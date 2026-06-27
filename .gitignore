@@ -8,9 +8,13 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
 dist-ssr
 *.local
+
+# Local env (committed template lives in .env.example)
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
