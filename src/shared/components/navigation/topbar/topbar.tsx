@@ -2,7 +2,7 @@ import { Menu } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
-import { CoinBalancePill } from './coin-balance-pill'
+import { PackagePill } from './package-pill'
 import { LanguageSwitcher } from './language-switcher'
 import { ThemeToggle } from './theme-toggle'
 import { UserMenu } from './user-menu'
@@ -12,12 +12,13 @@ export type TopbarProps = {
   /** Optional line under the title, e.g. the public menu link. */
   subtitle?: ReactNode
   user: { name: string; email: string }
-  coinBalance: number
+  /** The package the restaurant is on, in the current language. */
+  packageName: string
   publicUrl?: string | null
   locale: Locale
   onLocaleChange: (locale: Locale) => void
   onOpenMobileNav: () => void
-  onOpenWallet: () => void
+  onOpenPackage: () => void
   onOpenProfile: () => void
   onLogout: () => void
 }
@@ -31,12 +32,12 @@ export function Topbar({
   title,
   subtitle,
   user,
-  coinBalance,
+  packageName,
   publicUrl,
   locale,
   onLocaleChange,
   onOpenMobileNav,
-  onOpenWallet,
+  onOpenPackage,
   onOpenProfile,
   onLogout,
 }: TopbarProps) {
@@ -69,7 +70,7 @@ export function Topbar({
           ) : null}
         </div>
 
-        <CoinBalancePill balance={coinBalance} onClick={onOpenWallet} />
+        <PackagePill label={packageName} onClick={onOpenPackage} />
         <LanguageSwitcher
           value={locale}
           onChange={onLocaleChange}

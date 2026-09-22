@@ -4,7 +4,8 @@ import { cn } from '@/shared/utils/dom/cn'
 export type LimitNoticeProps = {
   label: string
   used: number
-  limit: number
+  /** Null means unlimited on this package. */
+  limit: number | null
   className?: string
 }
 

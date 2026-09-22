@@ -18,12 +18,12 @@ Routing, i18n, the API client and the feature pages are still to come; see §10.
 ## 1. Principles
 
 1. **Feature-first.** Code is grouped by business capability
-   (`features/menu`, `features/wallet`), not by technical role. A feature owns
+   (`features/menu`, `features/packages`), not by technical role. A feature owns
    its API calls, schemas, components, hooks, local state and pages.
 2. **One owner per kind of state.**
    | Kind of state                                               | Owner                         | Never put it in        |
    | ----------------------------------------------------------- | ----------------------------- | ---------------------- |
-   | Server data (categories, wallet, stats…)                    | TanStack Query                | Zustand, React context |
+   | Server data (categories, packages, stats…)                  | TanStack Query                | Zustand, React context |
    | Client/UI state (sidebar open, builder selection, QR draft) | Zustand                       | Query cache            |
    | Form state                                                  | React Hook Form + Zod         | Zustand                |
    | URL state (range, filters, active tab)                      | TanStack Router search params | Zustand                |
@@ -67,7 +67,7 @@ qayema-dashboard/
 │   │   │   └── blank/            BlankLayout (locked states, checkout return)
 │   │   └── guards/               require-auth, require-onboarding, require-template
 │   ├── routes/                   TanStack file-based tree — thin files only
-│   │   └── _authenticated/       index.tsx + menu/ templates/ wallet/ qr/ social-links/ settings/ account/
+│   │   └── _authenticated/       index.tsx + menu/ templates/ package/ qr/ social-links/ settings/ account/
 │   ├── config/                   env.ts (Zod-parsed), constants.ts, feature-flags.ts, paths.ts
 │   ├── lib/                      Infrastructure adapters — vendor wrappers, zero domain knowledge
 │   │   ├── api/                  client.ts, request.ts, errors.ts
@@ -77,7 +77,6 @@ qayema-dashboard/
 │   │   ├── security/             sanitize.ts, safe-redirect.ts, input-guards.ts
 │   │   ├── logger/               index.ts — console in dev, silent in prod
 │   │   ├── storage/              index.ts — namespaced, versioned; UI prefs ONLY
-│   │   └── paddle/               loader.ts, checkout.ts
 │   ├── stores/                   ui.store.ts, preferences.store.ts (global Zustand only)
 │   ├── shared/                   Reusable, domain-agnostic building blocks
 │   │   ├── components/
@@ -95,12 +94,12 @@ qayema-dashboard/
 │   │   │   ├── data-display/
 │   │   │   │   ├── table/        DataTable, DataTablePagination, DataTableToolbar, columns.ts
 │   │   │   │   ├── stats/        StatCard, TrendBadge
-│   │   │   │   ├── formatters/   Money, Coins, RelativeTime, DateTime
+│   │   │   │   ├── formatters/   Money, RelativeTime, DateTime
 │   │   │   │   └── badges/       StatusBadge, LimitBadge
 │   │   │   ├── layout/    (flat) PageHeader, Section, Container, SplitPane, Toolbar
 │   │   │   └── navigation/
 │   │   │       ├── sidebar/      Sidebar, SidebarGroup, SidebarItem
-│   │   │       ├── topbar/       Topbar, UserMenu, CoinBalancePill, LanguageSwitcher
+│   │   │       ├── topbar/       Topbar, UserMenu, PackagePill, LanguageSwitcher
 │   │   │       └── breadcrumbs/  Breadcrumbs
 │   │   ├── hooks/         (flat) use-debounce, use-media-query, use-direction, use-copy-to-clipboard, use-confirm
 │   │   ├── utils/
@@ -123,9 +122,9 @@ qayema-dashboard/
 │   │   │   ├── components/       builder/ dnd/ limits/
 │   │   │   ├── hooks/            use-menu-builder.ts
 │   │   │   └── pages/            MenuPage
-│   │   ├── templates/            Store, select, unlock with coins, settings editor
+│   │   ├── templates/            Store, select, settings editor
 │   │   │   └── components/       store/ preview/ unlock/ settings/ settings/controls/
-│   │   ├── wallet/               Balance, ledger, coin packs, Paddle checkout, invoices
+│   │   ├── packages/             Current package, the catalog, requesting one
 │   │   │   └── components/       balance/ ledger/ packs/ checkout/ invoices/
 │   │   ├── qr-studio/            QR design editor, preview, scan analytics
 │   │   │   └── components/       editor/ editor/controls/ preview/ stats/ locked/
@@ -138,7 +137,7 @@ qayema-dashboard/
 │   │   └── uploads/              Temp image upload → key. No pages, no store
 │   │       └── components/       dropzone/ preview/
 │   ├── locales/
-│   │   ├── en/                   common, nav, auth, overview, menu, templates, wallet, qr, social, settings, account, errors, validation
+│   │   ├── en/                   common, nav, auth, overview, menu, templates, packages, qr, social, settings, account, errors, validation
 │   │   └── ar/                   same namespaces, Arabic
 │   ├── styles/                   globals.css, tokens.css, rtl.css
 │   ├── assets/
@@ -163,17 +162,17 @@ qayema-dashboard/
 Every `features/<name>/` has the same shape, so learning one teaches all:
 
 ```
-features/wallet/
-├── api/          wallet.api.ts      — HTTP calls + response Zod schemas
-├── schemas/      checkout.schema.ts — form/input schemas shared with RHF
-├── types/        wallet.types.ts    — z.infer'd types + view models
-├── hooks/        use-wallet.ts, use-coin-packs.ts, use-checkout.ts
-├── store/        wallet.store.ts    — Zustand, transient UI state only
+features/packages/
+├── api/          package.api.ts     — HTTP calls + response Zod schemas
+├── schemas/      package.schema.ts  — response + form schemas shared with RHF
+├── types/        package.types.ts   — z.infer'd types + view models
+├── hooks/        package-keys.ts, use-packages.ts
+├── store/        package.store.ts   — Zustand, transient UI state only
 ├── components/
-│   ├── balance/  BalanceCard.tsx
-│   ├── ledger/   LedgerTable.tsx, TransactionTypeBadge.tsx
-│   └── packs/    CoinPackGrid.tsx, CoinPackCard.tsx
-├── pages/        WalletPage.tsx     — route-level composition
+│   ├── current/  CurrentPackageCard.tsx
+│   ├── cards/    PackageCard.tsx
+│   └── request/  RequestPackageDialog.tsx
+├── pages/        PackagesPage.tsx   — route-level composition
 └── index.ts      public barrel — the ONLY import path other features may use
 ```
 
@@ -183,7 +182,7 @@ Rules:
   file, never a folder.** No folder-per-component.
 - `api/` functions return **parsed** data (`schema.parse(res.data)`), never raw
   axios payloads, so a backend contract change fails loudly in dev.
-- Query keys come from the feature's key factory (`walletKeys.balance()`).
+- Query keys come from the feature's key factory (`packageKeys.list()`).
   Never hand-write key arrays.
 - Mutations invalidate by key prefix, and use optimistic updates with rollback
   where the UX needs it (menu reorder, availability toggle).
@@ -202,7 +201,7 @@ TanStack Router, file-based, with search params validated by Zod.
 /menu                menu builder            guard: requireTemplate
 /templates           template store
 /templates/settings  template settings       guard: requireTemplate
-/wallet              balance, ledger, packs
+/package             current package, the catalog, requesting one
 /qr                  QR studio               guard: requireTemplate + qr_studio feature
 /social-links        social links
 /settings            restaurant settings     guard: requireTemplate
@@ -220,19 +219,19 @@ first two redirects to `VITE_LOGIN_URL`; the rest redirect inside the SPA.
 The backend already provides rate limiting, abuse bans, security headers and
 Sanctum stateful auth. The SPA's responsibilities:
 
-| Concern        | Approach                                                                                                                                             |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Session        | Cookie only. **No tokens in localStorage/sessionStorage, ever.**                                                                                     |
-| CSRF           | Interceptor primes `/api/csrf-token` once and retries once on 419.                                                                                   |
-| XSS            | React escaping by default. Any `dangerouslySetInnerHTML` must go through `lib/security/sanitize.ts` (DOMPurify).                                     |
-| Open redirects | `lib/security/safe-redirect.ts` allowlists the API origin and same-origin paths.                                                                     |
-| Env            | `config/env.ts` parses `import.meta.env` with Zod at boot; bad config fails the build, not the user.                                                 |
-| Input          | Every form has a Zod schema mirroring the API rules (lengths, price ≥ 0, allowed platforms).                                                         |
-| Uploads        | Client checks MIME and size before POST; the server re-validates and optimises. Only the returned key is stored.                                     |
-| Dependencies   | `npm audit` in CI, lockfile committed, `knip` flags unused packages.                                                                                 |
-| Headers        | CSP / HSTS / frame-ancestors are set at the edge and documented in `docs/adr/`.                                                                      |
-| Errors         | `lib/logger` only — console in dev, silent in prod. **No third-party telemetry.**                                                                    |
-| Paddle         | Overlay loaded with the public client token. Coins are credited only by the server webhook; the SPA re-reads `/api/wallet` after the overlay closes. |
+| Concern        | Approach                                                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Session        | Cookie only. **No tokens in localStorage/sessionStorage, ever.**                                                        |
+| CSRF           | Interceptor primes `/api/csrf-token` once and retries once on 419.                                                      |
+| XSS            | React escaping by default. Any `dangerouslySetInnerHTML` must go through `lib/security/sanitize.ts` (DOMPurify).        |
+| Open redirects | `lib/security/safe-redirect.ts` allowlists the API origin and same-origin paths.                                        |
+| Env            | `config/env.ts` parses `import.meta.env` with Zod at boot; bad config fails the build, not the user.                    |
+| Input          | Every form has a Zod schema mirroring the API rules (lengths, price ≥ 0, allowed platforms).                            |
+| Uploads        | Client checks MIME and size before POST; the server re-validates and optimises. Only the returned key is stored.        |
+| Dependencies   | `npm audit` in CI, lockfile committed, `knip` flags unused packages.                                                    |
+| Headers        | CSP / HSTS / frame-ancestors are set at the edge and documented in `docs/adr/`.                                         |
+| Errors         | `lib/logger` only — console in dev, silent in prod. **No third-party telemetry.**                                       |
+| Money          | Nothing is charged in the SPA. A package request is a message to the admin; the package itself is assigned server-side. |
 
 ---
 
@@ -287,7 +286,6 @@ on PRs labelled `e2e`.
 | `react-dropzone`                                                                       | Image dropzone                                        |
 | `recharts`                                                                             | Overview charts                                       |
 | `qr-code-styling`                                                                      | Live QR preview                                       |
-| `@paddle/paddle-js`                                                                    | Paddle overlay checkout                               |
 | `date-fns`                                                                             | Dates with locales                                    |
 | `dompurify`                                                                            | HTML sanitisation                                     |
 
@@ -317,7 +315,7 @@ npm i @tanstack/react-router @tanstack/react-query @tanstack/react-table \
   i18next react-i18next i18next-browser-languagedetector i18next-http-backend \
   tailwindcss @tailwindcss/vite radix-ui class-variance-authority clsx tailwind-merge lucide-react \
   sonner react-error-boundary @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities \
-  react-dropzone recharts qr-code-styling @paddle/paddle-js date-fns dompurify
+  react-dropzone recharts qr-code-styling date-fns dompurify
 
 # dev
 npm i -D @tanstack/router-plugin @tanstack/react-query-devtools @tanstack/router-devtools \
@@ -356,10 +354,10 @@ npx shadcn@latest init
 | 1        | Packages, Tailwind, `@/` alias, Prettier, Husky, Vitest, MSW, CI workflow                                |
 | 2        | `config/env.ts`, `lib/api` with CSRF interceptor, `lib/query`, `lib/i18n`, `lib/security`, global stores |
 | 3        | Migrate auth into `features/auth`; router, guards, app shell with sidebar and topbar                     |
-| 4        | Templates: store, select, unlock with coins, settings editor. Dashboard unlocks here                     |
+| 4        | Templates: store, select, settings editor. Dashboard unlocks here                                        |
 | 5        | Uploads + menu builder: categories and dishes with drag-and-drop, limits                                 |
 | 6        | Settings, social links, account                                                                          |
-| 7        | Wallet with Paddle checkout and invoices; overview stats and charts                                      |
+| 7        | Packages: the catalog, the current package, requesting one; overview stats and charts                    |
 | 8        | QR Studio                                                                                                |
 | 9        | Playwright journeys, code splitting, a11y and RTL pass, `knip` in CI                                     |
 

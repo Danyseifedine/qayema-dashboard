@@ -20,23 +20,9 @@ describe('toast error descriptions', () => {
     expect(error.retryAfter).toBe(30)
   })
 
-  it('reads the shortfall off a payment-required error', () => {
-    const error = new ApiError({
-      message: 'You do not have enough coins.',
-      status: 402,
-      body: { balance: 100, needed: 650, shortfall: 550 },
-    })
-
-    expect(error.isPaymentRequired).toBe(true)
-    expect(error.shortfall).toBe(550)
-    expect(error.needed).toBe(650)
-    expect(error.balance).toBe(100)
-  })
-
   it('returns null for fields the body does not carry', () => {
     const error = new ApiError({ message: 'Nope', status: 500 })
 
     expect(error.retryAfter).toBeNull()
-    expect(error.shortfall).toBeNull()
   })
 })

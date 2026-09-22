@@ -27,7 +27,7 @@ function Harness({
       activeKey={activeKey}
       onNavigate={(item: NavItem) => setActiveKey(item.key)}
       user={{ name: 'Dany', email: 'owner@example.com' }}
-      coinBalance={1250}
+      packageName="Free"
       publicUrl="https://qayema.test/beit-qayema"
       hasTemplate={hasTemplate}
       features={{ qr_studio: qrStudio }}
@@ -57,14 +57,14 @@ describe('AuthenticatedLayout', () => {
       'Dishes',
       'Templates',
       'QR Studio',
-      'Coins',
+      'Package',
       'Settings',
     ]) {
       expect(within(nav).getByRole('button', { name: label })).toBeInTheDocument()
     }
 
     expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /1,250 coins/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Free package/ })).toBeInTheDocument()
     expect(screen.getByText('Page content')).toBeInTheDocument()
   })
 

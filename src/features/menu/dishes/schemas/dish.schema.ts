@@ -24,7 +24,8 @@ export const dishListSchema = z.object({
   data: z.array(dishSchema),
   meta: z.object({
     used: z.number().int(),
-    limit: z.number().int(),
+    /** Null means unlimited on this package. */
+    limit: z.number().int().nullable(),
     currency: z.string(),
   }),
 })

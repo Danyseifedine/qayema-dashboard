@@ -25,7 +25,7 @@
 React 19, Vite, TypeScript (strict), TanStack Router (file-based) + Query +
 Table, Zustand + immer, React Hook Form + Zod v4, Tailwind v4 + shadcn/ui,
 i18next (en/ar, RTL), axios, dnd-kit, react-dropzone, recharts,
-qr-code-styling, @paddle/paddle-js, date-fns, DOMPurify.
+qr-code-styling, date-fns, DOMPurify.
 Tests: Vitest + Testing Library + MSW; Playwright for e2e. Lint: oxlint.
 Format: Prettier. Hooks: Husky + lint-staged.
 
@@ -61,8 +61,12 @@ No third-party error telemetry. Errors go through `src/lib/logger`.
   why it snapped back.
 - Every query has a skeleton and an `ErrorState` with retry.
 - Backend contract: `../qayema/routes/api.php` and
-  `../qayema/app/Http/Resources/*`. Errors are `{message, code}`; can't-afford
-  is **402** carrying `balance`, `needed`, `shortfall`.
+  `../qayema/app/Http/Resources/*`. Errors are `{message, code}`; a rate limit
+  is **429** carrying `retry_after`.
+- Limits come from the restaurant's **package**, and a `limit` of `null` means
+  unlimited — never render it as a number. Nothing is bought in the SPA:
+  `POST /api/packages/request` sends a message and an admin assigns the
+  package.
 
 ## Commands
 

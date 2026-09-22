@@ -10,7 +10,8 @@ export type AuthenticatedLayoutProps = {
   activeKey: string
   onNavigate: (item: NavItem) => void
   user: { name: string; email: string }
-  coinBalance: number
+  /** The package the restaurant is on, in the current language. */
+  packageName: string
   publicUrl?: string | null
   hasTemplate: boolean
   features: { qr_studio: boolean }
@@ -28,7 +29,7 @@ export function AuthenticatedLayout({
   activeKey,
   onNavigate,
   user,
-  coinBalance,
+  packageName,
   publicUrl,
   hasTemplate,
   features,
@@ -143,12 +144,12 @@ export function AuthenticatedLayout({
             ) : null
           }
           user={user}
-          coinBalance={coinBalance}
+          packageName={packageName}
           publicUrl={publicUrl}
           locale={locale}
           onLocaleChange={onLocaleChange}
           onOpenMobileNav={() => setMobileOpen(true)}
-          onOpenWallet={() => goTo('wallet')}
+          onOpenPackage={() => goTo('package')}
           onOpenProfile={() => goTo('account')}
           onLogout={onLogout}
         />

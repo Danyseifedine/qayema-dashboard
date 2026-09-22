@@ -29,8 +29,7 @@ export class ApiError extends Error {
   readonly errors: ApiValidationErrors | null
   /**
    * The raw response body. Some failures carry fields beyond the envelope:
-   * a 402 adds `balance`, `needed` and `shortfall`, and a 429 adds
-   * `retry_after`. Read them through the helpers below.
+   * a 429 adds `retry_after`. Read them through the helpers below.
    */
   readonly body: Record<string, unknown>
 
@@ -55,21 +54,6 @@ export class ApiError extends Error {
     return typeof value === 'number' ? value : null
   }
 
-  /** Coins still needed, on a 402. */
-  get shortfall(): number | null {
-    return this.number('shortfall')
-  }
-
-  /** Coins the purchase costs, on a 402. */
-  get needed(): number | null {
-    return this.number('needed')
-  }
-
-  /** Coins currently held, on a 402. */
-  get balance(): number | null {
-    return this.number('balance')
-  }
-
   /** Seconds to wait, on a 429. */
   get retryAfter(): number | null {
     return this.number('retry_after')
@@ -83,11 +67,6 @@ export class ApiError extends Error {
   /** 401 — the session is gone; the caller should bounce to login. */
   get isUnauthenticated(): boolean {
     return this.status === 401
-  }
-
-  /** 402 — not enough coins. Carries balance/needed/shortfall on the body. */
-  get isPaymentRequired(): boolean {
-    return this.status === 402
   }
 
   /** 429 — a rate limiter rejected the call. */

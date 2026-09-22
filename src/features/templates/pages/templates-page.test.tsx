@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
@@ -9,33 +9,27 @@ import { TemplatesPage } from './templates-page'
 
 let mock: MockAdapter
 
-const free = {
+const classic = {
   id: 1,
   slug: 'classic',
-  price: 0,
-  is_free: true,
-  owned: true,
   name: { en: 'Classic', ar: null },
   description: { en: 'A clean, simple menu.', ar: null },
   thumbnail_url: null,
   settings_schema: [],
 }
 
-const paid = {
-  ...free,
+const midnight = {
+  ...classic,
   id: 2,
   slug: 'midnight',
-  price: 650,
-  is_free: false,
-  owned: false,
   name: { en: 'Midnight', ar: null },
   description: { en: 'Dark and moody.', ar: null },
 }
 
-function stub(current: number | null, balance = 100) {
+function stub(current: number | null) {
   mock.onGet('/api/templates').reply(200, {
-    data: [free, paid],
-    meta: { current, settings: {}, balance },
+    data: [classic, midnight],
+    meta: { current, settings: {} },
   })
 }
 
@@ -56,34 +50,37 @@ describe('TemplatesPage', () => {
 
   it('explains why the rest of the dashboard is locked when no design is chosen', async () => {
     stub(null)
-    renderWithProviders(<TemplatesPage locale="en" onOpenWallet={vi.fn()} />)
+    renderWithProviders(<TemplatesPage locale="en" />)
 
     expect(await screen.findByText('Your menu needs a design')).toBeInTheDocument()
   })
 
-  it('offers a free design for use and a paid one for unlocking', async () => {
+  it('offers every design for use, because designs are not sold', async () => {
     stub(null)
-    renderWithProviders(<TemplatesPage locale="en" onOpenWallet={vi.fn()} />)
+    renderWithProviders(<TemplatesPage locale="en" />)
 
-    expect(await screen.findByRole('button', { name: 'Use this design' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Unlock for 650 coins/ })).toBeInTheDocument()
+    // Both designs are available: a package grants limits, never a look.
+    const buttons = await screen.findAllByRole('button', { name: 'Use this design' })
+    expect(buttons).toHaveLength(2)
+    expect(screen.queryByText(/coins/i)).not.toBeInTheDocument()
   })
 
-  it('selects a design without spending coins', async () => {
+  it('selects a design in one tap, with no confirmation step', async () => {
     stub(null)
     mock
       .onPost('/api/templates/select')
-      .reply(200, { data: [free, paid], meta: { current: 1, settings: {}, balance: 100 } })
+      .reply(200, { data: [classic, midnight], meta: { current: 2, settings: {} } })
 
     const user = userEvent.setup()
-    renderWithProviders(<TemplatesPage locale="en" onOpenWallet={vi.fn()} />)
+    renderWithProviders(<TemplatesPage locale="en" />)
 
-    await user.click(await screen.findByRole('button', { name: 'Use this design' }))
+    const buttons = await screen.findAllByRole('button', { name: 'Use this design' })
+    await user.click(buttons[1]!)
 
     await waitFor(() => {
       const post = mock.history.post.find((r) => r.url === '/api/templates/select')
       expect(post).toBeDefined()
-      expect(JSON.parse(post!.data as string)).toEqual({ template_id: 1 })
+      expect(JSON.parse(post!.data as string)).toEqual({ template_id: 2 })
     })
 
     // Once chosen it is marked in use and the lock notice goes away.
@@ -91,40 +88,27 @@ describe('TemplatesPage', () => {
     expect(screen.queryByText('Your menu needs a design')).not.toBeInTheDocument()
   })
 
-  it('asks for confirmation before spending coins on a paid design', async () => {
-    stub(null, 900)
-    const user = userEvent.setup()
-    renderWithProviders(<TemplatesPage locale="en" onOpenWallet={vi.fn()} />)
+  it('marks the design already in use and does not offer it again', async () => {
+    stub(1)
+    renderWithProviders(<TemplatesPage locale="en" />)
 
-    await user.click(await screen.findByRole('button', { name: /Unlock for 650 coins/ }))
-
-    const dialog = screen.getByRole('dialog')
-    expect(within(dialog).getByText('Unlock this design?')).toBeInTheDocument()
-    expect(within(dialog).getByText(/spends 650 coins/)).toBeInTheDocument()
-
-    // Nothing is spent until the owner confirms.
-    expect(mock.history.post.filter((r) => r.url === '/api/templates/unlock')).toHaveLength(0)
+    expect(await screen.findByText('In use')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Currently in use' })).toBeDisabled()
+    expect(screen.getAllByRole('button', { name: 'Use this design' })).toHaveLength(1)
   })
 
-  it('turns a 402 into a shortfall prompt that leads to the wallet', async () => {
-    stub(null, 100)
-    mock.onPost('/api/templates/unlock').reply(402, {
-      message: 'You do not have enough coins.',
-      balance: 100,
-      needed: 650,
-      shortfall: 550,
-    })
+  it('shows the server message when a switch fails', async () => {
+    stub(1)
+    mock.onPost('/api/templates/select').reply(422, { message: 'That design is no longer active.' })
 
-    const onOpenWallet = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(<TemplatesPage locale="en" onOpenWallet={onOpenWallet} />)
+    renderWithProviders(<TemplatesPage locale="en" />)
 
-    await user.click(await screen.findByRole('button', { name: /Unlock for 650 coins/ }))
-    await user.click(screen.getByRole('button', { name: 'Unlock' }))
+    await user.click(await screen.findByRole('button', { name: 'Use this design' }))
 
-    const prompt = await screen.findByRole('button', { name: /Get 550 more coins/ })
-    await user.click(prompt)
-
-    expect(onOpenWallet).toHaveBeenCalledOnce()
+    // The hook also toasts, so scope the assertion to the inline notice.
+    const alert = await screen.findByRole('alert')
+    expect(within(alert).getByText('Could not switch design')).toBeInTheDocument()
+    expect(within(alert).getByText('That design is no longer active.')).toBeInTheDocument()
   })
 })

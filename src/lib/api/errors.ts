@@ -55,7 +55,7 @@ export function toApiError(error: unknown): ApiError {
       status: response.status,
       code: typeof body.code === 'string' ? body.code : null,
       errors: readValidationErrors(body.errors),
-      // Keeps 402 shortfall and 429 retry_after reachable.
+      // Keeps a 429's retry_after reachable.
       body:
         typeof response.data === 'object' && response.data !== null
           ? (response.data as Record<string, unknown>)

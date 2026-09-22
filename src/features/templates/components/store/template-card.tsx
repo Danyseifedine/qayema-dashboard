@@ -1,4 +1,4 @@
-import { Check, Coins, ImageOff, Lock } from 'lucide-react'
+import { Check, ImageOff } from 'lucide-react'
 import { Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
@@ -12,15 +12,14 @@ export type TemplateCardProps = {
   locale: Locale
   busy?: boolean
   onSelect: () => void
-  onUnlock: () => void
 }
 
 /**
  * One menu design.
  *
- * Three states: the active one, one already owned and ready to switch to, and
- * a paid one that must be unlocked with coins first. Unlocking is a separate
- * action from choosing, so a tap can never spend coins by accident.
+ * Two states: the design in use, and any other design, which is one tap away.
+ * Nothing here costs anything — a package grants limits and features, never a
+ * look.
  */
 export function TemplateCard({
   template,
@@ -28,7 +27,6 @@ export function TemplateCard({
   locale,
   busy = false,
   onSelect,
-  onUnlock,
 }: TemplateCardProps) {
   const name = translated(template.name, locale)
   const description = translated(template.description, locale)
@@ -54,27 +52,14 @@ export function TemplateCard({
           </div>
         )}
 
-        <div className="absolute end-2 top-2 flex gap-1.5">
-          {active ? (
+        {active ? (
+          <div className="absolute end-2 top-2 flex gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-full bg-gold px-2.5 py-1 text-[11px] font-medium text-ink">
               <Check aria-hidden className="size-3" />
               In use
             </span>
-          ) : template.is_free ? (
-            <span className="rounded-full bg-overlay-pill px-2.5 py-1 text-[11px] font-medium text-white">
-              Free
-            </span>
-          ) : template.owned ? (
-            <span className="rounded-full bg-overlay-pill px-2.5 py-1 text-[11px] font-medium text-white">
-              Owned
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gold px-2.5 py-1 text-[11px] font-medium text-ink">
-              <Coins aria-hidden className="size-3" />
-              {template.price.toLocaleString()}
-            </span>
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col gap-1 p-3.5">
@@ -92,19 +77,9 @@ export function TemplateCard({
             <Button variant="secondary" block disabled>
               Currently in use
             </Button>
-          ) : template.owned ? (
+          ) : (
             <Button block loading={busy} onClick={onSelect}>
               Use this design
-            </Button>
-          ) : (
-            <Button
-              variant="secondary"
-              block
-              loading={busy}
-              leadingIcon={<Lock className="size-3.5" />}
-              onClick={onUnlock}
-            >
-              Unlock for {template.price.toLocaleString()} coins
             </Button>
           )}
         </div>

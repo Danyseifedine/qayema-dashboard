@@ -1,5 +1,5 @@
 import {
-  Coins,
+  Crown,
   LayoutDashboard,
   LayoutList,
   type LucideIcon,
@@ -76,7 +76,7 @@ export const NAV_GROUPS: NavGroup[] = [
     key: 'account',
     label: 'Account',
     items: [
-      { key: 'wallet', path: '/wallet', label: 'Coins', icon: Coins },
+      { key: 'package', path: '/package', label: 'Package', icon: Crown },
       {
         key: 'settings',
         path: '/settings',

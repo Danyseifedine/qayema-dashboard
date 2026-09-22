@@ -1,25 +1,23 @@
-import { Coins } from 'lucide-react'
+import { Crown } from 'lucide-react'
 import { cn } from '@/shared/utils/dom/cn'
 
-export type CoinBalancePillProps = {
-  balance: number
+export type PackagePillProps = {
+  /** The package's name in the current language. */
+  label: string
   onClick?: () => void
   className?: string
 }
 
 /**
- * The owner's coin balance, always visible because every paid action in the
- * product is priced in coins. Clicking it goes to the wallet.
+ * Which package the restaurant is on, always visible because every limit in
+ * the dashboard comes from it. Clicking it opens the package page.
  */
-export function CoinBalancePill({ balance, onClick, className }: CoinBalancePillProps) {
-  // One formatting of the number, so the label and the visible text agree.
-  const formatted = balance.toLocaleString()
-
+export function PackagePill({ label, onClick, className }: PackagePillProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={`${formatted} coins. Open wallet.`}
+      aria-label={`${label} package. Open your package.`}
       className={cn(
         'inline-flex shrink-0 items-center gap-1.5 rounded-[var(--radius-control)] border-[0.5px] px-3 py-1.5',
         'border-accent-border bg-accent-wash text-[12.5px] font-medium text-accent',
@@ -28,8 +26,8 @@ export function CoinBalancePill({ balance, onClick, className }: CoinBalancePill
         className,
       )}
     >
-      <Coins aria-hidden className="size-3.5" />
-      <span className="tabular-nums">{formatted}</span>
+      <Crown aria-hidden className="size-3.5" />
+      <span>{label}</span>
     </button>
   )
 }

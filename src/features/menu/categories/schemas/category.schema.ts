@@ -25,7 +25,8 @@ export const categoryListSchema = z.object({
   data: z.array(categorySchema),
   meta: z.object({
     used: z.number().int(),
-    limit: z.number().int(),
+    /** Null means unlimited on this package. */
+    limit: z.number().int().nullable(),
   }),
 })
 

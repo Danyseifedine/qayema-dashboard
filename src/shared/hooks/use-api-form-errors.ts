@@ -6,7 +6,7 @@ import { ApiError } from '@/shared/types/api'
  * Bridges a rejected API call into a form.
  *
  * Laravel answers a bad submit with 422 and `{errors: {field: [msg, ...]}}`.
- * Those messages belong under their fields; anything else (401, 402, 429, a
+ * Those messages belong under their fields; anything else (401, 429, a
  * network failure) belongs in a form-level banner. This hook does that split
  * so no form has to reach into an error object itself.
  */

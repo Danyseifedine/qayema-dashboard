@@ -27,6 +27,17 @@ export const restaurantSchema = z.object({
   logo_url: z.string().nullable(),
   public_url: z.string(),
   qr_url: z.string(),
+  /**
+   * The package actually in force. An expired assignment reports as the
+   * default one, because that is where the limits below came from.
+   */
+  package: z.object({
+    slug: z.string().nullable(),
+    name: translatable,
+    is_contact_only: z.boolean(),
+    /** ISO-8601, or null when the package does not expire. */
+    ends_at: z.string().nullable(),
+  }),
   limits: z.object({
     dishes: limit,
     categories: limit,
@@ -43,7 +54,6 @@ export const userSchema = z.object({
   email: z.email(),
   role: z.string(),
   has_completed_onboarding: z.boolean(),
-  coin_balance: z.number(),
   has_password: z.boolean(),
   restaurant: restaurantSchema.nullable(),
 })

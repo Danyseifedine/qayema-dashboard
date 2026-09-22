@@ -33,7 +33,7 @@ export type AlertProps = {
 
 /**
  * Form-level message block. Validation errors that belong to no single field
- * (and 402/429 responses) surface here rather than under a control.
+ * (and 429 responses) surface here rather than under a control.
  */
 export function Alert({
   variant = 'info',

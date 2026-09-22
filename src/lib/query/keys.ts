@@ -11,8 +11,7 @@ export const QUERY_ROOTS = {
   dishes: 'dishes',
   settings: 'settings',
   templates: 'templates',
-  wallet: 'wallet',
-  coinPacks: 'coin-packs',
+  packages: 'packages',
   qr: 'qr',
   socialLinks: 'social-links',
 } as const

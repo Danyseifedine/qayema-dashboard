@@ -1,7 +1,7 @@
 export { Sidebar, type SidebarProps } from './sidebar/sidebar'
 export { SidebarGroup, type SidebarGroupProps } from './sidebar/sidebar-group'
 export { SidebarItem, type SidebarItemProps } from './sidebar/sidebar-item'
-export { CoinBalancePill, type CoinBalancePillProps } from './topbar/coin-balance-pill'
+export { PackagePill, type PackagePillProps } from './topbar/package-pill'
 export { LanguageSwitcher, type LanguageSwitcherProps } from './topbar/language-switcher'
 export { ThemeToggle } from './topbar/theme-toggle'
 export { Topbar, type TopbarProps } from './topbar/topbar'

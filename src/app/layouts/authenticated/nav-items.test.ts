@@ -17,7 +17,7 @@ describe('isNavItemLocked', () => {
   })
 
   it('leaves the sections that do not need a template open', () => {
-    for (const key of ['overview', 'templates', 'wallet', 'account', 'social-links']) {
+    for (const key of ['overview', 'templates', 'package', 'account', 'social-links']) {
       expect(isNavItemLocked(key, NO_TEMPLATE), `${key} should be open`).toBe(false)
     }
   })

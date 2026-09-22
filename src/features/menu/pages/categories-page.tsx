@@ -38,8 +38,11 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null)
 
   const list = categories.data?.data ?? []
+  // An unlimited package reports a null limit, which is never reached.
   const atLimit =
-    categories.data !== undefined && categories.data.meta.used >= categories.data.meta.limit
+    categories.data !== undefined &&
+    categories.data.meta.limit !== null &&
+    categories.data.meta.used >= categories.data.meta.limit
 
   return (
     <div className="flex flex-col gap-4">
@@ -47,7 +50,7 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
         <LimitNotice
           label="Categories"
           used={categories.data?.meta.used ?? 0}
-          limit={categories.data?.meta.limit ?? 0}
+          limit={categories.data?.meta.limit ?? null}
         />
         <Button
           size="sm"

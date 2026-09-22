@@ -40,10 +40,6 @@ function describe(error: unknown): string | undefined {
       : `Too many requests. Try again in ${wait} seconds.`
   }
 
-  if (error.isPaymentRequired && error.shortfall !== null) {
-    return `You need ${error.shortfall.toLocaleString()} more coins.`
-  }
-
   // A 422's field messages are shown on the fields themselves, so the toast
   // only carries the summary.
   return error.message

@@ -65,7 +65,11 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
     return dishList.filter((dish) => dish.category_id === filter)
   }, [dishList, filter])
 
-  const atLimit = dishes.data !== undefined && dishes.data.meta.used >= dishes.data.meta.limit
+  // An unlimited package reports a null limit, which is never reached.
+  const atLimit =
+    dishes.data !== undefined &&
+    dishes.data.meta.limit !== null &&
+    dishes.data.meta.used >= dishes.data.meta.limit
   const noCategories = !categories.isPending && categoryList.length === 0
 
   // A category can be deleted while it is the active filter. Fall back to
@@ -82,7 +86,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
         <LimitNotice
           label="Dishes"
           used={dishes.data?.meta.used ?? 0}
-          limit={dishes.data?.meta.limit ?? 0}
+          limit={dishes.data?.meta.limit ?? null}
         />
         <Button
           size="sm"

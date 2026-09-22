@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tan
 import { QUERY_ROOTS } from '@/lib/query/keys'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
-import { fetchTemplates, selectTemplate, unlockTemplate } from '../api/template.api'
+import { fetchTemplates, selectTemplate } from '../api/template.api'
 import type { TemplateList } from '../schemas/template.schema'
 
 export const templateKeys = {
@@ -32,24 +32,5 @@ export function useSelectTemplate() {
       void queryClient.invalidateQueries({ queryKey: [QUERY_ROOTS.session] })
     },
     onError: (error) => toast.error('Could not switch design', error),
-  })
-}
-
-export function useUnlockTemplate() {
-  const queryClient = useQueryClient()
-
-  return useMutation<TemplateList, ApiError, number>({
-    mutationFn: unlockTemplate,
-    onSuccess: (list) => {
-      toast.success('Design unlocked', 'It is yours for good, so switching back is free.')
-      queryClient.setQueryData(templateKeys.list(), list)
-      // Coins were spent, so the balance in the topbar is stale.
-      void queryClient.invalidateQueries({ queryKey: [QUERY_ROOTS.session] })
-      void queryClient.invalidateQueries({ queryKey: [QUERY_ROOTS.wallet] })
-    },
-    // A 402 is shown in place with a link to buy coins, so it needs no toast.
-    onError: (error) => {
-      if (!error.isPaymentRequired) toast.error('Could not unlock that design', error)
-    },
   })
 }
