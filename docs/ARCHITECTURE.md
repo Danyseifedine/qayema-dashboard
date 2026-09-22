@@ -20,12 +20,12 @@ are installed yet. §8 lists the exact install commands, §10 the roadmap.
    (`features/menu`, `features/wallet`), not by technical role. A feature owns
    its API calls, schemas, components, hooks, local state and pages.
 2. **One owner per kind of state.**
-   | Kind of state | Owner | Never put it in |
-   |---|---|---|
-   | Server data (categories, wallet, stats…) | TanStack Query | Zustand, React context |
-   | Client/UI state (sidebar open, builder selection, QR draft) | Zustand | Query cache |
-   | Form state | React Hook Form + Zod | Zustand |
-   | URL state (range, filters, active tab) | TanStack Router search params | Zustand |
+   | Kind of state                                               | Owner                         | Never put it in        |
+   | ----------------------------------------------------------- | ----------------------------- | ---------------------- |
+   | Server data (categories, wallet, stats…)                    | TanStack Query                | Zustand, React context |
+   | Client/UI state (sidebar open, builder selection, QR draft) | Zustand                       | Query cache            |
+   | Form state                                                  | React Hook Form + Zod         | Zustand                |
+   | URL state (range, filters, active tab)                      | TanStack Router search params | Zustand                |
 3. **Validate at every boundary.** Env vars, API responses and form input all
    pass through Zod schemas. Nothing untyped leaks past `lib/` or `features/*/api`.
 4. **Thin routes, fat features.** A file in `src/routes/` wires a URL to a page
@@ -43,7 +43,7 @@ are installed yet. §8 lists the exact install commands, §10 the roadmap.
 
 ## 2. Folder tree
 
-Each line is a folder and the files it will hold. Folders marked *(flat)* take
+Each line is a folder and the files it will hold. Folders marked _(flat)_ take
 files directly.
 
 ```
@@ -219,19 +219,19 @@ first two redirects to `VITE_LOGIN_URL`; the rest redirect inside the SPA.
 The backend already provides rate limiting, abuse bans, security headers and
 Sanctum stateful auth. The SPA's responsibilities:
 
-| Concern | Approach |
-|---|---|
-| Session | Cookie only. **No tokens in localStorage/sessionStorage, ever.** |
-| CSRF | Interceptor primes `/api/csrf-token` once and retries once on 419. |
-| XSS | React escaping by default. Any `dangerouslySetInnerHTML` must go through `lib/security/sanitize.ts` (DOMPurify). |
-| Open redirects | `lib/security/safe-redirect.ts` allowlists the API origin and same-origin paths. |
-| Env | `config/env.ts` parses `import.meta.env` with Zod at boot; bad config fails the build, not the user. |
-| Input | Every form has a Zod schema mirroring the API rules (lengths, price ≥ 0, allowed platforms). |
-| Uploads | Client checks MIME and size before POST; the server re-validates and optimises. Only the returned key is stored. |
-| Dependencies | `npm audit` in CI, lockfile committed, `knip` flags unused packages. |
-| Headers | CSP / HSTS / frame-ancestors are set at the edge and documented in `docs/adr/`. |
-| Errors | `lib/logger` only — console in dev, silent in prod. **No third-party telemetry.** |
-| Paddle | Overlay loaded with the public client token. Coins are credited only by the server webhook; the SPA re-reads `/api/wallet` after the overlay closes. |
+| Concern        | Approach                                                                                                                                             |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Session        | Cookie only. **No tokens in localStorage/sessionStorage, ever.**                                                                                     |
+| CSRF           | Interceptor primes `/api/csrf-token` once and retries once on 419.                                                                                   |
+| XSS            | React escaping by default. Any `dangerouslySetInnerHTML` must go through `lib/security/sanitize.ts` (DOMPurify).                                     |
+| Open redirects | `lib/security/safe-redirect.ts` allowlists the API origin and same-origin paths.                                                                     |
+| Env            | `config/env.ts` parses `import.meta.env` with Zod at boot; bad config fails the build, not the user.                                                 |
+| Input          | Every form has a Zod schema mirroring the API rules (lengths, price ≥ 0, allowed platforms).                                                         |
+| Uploads        | Client checks MIME and size before POST; the server re-validates and optimises. Only the returned key is stored.                                     |
+| Dependencies   | `npm audit` in CI, lockfile committed, `knip` flags unused packages.                                                                                 |
+| Headers        | CSP / HSTS / frame-ancestors are set at the edge and documented in `docs/adr/`.                                                                      |
+| Errors         | `lib/logger` only — console in dev, silent in prod. **No third-party telemetry.**                                                                    |
+| Paddle         | Overlay loaded with the public client token. Coins are credited only by the server webhook; the SPA re-reads `/api/wallet` after the overlay closes. |
 
 ---
 
@@ -251,12 +251,12 @@ Sanctum stateful auth. The SPA's responsibilities:
 
 ## 7. Testing
 
-| Layer | Tool | Where |
-|---|---|---|
-| Unit (utils, schemas, stores) | Vitest | co-located `*.test.ts` |
-| Component / hook | Vitest + Testing Library + MSW | co-located `*.test.tsx` |
-| API contract | MSW handlers typed against the same Zod schemas | `src/test/mocks/handlers` |
-| End-to-end | Playwright against a seeded Laravel instance | `tests/e2e` |
+| Layer                         | Tool                                            | Where                     |
+| ----------------------------- | ----------------------------------------------- | ------------------------- |
+| Unit (utils, schemas, stores) | Vitest                                          | co-located `*.test.ts`    |
+| Component / hook              | Vitest + Testing Library + MSW                  | co-located `*.test.tsx`   |
+| API contract                  | MSW handlers typed against the same Zod schemas | `src/test/mocks/handlers` |
+| End-to-end                    | Playwright against a seeded Laravel instance    | `tests/e2e`               |
 
 CI gate: `typecheck && lint && test && build`. E2E runs on the main branch and
 on PRs labelled `e2e`.
@@ -267,45 +267,45 @@ on PRs labelled `e2e`.
 
 ### Runtime
 
-| Package | Purpose |
-|---|---|
-| `react`, `react-dom` (19) | Already installed |
-| `@tanstack/react-router` | Type-safe file-based routing, search-param validation |
-| `@tanstack/react-query` | Server state, caching, optimistic updates |
-| `@tanstack/react-table` | Headless tables (ledger, dishes) |
-| `zustand`, `immer` | Client/UI state with immutable updates |
-| `axios` | HTTP (already installed) |
-| `zod` (v4) | Validation for env, API responses, forms |
-| `react-hook-form`, `@hookform/resolvers` | Forms bound to Zod schemas |
-| `i18next`, `react-i18next`, `i18next-browser-languagedetector`, `i18next-http-backend` | Bilingual EN/AR, lazy namespaces |
-| `tailwindcss`, `@tailwindcss/vite` (v4) | Styling with logical properties for RTL |
-| `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react` | shadcn/ui primitives owned in-repo |
-| `sonner` | Toasts |
-| `react-error-boundary` | Error boundaries per route and feature |
-| `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` | Reordering categories and dishes |
-| `react-dropzone` | Image dropzone |
-| `recharts` | Overview charts |
-| `qr-code-styling` | Live QR preview |
-| `@paddle/paddle-js` | Paddle overlay checkout |
-| `date-fns` | Dates with locales |
-| `dompurify` | HTML sanitisation |
+| Package                                                                                | Purpose                                               |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `react`, `react-dom` (19)                                                              | Already installed                                     |
+| `@tanstack/react-router`                                                               | Type-safe file-based routing, search-param validation |
+| `@tanstack/react-query`                                                                | Server state, caching, optimistic updates             |
+| `@tanstack/react-table`                                                                | Headless tables (ledger, dishes)                      |
+| `zustand`, `immer`                                                                     | Client/UI state with immutable updates                |
+| `axios`                                                                                | HTTP (already installed)                              |
+| `zod` (v4)                                                                             | Validation for env, API responses, forms              |
+| `react-hook-form`, `@hookform/resolvers`                                               | Forms bound to Zod schemas                            |
+| `i18next`, `react-i18next`, `i18next-browser-languagedetector`, `i18next-http-backend` | Bilingual EN/AR, lazy namespaces                      |
+| `tailwindcss`, `@tailwindcss/vite` (v4)                                                | Styling with logical properties for RTL               |
+| `radix-ui`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`       | shadcn/ui primitives owned in-repo                    |
+| `sonner`                                                                               | Toasts                                                |
+| `react-error-boundary`                                                                 | Error boundaries per route and feature                |
+| `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`                             | Reordering categories and dishes                      |
+| `react-dropzone`                                                                       | Image dropzone                                        |
+| `recharts`                                                                             | Overview charts                                       |
+| `qr-code-styling`                                                                      | Live QR preview                                       |
+| `@paddle/paddle-js`                                                                    | Paddle overlay checkout                               |
+| `date-fns`                                                                             | Dates with locales                                    |
+| `dompurify`                                                                            | HTML sanitisation                                     |
 
 ### Dev / tooling
 
-| Package | Purpose |
-|---|---|
-| `typescript`, `vite`, `@vitejs/plugin-react`, `oxlint` | Already installed |
-| `@tanstack/router-plugin` | Route tree generation |
-| `vite-tsconfig-paths` | `@/` import alias |
-| `prettier`, `prettier-plugin-tailwindcss` | Formatting, class sorting |
-| `husky`, `lint-staged` | Pre-commit lint/format, pre-push typecheck |
-| `vitest`, `@vitest/coverage-v8`, `jsdom` | Unit and component tests |
-| `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom` | Component testing |
-| `msw` | API mocking |
-| `@playwright/test` | End-to-end |
-| `@tanstack/react-query-devtools`, `@tanstack/router-devtools` | Dev-only inspectors |
-| `@types/dompurify` | Types |
-| `knip` | Unused files, exports and dependencies |
+| Package                                                                              | Purpose                                    |
+| ------------------------------------------------------------------------------------ | ------------------------------------------ |
+| `typescript`, `vite`, `@vitejs/plugin-react`, `oxlint`                               | Already installed                          |
+| `@tanstack/router-plugin`                                                            | Route tree generation                      |
+| `vite-tsconfig-paths`                                                                | `@/` import alias                          |
+| `prettier`, `prettier-plugin-tailwindcss`                                            | Formatting, class sorting                  |
+| `husky`, `lint-staged`                                                               | Pre-commit lint/format, pre-push typecheck |
+| `vitest`, `@vitest/coverage-v8`, `jsdom`                                             | Unit and component tests                   |
+| `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom` | Component testing                          |
+| `msw`                                                                                | API mocking                                |
+| `@playwright/test`                                                                   | End-to-end                                 |
+| `@tanstack/react-query-devtools`, `@tanstack/router-devtools`                        | Dev-only inspectors                        |
+| `@types/dompurify`                                                                   | Types                                      |
+| `knip`                                                                               | Unused files, exports and dependencies     |
 
 ### Install commands
 
@@ -349,26 +349,26 @@ npx shadcn@latest init
 
 ## 10. Roadmap
 
-| Phase | Deliverable |
-|---|---|
-| 0 (done) | Full-depth folder structure, CLAUDE.md, this document |
-| 1 | Packages, Tailwind, `@/` alias, Prettier, Husky, Vitest, MSW, CI workflow |
-| 2 | `config/env.ts`, `lib/api` with CSRF interceptor, `lib/query`, `lib/i18n`, `lib/security`, global stores |
-| 3 | Migrate auth into `features/auth`; router, guards, app shell with sidebar and topbar |
-| 4 | Templates: store, select, unlock with coins, settings editor. Dashboard unlocks here |
-| 5 | Uploads + menu builder: categories and dishes with drag-and-drop, limits |
-| 6 | Settings, social links, account |
-| 7 | Wallet with Paddle checkout and invoices; overview stats and charts |
-| 8 | QR Studio |
-| 9 | Playwright journeys, code splitting, a11y and RTL pass, `knip` in CI |
+| Phase    | Deliverable                                                                                              |
+| -------- | -------------------------------------------------------------------------------------------------------- |
+| 0 (done) | Full-depth folder structure, CLAUDE.md, this document                                                    |
+| 1        | Packages, Tailwind, `@/` alias, Prettier, Husky, Vitest, MSW, CI workflow                                |
+| 2        | `config/env.ts`, `lib/api` with CSRF interceptor, `lib/query`, `lib/i18n`, `lib/security`, global stores |
+| 3        | Migrate auth into `features/auth`; router, guards, app shell with sidebar and topbar                     |
+| 4        | Templates: store, select, unlock with coins, settings editor. Dashboard unlocks here                     |
+| 5        | Uploads + menu builder: categories and dishes with drag-and-drop, limits                                 |
+| 6        | Settings, social links, account                                                                          |
+| 7        | Wallet with Paddle checkout and invoices; overview stats and charts                                      |
+| 8        | QR Studio                                                                                                |
+| 9        | Playwright journeys, code splitting, a11y and RTL pass, `knip` in CI                                     |
 
 ### Migration of the current files (phase 3)
 
-| Today | Destination |
-|---|---|
-| `src/lib/api.ts` | `src/lib/api/client.ts` + `interceptors/csrf.ts` |
-| `src/auth/auth-context.ts` | `src/features/auth/types` + `hooks/use-session.ts` |
-| `src/auth/AuthProvider.tsx` | `src/features/auth/components/SessionProvider.tsx` |
-| `src/auth/AuthGuard.tsx` | `src/app/guards/require-auth.ts` (router `beforeLoad`) |
-| `src/App.tsx` | Replaced by `src/app/providers` + the router |
-| `src/App.css`, `src/index.css` | `src/styles/globals.css` |
+| Today                          | Destination                                            |
+| ------------------------------ | ------------------------------------------------------ |
+| `src/lib/api.ts`               | `src/lib/api/client.ts` + `interceptors/csrf.ts`       |
+| `src/auth/auth-context.ts`     | `src/features/auth/types` + `hooks/use-session.ts`     |
+| `src/auth/AuthProvider.tsx`    | `src/features/auth/components/SessionProvider.tsx`     |
+| `src/auth/AuthGuard.tsx`       | `src/app/guards/require-auth.ts` (router `beforeLoad`) |
+| `src/App.tsx`                  | Replaced by `src/app/providers` + the router           |
+| `src/App.css`, `src/index.css` | `src/styles/globals.css`                               |
