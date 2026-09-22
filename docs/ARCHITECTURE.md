@@ -9,8 +9,9 @@
 does), never leave a component unused, always use the shared component instead
 of re-implementing it, always report status truthfully.
 
-Status: **structure only.** Every leaf folder holds a `.gitkeep`; no packages
-are installed yet. §8 lists the exact install commands, §10 the roadmap.
+Status: **form library built.** The folder tree is complete, and the shared UI
+primitives plus the whole form layer are implemented, tested and rendering.
+Routing, i18n, the API client and the feature pages are still to come; see §10.
 
 ---
 
@@ -80,9 +81,9 @@ qayema-dashboard/
 │   ├── stores/                   ui.store.ts, preferences.store.ts (global Zustand only)
 │   ├── shared/                   Reusable, domain-agnostic building blocks
 │   │   ├── components/
-│   │   │   ├── ui/               shadcn primitives: button, input, dialog, sheet, tabs, table, select, switch, badge, card, skeleton, tooltip, dropdown-menu…
+│   │   │   ├── ui/               Primitives, owned in-repo: button, input, textarea, combobox, checkbox, radio, switch, label, helper-text, segmented, alert, field-shell
 │   │   │   ├── forms/
-│   │   │   │   ├── fields/       TextField, TextareaField, SelectField, SwitchField, PriceField, PhoneField, UrlField, ColorField
+│   │   │   │   ├── fields/       TextField, TextareaField, ComboboxField, SwitchField, PriceField, PhoneField, UrlField, ColorField
 │   │   │   │   ├── translatable/ TranslatableTextField, TranslatableTextareaField, LocaleTabs
 │   │   │   │   ├── media/        ImageField
 │   │   │   │   └── layout/       Form, FormSection, FormActions, FieldGroup

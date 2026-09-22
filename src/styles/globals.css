@@ -1,0 +1,138 @@
+@import 'tailwindcss';
+@import './tokens.css';
+@import './rtl.css';
+
+/* ------------------------------------------------------------
+   Base
+   ------------------------------------------------------------ */
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Arabic copy switches to the Arabic-first stack. */
+  html[lang='ar'] body {
+    font-family: var(--font-ar);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  /* One focus convention everywhere: a gold ring, never the UA outline. */
+  :focus-visible {
+    outline: 2px solid var(--gold-on);
+    outline-offset: 2px;
+  }
+
+  ::placeholder {
+    color: var(--placeholder);
+  }
+
+  /* ----------------------------------------------------------
+     Dialogs.
+
+     Every modal in the app is a native <dialog>, so one rule animates
+     them all. `allow-discrete` lets the browser transition the
+     discrete `display` and `overlay` properties, which is what makes
+     the closing animation run at all: without it the element leaves
+     the top layer instantly and the exit is never seen.
+     ---------------------------------------------------------- */
+  dialog {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+    transition:
+      opacity 200ms var(--ease-qayema),
+      transform 200ms var(--ease-qayema),
+      overlay 200ms allow-discrete,
+      display 200ms allow-discrete;
+  }
+
+  dialog[open] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* The state the dialog animates *from* on open. */
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+  }
+
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0);
+    backdrop-filter: blur(0px);
+    transition:
+      background 200ms var(--ease-qayema),
+      backdrop-filter 200ms var(--ease-qayema),
+      overlay 200ms allow-discrete,
+      display 200ms allow-discrete;
+  }
+
+  dialog[open]::backdrop {
+    background: rgb(0 0 0 / 0.45);
+    backdrop-filter: blur(2px);
+  }
+
+  @starting-style {
+    dialog[open]::backdrop {
+      background: rgb(0 0 0 / 0);
+      backdrop-filter: blur(0px);
+    }
+  }
+
+  /* Someone who asked for less motion gets the fade only. */
+  @media (prefers-reduced-motion: reduce) {
+    dialog,
+    dialog[open] {
+      transform: none;
+    }
+
+    @starting-style {
+      dialog[open] {
+        transform: none;
+      }
+    }
+  }
+
+  /* Numeric inputs: no spinners, they fight the trailing adornments. */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+/* ------------------------------------------------------------
+   Utilities shared by the form primitives
+   ------------------------------------------------------------ */
+@utility gold-gradient {
+  background-image: linear-gradient(105deg, #fce7bc 0%, #f8d38d 45%, #e9bd66 100%);
+}
+
+@utility label-caps {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}

@@ -54,8 +54,12 @@ No third-party error telemetry. Errors go through `src/lib/logger`.
   `*.schema.ts`, `*.api.ts`, `*.store.ts`, `*.test.ts(x)` co-located.
 - Named exports only. `@/` alias for all imports.
 - Query keys come from the feature's key factory; never hand-written arrays.
-- Every mutation shows a toast on success and error. Every query has a
-  skeleton and an `ErrorState` with retry.
+- Toasts live in the mutation hook, not the call site, so every caller gets
+  them. A mutation that writes and waits toasts on success and on error. An
+  **optimistic** mutation (reorder, availability) toasts on **error only**: the
+  UI already moved, so a success toast is noise, while an error toast explains
+  why it snapped back.
+- Every query has a skeleton and an `ErrorState` with retry.
 - Backend contract: `../qayema/routes/api.php` and
   `../qayema/app/Http/Resources/*`. Errors are `{message, code}`; can't-afford
   is **402** carrying `balance`, `needed`, `shortfall`.

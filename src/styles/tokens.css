@@ -1,0 +1,186 @@
+/* ============================================================
+   Qayema Dashboard — design tokens
+   Mirrors the portal token set in
+   ../qayema/public/portal/css/app.css so the dashboard and the
+   public site are visually one product.
+   ============================================================ */
+
+@theme {
+  /* ---- Gold, the brand accent ---- */
+  --color-gold: #f8d38d;
+  --color-gold-deep: #e9bd66;
+  --color-gold-soft: #fce7bc;
+
+  /* ---- Neutrals (light) ---- */
+  --color-ink: #141109;
+  --color-paper: #fbfaf6;
+  --color-paper-2: #f6f4ee;
+  --color-surface: #ffffff;
+  --color-sand: #e8dccb;
+  --color-sand-2: #d9cab3;
+
+  /* ---- Status base hues ----
+     These are the light-theme values the semantic --status-* tokens below
+     are built from. Use the semantic tokens in components; these stay for
+     the filled danger button, which is the same in both themes. ---- */
+  --color-danger: #b45040;
+  --color-warn: #b88829;
+  --color-success: #5c7a4f;
+  --color-info: #4a6b86;
+
+  /* ---- Type ---- */
+  --font-display: 'Instrument Serif', 'El Messiri', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Geist', 'El Messiri', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-ar: 'El Messiri', 'Geist', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  /* ---- Motion ---- */
+  --ease-qayema: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* ---- Radii (portal uses 12px on inputs, 10px on small controls) ---- */
+  --radius-field: 12px;
+  --radius-control: 10px;
+  --radius-chip: 999px;
+}
+
+/* ------------------------------------------------------------
+   Theme surfaces. The portal switches on html[data-theme]; we do
+   the same so a single attribute flips the whole dashboard, and
+   default to light when the attribute is absent.
+   ------------------------------------------------------------ */
+:root,
+html[data-theme='light'] {
+  --bg: #fbfaf6;
+  --surface: #ffffff;
+  --elevated: #f6f4ee;
+  --field: #fbfaf6;
+  --text: #141109;
+  --muted: rgba(20, 17, 9, 0.58);
+  --faint: rgba(20, 17, 9, 0.4);
+  --placeholder: rgba(20, 17, 9, 0.32);
+  --line: rgba(20, 17, 9, 0.1);
+  --line-strong: rgba(20, 17, 9, 0.18);
+  --line-2: rgba(20, 17, 9, 0.06);
+  --gold-on: #b08a2c;
+  --hover-wash: rgba(20, 17, 9, 0.04);
+  --disabled-wash: rgba(20, 17, 9, 0.04);
+  --ring-accent: rgba(248, 211, 141, 0.35);
+  --ring-danger: rgba(180, 80, 64, 0.1);
+  --ring-success: rgba(92, 122, 79, 0.12);
+  --shadow-card: 0 40px 90px -50px rgba(20, 17, 9, 0.45);
+
+  /* ---- Accent, theme-aware ----
+     `--accent-text` is gold dark enough to read on a pale surface (4.8:1);
+     `--accent-fill` is the bright gold used behind ink. Selection washes are
+     one step stronger than a status wash because they mark state, not news. */
+  --accent-text: #8f6d1f;
+  --accent-fill: #f8d38d;
+  --accent-wash: rgba(233, 189, 102, 0.16);
+  --accent-wash-hover: rgba(233, 189, 102, 0.24);
+  --accent-border: rgba(233, 189, 102, 0.55);
+
+  /* ---- Status, theme-aware. One alpha convention: wash .10, border .30. */
+  --status-danger: #b45040;
+  --status-danger-wash: rgba(180, 80, 64, 0.1);
+  --status-danger-border: rgba(180, 80, 64, 0.3);
+  --status-warn: #9a5b12;
+  --status-warn-wash: rgba(154, 91, 18, 0.1);
+  --status-warn-border: rgba(154, 91, 18, 0.3);
+  --status-success: #5c7a4f;
+  --status-success-wash: rgba(92, 122, 79, 0.1);
+  --status-success-border: rgba(92, 122, 79, 0.3);
+  --status-info: #4a6b86;
+  --status-info-wash: rgba(74, 107, 134, 0.1);
+  --status-info-border: rgba(74, 107, 134, 0.3);
+
+  /* ---- Overlays and elevation ---- */
+  --overlay-pill: rgba(20, 17, 9, 0.78);
+  --pop-shadow: 0 24px 60px -20px rgba(20, 17, 9, 0.35), 0 4px 12px rgba(20, 17, 9, 0.06);
+  --lift-shadow: 0 12px 32px -8px rgba(20, 17, 9, 0.18), 0 2px 8px -2px rgba(20, 17, 9, 0.08);
+}
+
+html[data-theme='dark'] {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --elevated: #111111;
+  --field: #111111;
+  --text: #f5f1e8;
+  --muted: rgba(245, 241, 232, 0.6);
+  --faint: rgba(245, 241, 232, 0.4);
+  --placeholder: rgba(245, 241, 232, 0.32);
+  --line: rgba(245, 241, 232, 0.12);
+  --line-strong: rgba(245, 241, 232, 0.22);
+  --line-2: rgba(245, 241, 232, 0.06);
+  --gold-on: #f8d38d;
+  --hover-wash: rgba(245, 241, 232, 0.06);
+  --disabled-wash: rgba(245, 241, 232, 0.04);
+  --ring-accent: rgba(248, 211, 141, 0.28);
+  --ring-danger: rgba(180, 80, 64, 0.22);
+  --ring-success: rgba(163, 196, 145, 0.22);
+  --shadow-card: 0 50px 100px -45px rgba(0, 0, 0, 0.85);
+
+  /* On black the bright gold is the loudest thing on screen, so fills step
+     down to a muted gold. The primary button keeps --color-gold. */
+  --accent-text: #f8d38d;
+  --accent-fill: #c39b50;
+  --accent-wash: rgba(248, 211, 141, 0.12);
+  --accent-wash-hover: rgba(248, 211, 141, 0.18);
+  --accent-border: rgba(248, 211, 141, 0.35);
+
+  /* Status hues lighten so they read on black; wash .14, border .38. */
+  --status-danger: #e8907f;
+  --status-danger-wash: rgba(232, 144, 127, 0.14);
+  --status-danger-border: rgba(232, 144, 127, 0.38);
+  --status-warn: #f0b354;
+  --status-warn-wash: rgba(240, 179, 84, 0.14);
+  --status-warn-border: rgba(240, 179, 84, 0.38);
+  --status-success: #a3c491;
+  --status-success-wash: rgba(163, 196, 145, 0.14);
+  --status-success-border: rgba(163, 196, 145, 0.38);
+  --status-info: #93b8d6;
+  --status-info-wash: rgba(147, 184, 214, 0.14);
+  --status-info-border: rgba(147, 184, 214, 0.38);
+
+  --overlay-pill: rgba(0, 0, 0, 0.7);
+  --pop-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.85), 0 0 0 0.5px rgba(245, 241, 232, 0.08);
+  --lift-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 2px 8px -2px rgba(0, 0, 0, 0.5);
+}
+
+/* Expose the theme surfaces to Tailwind utilities (bg-surface, text-muted…). */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface-themed: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-field: var(--field);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-gold-on: var(--gold-on);
+
+  /* Accent: text-accent, bg-accent-fill, bg-accent-wash, border-accent-border */
+  --color-accent: var(--accent-text);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-wash: var(--accent-wash);
+  --color-accent-wash-hover: var(--accent-wash-hover);
+  --color-accent-border: var(--accent-border);
+
+  /* Status: text-status-warn, bg-status-warn-wash, border-status-warn-border… */
+  --color-status-danger: var(--status-danger);
+  --color-status-danger-wash: var(--status-danger-wash);
+  --color-status-danger-border: var(--status-danger-border);
+  --color-status-warn: var(--status-warn);
+  --color-status-warn-wash: var(--status-warn-wash);
+  --color-status-warn-border: var(--status-warn-border);
+  --color-status-success: var(--status-success);
+  --color-status-success-wash: var(--status-success-wash);
+  --color-status-success-border: var(--status-success-border);
+  --color-status-info: var(--status-info);
+  --color-status-info-wash: var(--status-info-wash);
+  --color-status-info-border: var(--status-info-border);
+
+  --color-overlay-pill: var(--overlay-pill);
+  --shadow-pop: var(--pop-shadow);
+  --shadow-lift: var(--lift-shadow);
+}
