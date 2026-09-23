@@ -6,7 +6,6 @@ import {
   createDish,
   deleteDish,
   fetchDishes,
-  moveDish,
   reorderDishes,
   setDishAvailability,
   updateDish,
@@ -19,12 +18,15 @@ import { dishKeys } from './dish-keys'
  * Every dish for the restaurant, in one request.
  *
  * The API offers no category filter and no pagination, so the whole set is
- * cached once and the category tabs filter it in memory.
+ * cached once and the category tabs filter it in memory. The stale window
+ * stops a refetch of that whole set every time the owner steps between
+ * Categories and Dishes, which on a long menu is the heaviest call they make.
  */
 export function useDishes(): UseQueryResult<DishList, ApiError> {
   return useQuery<DishList, ApiError>({
     queryKey: dishKeys.lists(),
     queryFn: ({ signal }) => fetchDishes(signal),
+    staleTime: 30_000,
   })
 }
 
@@ -85,11 +87,23 @@ export function useDishAvailability() {
         return { previous }
       },
 
-      onError: (_error, _variables, context) => {
-        if (context?.previous) queryClient.setQueryData(dishKeys.lists(), context.previous)
+      // The server hands back the saved dish, so the optimistic row is
+      // replaced in place. Refetching the whole menu to learn one boolean was
+      // the most wasteful call in the app: it ran on every toggle.
+      onSuccess: (saved) => {
+        queryClient.setQueryData<DishList>(dishKeys.lists(), (current) =>
+          current === undefined
+            ? current
+            : {
+                ...current,
+                data: current.data.map((dish) => (dish.id === saved.id ? saved : dish)),
+              },
+        )
       },
 
-      onSettled: () => {
+      onError: (_error, _variables, context) => {
+        if (context?.previous) queryClient.setQueryData(dishKeys.lists(), context.previous)
+        // Only a failure needs the truth from the server.
         void queryClient.invalidateQueries({ queryKey: dishKeys.lists() })
       },
     },
@@ -124,28 +138,18 @@ export function useReorderDishes() {
       return { previous }
     },
 
+    // The reordered list comes back in full, so it replaces the optimistic
+    // one directly instead of costing a second round trip.
+    onSuccess: (ordered) => {
+      queryClient.setQueryData<DishList>(dishKeys.lists(), (current) =>
+        current === undefined ? current : { ...current, data: ordered },
+      )
+    },
+
     onError: (error, _ordered, context) => {
       if (context?.previous) queryClient.setQueryData(dishKeys.lists(), context.previous)
       toast.error('Could not save the new order', error)
-    },
-
-    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: dishKeys.lists() })
     },
-  })
-}
-
-/** Moves a dish into another category. Position is 1-based; omitted means last. */
-export function useMoveDish() {
-  const queryClient = useQueryClient()
-
-  return useMutation<Dish, ApiError, { id: number; categoryId: number; position?: number }>({
-    mutationFn: ({ id, categoryId, position }) => moveDish(id, categoryId, position),
-    onSuccess: () => {
-      toast.success('Dish moved')
-      void queryClient.invalidateQueries({ queryKey: dishKeys.all })
-      void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
-    },
-    onError: (error) => toast.error('Could not move that dish', error),
   })
 }

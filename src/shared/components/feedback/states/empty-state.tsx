@@ -8,16 +8,30 @@ export type EmptyStateProps = {
   description?: ReactNode
   /** Usually the button that fills the emptiness. */
   action?: ReactNode
+  /**
+   * Grows into whatever height is left in its flex column and centres itself
+   * there, instead of sitting as a short box under the page heading. The
+   * parent has to be a flex column with a height for this to do anything.
+   */
+  fill?: boolean
   className?: string
 }
 
 /** Shown when a list has nothing in it yet. */
-export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+  fill = false,
+  className,
+}: EmptyStateProps) {
   return (
     <div
       className={cn(
         'flex flex-col items-center gap-3 rounded-[14px] border-[1.5px] border-dashed border-[var(--line-strong)]',
         'bg-[var(--field)] px-6 py-12 text-center',
+        fill && 'flex-1 justify-center',
         className,
       )}
     >

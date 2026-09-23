@@ -1,5 +1,5 @@
 import { Pencil, Trash2 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import { Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
@@ -11,8 +11,13 @@ export type CategoryCardProps = {
   locale: Locale
   /** The drag grip, supplied by the sortable wrapper. */
   handle: ReactNode
-  onEdit: () => void
-  onDelete: () => void
+  /**
+   * These take the category back rather than closing over it, so the page can
+   * pass one callback that never changes identity and the card can skip
+   * re-rendering when nothing about it moved.
+   */
+  onEdit: (category: Category) => void
+  onDelete: (category: Category) => void
   className?: string
 }
 
@@ -20,7 +25,7 @@ export type CategoryCardProps = {
  * One category, as a card rather than a table row: on a phone a row of cells
  * forces a horizontal scroll, while a card stacks and stays tappable.
  */
-export function CategoryCard({
+export const CategoryCard = memo(function CategoryCard({
   category,
   locale,
   handle,
@@ -43,7 +48,7 @@ export function CategoryCard({
 
       <button
         type="button"
-        onClick={onEdit}
+        onClick={() => onEdit(category)}
         className="min-w-0 flex-1 py-3 text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]"
       >
         <span className="flex items-center gap-2">
@@ -72,7 +77,7 @@ export function CategoryCard({
       <Button
         variant="ghost"
         size="icon"
-        onClick={onEdit}
+        onClick={() => onEdit(category)}
         aria-label={`Edit ${name.text || 'category'}`}
       >
         <Pencil aria-hidden className="size-4" />
@@ -80,7 +85,7 @@ export function CategoryCard({
       <Button
         variant="ghost"
         size="icon"
-        onClick={onDelete}
+        onClick={() => onDelete(category)}
         aria-label={`Delete ${name.text || 'category'}`}
         className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
       >
@@ -88,4 +93,4 @@ export function CategoryCard({
       </Button>
     </div>
   )
-}
+})

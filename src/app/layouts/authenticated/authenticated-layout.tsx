@@ -154,8 +154,10 @@ export function AuthenticatedLayout({
           onLogout={onLogout}
         />
         {/* Full width: the menu builder lays cards out in a grid and wants
-            every pixel. A page that needs a narrower measure caps itself. */}
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+            every pixel. A page that needs a narrower measure caps itself.
+            A flex column so a page can hand its empty state the leftover
+            height instead of leaving it stranded under the heading. */}
+        <main className="flex min-w-0 flex-1 flex-col px-4 py-6 sm:px-6 sm:py-8">{children}</main>
       </div>
     </div>
   )

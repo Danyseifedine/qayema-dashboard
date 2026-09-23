@@ -97,6 +97,31 @@ describe('DishesPage', () => {
       expect(patch).toBeDefined()
       expect(JSON.parse(patch!.data as string)).toEqual({ is_available: false })
     })
+
+    // The server hands the saved dish back, so the card is patched in place.
+    // Refetching the whole menu to learn one boolean would be the heaviest
+    // call in the app, on the action an owner repeats most.
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: /Hummus is available/ })).not.toBeChecked(),
+    )
+    expect(mock.history.get.filter((r) => r.url === '/api/dishes')).toHaveLength(1)
+  })
+
+  it('does not refetch the menu when a toggle fails, until it has to', async () => {
+    stub()
+    mock.onPatch('/api/dishes/10/availability').reply(500, { message: 'Something went wrong.' })
+
+    const user = userEvent.setup()
+    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+
+    await user.click(await screen.findByRole('switch', { name: /Hummus is available/ }))
+
+    // A failure is the one case that needs the truth from the server, so the
+    // optimistic flip rolls back and the list is refetched.
+    await waitFor(() => {
+      expect(mock.history.get.filter((r) => r.url === '/api/dishes')).toHaveLength(2)
+    })
+    expect(screen.getByRole('switch', { name: /Hummus is available/ })).toBeChecked()
   })
 
   it('still shows dishes whose category was deleted', async () => {

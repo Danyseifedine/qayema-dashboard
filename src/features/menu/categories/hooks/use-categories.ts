@@ -12,10 +12,15 @@ import { fetchCategories } from '../api/category.api'
 import type { Category, CategoryList } from '../schemas/category.schema'
 import { categoryKeys } from './category-keys'
 
+/**
+ * Every category for the restaurant. Both menu pages read this, so the stale
+ * window stops a refetch each time the owner steps between them.
+ */
 export function useCategories(): UseQueryResult<CategoryList, ApiError> {
   return useQuery<CategoryList, ApiError>({
     queryKey: categoryKeys.list(),
     queryFn: ({ signal }) => fetchCategories(signal),
+    staleTime: 30_000,
   })
 }
 
@@ -84,6 +89,14 @@ export function useReorderCategories() {
       return { previous }
     },
 
+    // The reordered list comes back in full, so it replaces the optimistic
+    // one directly instead of costing a second round trip.
+    onSuccess: (ordered) => {
+      queryClient.setQueryData<CategoryList>(categoryKeys.list(), (current) =>
+        current === undefined ? current : { ...current, data: ordered },
+      )
+    },
+
     onError: (error, _ordered, context) => {
       if (context?.previous) {
         queryClient.setQueryData(categoryKeys.list(), context.previous)
@@ -91,9 +104,6 @@ export function useReorderCategories() {
       // The cards visibly snap back, so say why. There is no success toast
       // here: the new order on screen is the confirmation.
       toast.error('Could not save the new order', error)
-    },
-
-    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
     },
   })

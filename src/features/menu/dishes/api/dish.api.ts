@@ -66,28 +66,13 @@ export async function setDishAvailability(id: number, isAvailable: boolean): Pro
 
 /**
  * Renumbers `display_order` across the whole restaurant in the given order.
- * It does not scope to a category, so a cross-category change needs `move`.
+ * A dish changes category through the edit dialog, not through dragging.
  */
 export async function reorderDishes(ids: number[]): Promise<Dish[]> {
   const { data } = await request(dishCollectionSchema, {
     method: 'POST',
     url: '/api/dishes/reorder',
     data: { ids },
-  })
-  return data
-}
-
-/**
- * Moves a dish to another category, and optionally to a position within it.
- * `position` is 1-based; omitted or past the end means last. Only the moved
- * dish comes back, so the list is refetched after.
- */
-export async function moveDish(id: number, categoryId: number, position?: number): Promise<Dish> {
-  const { data } = await request(dishResponseSchema, {
-    method: 'POST',
-    url: `/api/dishes/${id}/move`,
-    data:
-      position === undefined ? { category_id: categoryId } : { category_id: categoryId, position },
   })
   return data
 }

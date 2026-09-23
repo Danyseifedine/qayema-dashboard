@@ -1,5 +1,5 @@
 import { FolderPlus } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { CategoryDialog } from '../categories/components/dialogs/category-dialog'
 import { CategoryCard } from '../categories/components/list/category-card'
 import {
@@ -37,6 +37,11 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
   })
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null)
 
+  // Stable identities, so the memo on CategoryCard can bail out instead of
+  // re-rendering every row whenever the dialog opens.
+  const openEdit = useCallback((category: Category) => setDialog({ open: true, category }), [])
+  const confirmDelete = useCallback((category: Category) => setPendingDelete(category), [])
+
   const list = categories.data?.data ?? []
   // An unlimited package reports a null limit, which is never reached.
   const atLimit =
@@ -45,12 +50,13 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
     categories.data.meta.used >= categories.data.meta.limit
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LimitNotice
           label="Categories"
           used={categories.data?.meta.used ?? 0}
           limit={categories.data?.meta.limit ?? null}
+          description="Categories group your dishes on the menu. Drag to change the order guests see."
         />
         <Button
           size="sm"
@@ -61,10 +67,6 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
           Add category
         </Button>
       </div>
-
-      <p className="-mt-2 text-[13px] text-[var(--muted)]">
-        Categories group your dishes on the menu. Drag to change the order guests see.
-      </p>
 
       {atLimit ? (
         <Alert variant="warning">
@@ -85,6 +87,7 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
         />
       ) : list.length === 0 ? (
         <EmptyState
+          fill
           icon={FolderPlus}
           title="No categories yet"
           description="Start with something like Starters, Mains or Drinks. You can rename and reorder them any time."
@@ -105,8 +108,8 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
                       category={category}
                       locale={locale}
                       handle={handle}
-                      onEdit={() => setDialog({ open: true, category })}
-                      onDelete={() => setPendingDelete(category)}
+                      onEdit={openEdit}
+                      onDelete={confirmDelete}
                     />
                   )}
                 </SortableCard>

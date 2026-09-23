@@ -1,12 +1,14 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
 import { DragHandle } from './drag-handle'
 
 export type SortableCardProps = {
   id: number
   disabled?: boolean
+  /** True when the handle lands on a photo and needs its own background. */
+  overlayHandle?: boolean
   /** Receives the handle to place wherever the card wants it. */
   children: (parts: { handle: ReactNode; dragging: boolean }) => ReactNode
   className?: string
@@ -18,7 +20,13 @@ export type SortableCardProps = {
  * dnd-kit's keyboard sensor drives the same handle, so reordering works
  * without a pointer.
  */
-export function SortableCard({ id, disabled = false, children, className }: SortableCardProps) {
+export function SortableCard({
+  id,
+  disabled = false,
+  overlayHandle = false,
+  children,
+  className,
+}: SortableCardProps) {
   const {
     attributes,
     listeners,
@@ -29,8 +37,19 @@ export function SortableCard({ id, disabled = false, children, className }: Sort
     isDragging,
   } = useSortable({ id, disabled })
 
-  const handle = (
-    <DragHandle ref={setActivatorNodeRef} disabled={disabled} {...attributes} {...listeners} />
+  // The handle is a prop on a memoised card, so it has to keep its identity
+  // between renders or every card re-renders on every drag frame.
+  const handle = useMemo(
+    () => (
+      <DragHandle
+        ref={setActivatorNodeRef}
+        disabled={disabled}
+        overlay={overlayHandle}
+        {...attributes}
+        {...listeners}
+      />
+    ),
+    [setActivatorNodeRef, disabled, overlayHandle, attributes, listeners],
   )
 
   return (

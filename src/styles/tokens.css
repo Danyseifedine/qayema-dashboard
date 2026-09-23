@@ -93,8 +93,14 @@ html[data-theme='light'] {
   --status-info-wash: rgba(74, 107, 134, 0.1);
   --status-info-border: rgba(74, 107, 134, 0.3);
 
-  /* ---- Overlays and elevation ---- */
+  /* ---- Overlays and elevation ----
+     `pill` is the dark badge that sits on a photo and always carries white
+     text. `chip` is a control on a photo, so unlike the pill it follows the
+     theme: a bright chip in dark mode is the loudest thing on the screen. ---- */
   --overlay-pill: rgba(20, 17, 9, 0.78);
+  --overlay-chip: rgba(251, 250, 246, 0.92);
+  --overlay-chip-hover: rgb(251, 250, 246);
+  --overlay-chip-ink: #141109;
   --pop-shadow: 0 24px 60px -20px rgba(20, 17, 9, 0.35), 0 4px 12px rgba(20, 17, 9, 0.06);
   --lift-shadow: 0 12px 32px -8px rgba(20, 17, 9, 0.18), 0 2px 8px -2px rgba(20, 17, 9, 0.08);
 }
@@ -142,6 +148,9 @@ html[data-theme='dark'] {
   --status-info-border: rgba(147, 184, 214, 0.38);
 
   --overlay-pill: rgba(0, 0, 0, 0.7);
+  --overlay-chip: rgba(10, 10, 10, 0.78);
+  --overlay-chip-hover: rgba(10, 10, 10, 0.92);
+  --overlay-chip-ink: #f5f1e8;
   --pop-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.85), 0 0 0 0.5px rgba(245, 241, 232, 0.08);
   --lift-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 2px 8px -2px rgba(0, 0, 0, 0.5);
 }
@@ -181,6 +190,9 @@ html[data-theme='dark'] {
   --color-status-info-border: var(--status-info-border);
 
   --color-overlay-pill: var(--overlay-pill);
+  --color-overlay-chip: var(--overlay-chip);
+  --color-overlay-chip-hover: var(--overlay-chip-hover);
+  --color-overlay-chip-ink: var(--overlay-chip-ink);
   --shadow-pop: var(--pop-shadow);
   --shadow-lift: var(--lift-shadow);
 }

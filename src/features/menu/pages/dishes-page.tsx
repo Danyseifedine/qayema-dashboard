@@ -1,5 +1,5 @@
 import { LayoutList, Plus, UtensilsCrossed } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useCategories } from '../categories/hooks/use-categories'
 import { CategoryFilter, UNCATEGORISED } from '../components/builder/category-filter'
 import { SortableCard, SortableList } from '../components/dnd'
@@ -72,6 +72,16 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
     dishes.data.meta.used >= dishes.data.meta.limit
   const noCategories = !categories.isPending && categoryList.length === 0
 
+  // Stable identities: every card takes these, so a new closure per card per
+  // render would defeat the memo on DishCard and re-render the whole grid
+  // whenever the dialog opens or the filter changes.
+  const openEdit = useCallback((dish: Dish) => setDialog({ open: true, dish }), [])
+  const confirmDelete = useCallback((dish: Dish) => setPendingDelete(dish), [])
+  const toggleAvailability = useCallback(
+    (dish: Dish, isAvailable: boolean) => availability.mutate({ id: dish.id, isAvailable }),
+    [availability],
+  )
+
   // A category can be deleted while it is the active filter. Fall back to
   // "All" rather than showing an empty grid for a category that is gone.
   useEffect(() => {
@@ -81,12 +91,13 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
   }, [filter, categoryList, categories.isPending])
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LimitNotice
           label="Dishes"
           used={dishes.data?.meta.used ?? 0}
           limit={dishes.data?.meta.limit ?? null}
+          description="Everything guests can order. Drag to change the order they appear in."
         />
         <Button
           size="sm"
@@ -106,6 +117,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
 
       {noCategories && dishList.length === 0 ? (
         <EmptyState
+          fill
           icon={LayoutList}
           title="Add a category first"
           description="Every dish belongs to a category, so your menu has some structure before you start filling it."
@@ -143,6 +155,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
             <ErrorState description={dishes.error.message} onRetry={() => void dishes.refetch()} />
           ) : visible.length === 0 ? (
             <EmptyState
+              fill
               icon={UtensilsCrossed}
               title={dishList.length === 0 ? 'No dishes yet' : 'Nothing in this category'}
               description={
@@ -162,18 +175,16 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
             >
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {visible.map((dish) => (
-                  <SortableCard key={dish.id} id={dish.id}>
+                  <SortableCard key={dish.id} id={dish.id} overlayHandle>
                     {({ handle }) => (
                       <DishCard
                         dish={dish}
                         currency={currency}
                         locale={locale}
                         handle={handle}
-                        onEdit={() => setDialog({ open: true, dish })}
-                        onDelete={() => setPendingDelete(dish)}
-                        onToggleAvailability={(isAvailable) =>
-                          availability.mutate({ id: dish.id, isAvailable })
-                        }
+                        onEdit={openEdit}
+                        onDelete={confirmDelete}
+                        onToggleAvailability={toggleAvailability}
                       />
                     )}
                   </SortableCard>

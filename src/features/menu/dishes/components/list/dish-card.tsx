@@ -1,5 +1,5 @@
 import { ImageOff, Pencil, Trash2 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import { Money } from '@/shared/components/data-display'
 import { Button, Switch } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
@@ -12,9 +12,15 @@ export type DishCardProps = {
   currency: string
   locale: Locale
   handle: ReactNode
-  onEdit: () => void
-  onDelete: () => void
-  onToggleAvailability: (available: boolean) => void
+  /**
+   * These take the dish back rather than closing over it, so the page can pass
+   * one callback that never changes identity and the card can skip re-rendering
+   * when nothing about it moved. On a menu of three hundred that is the
+   * difference between one card re-rendering and all of them.
+   */
+  onEdit: (dish: Dish) => void
+  onDelete: (dish: Dish) => void
+  onToggleAvailability: (dish: Dish, isAvailable: boolean) => void
   className?: string
 }
 
@@ -22,8 +28,12 @@ export type DishCardProps = {
  * A dish as a card: photo, name, price, and the availability switch right on
  * the face of it, because marking something sold out is the thing an owner
  * does most often and usually from a phone mid-service.
+ *
+ * It fills the grid cell it is given (`h-full`) so a long description cannot
+ * make one card taller than the one beside it, and the switch row lines up
+ * across the row.
  */
-export function DishCard({
+export const DishCard = memo(function DishCard({
   dish,
   currency,
   locale,
@@ -40,7 +50,7 @@ export function DishCard({
   return (
     <article
       className={cn(
-        'flex flex-col overflow-hidden rounded-[14px] border-[0.5px] border-[var(--line)]',
+        'flex h-full flex-col overflow-hidden rounded-[14px] border-[0.5px] border-[var(--line)]',
         'bg-[var(--surface)] transition-colors hover:border-[var(--line-strong)]',
         !dish.is_available && 'opacity-70',
         className,
@@ -52,6 +62,9 @@ export function DishCard({
             src={dish.image_url}
             alt=""
             loading="lazy"
+            // Off the main thread: a grid of photos decoding synchronously
+            // stutters the scroll on the phone this is edited from.
+            decoding="async"
             className="aspect-[4/3] w-full bg-[var(--color-sand)] object-cover"
           />
         ) : (
@@ -100,7 +113,7 @@ export function DishCard({
           <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[var(--muted)]">
             <Switch
               checked={dish.is_available}
-              onChange={onToggleAvailability}
+              onChange={(isAvailable) => onToggleAvailability(dish, isAvailable)}
               aria-label={`${name.text || 'Dish'} is available`}
             />
             <span>{dish.is_available ? 'Available' : 'Hidden'}</span>
@@ -110,7 +123,7 @@ export function DishCard({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onEdit}
+              onClick={() => onEdit(dish)}
               aria-label={`Edit ${name.text || 'dish'}`}
             >
               <Pencil aria-hidden className="size-4" />
@@ -118,7 +131,7 @@ export function DishCard({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onDelete}
+              onClick={() => onDelete(dish)}
               aria-label={`Delete ${name.text || 'dish'}`}
               className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
             >
@@ -129,4 +142,4 @@ export function DishCard({
       </div>
     </article>
   )
-}
+})
