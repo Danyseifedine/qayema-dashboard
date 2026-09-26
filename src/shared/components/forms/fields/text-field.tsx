@@ -8,6 +8,11 @@ export type TextFieldProps<T extends FieldValues> = {
   control: Control<T>
   name: FieldPath<T>
   label?: ReactNode
+  /**
+   * The accessible name when there is no visible label — a field inside a row
+   * that is already headed, such as one day of the opening hours.
+   */
+  'aria-label'?: string
   placeholder?: string
   hint?: ReactNode
   required?: boolean
@@ -32,6 +37,7 @@ export function TextField<T extends FieldValues>({
   control,
   name,
   label,
+  'aria-label': ariaLabel,
   placeholder,
   hint,
   required,
@@ -91,6 +97,7 @@ export function TextField<T extends FieldValues>({
           disabled={disabled}
           autoComplete={autoComplete}
           maxLength={maxLength}
+          aria-label={ariaLabel}
           aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           tone={invalid ? 'error' : 'default'}

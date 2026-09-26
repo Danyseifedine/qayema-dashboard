@@ -5,11 +5,15 @@ import {
   type LucideIcon,
   Palette,
   QrCode,
-  Settings,
+  ReceiptText,
+  Store,
   Share2,
   UserRound,
   UtensilsCrossed,
 } from 'lucide-react'
+
+/** The package flags a section can be gated on, as `/api/user` reports them. */
+export type PlanFeature = 'qr_studio' | 'ordering' | 'advanced_analytics'
 
 export type NavItem = {
   /** Stable id, and the route path once the router is wired up. */
@@ -20,7 +24,7 @@ export type NavItem = {
   /** Hidden until the owner has picked a template. */
   requiresTemplate?: boolean
   /** Hidden unless the restaurant's plan includes the feature. */
-  requiresFeature?: 'qr_studio'
+  requiresFeature?: PlanFeature
 }
 
 export type NavGroup = {
@@ -54,6 +58,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: UtensilsCrossed,
         requiresTemplate: true,
       },
+      {
+        key: 'orders',
+        path: '/orders',
+        label: 'Orders',
+        icon: ReceiptText,
+        requiresTemplate: true,
+        requiresFeature: 'ordering',
+      },
       { key: 'templates', path: '/templates', label: 'Templates', icon: Palette },
     ],
   },
@@ -80,8 +92,8 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         key: 'settings',
         path: '/settings',
-        label: 'Settings',
-        icon: Settings,
+        label: 'Restaurant',
+        icon: Store,
         requiresTemplate: true,
       },
       { key: 'account', path: '/account', label: 'Profile', icon: UserRound },
@@ -94,7 +106,7 @@ export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items)
 
 export type NavAccess = {
   hasTemplate: boolean
-  features: { qr_studio: boolean }
+  features: Record<PlanFeature, boolean>
 }
 
 /**
@@ -109,7 +121,9 @@ export function isNavItemLocked(key: string, access: NavAccess): boolean {
   if (!item) return false
 
   if (item.requiresTemplate === true && !access.hasTemplate) return true
-  if (item.requiresFeature === 'qr_studio' && !access.features.qr_studio) return true
+  // Data-driven, so gating a new section on a new flag is one line in the
+  // table above rather than another branch here.
+  if (item.requiresFeature !== undefined && !access.features[item.requiresFeature]) return true
 
   return false
 }

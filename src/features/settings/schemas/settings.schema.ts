@@ -28,8 +28,84 @@ export const uploadedImageSchema = z.object({
   key: z.string().regex(UPLOAD_KEY, 'That upload could not be read. Please try again.'),
   previewUrl: z.string(),
   name: z.string(),
-  size: z.number(),
+  optimizedSize: z.string(),
+  savedPercent: z.number(),
 })
+
+/** One value in both languages, as every translatable column comes back. */
+const translatable = z.object({
+  en: z.string().nullable(),
+  ar: z.string().nullable(),
+})
+
+/**
+ * Mirrors ../qayema/app/Http/Resources/SettingsResource.php.
+ *
+ * `slug` and `default_locale` are read-only: the public address is fixed once
+ * onboarding sets it, and the language the owner writes in is chosen there too.
+ */
+/** Monday first, as the API keys them. */
+export const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
+
+export const WEEKDAY_LABELS: Record<(typeof WEEKDAYS)[number], string> = {
+  mon: 'Monday',
+  tue: 'Tuesday',
+  wed: 'Wednesday',
+  thu: 'Thursday',
+  fri: 'Friday',
+  sat: 'Saturday',
+  sun: 'Sunday',
+}
+
+/** One range, or null for a day the restaurant does not open. */
+const dayRangeSchema = z.object({ open: z.string(), close: z.string() }).nullable()
+
+export const openingHoursSchema = z.object({
+  mon: dayRangeSchema,
+  tue: dayRangeSchema,
+  wed: dayRangeSchema,
+  thu: dayRangeSchema,
+  fri: dayRangeSchema,
+  sat: dayRangeSchema,
+  sun: dayRangeSchema,
+})
+
+export const settingsResponseSchema = z.object({
+  data: z.object({
+    name: translatable,
+    description: translatable,
+    default_locale: z.string(),
+    slug: z.string(),
+    google_maps_url: z.string().nullable(),
+    phone: z.string().nullable(),
+    country_code: z.string().nullable(),
+    currency: z.string(),
+    opening_hours: openingHoursSchema,
+    timezone: z.string(),
+    logo_url: z.url().nullable(),
+    cover_url: z.url().nullable(),
+  }),
+})
+
+export type Settings = z.infer<typeof settingsResponseSchema>['data']
+
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
+
+const dayFormSchema = z
+  .object({
+    closed: z.boolean(),
+    open: z.string(),
+    close: z.string(),
+  })
+  .superRefine((day, ctx) => {
+    if (day.closed) return
+
+    for (const field of ['open', 'close'] as const) {
+      if (!TIME.test(day[field])) {
+        ctx.addIssue({ code: 'custom', path: [field], message: 'Use a time like 09:00.' })
+      }
+    }
+  })
 
 export const settingsSchema = z.object({
   name: z
@@ -43,13 +119,6 @@ export const settingsSchema = z.object({
     .string()
     .trim()
     .max(2000, 'The description may not be longer than 2000 characters.')
-    .or(z.literal(''))
-    .nullable(),
-
-  address: z
-    .string()
-    .trim()
-    .max(500, 'The address may not be longer than 500 characters.')
     .or(z.literal(''))
     .nullable(),
 
@@ -84,6 +153,24 @@ export const settingsSchema = z.object({
   /** Replaced through a temp upload; the logo can never be cleared. */
   logo: uploadedImageSchema.nullable(),
   cover_image: uploadedImageSchema.nullable(),
+  /**
+   * A day is either both times or neither. The form keeps an `closed` flag per
+   * day so unticking it does not throw away what was typed.
+   */
+  opening_hours: z.object({
+    mon: dayFormSchema,
+    tue: dayFormSchema,
+    wed: dayFormSchema,
+    thu: dayFormSchema,
+    fri: dayFormSchema,
+    sat: dayFormSchema,
+    sun: dayFormSchema,
+  }),
+
+  timezone: z.string().min(1, 'Choose a timezone.'),
+
+  /** Set when the owner removes the cover without picking a new one. */
+  delete_cover_image: z.boolean(),
 })
 
 export type SettingsFormValues = z.infer<typeof settingsSchema>

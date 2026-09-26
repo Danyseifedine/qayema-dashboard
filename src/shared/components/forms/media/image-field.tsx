@@ -35,6 +35,11 @@ export type ImageFieldProps<T extends FieldValues> = {
    * `cover_image` crops to 1920x600, `dish` crops to 1200x900.
    */
   context: UploadContext
+  /**
+   * False for an image the record cannot exist without, such as the logo:
+   * offering a remove that the server refuses is a dead end.
+   */
+  removable?: boolean
   className?: string
 }
 
@@ -46,6 +51,12 @@ export type ImageFieldProps<T extends FieldValues> = {
  * browser, then uploaded to the temp endpoint. Only the returned key is stored
  * in the form, so the original never reaches the model.
  */
+/**
+ * Both states are this tall, so a filled field and an empty one sitting beside
+ * each other are the same size rather than one box overhanging the other.
+ */
+const BOX_HEIGHT = 'min-h-[168px]'
+
 export function ImageField<T extends FieldValues>({
   control,
   name,
@@ -57,6 +68,7 @@ export function ImageField<T extends FieldValues>({
   currentUrl,
   aspect = 'wide',
   context,
+  removable = true,
   className,
 }: ImageFieldProps<T>) {
   const { field, fieldState } = useController({ control, name })
@@ -122,22 +134,28 @@ export function ImageField<T extends FieldValues>({
       />
 
       {preview ? (
-        <div className="flex items-stretch overflow-hidden rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)]">
-          <img
-            src={preview}
-            alt=""
-            className={cn(
-              'shrink-0 bg-[var(--color-sand)] object-cover',
-              aspect === 'square' ? 'size-[140px]' : 'h-[140px] w-[200px]',
-            )}
-          />
-          <div className="flex min-w-0 flex-1 flex-col justify-between gap-2.5 p-4">
+        <div
+          className={cn(
+            'flex flex-col justify-between gap-3 rounded-[14px] p-3',
+            'border-[0.5px] border-[var(--line)] bg-[var(--surface)]',
+            BOX_HEIGHT,
+          )}
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <img
+              src={preview}
+              alt=""
+              className={cn(
+                'shrink-0 rounded-[10px] bg-[var(--color-sand)] object-cover',
+                aspect === 'square' ? 'size-16' : 'h-16 w-[86px]',
+              )}
+            />
             <div className="min-w-0">
               <p className="truncate text-[14px] font-medium tracking-[-0.012em]">
                 {value?.name ?? 'Current image'}
               </p>
               {value ? (
-                <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[12px] text-[var(--muted)]">
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--muted)]">
                   <span>{value.optimizedSize}</span>
                   {value.savedPercent > 0 ? (
                     <span className="rounded-full bg-status-success-wash px-2 py-0.5 text-[11.5px] font-medium text-status-success">
@@ -147,23 +165,29 @@ export function ImageField<T extends FieldValues>({
                 </p>
               ) : null}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
+          </div>
 
-                onClick={openPicker}
-                disabled={disabled || uploading}
-                loading={uploading}
-              >
-                Replace
-              </Button>
+          {/* Across the full width of the card, not beside the thumbnail: in a
+              two-column form the space next to it is too narrow for two
+              buttons, and they wrapped into a ragged stack. */}
+          <div className={cn('grid gap-2', removable ? 'grid-cols-2' : 'grid-cols-1')}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              block
+              onClick={openPicker}
+              disabled={disabled || uploading}
+              loading={uploading}
+            >
+              Replace
+            </Button>
+            {removable ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-
+                block
                 onClick={clear}
                 disabled={disabled || uploading}
                 leadingIcon={<Trash2 className="size-3.5" />}
@@ -171,7 +195,7 @@ export function ImageField<T extends FieldValues>({
               >
                 Remove
               </Button>
-            </div>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -193,7 +217,8 @@ export function ImageField<T extends FieldValues>({
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
           className={cn(
-            'flex cursor-pointer flex-col items-center gap-3 rounded-[14px] p-7 text-center',
+            'flex cursor-pointer flex-col items-center justify-center gap-3 rounded-[14px] p-5 text-center',
+            BOX_HEIGHT,
             'border-[1.5px] border-dashed transition-all duration-200',
             '[background-image:repeating-linear-gradient(135deg,transparent_0_12px,var(--line-2)_12px_13px)]',
             'bg-[var(--field)]',

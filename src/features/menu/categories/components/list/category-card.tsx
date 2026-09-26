@@ -34,6 +34,7 @@ export const CategoryCard = memo(function CategoryCard({
   className,
 }: CategoryCardProps) {
   const name = translated(category.name, locale)
+  const description = translated(category.description, locale)
   const count = category.dishes_count ?? 0
 
   return (
@@ -69,7 +70,12 @@ export const CategoryCard = memo(function CategoryCard({
             </span>
           ) : null}
         </span>
-        <span className="mt-0.5 block text-[12px] text-[var(--muted)]">
+        {!description.missing ? (
+          <span className="mt-0.5 block truncate text-[12.5px] text-[var(--muted)]">
+            {description.text}
+          </span>
+        ) : null}
+        <span className="mt-0.5 block text-[12px] text-[var(--faint)]">
           {count === 1 ? '1 dish' : `${count} dishes`}
         </span>
       </button>

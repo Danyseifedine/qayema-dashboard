@@ -4,7 +4,7 @@ import { Sidebar, Topbar } from '@/shared/components/navigation'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { useUiStore } from '@/stores/ui.store'
-import { NAV_ITEMS, type NavItem } from './nav-items'
+import { NAV_ITEMS, type NavAccess, type NavItem } from './nav-items'
 
 export type AuthenticatedLayoutProps = {
   activeKey: string
@@ -14,7 +14,7 @@ export type AuthenticatedLayoutProps = {
   packageName: string
   publicUrl?: string | null
   hasTemplate: boolean
-  features: { qr_studio: boolean }
+  features: NavAccess['features']
   locale: Locale
   onLocaleChange: (locale: Locale) => void
   onLogout: () => void

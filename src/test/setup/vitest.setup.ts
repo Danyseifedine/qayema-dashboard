@@ -45,3 +45,13 @@ if (typeof HTMLDialogElement !== 'undefined' && !HTMLDialogElement.prototype.sho
     this.dispatchEvent(new Event('close'))
   }
 }
+
+// jsdom has no ResizeObserver, which the charts use to size themselves. They
+// render at zero size here; tests read the words around them, not the bars.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver
+}

@@ -67,6 +67,23 @@ No third-party error telemetry. Errors go through `src/lib/logger`.
   unlimited — never render it as a number. Nothing is bought in the SPA:
   `POST /api/packages/request` sends a message and an admin assigns the
   package.
+- Section gating is data-driven: `requiresFeature` on a nav item is matched
+  against `restaurant.features` by key. Adding a gated section is one line in
+  `nav-items.ts`, not another branch in `isNavItemLocked`.
+- An order is written once by the guest who placed it. The dashboard may change
+  its `status` and nothing else.
+- The QR preview mirrors the printable card: `qr-studio/components/preview/qr-options.ts`
+  is the twin of `QrStyle::options()` in `../qayema`, tested against the same
+  cases. Change one, change both. `qr-code-styling` needs a real canvas, so
+  tests mock it and assert the options it was given, not the pixels.
+- Card text on the QR form is `''` in the form and `null` on the wire;
+  `toFormValues` / `toDesign` convert, so blank text never saves as `""`.
+- Overview analytics: `GET /api/stats` for every package, `GET /api/stats/advanced`
+  only when `restaurant.features.advanced_analytics` is on (the hook is
+  disabled otherwise, never fired and caught). Charts are recharts with
+  `responsive`; colours are theme tokens (`chart-style.ts`). jsdom has no
+  ResizeObserver, so the test setup stubs it and chart tests read the words
+  around a chart, not its bars.
 
 ## Commands
 

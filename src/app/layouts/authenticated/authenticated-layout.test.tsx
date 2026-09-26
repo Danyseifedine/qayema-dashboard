@@ -30,7 +30,7 @@ function Harness({
       packageName="Free"
       publicUrl="https://qayema.test/beit-qayema"
       hasTemplate={hasTemplate}
-      features={{ qr_studio: qrStudio }}
+      features={{ qr_studio: qrStudio, ordering: qrStudio, advanced_analytics: qrStudio }}
       locale={locale}
       onLocaleChange={setLocale}
       onLogout={onLogout}
@@ -58,7 +58,7 @@ describe('AuthenticatedLayout', () => {
       'Templates',
       'QR Studio',
       'Package',
-      'Settings',
+      'Restaurant',
     ]) {
       expect(within(nav).getByRole('button', { name: label })).toBeInTheDocument()
     }

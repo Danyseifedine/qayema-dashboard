@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { NAV_ITEMS, isNavItemLocked } from './nav-items'
 
-const NO_TEMPLATE = { hasTemplate: false, features: { qr_studio: true } }
-const READY = { hasTemplate: true, features: { qr_studio: true } }
+const ALL_FEATURES = { qr_studio: true, ordering: true, advanced_analytics: true }
+
+const NO_TEMPLATE = { hasTemplate: false, features: ALL_FEATURES }
+const READY = { hasTemplate: true, features: ALL_FEATURES }
 
 describe('isNavItemLocked', () => {
   it('locks the sections that need a template before one is chosen', () => {
@@ -10,6 +12,7 @@ describe('isNavItemLocked', () => {
     expect(isNavItemLocked('categories', NO_TEMPLATE)).toBe(true)
     expect(isNavItemLocked('dishes', NO_TEMPLATE)).toBe(true)
     expect(isNavItemLocked('qr', NO_TEMPLATE)).toBe(true)
+    expect(isNavItemLocked('orders', NO_TEMPLATE)).toBe(true)
   })
 
   it('always leaves Templates open, since it is the way out of the locked state', () => {
@@ -22,8 +25,21 @@ describe('isNavItemLocked', () => {
     }
   })
 
-  it('locks the QR studio when the plan does not include it', () => {
-    expect(isNavItemLocked('qr', { hasTemplate: true, features: { qr_studio: false } })).toBe(true)
+  it('locks a section when the plan does not include its feature', () => {
+    expect(
+      isNavItemLocked('qr', { hasTemplate: true, features: { ...ALL_FEATURES, qr_studio: false } }),
+    ).toBe(true)
+    expect(
+      isNavItemLocked('orders', {
+        hasTemplate: true,
+        features: { ...ALL_FEATURES, ordering: false },
+      }),
+    ).toBe(true)
+
+    // Gating is data-driven, so one flag being off leaves the other alone.
+    expect(
+      isNavItemLocked('qr', { hasTemplate: true, features: { ...ALL_FEATURES, ordering: false } }),
+    ).toBe(false)
   })
 
   it('opens everything once a template is chosen and the feature is on', () => {
@@ -45,7 +61,10 @@ describe('landing section', () => {
     for (const hasTemplate of [true, false]) {
       const key = landingKey(hasTemplate)
       expect(
-        isNavItemLocked(key, { hasTemplate, features: { qr_studio: false } }),
+        isNavItemLocked(key, {
+          hasTemplate,
+          features: { qr_studio: false, ordering: false, advanced_analytics: false },
+        }),
         `landing on ${key} with hasTemplate=${hasTemplate}`,
       ).toBe(false)
     }

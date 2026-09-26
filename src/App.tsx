@@ -6,8 +6,13 @@ import { useLogout } from '@/features/auth/hooks/use-logout'
 import type { AuthUser } from '@/features/auth/schemas/user.schema'
 import { CategoriesPage } from '@/features/menu/pages/categories-page'
 import { DishesPage } from '@/features/menu/pages/dishes-page'
+import { OrdersPage } from '@/features/orders/pages/orders-page'
+import { OverviewPage } from '@/features/overview/pages/overview-page'
+import { QrPage } from '@/features/qr-studio/pages/qr-page'
 import { PackagesPage } from '@/features/packages/pages/packages-page'
-import { SettingsFormPreview } from '@/features/settings/pages/settings-form-preview'
+import { SocialLinksPage } from '@/features/social-links/pages/social-links-page'
+import { AccountPage } from '@/features/account/pages/account-page'
+import { SettingsPage } from '@/features/settings/pages/settings-page'
 import { TemplatesPage } from '@/features/templates/pages/templates-page'
 import { Alert, Button } from '@/shared/components/ui'
 import { translated } from '@/shared/utils/string/translated'
@@ -61,16 +66,30 @@ function Dashboard({ user }: { user: AuthUser }) {
             Browse designs
           </Button>
         </div>
+      ) : activeKey === 'overview' ? (
+        <OverviewPage
+          locale={locale}
+          advanced={features.advanced_analytics}
+          onOpenPackage={() => setActiveKey('package')}
+        />
       ) : activeKey === 'templates' ? (
         <TemplatesPage locale={locale} />
       ) : activeKey === 'categories' ? (
         <CategoriesPage locale={locale} onOpenDishes={() => setActiveKey('dishes')} />
       ) : activeKey === 'dishes' ? (
         <DishesPage locale={locale} onOpenCategories={() => setActiveKey('categories')} />
+      ) : activeKey === 'orders' ? (
+        <OrdersPage />
+      ) : activeKey === 'qr' ? (
+        <QrPage />
+      ) : activeKey === 'social-links' ? (
+        <SocialLinksPage />
       ) : activeKey === 'package' ? (
         <PackagesPage locale={locale} />
       ) : activeKey === 'settings' ? (
-        <SettingsFormPreview />
+        <SettingsPage />
+      ) : activeKey === 'account' ? (
+        <AccountPage onOpenRestaurant={() => setActiveKey('settings')} />
       ) : (
         <Alert variant="info" title="Not built yet">
           This section has its folder and its place in the navigation. The form library, the shell

@@ -45,6 +45,8 @@ export const restaurantSchema = z.object({
   }),
   features: z.object({
     qr_studio: z.boolean(),
+    ordering: z.boolean(),
+    advanced_analytics: z.boolean(),
   }),
 })
 

@@ -9,7 +9,10 @@ import {
 } from '../schemas/category.schema'
 
 /** Only non-blank locales are sent; the server drops empty ones anyway. */
-export type CategoryPayload = { name: { en: string; ar: string } }
+export type CategoryPayload = {
+  name: { en: string; ar: string }
+  description: { en: string; ar: string }
+}
 
 export function fetchCategories(signal?: AbortSignal): Promise<CategoryList> {
   return request(categoryListSchema, { method: 'GET', url: '/api/categories', signal })
@@ -26,7 +29,8 @@ export async function createCategory(payload: CategoryPayload): Promise<Category
 
 /**
  * The update rules mark `name` as required, not `sometimes`, so a rename must
- * always send both locales or the missing one is wiped.
+ * always send both locales or the missing one is wiped. The description is
+ * sent in full every time for the same reason; blanks clear it.
  */
 export async function updateCategory(id: number, payload: CategoryPayload): Promise<Category> {
   const { data } = await request(categoryResponseSchema, {

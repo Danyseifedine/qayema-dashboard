@@ -1,7 +1,12 @@
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import qMark from '@/assets/images/brand/qayema-q.svg'
 import wordmark from '@/assets/images/brand/qayema-wordmark.png'
-import { NAV_GROUPS, isNavItemLocked, type NavItem } from '@/app/layouts/authenticated/nav-items'
+import {
+  NAV_GROUPS,
+  isNavItemLocked,
+  type NavAccess,
+  type NavItem,
+} from '@/app/layouts/authenticated/nav-items'
 import { cn } from '@/shared/utils/dom/cn'
 import { SidebarGroup } from './sidebar-group'
 import { SidebarItem } from './sidebar-item'
@@ -14,7 +19,7 @@ export type SidebarProps = {
   /** False until the owner picks a template; gates the menu and QR studio. */
   hasTemplate: boolean
   /** Plan features from the session payload. */
-  features: { qr_studio: boolean }
+  features: NavAccess['features']
   className?: string
 }
 

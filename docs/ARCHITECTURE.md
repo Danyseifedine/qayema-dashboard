@@ -82,7 +82,7 @@ qayema-dashboard/
 │   │   ├── components/
 │   │   │   ├── ui/               Primitives, owned in-repo: button, input, textarea, combobox, checkbox, radio, switch, label, helper-text, segmented, alert, field-shell
 │   │   │   ├── forms/
-│   │   │   │   ├── fields/       TextField, TextareaField, ComboboxField, SwitchField, PriceField, PhoneField, UrlField, ColorField
+│   │   │   │   ├── fields/       TextField, TextareaField, ComboboxField, SwitchField, PriceField, PhoneField, UrlField
 │   │   │   │   ├── translatable/ TranslatableTextField, TranslatableTextareaField, LocaleTabs
 │   │   │   │   ├── media/        ImageField
 │   │   │   │   └── layout/       Form, FormSection, FormActions, FieldGroup

@@ -15,6 +15,8 @@ export const translatableTextSchema = z.object({
 export const categorySchema = z.object({
   id: z.number().int(),
   name: translatableTextSchema,
+  /** One optional line under the heading on the public menu. */
+  description: translatableTextSchema,
   display_order: z.number().int(),
   // Always sent in practice, but the resource marks it conditional.
   dishes_count: z.number().int().optional(),
@@ -46,6 +48,10 @@ export const categoryFormSchema = z
     name: z.object({
       en: z.string().trim().max(255, 'Keep the name under 255 characters.'),
       ar: z.string().trim().max(255, 'Keep the name under 255 characters.'),
+    }),
+    description: z.object({
+      en: z.string().trim().max(300, 'Keep the description under 300 characters.'),
+      ar: z.string().trim().max(300, 'Keep the description under 300 characters.'),
     }),
   })
   .superRefine((values, ctx) => {

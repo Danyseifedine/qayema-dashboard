@@ -19,9 +19,9 @@ export type CategoryDialogProps = {
   onClose: () => void
 }
 
-const EMPTY: CategoryFormValues = { name: { en: '', ar: '' } }
+const EMPTY: CategoryFormValues = { name: { en: '', ar: '' }, description: { en: '', ar: '' } }
 
-/** Create or rename a category. A name in either language is enough. */
+/** Create or edit a category. A name in either language is enough; the description is optional. */
 export function CategoryDialog({ open, category, onClose }: CategoryDialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const save = useSaveCategory(category?.id ?? null)
@@ -38,7 +38,15 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
     if (!open) return
     clearFormError()
     form.reset(
-      category ? { name: { en: category.name.en ?? '', ar: category.name.ar ?? '' } } : EMPTY,
+      category
+        ? {
+            name: { en: category.name.en ?? '', ar: category.name.ar ?? '' },
+            description: {
+              en: category.description.en ?? '',
+              ar: category.description.ar ?? '',
+            },
+          }
+        : EMPTY,
     )
   }, [open, category, form, clearFormError])
 
@@ -75,7 +83,7 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
       <Form onSubmit={onSubmit} className="gap-0">
         <div className="p-5 pb-0">
           <h2 className="font-display text-[19px] leading-tight">
-            {category ? 'Rename category' : 'New category'}
+            {category ? 'Edit category' : 'New category'}
           </h2>
 
           {formError ? (
@@ -92,6 +100,18 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
             maxLength={255}
             placeholder={{ en: 'Starters', ar: 'المقبلات' }}
             hint="One language is enough; the other can be added later."
+          />
+
+          <TranslatableTextField
+            control={form.control}
+            name="description"
+            label="Description"
+            multiline
+            rows={2}
+            maxLength={300}
+            optionalText="optional"
+            placeholder={{ en: 'Served from noon until close', ar: 'تقدّم من الظهر حتى الإغلاق' }}
+            hint="One line under the heading on your menu."
           />
         </div>
 

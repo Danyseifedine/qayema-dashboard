@@ -8,6 +8,7 @@ export function makeCategory(overrides: Partial<Category> = {}): Category {
   return {
     id,
     name: { en: `Category ${id}`, ar: null },
+    description: { en: null, ar: null },
     display_order: id,
     dishes_count: 0,
     ...overrides,

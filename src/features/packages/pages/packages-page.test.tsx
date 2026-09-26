@@ -97,7 +97,7 @@ function session(current = 'free') {
           categories: { used: 3, limit: 10 },
           social_links: { used: 1, limit: 2 },
         },
-        features: { qr_studio: false },
+        features: { qr_studio: false, ordering: false, advanced_analytics: false },
       },
     },
   })

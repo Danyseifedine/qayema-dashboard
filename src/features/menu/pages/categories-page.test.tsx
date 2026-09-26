@@ -66,7 +66,11 @@ describe('CategoriesPage', () => {
     await waitFor(() => {
       const post = mock.history.post.find((r) => r.url === '/api/categories')
       expect(post).toBeDefined()
-      expect(JSON.parse(post!.data as string)).toEqual({ name: { en: 'Drinks', ar: '' } })
+      // The description goes up even when blank, so an edit can clear it.
+      expect(JSON.parse(post!.data as string)).toEqual({
+        name: { en: 'Drinks', ar: '' },
+        description: { en: '', ar: '' },
+      })
     })
 
     expect(await screen.findByText('Category added')).toBeInTheDocument()
