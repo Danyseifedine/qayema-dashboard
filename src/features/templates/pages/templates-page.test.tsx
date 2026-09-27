@@ -111,4 +111,70 @@ describe('TemplatesPage', () => {
     expect(within(alert).getByText('Could not switch design')).toBeInTheDocument()
     expect(within(alert).getByText('That design is no longer active.')).toBeInTheDocument()
   })
+
+  describe('menu colour', () => {
+    const styled = {
+      ...classic,
+      settings_schema: [
+        { key: 'primary_color', type: 'color', default: '#F8D38D' },
+        { key: 'background_color', type: 'color', default: '#FFFFFF' },
+      ],
+    }
+
+    function stubStyled(settings: Record<string, unknown>) {
+      mock.onGet('/api/templates').reply(200, {
+        data: [styled, midnight],
+        meta: { current: 1, settings },
+      })
+    }
+
+    it('is not offered before a design is chosen, or on a design with a fixed look', async () => {
+      stub(1)
+      renderWithProviders(<TemplatesPage locale="en" />)
+
+      expect(await screen.findByText('In use')).toBeInTheDocument()
+      expect(screen.queryByText('Menu colour')).not.toBeInTheDocument()
+    })
+
+    it('shows the colour the menu uses and saves a new one on its own', async () => {
+      stubStyled({ primary_color: '#1F6FEB', background_color: '#FAF7F0' })
+      mock.onPut('/api/template-settings').reply(200, {
+        data: { settings: { primary_color: '#C0392B', background_color: '#FAF7F0' } },
+      })
+
+      const user = userEvent.setup()
+      renderWithProviders(<TemplatesPage locale="en" />)
+
+      const hex = await screen.findByRole('textbox', { name: 'Main colour' })
+      expect(hex).toHaveValue('#1F6FEB')
+      expect(screen.getByRole('button', { name: 'Save colour' })).toBeDisabled()
+
+      await user.clear(hex)
+      await user.type(hex, '#C0392B')
+      await user.click(screen.getByRole('button', { name: 'Save colour' }))
+
+      // Only the colour is sent: the server keeps every other setting.
+      await waitFor(() => {
+        const put = mock.history.put.find((r) => r.url === '/api/template-settings')
+        expect(put).toBeDefined()
+        expect(JSON.parse(put!.data as string)).toEqual({ settings: { primary_color: '#C0392B' } })
+      })
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Save colour' })).toBeDisabled(),
+      )
+    })
+
+    it('goes back to the design default in one tap', async () => {
+      stubStyled({ primary_color: '#1F6FEB' })
+
+      const user = userEvent.setup()
+      renderWithProviders(<TemplatesPage locale="en" />)
+
+      await user.click(await screen.findByRole('button', { name: 'Reset to Qayema gold' }))
+
+      expect(screen.getByRole('textbox', { name: 'Main colour' })).toHaveValue('#F8D38D')
+      expect(screen.getByRole('button', { name: 'Reset to Qayema gold' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Save colour' })).toBeEnabled()
+    })
+  })
 })

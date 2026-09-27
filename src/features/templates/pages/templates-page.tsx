@@ -3,8 +3,32 @@ import { useTranslation } from 'react-i18next'
 import { CardGridSkeleton, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
+import { MenuColourSection } from '../components/settings/menu-colour-section'
 import { TemplateCard } from '../components/store/template-card'
-import { useSelectTemplate, useTemplates } from '../hooks/use-templates'
+import { useSaveTemplateSettings, useSelectTemplate, useTemplates } from '../hooks/use-templates'
+import type { Template, TemplateSettings } from '../schemas/template.schema'
+
+const HEX = /^#[0-9a-fA-F]{6}$/
+
+/**
+ * The design in use's main colour, when it lets the owner choose one: what it
+ * is now and what it starts as. Null for a design that ships a fixed look.
+ */
+function primaryColour(
+  template: Template | undefined,
+  settings: TemplateSettings,
+): { colour: string; defaultColour: string } | null {
+  const field = template?.settings_schema?.find(
+    (row) => row.key === 'primary_color' && row.type === 'color',
+  )
+  if (!field || typeof field.default !== 'string' || !HEX.test(field.default)) return null
+
+  const saved = settings.primary_color
+  return {
+    colour: typeof saved === 'string' && HEX.test(saved) ? saved : field.default,
+    defaultColour: field.default,
+  }
+}
 
 export type TemplatesPageProps = {
   locale: Locale
@@ -21,9 +45,14 @@ export function TemplatesPage({ locale }: TemplatesPageProps) {
   const { t } = useTranslation('templates')
   const templates = useTemplates()
   const select = useSelectTemplate()
+  const saveSettings = useSaveTemplateSettings()
 
   const list = templates.data?.data ?? []
   const current = templates.data?.meta.current ?? null
+  const colour = primaryColour(
+    list.find((template) => template.id === current),
+    templates.data?.meta.settings ?? {},
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -46,6 +75,15 @@ export function TemplatesPage({ locale }: TemplatesPageProps) {
         <Alert variant="error" title={t('toast.switchFailed')}>
           {select.error.message}
         </Alert>
+      ) : null}
+
+      {colour ? (
+        <MenuColourSection
+          colour={colour.colour}
+          defaultColour={colour.defaultColour}
+          saving={saveSettings.isPending}
+          onSave={(primary_color) => saveSettings.mutate({ primary_color })}
+        />
       ) : null}
 
       {templates.isPending ? (

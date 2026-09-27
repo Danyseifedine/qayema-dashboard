@@ -3,8 +3,8 @@ import { t } from '@/lib/i18n'
 import { QUERY_ROOTS } from '@/lib/query/keys'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
-import { fetchTemplates, selectTemplate } from '../api/template.api'
-import type { TemplateList } from '../schemas/template.schema'
+import { fetchTemplates, saveTemplateSettings, selectTemplate } from '../api/template.api'
+import type { TemplateList, TemplateSettings } from '../schemas/template.schema'
 
 export const templateKeys = {
   all: [QUERY_ROOTS.templates] as const,
@@ -33,5 +33,26 @@ export function useSelectTemplate() {
       void queryClient.invalidateQueries({ queryKey: [QUERY_ROOTS.session] })
     },
     onError: (error) => toast.error(t('templates:toast.switchFailed'), error),
+  })
+}
+
+/**
+ * Saves the active design's settings and puts the answer straight into the
+ * list's cache. The QR card's "brand" colour follows the menu's, so the QR
+ * studio is refetched too.
+ */
+export function useSaveTemplateSettings() {
+  const queryClient = useQueryClient()
+
+  return useMutation<TemplateSettings, ApiError, TemplateSettings>({
+    mutationFn: saveTemplateSettings,
+    onSuccess: (settings) => {
+      toast.success(t('templates:toast.colourSaved'), t('templates:toast.colourSavedDescription'))
+      queryClient.setQueryData<TemplateList>(templateKeys.list(), (list) =>
+        list ? { ...list, meta: { ...list.meta, settings } } : list,
+      )
+      void queryClient.invalidateQueries({ queryKey: [QUERY_ROOTS.qr] })
+    },
+    onError: (error) => toast.error(t('templates:toast.colourFailed'), error),
   })
 }
