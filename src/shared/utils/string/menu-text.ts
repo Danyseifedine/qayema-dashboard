@@ -10,6 +10,16 @@ export const menuTextSchema = z.record(z.string(), z.string().nullable())
 
 export type MenuText = z.infer<typeof menuTextSchema>
 
+/**
+ * An `{en, ar}` pair, as the platform's own content (packages, designs)
+ * comes. A restaurant's menu text uses `menuTextSchema` instead, keyed by the
+ * restaurant's own languages.
+ */
+export const translatableTextSchema = z.object({
+  en: z.string().nullable(),
+  ar: z.string().nullable(),
+})
+
 /** The same text as a form holds it: a string per language, '' when empty. */
 export type MenuTextForm = Record<string, string>
 

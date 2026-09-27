@@ -1,7 +1,0 @@
-export { Sidebar, type SidebarProps } from './sidebar/sidebar'
-export { SidebarGroup, type SidebarGroupProps } from './sidebar/sidebar-group'
-export { SidebarItem, type SidebarItemProps } from './sidebar/sidebar-item'
-export { PackagePill, type PackagePillProps } from './topbar/package-pill'
-export { LanguageSwitcher, type LanguageSwitcherProps } from './topbar/language-switcher'
-export { Topbar, type TopbarProps } from './topbar/topbar'
-export { UserMenu, type UserMenuProps } from './topbar/user-menu'

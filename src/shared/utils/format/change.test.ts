@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { changeBetween } from './change'
+import { changeBetween } from '@/shared/utils/format/change'
 
 describe('changeBetween', () => {
   it('is the change as a fraction of what came before', () => {

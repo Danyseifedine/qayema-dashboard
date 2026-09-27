@@ -12,18 +12,19 @@
   "nav": {
     "overview": "نظرة عامة",
     "analytics": "الإحصاءات",
+    "menu": "القائمة",
     "categories": "الأقسام",
     "dishes": "الأطباق",
+    "design": "التصميم",
+    "guests": "الزبائن",
     "orders": "الطلبات",
-    "templates": "التصاميم",
-    "reach": "الانتشار",
     "qr": "رمز QR",
     "socialLinks": "روابط التواصل",
-    "account": "الحساب",
-    "package": "الباقة",
+    "settings": "الإعدادات",
     "restaurant": "المطعم",
-    "profile": "الملف الشخصي",
-    "features": "الميزات"
+    "features": "الميزات",
+    "package": "الباقة",
+    "account": "الحساب"
   },
   "layout": {
     "openNavigation": "فتح القائمة",
@@ -40,11 +41,11 @@
   "userMenu": {
     "trigger": "قائمة الحساب",
     "viewPublicMenu": "عرض القائمة العامة",
-    "profile": "الملف الشخصي",
     "preferences": "التفضيلات",
     "language": "اللغة",
     "darkMode": "الوضع الداكن",
-    "logOut": "تسجيل الخروج"
+    "logOut": "تسجيل الخروج",
+    "account": "الحساب"
   },
   "languageSwitcher": {
     "label": "لغة الواجهة"

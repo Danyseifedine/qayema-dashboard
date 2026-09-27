@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
-import { FieldLeading, FieldPrefix, FieldShell, FieldTrailing, type FieldTone } from './field-shell'
-import { controlClass } from './control-class'
+import { FieldLeading, FieldPrefix, FieldShell, FieldTrailing, type FieldTone } from '@/shared/components/ui/field-shell'
+import { controlClass } from '@/shared/components/ui/control-class'
 
 export type InputProps = Omit<ComponentProps<'input'>, 'prefix' | 'size'> & {
   tone?: FieldTone

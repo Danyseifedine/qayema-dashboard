@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
-import type { SocialPlatform } from '../../schemas/social-link.schema'
+import type { SocialPlatform } from '@/features/social-links/schemas/social-link.schema'
 
 export type PlatformIconProps = ComponentProps<'svg'> & {
   platform: SocialPlatform

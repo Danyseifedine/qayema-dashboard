@@ -3,7 +3,7 @@ import {
   tempUploadSchema,
   type TempUpload,
   type UploadContext,
-} from '../schemas/temp-upload.schema'
+} from '@/features/uploads/schemas/temp-upload.schema'
 
 export type UploadTempImageOptions = {
   context: UploadContext

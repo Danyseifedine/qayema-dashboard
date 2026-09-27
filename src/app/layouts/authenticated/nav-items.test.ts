@@ -1,33 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { NAV_ITEMS, isNavItemLocked } from './nav-items'
+import { NAV_ITEMS, isNavItemLocked } from '@/app/layouts/authenticated/nav-items'
 
 const ALL_FEATURES = { qr_studio: true, ordering: true, advanced_analytics: true }
 
-const NO_TEMPLATE = { hasTemplate: false, features: ALL_FEATURES }
-const READY = { hasTemplate: true, features: ALL_FEATURES }
+const NO_TEMPLATE = { hasTemplate: false, plan: ALL_FEATURES }
+const READY = { hasTemplate: true, plan: ALL_FEATURES }
 
 describe('isNavItemLocked', () => {
   it('locks the sections that need a template before one is chosen', () => {
-    expect(isNavItemLocked('settings', NO_TEMPLATE)).toBe(true)
+    expect(isNavItemLocked('restaurant', NO_TEMPLATE)).toBe(true)
     expect(isNavItemLocked('categories', NO_TEMPLATE)).toBe(true)
     expect(isNavItemLocked('dishes', NO_TEMPLATE)).toBe(true)
     expect(isNavItemLocked('qr', NO_TEMPLATE)).toBe(true)
     expect(isNavItemLocked('orders', NO_TEMPLATE)).toBe(true)
   })
 
-  it('always leaves Templates open, since it is the way out of the locked state', () => {
-    expect(isNavItemLocked('templates', NO_TEMPLATE)).toBe(false)
+  it('always leaves Design open, since it is the way out of the locked state', () => {
+    expect(isNavItemLocked('design', NO_TEMPLATE)).toBe(false)
   })
 
   it('leaves the sections that do not need a template open', () => {
-    for (const key of [
-      'overview',
-      'analytics',
-      'templates',
-      'package',
-      'account',
-      'social-links',
-    ]) {
+    for (const key of ['overview', 'analytics', 'design', 'package', 'account', 'social-links']) {
       expect(isNavItemLocked(key, NO_TEMPLATE), `${key} should be open`).toBe(false)
     }
   })
@@ -36,7 +29,7 @@ describe('isNavItemLocked', () => {
     expect(
       isNavItemLocked('orders', {
         hasTemplate: true,
-        features: { ...ALL_FEATURES, ordering: false },
+        plan: { ...ALL_FEATURES, ordering: false },
       }),
     ).toBe(true)
 
@@ -44,14 +37,14 @@ describe('isNavItemLocked', () => {
     expect(
       isNavItemLocked('analytics', {
         hasTemplate: true,
-        features: { ...ALL_FEATURES, ordering: false },
+        plan: { ...ALL_FEATURES, ordering: false },
       }),
     ).toBe(false)
   })
 
   it("keeps the QR code page open without the studio: the plain code is everyone's", () => {
     expect(
-      isNavItemLocked('qr', { hasTemplate: true, features: { ...ALL_FEATURES, qr_studio: false } }),
+      isNavItemLocked('qr', { hasTemplate: true, plan: { ...ALL_FEATURES, qr_studio: false } }),
     ).toBe(false)
   })
 
@@ -68,7 +61,7 @@ describe('isNavItemLocked', () => {
 
 describe('landing section', () => {
   // The rule App.tsx applies when it picks where to open.
-  const landingKey = (hasTemplate: boolean) => (hasTemplate ? 'overview' : 'templates')
+  const landingKey = (hasTemplate: boolean) => (hasTemplate ? 'overview' : 'design')
 
   it('never opens on a section the owner cannot use', () => {
     for (const hasTemplate of [true, false]) {
@@ -76,14 +69,14 @@ describe('landing section', () => {
       expect(
         isNavItemLocked(key, {
           hasTemplate,
-          features: { qr_studio: false, ordering: false, advanced_analytics: false },
+          plan: { qr_studio: false, ordering: false, advanced_analytics: false },
         }),
         `landing on ${key} with hasTemplate=${hasTemplate}`,
       ).toBe(false)
     }
   })
 
-  it('sends an owner with no template to Templates', () => {
-    expect(landingKey(false)).toBe('templates')
+  it('sends an owner with no design to Design', () => {
+    expect(landingKey(false)).toBe('design')
   })
 })

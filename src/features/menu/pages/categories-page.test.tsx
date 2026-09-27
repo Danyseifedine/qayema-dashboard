@@ -7,7 +7,7 @@ import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/c
 import { makeCategory, resetFactories } from '@/test/mocks/factories/menu'
 import { makeSessionUser } from '@/test/mocks/factories/session'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
-import { CategoriesPage } from './categories-page'
+import { CategoriesPage } from '@/features/menu/pages/categories-page'
 
 let mock: MockAdapter
 

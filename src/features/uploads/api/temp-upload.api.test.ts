@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { ApiError } from '@/shared/types/api'
-import { uploadTempImage } from './temp-upload.api'
+import { uploadTempImage } from '@/features/uploads/api/temp-upload.api'
 
 let mock: MockAdapter
 

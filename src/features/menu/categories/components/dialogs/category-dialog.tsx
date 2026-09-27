@@ -10,9 +10,9 @@ import {
   categoryFormSchema,
   type Category,
   type CategoryFormValues,
-} from '../../schemas/category.schema'
-import { useSaveCategory } from '../../hooks/use-categories'
-import { useMenuLanguages } from '@/features/settings/hooks/use-menu-languages'
+} from '@/features/menu/categories/schemas/category.schema'
+import { useSaveCategory } from '@/features/menu/categories/hooks/use-categories'
+import { useMenuLanguages } from '@/features/auth'
 import { toMenuTextForm } from '@/shared/utils/string/menu-text'
 
 export type CategoryDialogProps = {

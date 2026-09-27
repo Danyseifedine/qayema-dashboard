@@ -1,5 +1,4 @@
-import type { AuthUser } from '@/features/auth/schemas/user.schema'
-
+import type { AuthUser } from '@/features/auth'
 /**
  * A signed-in owner as `GET /api/user` returns one, with a menu written in
  * English and Arabic unless the test says otherwise.
@@ -37,8 +36,8 @@ export function makeSessionUser(
         categories: { used: 0, limit: 10 },
         social_links: { used: 0, limit: 2 },
       },
-      hidden_sections: [],
-      features: { qr_studio: true, ordering: true, advanced_analytics: true },
+      switched_off: [],
+      plan: { qr_studio: true, ordering: true, advanced_analytics: true },
       ...restaurant,
     },
   }

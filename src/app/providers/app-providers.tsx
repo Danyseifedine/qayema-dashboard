@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { configureApi } from '@/lib/api'
-import { QueryProvider } from './query-provider'
-import { ToastProvider } from './toast-provider'
+import { QueryProvider } from '@/app/providers/query-provider'
+import { ToastProvider } from '@/app/providers/toast-provider'
 
 /**
  * Everything the app needs in scope before a screen renders. Kept to

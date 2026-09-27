@@ -6,7 +6,7 @@ import { Button, Switch } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
-import type { Dish } from '../../schemas/dish.schema'
+import type { Dish } from '@/features/menu/dishes/schemas/dish.schema'
 
 export type DishCardProps = {
   dish: Dish

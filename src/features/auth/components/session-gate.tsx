@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { env } from '@/config/env'
 import { safeRedirect } from '@/lib/security/safe-redirect'
 import { Alert, Button } from '@/shared/components/ui'
-import { useSession } from '../hooks/use-session'
-import type { AuthUser } from '../schemas/user.schema'
+import { useSession } from '@/features/auth/hooks/use-session'
+import type { AuthUser } from '@/features/auth/schemas/user.schema'
 
 /** Where the Laravel wizard lives, derived from the API origin. */
 const ONBOARDING_URL = `${env.VITE_API_URL}/onboarding`

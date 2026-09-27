@@ -6,7 +6,7 @@ import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { makeCategory, makeDish, resetFactories } from '@/test/mocks/factories/menu'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
-import { DishesPage } from './dishes-page'
+import { DishesPage } from '@/features/menu/pages/dishes-page'
 
 let mock: MockAdapter
 

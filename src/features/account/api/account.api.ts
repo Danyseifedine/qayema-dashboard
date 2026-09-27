@@ -1,6 +1,6 @@
 import { request } from '@/lib/api'
-import { userResponseSchema, type AuthUser } from '@/features/auth/schemas/user.schema'
-import { passwordResponseSchema } from '../schemas/account.schema'
+import { userResponseSchema, type AuthUser } from '@/features/auth'
+import { passwordResponseSchema } from '@/features/account/schemas/account.schema'
 
 /** The email is not here on purpose: accounts come from Google, so it is the identity. */
 export async function updateProfile(name: string): Promise<AuthUser> {

@@ -1,7 +1,7 @@
-import { api } from './client'
-import { installAuthRedirectInterceptor } from './interceptors/auth-redirect'
-import { installCsrfInterceptor } from './interceptors/csrf'
-import { installLocaleInterceptor } from './interceptors/locale'
+import { api } from '@/lib/api/client'
+import { installAuthRedirectInterceptor } from '@/lib/api/interceptors/auth-redirect'
+import { installCsrfInterceptor } from '@/lib/api/interceptors/csrf'
+import { installLocaleInterceptor } from '@/lib/api/interceptors/locale'
 
 let installed = false
 
@@ -18,6 +18,6 @@ export function configureApi(options: { onUnauthenticated?: () => void } = {}): 
   installAuthRedirectInterceptor(api, options)
 }
 
-export { api } from './client'
-export { toApiError } from './errors'
-export { request } from './request'
+export { api } from '@/lib/api/client'
+export { toApiError } from '@/lib/api/errors'
+export { request } from '@/lib/api/request'

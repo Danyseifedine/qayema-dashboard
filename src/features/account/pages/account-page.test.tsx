@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
-import { AccountPage } from './account-page'
+import { AccountPage } from '@/features/account/pages/account-page'
 
 let mock: MockAdapter
 

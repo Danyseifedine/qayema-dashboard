@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { ComboboxField } from './combobox-field'
+import { ComboboxField } from '@/shared/components/forms/fields/combobox-field'
 
 const OPTIONS = [
   { value: '1', label: 'Starters' },

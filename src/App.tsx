@@ -6,21 +6,21 @@ import {
   isNavItemLocked,
   type NavItem,
 } from '@/app/layouts/authenticated/nav-items'
-import { SessionGate } from '@/features/auth/components/session-gate'
-import { useLogout } from '@/features/auth/hooks/use-logout'
-import type { AuthUser } from '@/features/auth/schemas/user.schema'
-import { CategoriesPage } from '@/features/menu/pages/categories-page'
-import { DishesPage } from '@/features/menu/pages/dishes-page'
-import { OrdersPage } from '@/features/orders/pages/orders-page'
-import { AnalyticsPage } from '@/features/overview/pages/analytics-page'
-import { OverviewPage } from '@/features/overview/pages/overview-page'
-import { QrPage } from '@/features/qr-studio/pages/qr-page'
-import { PackagesPage } from '@/features/packages/pages/packages-page'
-import { SocialLinksPage } from '@/features/social-links/pages/social-links-page'
-import { AccountPage } from '@/features/account/pages/account-page'
-import { FeaturesPage } from '@/features/settings/pages/features-page'
-import { SettingsPage } from '@/features/settings/pages/settings-page'
-import { TemplatesPage } from '@/features/templates/pages/templates-page'
+import { SessionGate } from '@/features/auth'
+import { useLogout } from '@/features/auth'
+import type { AuthUser } from '@/features/auth'
+import { CategoriesPage } from '@/features/menu'
+import { DishesPage } from '@/features/menu'
+import { OrdersPage } from '@/features/orders'
+import { AnalyticsPage } from '@/features/analytics'
+import { OverviewPage } from '@/features/overview'
+import { QrPage } from '@/features/qr'
+import { PackagePage } from '@/features/package'
+import { SocialLinksPage } from '@/features/social-links'
+import { AccountPage } from '@/features/account'
+import { FeaturesPage } from '@/features/restaurant'
+import { RestaurantPage } from '@/features/restaurant'
+import { DesignPage } from '@/features/design'
 import { Alert, Button } from '@/shared/components/ui'
 import { translated } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
@@ -29,20 +29,20 @@ function Dashboard({ user }: { user: AuthUser }) {
   // SessionGate guarantees a restaurant, so this is never null here.
   const restaurant = user.restaurant!
   const hasTemplate = restaurant.template_id !== null
-  const features = restaurant.features
+  const plan = restaurant.plan
 
   // Land where the owner can actually act. Without a design chosen, most of
   // the dashboard is locked, and Templates is the only way out of that.
-  const [chosenKey, setActiveKey] = useState(() => (hasTemplate ? 'overview' : 'templates'))
-  const hiddenSections = restaurant.hidden_sections
+  const [chosenKey, setActiveKey] = useState(() => (hasTemplate ? 'overview' : 'design'))
+  const switchedOff = restaurant.switched_off
   // A section switched off while it was open hands over to the overview.
-  const activeKey = isNavItemHidden(chosenKey, hiddenSections) ? 'overview' : chosenKey
+  const activeKey = isNavItemHidden(chosenKey, switchedOff) ? 'overview' : chosenKey
   const logout = useLogout()
   const locale = usePreferencesStore((state) => state.locale)
   const setLocale = usePreferencesStore((state) => state.setLocale)
   const { t } = useTranslation()
 
-  const locked = isNavItemLocked(activeKey, { hasTemplate, features })
+  const locked = isNavItemLocked(activeKey, { hasTemplate, plan })
 
   // Menu text shows in the dashboard's language when the menu is written in
   // it, and in English (the language every name has) otherwise.
@@ -62,8 +62,8 @@ function Dashboard({ user }: { user: AuthUser }) {
       }
       publicUrl={restaurant.public_url}
       hasTemplate={hasTemplate}
-      features={features}
-      hiddenSections={hiddenSections}
+      plan={plan}
+      switchedOff={switchedOff}
       locale={locale}
       onLocaleChange={setLocale}
       onLogout={() => logout.mutate()}
@@ -79,24 +79,20 @@ function Dashboard({ user }: { user: AuthUser }) {
           <Alert variant="info" title={t('app.lockedTitle')}>
             {t('app.lockedBody')}
           </Alert>
-          <Button className="mt-4" onClick={() => setActiveKey('templates')}>
+          <Button className="mt-4" onClick={() => setActiveKey('design')}>
             {t('app.browseDesigns')}
           </Button>
         </div>
       ) : activeKey === 'overview' ? (
-        <OverviewPage
-          limits={restaurant.limits}
-          hiddenSections={hiddenSections}
-          onOpen={setActiveKey}
-        />
+        <OverviewPage limits={restaurant.limits} switchedOff={switchedOff} onOpen={setActiveKey} />
       ) : activeKey === 'analytics' ? (
         <AnalyticsPage
           locale={locale}
-          advanced={features.advanced_analytics}
+          advanced={plan.advanced_analytics}
           onOpenPackage={() => setActiveKey('package')}
         />
-      ) : activeKey === 'templates' ? (
-        <TemplatesPage locale={locale} />
+      ) : activeKey === 'design' ? (
+        <DesignPage locale={locale} />
       ) : activeKey === 'categories' ? (
         <CategoriesPage locale={contentLocale} onOpenDishes={() => setActiveKey('dishes')} />
       ) : activeKey === 'dishes' ? (
@@ -108,18 +104,18 @@ function Dashboard({ user }: { user: AuthUser }) {
       ) : activeKey === 'social-links' ? (
         <SocialLinksPage />
       ) : activeKey === 'package' ? (
-        <PackagesPage locale={locale} />
-      ) : activeKey === 'settings' ? (
-        <SettingsPage />
+        <PackagePage locale={locale} />
+      ) : activeKey === 'restaurant' ? (
+        <RestaurantPage />
       ) : activeKey === 'features' ? (
         <FeaturesPage
-          hidden={hiddenSections}
-          features={features}
+          off={switchedOff}
+          plan={plan}
           secondLocale={restaurant.second_locale}
           defaultLocale={restaurant.default_locale}
         />
       ) : activeKey === 'account' ? (
-        <AccountPage onOpenRestaurant={() => setActiveKey('settings')} />
+        <AccountPage onOpenRestaurant={() => setActiveKey('restaurant')} />
       ) : (
         <Alert variant="info" title={t('app.notBuiltTitle')}>
           {t('app.notBuiltBody')}

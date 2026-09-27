@@ -12,18 +12,19 @@
   "nav": {
     "overview": "Overview",
     "analytics": "Analytics",
+    "menu": "Menu",
     "categories": "Categories",
     "dishes": "Dishes",
+    "design": "Design",
+    "guests": "Guests",
     "orders": "Orders",
-    "templates": "Templates",
-    "reach": "Reach",
     "qr": "QR code",
     "socialLinks": "Social links",
-    "account": "Account",
-    "package": "Package",
+    "settings": "Settings",
     "restaurant": "Restaurant",
-    "profile": "Profile",
-    "features": "Features"
+    "features": "Features",
+    "package": "Package",
+    "account": "Account"
   },
   "layout": {
     "openNavigation": "Open navigation",
@@ -40,11 +41,11 @@
   "userMenu": {
     "trigger": "Account menu",
     "viewPublicMenu": "View public menu",
-    "profile": "Profile",
     "preferences": "Preferences",
     "language": "Language",
     "darkMode": "Dark mode",
-    "logOut": "Log out"
+    "logOut": "Log out",
+    "account": "Account"
   },
   "languageSwitcher": {
     "label": "Interface language"

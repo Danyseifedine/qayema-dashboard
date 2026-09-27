@@ -1,8 +1,8 @@
 import { t } from '@/lib/i18n'
 import type { AxiosRequestConfig } from 'axios'
 import type { ZodType } from 'zod'
-import { api } from './client'
-import { toApiError } from './errors'
+import { api } from '@/lib/api/client'
+import { toApiError } from '@/lib/api/errors'
 
 /**
  * Performs a request and parses the response against a schema.

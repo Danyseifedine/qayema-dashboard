@@ -3,10 +3,10 @@ import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ConfirmDialog, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert } from '@/shared/components/ui'
-import { StatusFilter } from '../components/detail/status-filter'
-import { OrderCard } from '../components/list/order-card'
-import { useOrders, useSetOrderStatus } from '../hooks/use-orders'
-import type { Order, OrderStatus } from '../schemas/order.schema'
+import { StatusFilter } from '@/features/orders/components/filters/status-filter'
+import { OrderCard } from '@/features/orders/components/list/order-card'
+import { useOrders, useSetOrderStatus } from '@/features/orders/hooks/use-orders'
+import type { Order, OrderStatus } from '@/features/orders/schemas/order.schema'
 
 /**
  * Orders guests placed from the public menu.

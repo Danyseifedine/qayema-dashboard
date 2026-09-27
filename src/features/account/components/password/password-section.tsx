@@ -6,8 +6,11 @@ import { useTranslation } from 'react-i18next'
 import { Form, FormActions, FormSection, TextField } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
-import { useSavePassword } from '../../hooks/use-account'
-import { passwordFormSchema, type PasswordFormValues } from '../../schemas/account.schema'
+import { useSavePassword } from '@/features/account/hooks/use-account'
+import {
+  passwordFormSchema,
+  type PasswordFormValues,
+} from '@/features/account/schemas/account.schema'
 
 export type PasswordSectionProps = {
   /** False for a Google-only account, which is setting its first password. */

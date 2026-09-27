@@ -3,16 +3,6 @@ import { t } from '@/lib/i18n'
 import { menuTextField, menuTextSchema, requireEnglish } from '@/shared/utils/string/menu-text'
 
 /**
- * An `{en, ar}` pair, as the platform's own content (packages, templates)
- * comes. A restaurant's menu text uses `menuTextSchema` instead, keyed by the
- * restaurant's own languages.
- */
-export const translatableTextSchema = z.object({
-  en: z.string().nullable(),
-  ar: z.string().nullable(),
-})
-
-/**
  * Mirrors ../qayema/app/Http/Resources/CategoryResource.php and the
  * Store/Update request rules. Names are maps with one entry per menu
  * language, never plain strings.

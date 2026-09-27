@@ -6,7 +6,7 @@ import { ComboboxField, Form, FormActions, UrlField } from '@/shared/components/
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { cn } from '@/shared/utils/dom/cn'
-import { useSaveSocialLink } from '../../hooks/use-social-links'
+import { useSaveSocialLink } from '@/features/social-links/hooks/use-social-links'
 import {
   PLATFORM_LABELS,
   SOCIAL_PLATFORMS,
@@ -14,7 +14,7 @@ import {
   type SocialLink,
   type SocialLinkFormValues,
   type SocialPlatform,
-} from '../../schemas/social-link.schema'
+} from '@/features/social-links/schemas/social-link.schema'
 
 export type SocialLinkDialogProps = {
   open: boolean
@@ -34,7 +34,7 @@ const PLACEHOLDERS: Record<SocialPlatform, string> = {
 }
 
 export function SocialLinkDialog({ open, link, taken, onClose }: SocialLinkDialogProps) {
-  const { t } = useTranslation('social')
+  const { t } = useTranslation('social-links')
   const ref = useRef<HTMLDialogElement>(null)
   const save = useSaveSocialLink(link?.id ?? null)
 

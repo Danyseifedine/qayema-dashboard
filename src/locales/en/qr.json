@@ -13,7 +13,6 @@
     "cardUnsaved": "The card shows your saved design. Save to see these changes on it.",
     "scansTitle": "Scans",
     "scansDescription": "Menu visits that came through this QR code.",
-    "colours": "Colours",
     "shapes": "Shapes",
     "logo": "Logo",
     "card": "Printable card",
@@ -24,7 +23,8 @@
     "lockedDescription": "Your QR code works as it is. Colours, shapes, a logo and the printable card come with a package that includes the QR studio.",
     "offTitle": "QR Studio is switched off",
     "offDescription": "Your QR code works as it is. Switch the studio on in Features to style it, add your logo and print a table card.",
-    "openFeatures": "Open Features"
+    "openFeatures": "Open Features",
+    "colors": "Colours"
   },
   "contrast": {
     "title": "This may not scan",
@@ -44,18 +44,6 @@
     "week": "This week",
     "month": "This month",
     "total": "All time"
-  },
-  "colours": {
-    "dots": "Dots",
-    "background": "Background",
-    "cornerFrames": "Corner frames",
-    "cornerCentres": "Corner centres",
-    "gradient": "Gradient",
-    "gradientDescription": "Blend the dots into a second colour.",
-    "secondColour": "Second colour",
-    "direction": "Direction",
-    "linear": "Across",
-    "radial": "From the centre"
   },
   "shapes": {
     "dots": "Dots",
@@ -103,9 +91,21 @@
     "saveFailed": "Could not save your QR code"
   },
   "schema": {
-    "colour": "Use a colour like #1F6FEB.",
     "titleMax": "Keep the title under 60 characters.",
     "subtitleMax": "Keep the subtitle under 80 characters.",
-    "ctaMax": "Keep this under 60 characters."
+    "ctaMax": "Keep this under 60 characters.",
+    "color": "Use a colour like #1F6FEB."
+  },
+  "colors": {
+    "dots": "Dots",
+    "background": "Background",
+    "cornerFrames": "Corner frames",
+    "cornerCentres": "Corner centres",
+    "gradient": "Gradient",
+    "gradientDescription": "Blend the dots into a second colour.",
+    "direction": "Direction",
+    "linear": "Across",
+    "radial": "From the centre",
+    "secondColor": "Second colour"
   }
 }

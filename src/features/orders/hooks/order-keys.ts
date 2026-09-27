@@ -1,5 +1,5 @@
 import { QUERY_ROOTS } from '@/lib/query/keys'
-import type { OrderStatus } from '../schemas/order.schema'
+import type { OrderStatus } from '@/features/orders/schemas/order.schema'
 
 export const orderKeys = {
   all: [QUERY_ROOTS.orders] as const,

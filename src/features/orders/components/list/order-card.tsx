@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
-import type { Order } from '../../schemas/order.schema'
+import type { Order } from '@/features/orders/schemas/order.schema'
 
 export type OrderCardProps = {
   order: Order

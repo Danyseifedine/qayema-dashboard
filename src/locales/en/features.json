@@ -1,0 +1,34 @@
+{
+  "title": "Features",
+  "description": "Switch off what you don't use. Nothing is deleted, and switching it back on brings it all back.",
+  "listTitle": "What your restaurant uses",
+  "toggle": "{{feature}} on",
+  "saveFailed": "Could not update your features",
+  "notOnPackage": "Not on your package",
+  "orders": {
+    "label": "Orders",
+    "description": "Guests add dishes to a cart and send you the order on WhatsApp.",
+    "offNote": "Guests can't order from your menu while this is off. Orders you already have stay saved."
+  },
+  "qr": {
+    "label": "QR Studio",
+    "description": "Colours, shapes, your logo and a printable table card for your QR code.",
+    "offNote": "Your plain black QR code stays on the QR code page, ready to download. Your design is kept."
+  },
+  "analytics": {
+    "label": "Analytics",
+    "description": "How guests find your menu and what they do on it."
+  },
+  "languages": {
+    "label": "Multiple languages",
+    "description": "Your menu in English and one more language, with a switch for guests.",
+    "offNote": "Your menu shows English only. What you wrote in the other language is kept.",
+    "secondLabel": "Second language",
+    "secondPlaceholder": "Choose a language",
+    "searchEmpty": "No language matches that",
+    "secondHint": "Changing it keeps what you wrote in the old language.",
+    "openingLabel": "The menu opens in",
+    "saved": "Menu languages saved",
+    "saveFailed": "Could not save your menu languages"
+  }
+}

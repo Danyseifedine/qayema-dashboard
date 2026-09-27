@@ -1,6 +1,5 @@
-import type { Category } from '@/features/menu/categories/schemas/category.schema'
-import type { Dish } from '@/features/menu/dishes/schemas/dish.schema'
-
+import type { Category } from '@/features/menu'
+import type { Dish } from '@/features/menu'
 let nextId = 1
 
 export function makeCategory(overrides: Partial<Category> = {}): Category {

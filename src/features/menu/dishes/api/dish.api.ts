@@ -7,7 +7,7 @@ import {
   dishResponseSchema,
   type Dish,
   type DishList,
-} from '../schemas/dish.schema'
+} from '@/features/menu/dishes/schemas/dish.schema'
 
 export type DishPayload = {
   /** One entry per menu language; a blank one clears that language. */

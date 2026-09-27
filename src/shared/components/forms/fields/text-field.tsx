@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { FieldTrailingButton, Input } from '@/shared/components/ui'
-import { Field } from '../layout/field'
+import { Field } from '@/shared/components/forms/layout/field'
 
 export type TextFieldProps<T extends FieldValues> = {
   control: Control<T>

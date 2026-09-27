@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatMoney } from './money'
+import { formatMoney } from '@/shared/utils/format/money'
 
 describe('formatMoney', () => {
   it('formats a price in the given currency', () => {

@@ -2,8 +2,8 @@ import { useCallback, useRef, useState } from 'react'
 import { t } from '@/lib/i18n'
 import { MAX_IMAGE_EDGE, checkImageFile } from '@/lib/security/input-guards'
 import { ApiError } from '@/shared/types/api'
-import { uploadTempImage } from '../api/temp-upload.api'
-import type { TempUpload, UploadContext } from '../schemas/temp-upload.schema'
+import { uploadTempImage } from '@/features/uploads/api/temp-upload.api'
+import type { TempUpload, UploadContext } from '@/features/uploads/schemas/temp-upload.schema'
 
 export type UploadState = {
   uploading: boolean

@@ -1,0 +1,7 @@
+export type { Category } from '@/features/menu/categories/schemas/category.schema'
+export { useDishes } from '@/features/menu/dishes/hooks/use-dishes'
+export type { Dish } from '@/features/menu/dishes/schemas/dish.schema'
+export { CategoriesPage } from '@/features/menu/pages/categories-page'
+export { DishesPage } from '@/features/menu/pages/dishes-page'
+export { categoryKeys } from '@/features/menu/categories/hooks/category-keys'
+export { dishKeys } from '@/features/menu/dishes/hooks/dish-keys'

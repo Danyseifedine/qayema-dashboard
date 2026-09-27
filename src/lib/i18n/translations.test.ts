@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { FALLBACK_LANGUAGE, LANGUAGES, NAMESPACES, languageMeta, messagesFor } from './index'
+import {
+  FALLBACK_LANGUAGE,
+  LANGUAGES,
+  NAMESPACES,
+  languageMeta,
+  messagesFor,
+} from '@/lib/i18n/index'
 
 /**
  * Every language must say everything English says — no more, no less — or an

@@ -44,10 +44,10 @@ export const socialLinkResponseSchema = z.object({ data: socialLinkSchema })
 export const socialLinkFormSchema = z.object({
   platform: platformSchema,
   url: z
-    .url({ error: () => t('social:validation.urlInvalid') })
-    .max(500, { error: () => t('social:validation.urlTooLong') })
+    .url({ error: () => t('social-links:validation.urlInvalid') })
+    .max(500, { error: () => t('social-links:validation.urlTooLong') })
     .refine((value) => value.startsWith('http://') || value.startsWith('https://'), {
-      error: () => t('social:validation.urlScheme'),
+      error: () => t('social-links:validation.urlScheme'),
     }),
 })
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dishFormSchema } from './dish.schema'
+import { dishFormSchema } from '@/features/menu/dishes/schemas/dish.schema'
 
 const base = {
   name: { en: 'Hummus', ar: '' },

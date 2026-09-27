@@ -1,13 +1,17 @@
 import { Share2 } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LimitNotice } from '@/features/menu/components/limits/limit-notice'
+import { LimitNotice } from '@/shared/components/data-display/badges/limit-notice'
 import { ConfirmDialog, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
-import { SocialLinkDialog } from '../components/form/social-link-dialog'
-import { SocialLinkCard } from '../components/list/social-link-card'
-import { useDeleteSocialLink, useSocialLinks } from '../hooks/use-social-links'
-import { PLATFORM_LABELS, SOCIAL_PLATFORMS, type SocialLink } from '../schemas/social-link.schema'
+import { SocialLinkDialog } from '@/features/social-links/components/form/social-link-dialog'
+import { SocialLinkCard } from '@/features/social-links/components/list/social-link-card'
+import { useDeleteSocialLink, useSocialLinks } from '@/features/social-links/hooks/use-social-links'
+import {
+  PLATFORM_LABELS,
+  SOCIAL_PLATFORMS,
+  type SocialLink,
+} from '@/features/social-links/schemas/social-link.schema'
 
 /**
  * The handful of places a guest can follow the restaurant, shown at the foot
@@ -18,7 +22,7 @@ import { PLATFORM_LABELS, SOCIAL_PLATFORMS, type SocialLink } from '../schemas/s
  * package says.
  */
 export function SocialLinksPage() {
-  const { t } = useTranslation('social')
+  const { t } = useTranslation('social-links')
   const links = useSocialLinks()
   const remove = useDeleteSocialLink()
 

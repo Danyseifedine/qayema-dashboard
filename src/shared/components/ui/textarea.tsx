@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
-import { FieldShell, type FieldTone } from './field-shell'
-import { controlClass } from './control-class'
+import { FieldShell, type FieldTone } from '@/shared/components/ui/field-shell'
+import { controlClass } from '@/shared/components/ui/control-class'
 
 export type TextareaProps = ComponentProps<'textarea'> & {
   tone?: FieldTone

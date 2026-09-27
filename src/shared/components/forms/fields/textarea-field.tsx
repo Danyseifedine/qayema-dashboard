@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { HelperText, Textarea } from '@/shared/components/ui'
-import { Field } from '../layout/field'
+import { Field } from '@/shared/components/forms/layout/field'
 
 export type TextareaFieldProps<T extends FieldValues> = {
   control: Control<T>

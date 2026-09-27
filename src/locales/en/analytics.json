@@ -1,0 +1,100 @@
+{
+  "title": "Analytics",
+  "description": "How guests find your menu and what they do on it.",
+  "range": {
+    "label": "Range",
+    "locked": "Comes with advanced analytics",
+    "options": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "all": "All time"
+    }
+  },
+  "summary": {
+    "views": "Menu views",
+    "viewsToday": "{{views}} today",
+    "visitors": "Visitors",
+    "qrScans": "QR scans",
+    "orders": "Orders"
+  },
+  "visits": {
+    "title": "Visits",
+    "description": "Each time your menu was opened.",
+    "empty": "No visits in this range yet. Share your menu link, or put the QR code on your tables.",
+    "chartLabel_one": "{{views}} views over {{count}} day, {{scans}} of them QR scans.",
+    "chartLabel_other": "{{views}} views over {{count}} days, {{scans}} of them QR scans.",
+    "views": "Views",
+    "qrScans": "QR scans"
+  },
+  "arrive": {
+    "title": "How guests arrive",
+    "empty": "No visits in this range yet.",
+    "qr": "Scanned the QR code",
+    "link": "Opened a link"
+  },
+  "busiest": {
+    "title": "Busiest times",
+    "description": "When guests open your menu, in your restaurant's time.",
+    "notEnough": "Not enough visits yet.",
+    "sentence": "Busiest around <strong>{{hour}}</strong>, and on <strong>{{day}}</strong>.",
+    "byHour": "By hour",
+    "byDay": "By day",
+    "views": "Views"
+  },
+  "actions": {
+    "title": "What guests do",
+    "description": "Taps and searches on your menu. What happens after a tap, like the call itself, happens outside it and is not counted.",
+    "labels": {
+      "dishAdd": "Added to cart",
+      "categoryOpen": "Opened a category",
+      "search": "Searched",
+      "whatsapp": "Tapped WhatsApp",
+      "map": "Tapped the map",
+      "call": "Tapped call",
+      "social": "Tapped a social link",
+      "language": "Changed language"
+    }
+  },
+  "funnel": {
+    "title": "From visit to order",
+    "visitors": "Opened the menu",
+    "carted": "Added something to the cart",
+    "ordered": "Placed an order"
+  },
+  "topAdded": {
+    "title": "Most added to the cart",
+    "empty": "Nothing added to a cart in this range."
+  },
+  "topCategories": {
+    "title": "Most opened categories",
+    "empty": "No category picked in this range."
+  },
+  "searches": {
+    "title": "What guests search for",
+    "empty": "No searches in this range."
+  },
+  "missed": {
+    "title": "Searched but not found",
+    "description": "Guests looked for these and your menu had nothing to show.",
+    "empty": "Every search found something."
+  },
+  "languages": {
+    "title": "Languages",
+    "description": "The language guests read your menu in.",
+    "empty": "No visits in this range.",
+    "unknown": "Unknown"
+  },
+  "locked": {
+    "title": "Advanced analytics",
+    "description": "Comes with the bigger packages. Your menu already records all of this, so it is there the day you move up.",
+    "includes": {
+      "compare": "Change against the period before, and 90-day and all-time ranges",
+      "busiest": "Your busiest hours and days",
+      "taps": "What guests tap: dishes added to the cart, WhatsApp, the map and call",
+      "searches": "What guests search for — and what they could not find",
+      "funnel": "From visit to cart to order, and the languages guests read in"
+    },
+    "cta": "See packages"
+  }
+}

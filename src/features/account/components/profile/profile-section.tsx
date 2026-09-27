@@ -6,8 +6,11 @@ import { useTranslation } from 'react-i18next'
 import { Form, FormActions, FormSection, TextField } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
-import { useSaveProfile } from '../../hooks/use-account'
-import { profileFormSchema, type ProfileFormValues } from '../../schemas/account.schema'
+import { useSaveProfile } from '@/features/account/hooks/use-account'
+import {
+  profileFormSchema,
+  type ProfileFormValues,
+} from '@/features/account/schemas/account.schema'
 
 export type ProfileSectionProps = {
   name: string

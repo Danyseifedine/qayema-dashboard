@@ -7,8 +7,8 @@ import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { makeCategory, makeDish, resetFactories } from '@/test/mocks/factories/menu'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
-import type { Category } from '../../../categories/schemas/category.schema'
-import { DishDialog } from './dish-dialog'
+import type { Category } from '@/features/menu/categories/schemas/category.schema'
+import { DishDialog } from '@/features/menu/dishes/components/dialogs/dish-dialog'
 
 let mock: MockAdapter
 

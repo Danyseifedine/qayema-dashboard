@@ -1,0 +1,45 @@
+{
+  "page": {
+    "limitLabel": "روابط التواصل",
+    "limitDescription": "تظهر كأيقونات أسفل قائمتك، ليتمكن الزبائن من متابعتك.",
+    "add": "إضافة رابط",
+    "atLimit": "لقد استخدمت كل روابط التواصل التي تسمح بها باقتك. احذف رابطًا لإضافة آخر.",
+    "allPlatformsUsed": "كل منصة يمكن لقائمتك عرضها لديها رابط بالفعل. عدّل أحدها لتوجيهه إلى مكان آخر.",
+    "emptyTitle": "لا توجد روابط تواصل بعد",
+    "emptyDescription": "أضف {{platforms}} أو أي مكان آخر يمكن للزبائن أن يجدوك فيه.",
+    "addFirst": "أضف رابطك الأول",
+    "removeTitle": "حذف هذا الرابط؟",
+    "removeDescription": "يختفي من قائمتك فورًا. يمكنك إضافته مجددًا في أي وقت.",
+    "removeConfirm": "حذف"
+  },
+  "card": {
+    "edit": "تعديل رابط {{platform}}",
+    "remove": "حذف رابط {{platform}}"
+  },
+  "dialog": {
+    "addTitle": "إضافة رابط تواصل",
+    "editTitle": "تعديل الرابط",
+    "description": "يرى الزبائن هذه الروابط كأيقونات أسفل قائمتك.",
+    "platformLabel": "المنصة",
+    "platformPlaceholder": "اختر منصة",
+    "linkLabel": "الرابط",
+    "linkHint": "الصق العنوان كاملًا، بما في ذلك https://",
+    "cancel": "إلغاء",
+    "addSubmit": "إضافة الرابط",
+    "saveSubmit": "حفظ الرابط"
+  },
+  "toast": {
+    "added": "تمت إضافة الرابط",
+    "saved": "تم حفظ الرابط",
+    "addFailed": "تعذّرت إضافة هذا الرابط",
+    "saveFailed": "تعذّر حفظ هذا الرابط",
+    "removed": "تم حذف الرابط",
+    "removedDescription": "لم يعد يظهر في قائمتك.",
+    "removeFailed": "تعذّر حذف هذا الرابط"
+  },
+  "validation": {
+    "urlInvalid": "أدخل الرابط كاملًا، بدءًا بـ https://",
+    "urlTooLong": "هذا الرابط طويل جدًا.",
+    "urlScheme": "يجب أن يبدأ الرابط بـ http:// أو https://"
+  }
+}

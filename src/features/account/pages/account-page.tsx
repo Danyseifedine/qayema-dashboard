@@ -1,10 +1,10 @@
 import { Store } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useSession } from '@/features/auth/hooks/use-session'
+import { useSession } from '@/features/auth'
 import { ErrorState } from '@/shared/components/feedback'
 import { Button } from '@/shared/components/ui'
-import { PasswordSection } from '../components/password/password-section'
-import { ProfileSection } from '../components/profile/profile-section'
+import { PasswordSection } from '@/features/account/components/password/password-section'
+import { ProfileSection } from '@/features/account/components/profile/profile-section'
 
 /**
  * The owner's own account, as opposed to their restaurant.

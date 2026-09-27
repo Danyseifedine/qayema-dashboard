@@ -7,13 +7,13 @@ import {
   deleteSocialLink,
   fetchSocialLinks,
   updateSocialLink,
-} from '../api/social-link.api'
+} from '@/features/social-links/api/social-link.api'
 import type {
   SocialLink,
   SocialLinkFormValues,
   SocialLinkList,
-} from '../schemas/social-link.schema'
-import { socialLinkKeys } from './social-link-keys'
+} from '@/features/social-links/schemas/social-link.schema'
+import { socialLinkKeys } from '@/features/social-links/hooks/social-link-keys'
 
 /**
  * Every social link for the restaurant. There are at most four — one per
@@ -35,11 +35,14 @@ export function useSaveSocialLink(id: number | null) {
     mutationFn: (payload) =>
       id === null ? createSocialLink(payload) : updateSocialLink(id, payload),
     onSuccess: () => {
-      toast.success(id === null ? t('social:toast.added') : t('social:toast.saved'))
+      toast.success(id === null ? t('social-links:toast.added') : t('social-links:toast.saved'))
       void queryClient.invalidateQueries({ queryKey: socialLinkKeys.all })
     },
     onError: (error) =>
-      toast.error(id === null ? t('social:toast.addFailed') : t('social:toast.saveFailed'), error),
+      toast.error(
+        id === null ? t('social-links:toast.addFailed') : t('social-links:toast.saveFailed'),
+        error,
+      ),
   })
 }
 
@@ -49,9 +52,9 @@ export function useDeleteSocialLink() {
   return useMutation<void, ApiError, number>({
     mutationFn: deleteSocialLink,
     onSuccess: () => {
-      toast.success(t('social:toast.removed'), t('social:toast.removedDescription'))
+      toast.success(t('social-links:toast.removed'), t('social-links:toast.removedDescription'))
       void queryClient.invalidateQueries({ queryKey: socialLinkKeys.all })
     },
-    onError: (error) => toast.error(t('social:toast.removeFailed'), error),
+    onError: (error) => toast.error(t('social-links:toast.removeFailed'), error),
   })
 }

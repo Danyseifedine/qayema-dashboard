@@ -1,19 +1,19 @@
 import { useTranslation } from 'react-i18next'
-import type { AuthRestaurant } from '@/features/auth/schemas/user.schema'
-import { useDishes } from '@/features/menu/dishes/hooks/use-dishes'
-import { useSettings } from '@/features/settings/hooks/use-settings'
+import type { AuthRestaurant } from '@/features/auth'
+import { useDishes } from '@/features/menu'
+import { useRestaurant } from '@/features/restaurant'
 import { ErrorState } from '@/shared/components/feedback'
-import { ContentCounts } from '../components/limits/content-counts'
-import { MenuChecklist } from '../components/quick-actions/menu-checklist'
+import { ContentCounts } from '@/features/overview/components/counts/content-counts'
+import { MenuChecklist } from '@/features/overview/components/checklist/menu-checklist'
 import {
   menuChecklist,
   type ChecklistTarget,
-} from '../components/quick-actions/menu-checklist-items'
+} from '@/features/overview/components/checklist/menu-checklist-items'
 
 export type OverviewPageProps = {
   limits: AuthRestaurant['limits']
   /** Sections the owner switched off; their checklist items are left out. */
-  hiddenSections?: readonly string[]
+  switchedOff?: readonly string[]
   /** Opens the dashboard section a checklist item points to. */
   onOpen: (target: ChecklistTarget) => void
 }
@@ -25,9 +25,9 @@ export type OverviewPageProps = {
 /** Stable empty default, so the prop keeps its identity between renders. */
 const NONE: readonly string[] = []
 
-export function OverviewPage({ limits, hiddenSections = NONE, onOpen }: OverviewPageProps) {
+export function OverviewPage({ limits, switchedOff = NONE, onOpen }: OverviewPageProps) {
   const { t } = useTranslation('overview')
-  const settings = useSettings()
+  const settings = useRestaurant()
   const dishes = useDishes()
 
   return (
@@ -55,7 +55,7 @@ export function OverviewPage({ limits, hiddenSections = NONE, onOpen }: Overview
             settings: settings.data,
             dishes: dishes.data.data,
             limits,
-          }).filter((item) => !hiddenSections.includes(item.action.target))}
+          }).filter((item) => !switchedOff.includes(item.action.target))}
           onOpen={onOpen}
         />
       )}

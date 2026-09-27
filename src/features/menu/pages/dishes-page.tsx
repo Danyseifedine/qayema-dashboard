@@ -1,19 +1,19 @@
 import { LayoutList, Plus, UtensilsCrossed } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useCategories } from '../categories/hooks/use-categories'
-import { CategoryFilter, UNCATEGORISED } from '../components/builder/category-filter'
-import { SortableCard, SortableList } from '../components/dnd'
-import { LimitNotice } from '../components/limits/limit-notice'
-import { DishDialog } from '../dishes/components/dialogs/dish-dialog'
-import { DishCard } from '../dishes/components/list/dish-card'
+import { useCategories } from '@/features/menu/categories/hooks/use-categories'
+import { CategoryFilter, UNCATEGORISED } from '@/features/menu/components/builder/category-filter'
+import { SortableCard, SortableList } from '@/features/menu/components/dnd'
+import { LimitNotice } from '@/shared/components/data-display/badges/limit-notice'
+import { DishDialog } from '@/features/menu/dishes/components/dialogs/dish-dialog'
+import { DishCard } from '@/features/menu/dishes/components/list/dish-card'
 import {
   useDeleteDish,
   useDishAvailability,
   useDishes,
   useReorderDishes,
-} from '../dishes/hooks/use-dishes'
-import type { Dish } from '../dishes/schemas/dish.schema'
+} from '@/features/menu/dishes/hooks/use-dishes'
+import type { Dish } from '@/features/menu/dishes/schemas/dish.schema'
 import {
   CardGridSkeleton,
   ConfirmDialog,

@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { useUiStore } from '@/stores/ui.store'
-import { AuthenticatedLayout } from './authenticated-layout'
-import type { NavItem } from './nav-items'
+import { AuthenticatedLayout } from '@/app/layouts/authenticated/authenticated-layout'
+import type { NavItem } from '@/app/layouts/authenticated/nav-items'
 
 const NONE_HIDDEN: string[] = []
 
@@ -34,8 +34,8 @@ function Harness({
       packageName="Free"
       publicUrl="https://qayema.test/beit-qayema"
       hasTemplate={hasTemplate}
-      features={{ qr_studio: qrStudio, ordering: qrStudio, advanced_analytics: qrStudio }}
-      hiddenSections={hidden}
+      plan={{ qr_studio: qrStudio, ordering: qrStudio, advanced_analytics: qrStudio }}
+      switchedOff={hidden}
       locale={locale}
       onLocaleChange={setLocale}
       onLogout={onLogout}
@@ -60,7 +60,7 @@ describe('AuthenticatedLayout', () => {
       'Overview',
       'Categories',
       'Dishes',
-      'Templates',
+      'Design',
       'QR code',
       'Package',
       'Restaurant',
@@ -81,14 +81,14 @@ describe('AuthenticatedLayout', () => {
     const overview = within(nav).getByRole('button', { name: 'Overview' })
     expect(overview).toHaveAttribute('aria-current', 'page')
 
-    await user.click(within(nav).getByRole('button', { name: 'Templates' }))
+    await user.click(within(nav).getByRole('button', { name: 'Design' }))
 
-    expect(within(nav).getByRole('button', { name: 'Templates' })).toHaveAttribute(
+    expect(within(nav).getByRole('button', { name: 'Design' })).toHaveAttribute(
       'aria-current',
       'page',
     )
     expect(overview).not.toHaveAttribute('aria-current')
-    expect(screen.getByRole('heading', { name: 'Templates' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Design' })).toBeInTheDocument()
   })
 
   it('locks the sections that need a template', () => {
@@ -98,8 +98,8 @@ describe('AuthenticatedLayout', () => {
     expect(within(nav).getByRole('button', { name: 'Categories' })).toBeDisabled()
     expect(within(nav).getByRole('button', { name: 'Dishes' })).toBeDisabled()
     expect(within(nav).getByRole('button', { name: 'QR code' })).toBeDisabled()
-    // Templates is how an owner escapes the locked state, so it stays open.
-    expect(within(nav).getByRole('button', { name: 'Templates' })).toBeEnabled()
+    // Design is how an owner escapes the locked state, so it stays open.
+    expect(within(nav).getByRole('button', { name: 'Design' })).toBeEnabled()
   })
 
   it('collapses the sidebar to an icon rail and remembers it', async () => {
@@ -173,6 +173,22 @@ describe('AuthenticatedLayout', () => {
     // Closed menu: no language tabs or theme switch on the bar itself.
     expect(screen.queryByRole('tab', { name: 'ع' })).not.toBeInTheDocument()
     expect(screen.queryByRole('switch', { name: 'Dark mode' })).not.toBeInTheDocument()
+  })
+
+  it('keeps the account out of the sidebar and in the avatar menu', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+
+    const nav = screen.getByRole('navigation', { name: 'Dashboard' })
+    expect(within(nav).queryByRole('button', { name: 'Account' })).not.toBeInTheDocument()
+    for (const heading of ['Menu', 'Guests', 'Settings']) {
+      expect(within(nav).getByText(heading)).toBeInTheDocument()
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
+    await user.click(screen.getByRole('menuitem', { name: /Account/ }))
+
+    expect(screen.getByRole('heading', { name: 'Account' })).toBeInTheDocument()
   })
 
   it('leaves switched-off sections out of the sidebar', () => {

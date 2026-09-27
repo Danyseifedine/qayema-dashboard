@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { env } from '@/config/env'
 import { safeRedirect } from '@/lib/security/safe-redirect'
 import type { ApiError } from '@/shared/types/api'
-import { logout } from '../api/session.api'
+import { logout } from '@/features/auth/api/session.api'
 
 /**
  * Logs out, then leaves.

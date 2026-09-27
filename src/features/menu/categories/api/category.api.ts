@@ -7,7 +7,7 @@ import {
   categoryResponseSchema,
   type Category,
   type CategoryList,
-} from '../schemas/category.schema'
+} from '@/features/menu/categories/schemas/category.schema'
 
 /** One entry per menu language; a blank one clears that language. */
 export type CategoryPayload = {

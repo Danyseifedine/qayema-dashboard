@@ -4,4 +4,4 @@ export {
   type ApiPaginated,
   type ApiPaginationMeta,
   type ApiValidationErrors,
-} from './api'
+} from '@/shared/types/api'

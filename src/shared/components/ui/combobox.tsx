@@ -3,8 +3,8 @@ import { Check, ChevronDown } from 'lucide-react'
 import { useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
-import { controlClass } from './control-class'
-import { FieldShell, type FieldTone } from './field-shell'
+import { controlClass } from '@/shared/components/ui/control-class'
+import { FieldShell, type FieldTone } from '@/shared/components/ui/field-shell'
 
 export type ComboboxOption = {
   value: string

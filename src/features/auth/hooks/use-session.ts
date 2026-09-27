@@ -1,13 +1,8 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { QUERY_ROOTS } from '@/lib/query/keys'
 import type { ApiError } from '@/shared/types/api'
-import { fetchSession } from '../api/session.api'
-import type { AuthUser } from '../schemas/user.schema'
-
-export const sessionKeys = {
-  all: [QUERY_ROOTS.session] as const,
-  current: () => [QUERY_ROOTS.session, 'current'] as const,
-}
+import { fetchSession } from '@/features/auth/api/session.api'
+import { sessionKeys } from '@/features/auth/hooks/session-keys'
+import type { AuthUser } from '@/features/auth/schemas/user.schema'
 
 /**
  * The signed-in owner.

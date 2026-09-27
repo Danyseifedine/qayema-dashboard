@@ -3,7 +3,7 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { useTempUpload } from './use-temp-upload'
+import { useTempUpload } from '@/features/uploads/hooks/use-temp-upload'
 
 let mock: MockAdapter
 

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
-import type { Category } from '../../categories/schemas/category.schema'
+import type { Category } from '@/features/menu/categories/schemas/category.schema'
 
 export type CategoryFilterProps = {
   categories: Category[]

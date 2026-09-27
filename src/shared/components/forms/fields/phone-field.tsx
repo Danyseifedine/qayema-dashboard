@@ -4,7 +4,7 @@ import { useController, type Control, type FieldPath, type FieldValues } from 'r
 import { Combobox, FieldShell, controlClass } from '@/shared/components/ui'
 import { COUNTRIES } from '@/shared/constants/countries'
 import { cn } from '@/shared/utils/dom/cn'
-import { Field } from '../layout/field'
+import { Field } from '@/shared/components/forms/layout/field'
 
 export type PhoneFieldProps<T extends FieldValues> = {
   control: Control<T>

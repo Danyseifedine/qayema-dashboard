@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { Combobox, type ComboboxOption } from './combobox'
+import { Combobox, type ComboboxOption } from '@/shared/components/ui/combobox'
 
 const OPTIONS: ComboboxOption[] = [
   { value: 'LB', label: 'LB +961', description: 'Lebanon', leading: <span>🇱🇧</span> },

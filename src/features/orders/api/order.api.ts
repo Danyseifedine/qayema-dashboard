@@ -5,7 +5,7 @@ import {
   type Order,
   type OrderList,
   type OrderStatus,
-} from '../schemas/order.schema'
+} from '@/features/orders/schemas/order.schema'
 
 export function fetchOrders(status: OrderStatus | null, signal?: AbortSignal): Promise<OrderList> {
   return request(orderListSchema, {

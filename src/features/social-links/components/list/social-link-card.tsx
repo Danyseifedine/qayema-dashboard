@@ -3,8 +3,11 @@ import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
-import { PLATFORM_LABELS, type SocialLink } from '../../schemas/social-link.schema'
-import { PlatformIcon } from '../platform/platform-icon'
+import {
+  PLATFORM_LABELS,
+  type SocialLink,
+} from '@/features/social-links/schemas/social-link.schema'
+import { PlatformIcon } from '@/features/social-links/components/platform/platform-icon'
 
 export type SocialLinkCardProps = {
   link: SocialLink
@@ -25,7 +28,7 @@ export const SocialLinkCard = memo(function SocialLinkCard({
   onDelete,
   className,
 }: SocialLinkCardProps) {
-  const { t } = useTranslation('social')
+  const { t } = useTranslation('social-links')
   const label = PLATFORM_LABELS[link.platform]
 
   return (

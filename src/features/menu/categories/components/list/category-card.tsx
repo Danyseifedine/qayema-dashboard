@@ -5,7 +5,7 @@ import { Button } from '@/shared/components/ui'
 import { localeLabel, type Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
-import type { Category } from '../../schemas/category.schema'
+import type { Category } from '@/features/menu/categories/schemas/category.schema'
 
 export type CategoryCardProps = {
   category: Category

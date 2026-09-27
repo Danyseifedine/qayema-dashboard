@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useMemo, type ReactNode } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
-import { DragHandle } from './drag-handle'
+import { DragHandle } from '@/features/menu/components/dnd/drag-handle'
 
 export type SortableCardProps = {
   id: number

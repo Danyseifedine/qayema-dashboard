@@ -13,10 +13,11 @@ import {
   UserRound,
   UtensilsCrossed,
 } from 'lucide-react'
+import type { Plan } from '@/features/auth'
 import type common from '@/locales/en/common.json'
 
-/** The package flags a section can be gated on, as `/api/user` reports them. */
-export type PlanFeature = 'qr_studio' | 'ordering' | 'advanced_analytics'
+/** The plan flags a section can be gated on, as `/api/user` reports them. */
+export type PlanFlag = keyof Plan
 
 /**
  * A section's name, as a key into `common.json`. The table below is built at
@@ -26,15 +27,14 @@ export type PlanFeature = 'qr_studio' | 'ordering' | 'advanced_analytics'
 export type NavLabelKey = `nav.${keyof typeof common.nav}`
 
 export type NavItem = {
-  /** Stable id, and the route path once the router is wired up. */
+  /** Stable id: the page `App.tsx` shows, and the feature folder's name. */
   key: string
-  path: string
   labelKey: NavLabelKey
   icon: LucideIcon
-  /** Hidden until the owner has picked a template. */
+  /** Locked until the owner has picked a design. */
   requiresTemplate?: boolean
-  /** Hidden unless the restaurant's plan includes the feature. */
-  requiresFeature?: PlanFeature
+  /** Locked unless the restaurant's plan includes the flag. */
+  requiresPlan?: PlanFlag
   /**
    * Leaves the sidebar when the owner switches its feature off on the
    * Features page (same key in `Restaurant::OPTIONAL_FEATURES`, ../qayema).
@@ -50,101 +50,78 @@ export type NavGroup = {
 }
 
 /**
- * The dashboard's navigation, one entry per surface in
- * ../qayema/routes/api.php. Menu, templates settings and the QR studio only
- * unlock once a template is chosen, which is what `requiresTemplate` gates.
+ * The sidebar, grouped by what the owner is doing: looking at the numbers,
+ * building the menu, reaching guests, or setting the restaurant up. Keys are
+ * the feature folders under `src/features/`. Anything that works on the menu
+ * itself only unlocks once a design is chosen (`requiresTemplate`).
  */
 export const NAV_GROUPS: NavGroup[] = [
   {
     key: 'main',
     items: [
-      { key: 'overview', path: '/', labelKey: 'nav.overview', icon: LayoutDashboard },
-      {
-        key: 'analytics',
-        path: '/analytics',
-        labelKey: 'nav.analytics',
-        icon: ChartNoAxesColumn,
-        hideable: true,
-      },
-      {
-        key: 'categories',
-        path: '/menu/categories',
-        labelKey: 'nav.categories',
-        icon: LayoutList,
-        requiresTemplate: true,
-      },
-      {
-        key: 'dishes',
-        path: '/menu/dishes',
-        labelKey: 'nav.dishes',
-        icon: UtensilsCrossed,
-        requiresTemplate: true,
-      },
+      { key: 'overview', labelKey: 'nav.overview', icon: LayoutDashboard },
+      { key: 'analytics', labelKey: 'nav.analytics', icon: ChartNoAxesColumn, hideable: true },
+    ],
+  },
+  {
+    key: 'menu',
+    labelKey: 'nav.menu',
+    items: [
+      { key: 'categories', labelKey: 'nav.categories', icon: LayoutList, requiresTemplate: true },
+      { key: 'dishes', labelKey: 'nav.dishes', icon: UtensilsCrossed, requiresTemplate: true },
+      // Always open: it is how an owner gets out of the locked state.
+      { key: 'design', labelKey: 'nav.design', icon: Palette },
+    ],
+  },
+  {
+    key: 'guests',
+    labelKey: 'nav.guests',
+    items: [
       {
         key: 'orders',
-        path: '/orders',
         labelKey: 'nav.orders',
         icon: ReceiptText,
         requiresTemplate: true,
-        requiresFeature: 'ordering',
+        requiresPlan: 'ordering',
         hideable: true,
       },
-      { key: 'templates', path: '/templates', labelKey: 'nav.templates', icon: Palette },
+      // Always open: the plain code is every restaurant's. The studio's
+      // styling is what the plan and the Features switch decide.
+      { key: 'qr', labelKey: 'nav.qr', icon: QrCode, requiresTemplate: true },
+      { key: 'social-links', labelKey: 'nav.socialLinks', icon: Share2 },
     ],
   },
   {
-    key: 'reach',
-    labelKey: 'nav.reach',
+    key: 'settings',
+    labelKey: 'nav.settings',
     items: [
-      {
-        key: 'qr',
-        path: '/qr',
-        labelKey: 'nav.qr',
-        icon: QrCode,
-        // Always open: the plain code is every restaurant's. The studio's
-        // styling is what the package and the Features switch decide.
-        requiresTemplate: true,
-      },
-      {
-        key: 'social-links',
-        path: '/social-links',
-        labelKey: 'nav.socialLinks',
-        icon: Share2,
-      },
-    ],
-  },
-  {
-    key: 'account',
-    labelKey: 'nav.account',
-    items: [
-      { key: 'package', path: '/package', labelKey: 'nav.package', icon: Crown },
-      {
-        key: 'settings',
-        path: '/settings',
-        labelKey: 'nav.restaurant',
-        icon: Store,
-        requiresTemplate: true,
-      },
-      { key: 'features', path: '/features', labelKey: 'nav.features', icon: ToggleRight },
-      { key: 'account', path: '/account', labelKey: 'nav.profile', icon: UserRound },
+      { key: 'restaurant', labelKey: 'nav.restaurant', icon: Store, requiresTemplate: true },
+      { key: 'features', labelKey: 'nav.features', icon: ToggleRight },
+      { key: 'package', labelKey: 'nav.package', icon: Crown },
     ],
   },
 ]
 
-/** Every item, flattened, for lookups by key. */
-export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items)
+/**
+ * The owner's own account is a page too, but it is about the person, not the
+ * restaurant, so it opens from the avatar menu rather than the sidebar.
+ */
+export const ACCOUNT_ITEM: NavItem = { key: 'account', labelKey: 'nav.account', icon: UserRound }
+
+/** Every page, flattened, for lookups by key. */
+export const NAV_ITEMS: NavItem[] = [...NAV_GROUPS.flatMap((group) => group.items), ACCOUNT_ITEM]
 
 /** The sections an owner can switch off, in sidebar order. */
 export const HIDEABLE_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.hideable)
 
 /** Whether the owner switched this section off. Only hideable sections can be. */
-export function isNavItemHidden(key: string, hidden: readonly string[]): boolean {
-  return hidden.includes(key) && HIDEABLE_ITEMS.some((item) => item.key === key)
+export function isNavItemHidden(key: string, off: readonly string[]): boolean {
+  return off.includes(key) && HIDEABLE_ITEMS.some((item) => item.key === key)
 }
 
 export type NavAccess = {
   hasTemplate: boolean
-  features: Record<PlanFeature, boolean>
+  plan: Plan
 }
 
 /**
@@ -161,7 +138,7 @@ export function isNavItemLocked(key: string, access: NavAccess): boolean {
   if (item.requiresTemplate === true && !access.hasTemplate) return true
   // Data-driven, so gating a new section on a new flag is one line in the
   // table above rather than another branch here.
-  if (item.requiresFeature !== undefined && !access.features[item.requiresFeature]) return true
+  if (item.requiresPlan !== undefined && !access.plan[item.requiresPlan]) return true
 
   return false
 }

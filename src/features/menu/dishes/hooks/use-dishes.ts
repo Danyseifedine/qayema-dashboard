@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
-import { categoryKeys } from '../../categories/hooks/category-keys'
+import { categoryKeys } from '@/features/menu/categories/hooks/category-keys'
 import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
@@ -11,9 +11,9 @@ import {
   setDishAvailability,
   updateDish,
   type DishPayload,
-} from '../api/dish.api'
-import type { Dish, DishList } from '../schemas/dish.schema'
-import { dishKeys } from './dish-keys'
+} from '@/features/menu/dishes/api/dish.api'
+import type { Dish, DishList } from '@/features/menu/dishes/schemas/dish.schema'
+import { dishKeys } from '@/features/menu/dishes/hooks/dish-keys'
 
 /**
  * Every dish for the restaurant, in one request.

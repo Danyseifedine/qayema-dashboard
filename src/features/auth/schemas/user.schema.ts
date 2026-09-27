@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { menuTextSchema } from '@/shared/utils/string/menu-text'
+import { menuTextSchema, translatableTextSchema } from '@/shared/utils/string/menu-text'
 
 /**
  * Mirrors ../qayema/app/Http/Resources/UserResource.php.
@@ -7,9 +7,10 @@ import { menuTextSchema } from '@/shared/utils/string/menu-text'
  * `restaurant` is only present once onboarding has created one, which is what
  * the dashboard branches on to decide between the wizard and the app.
  */
-const translatable = z.object({
-  en: z.string().nullable(),
-  ar: z.string().nullable(),
+const planSchema = z.object({
+  qr_studio: z.boolean(),
+  ordering: z.boolean(),
+  advanced_analytics: z.boolean(),
 })
 
 const limit = z.object({
@@ -40,7 +41,7 @@ export const restaurantSchema = z.object({
    */
   package: z.object({
     slug: z.string().nullable(),
-    name: translatable,
+    name: translatableTextSchema,
     is_contact_only: z.boolean(),
     /** ISO-8601, or null when the package does not expire. */
     ends_at: z.string().nullable(),
@@ -50,13 +51,10 @@ export const restaurantSchema = z.object({
     categories: limit,
     social_links: limit,
   }),
-  /** Optional dashboard sections the owner switched off. */
-  hidden_sections: z.array(z.string()),
-  features: z.object({
-    qr_studio: z.boolean(),
-    ordering: z.boolean(),
-    advanced_analytics: z.boolean(),
-  }),
+  /** Optional features the owner switched off on the Features page. */
+  switched_off: z.array(z.string()),
+  /** What this restaurant may use: its package plus any grants. */
+  plan: planSchema,
 })
 
 export const userSchema = z.object({
@@ -74,3 +72,4 @@ export const userResponseSchema = z.object({ data: userSchema })
 
 export type AuthUser = z.infer<typeof userSchema>
 export type AuthRestaurant = z.infer<typeof restaurantSchema>
+export type Plan = z.infer<typeof planSchema>

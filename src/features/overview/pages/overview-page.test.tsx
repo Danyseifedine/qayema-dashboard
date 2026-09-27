@@ -6,7 +6,7 @@ import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { makeDish } from '@/test/mocks/factories/menu'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
-import { OverviewPage } from './overview-page'
+import { OverviewPage } from '@/features/overview/pages/overview-page'
 
 let mock: MockAdapter
 
@@ -19,7 +19,7 @@ const LIMITS = {
 const CLOSED = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null }
 
 function stub(settings: Record<string, unknown> = {}, dishes = [makeDish()]) {
-  mock.onGet('/api/settings').reply(200, {
+  mock.onGet('/api/restaurant').reply(200, {
     data: {
       languages: ['en', 'ar'],
       name: { en: 'Olive', ar: null },
@@ -102,7 +102,7 @@ describe('OverviewPage', () => {
     renderWithProviders(<OverviewPage limits={LIMITS} onOpen={onOpen} />)
 
     await user.click(await screen.findByRole('button', { name: 'Add: A cover photo' }))
-    expect(onOpen).toHaveBeenLastCalledWith('settings')
+    expect(onOpen).toHaveBeenLastCalledWith('restaurant')
 
     await user.click(screen.getByRole('button', { name: 'Fix: 2 dishes have no photo' }))
     expect(onOpen).toHaveBeenLastCalledWith('dishes')
@@ -144,7 +144,7 @@ describe('OverviewPage', () => {
   })
 
   it('shows an error with a retry when the checklist cannot load', async () => {
-    mock.onGet('/api/settings').reply(500, { message: 'Server error', code: 'server_error' })
+    mock.onGet('/api/restaurant').reply(500, { message: 'Server error', code: 'server_error' })
     mock
       .onGet('/api/dishes')
       .reply(200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } })

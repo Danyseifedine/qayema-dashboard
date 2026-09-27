@@ -1,10 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { sessionKeys } from '@/features/auth/hooks/use-session'
-import type { AuthUser } from '@/features/auth/schemas/user.schema'
+import { sessionKeys } from '@/features/auth'
+import type { AuthUser } from '@/features/auth'
 import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
-import { updatePassword, updateProfile, type PasswordPayload } from '../api/account.api'
+import {
+  updatePassword,
+  updateProfile,
+  type PasswordPayload,
+} from '@/features/account/api/account.api'
 
 /**
  * The owner's own name. It comes back as the whole session payload, which is

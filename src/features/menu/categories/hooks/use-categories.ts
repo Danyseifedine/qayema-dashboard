@@ -8,10 +8,10 @@ import {
   reorderCategories,
   updateCategory,
   type CategoryPayload,
-} from '../api/category.api'
-import { fetchCategories } from '../api/category.api'
-import type { Category, CategoryList } from '../schemas/category.schema'
-import { categoryKeys } from './category-keys'
+} from '@/features/menu/categories/api/category.api'
+import { fetchCategories } from '@/features/menu/categories/api/category.api'
+import type { Category, CategoryList } from '@/features/menu/categories/schemas/category.schema'
+import { categoryKeys } from '@/features/menu/categories/hooks/category-keys'
 
 /**
  * Every category for the restaurant. Both menu pages read this, so the stale

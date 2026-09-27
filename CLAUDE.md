@@ -22,23 +22,37 @@
 
 ## Stack
 
-React 19, Vite, TypeScript (strict), TanStack Router (file-based) + Query +
-Table, Zustand + immer, React Hook Form + Zod v4, Tailwind v4 + shadcn/ui,
-i18next (en/ar, RTL), axios, dnd-kit, react-dropzone, recharts,
-qr-code-styling, date-fns, DOMPurify.
-Tests: Vitest + Testing Library + MSW; Playwright for e2e. Lint: oxlint.
-Format: Prettier. Hooks: Husky + lint-staged.
+React 19, Vite, TypeScript (strict), TanStack Query, Zustand, React Hook Form
 
-No third-party error telemetry. Errors go through `src/lib/logger`.
+- Zod v4, Tailwind v4 with our own primitives in `shared/components/ui`,
+  i18next (en/ar, RTL), axios, dnd-kit, recharts, qr-code-styling.
+  Tests: Vitest + Testing Library + axios-mock-adapter. Lint: oxlint. Format:
+  Prettier. Hooks: Husky + lint-staged. No router yet: `App.tsx` holds the open
+  page in state.
+
+No third-party error telemetry.
 
 ## Architecture (full detail in docs/ARCHITECTURE.md)
 
-- Feature-first: `src/features/<name>/{api,schemas,types,hooks,store,components/<area>,pages}`
-  plus an `index.ts` barrel.
-- Import direction: `routes → features → shared → lib → config`. Cross-feature
-  imports only through the other feature's `index.ts`.
-- State ownership: server data → TanStack Query; UI state → Zustand;
-  form state → RHF + Zod; URL state → router search params. Never mix.
+- **One name per thing.** Sidebar label = page heading = feature folder =
+  nav key = i18n namespace = query root: `overview`, `analytics`, `menu`
+  (categories, dishes), `design`, `orders`, `qr`, `social-links`,
+  `restaurant` (+ its `features` page), `package`, `account`. The sidebar
+  groups them as MENU / GUESTS / SETTINGS; Account opens from the avatar menu.
+  The vocabulary table is §2 of docs/ARCHITECTURE.md; the backend's CLAUDE.md
+  carries the same names.
+- Three words never swapped: **plan** = what the restaurant may use
+  (`restaurant.plan.{qr_studio, ordering, advanced_analytics}`, `requiresPlan`
+  in nav-items); **switched off** = what the owner turned off on the Features
+  page (`restaurant.switched_off`, `hideable` in nav-items); **grant** is a
+  backend word (an admin giving one restaurant more than its package).
+- Feature-first: `src/features/<name>/{api,schemas,hooks,components/<area>,pages}`
+  plus an `index.ts` barrel that exports only what outsiders import.
+- Import direction: `app → features → shared → lib → config`. Cross-feature
+  imports only through the other feature's `index.ts`; `shared` never imports
+  from `features` or `app`. Always `@/…`, never relative.
+- State ownership: server data → TanStack Query; UI preferences → Zustand;
+  form state → RHF + Zod; the open page → `useState` in `App.tsx`. Never mix.
 - Every API call parses its response with a Zod schema. Every form has a Zod
   schema. `config/env.ts` validates `import.meta.env` at boot.
 - Session is the Sanctum cookie. No tokens in localStorage/sessionStorage.
@@ -47,8 +61,9 @@ No third-party error telemetry. Errors go through `src/lib/logger`.
   logical Tailwind utilities (`ms-`, `pe-`, `text-start`) so RTL needs no
   overrides.
 - **Translations:** `src/locales/<code>/` holds `meta.json` (name, short
-  label, `ltr`/`rtl`) and one JSON per area (`common`, `menu`, `settings`,
-  `account`, `social`, `overview`, `orders`, `packages`, `templates`, `qr`).
+  label, `ltr`/`rtl`) and one JSON per namespace, named after the feature
+  (`common`, `overview`, `analytics`, `menu`, `design`, `orders`, `qr`,
+  `social-links`, `restaurant`, `features`, `package`, `account`).
   **To add a language, copy `src/locales/en/` to `src/locales/<code>/` and
   translate it** — it is found at build time and appears in the switcher;
   nothing else changes. `translations.test.ts` fails on any missing line or
@@ -62,13 +77,15 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
 - The dashboard sends `Accept-Language`; the API answers in it when it has that
   language (`lang/ar.json`, `lang/ar/validation.php` in ../qayema), English
   otherwise.
-- **Folders are final.** Add files; do not add folders. If a folder seems
-  missing, ask before creating it.
+- **The tree in docs/ARCHITECTURE.md §2 is the tree.** Add files freely into
+  the folder that fits. A new, renamed or removed folder is a design decision:
+  ask, and update §2 in the same change. No `.gitkeep` placeholders.
 
 ## Conventions
 
-- Files: `kebab-case.ts`, components `PascalCase.tsx`, hooks `use-*.ts`,
-  `*.schema.ts`, `*.api.ts`, `*.store.ts`, `*.test.ts(x)` co-located.
+- Files: `kebab-case.ts(x)` for everything, components included; hooks
+  `use-*.ts`, keys `*-keys.ts`, `*.schema.ts`, `*.api.ts`, `*.store.ts`,
+  `*.test.ts(x)` co-located. Identifiers use `color`; English copy "colour".
 - Named exports only. `@/` alias for all imports.
 - Query keys come from the feature's key factory; never hand-written arrays.
 - Toasts live in the mutation hook, not the call site, so every caller gets
@@ -84,49 +101,55 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   unlimited — never render it as a number. Nothing is bought in the SPA:
   `POST /api/packages/request` sends a message and an admin assigns the
   package.
-- Section gating is data-driven: `requiresFeature` on a nav item is matched
-  against `restaurant.features` by key. Adding a gated section is one line in
-  `nav-items.ts`, not another branch in `isNavItemLocked`.
-- **Features page** (`features/settings/pages/features-page.tsx`): one switch
+- Section gating is data-driven: `requiresPlan` on a nav item is matched
+  against `restaurant.plan` by key. Adding a gated section is one line in
+  `app/layouts/authenticated/nav-items.ts`, not another branch in
+  `isNavItemLocked`.
+- **Features page** (`features/restaurant/pages/features-page.tsx`): one switch
   each for Orders, QR Studio, Analytics and Multiple languages, stored in
-  `restaurant.hidden_sections` (`PUT /api/sections`, optimistic through the
-  session cache; must match `Restaurant::OPTIONAL_FEATURES`). A nav item with
-  `hideable: true` (analytics, orders) leaves the sidebar when off
+  `restaurant.switched_off` (`PUT /api/features` with `{off}`, optimistic
+  through the session cache; must match `Restaurant::OPTIONAL_FEATURES`). A nav
+  item with `hideable: true` (analytics, orders) leaves the sidebar when off
   (`isNavItemHidden`), and an open page hands over to Overview. QR Studio off
   keeps the QR code page with the plain code (`qr.switched_off`). Multiple
   languages carries its own pickers (second language, opening language) saved
-  with `PUT /api/menu-languages`; Settings no longer sets languages, its text
-  fields just follow `useMenuLanguages()`.
+  with `PUT /api/menu-languages`; the Restaurant page's text fields just
+  follow `useMenuLanguages()` (from `features/auth`, it reads the session).
+- **Design page** (`features/design`): the designs (backend `Template` rows,
+  `/api/templates`) and the Menu colour card (`PUT /api/template-settings`,
+  which merges — sending one colour keeps the others).
 - An order is written once by the guest who placed it. The dashboard may change
   its `status` and nothing else.
-- The QR preview mirrors the printable card: `qr-studio/components/preview/qr-options.ts`
+- The QR preview mirrors the printable card: `features/qr/utils/qr-options.ts`
   is the twin of `QrStyle::options()` in `../qayema`, tested against the same
   cases. Change one, change both. `qr-code-styling` needs a real canvas, so
   tests mock it and assert the options it was given, not the pixels.
 - **Two kinds of language.** `shared/constants/locales.ts` is the dashboard's
   own interface (en/ar). `shared/constants/menu-languages.ts` is what a
   restaurant's _menu_ can be written in: English plus one optional second
-  language, per restaurant, read with `useMenuLanguages()` from the session.
-  Menu text is `Record<code, string|null>` (`menuTextSchema`); forms build it
+  language, per restaurant, read with `useMenuLanguages()` (`features/auth`).
+  Menu text is `Record<code, string|null>` (`menuTextSchema`); platform
+  content (package, design names) is `{en, ar}` (`translatableTextSchema`),
+  both in `shared/utils/string/menu-text.ts`; forms build menu text
   with `toMenuTextForm()` and require English with `requireEnglish()`.
   `TranslatableTextField` takes `languages` and shows no tabs for an
   English-only menu. Send every active language (blank clears it); never send
   a hidden one — the server keeps it for when the owner switches back.
 - Card text on the QR form is `''` in the form and `null` on the wire;
   `toFormValues` / `toDesign` convert, so blank text never saves as `""`.
-- **Overview** is the menu at a glance: dish, category and social-link counts
-  from the session's `limits`, and a "Finish your menu" checklist built from
-  settings + dishes by `menuChecklist()` (a pure function, unit tested). Each
-  item's action is a nav key. **Analytics** is its own page. Both live in
-  `features/overview`.
-- Analytics: `GET /api/stats` for every package, `GET /api/stats/advanced`
-  only when `restaurant.features.advanced_analytics` is on (the hook is
-  disabled otherwise, never fired and caught). Charts are recharts with
-  `responsive`; colours are theme tokens (`chart-style.ts`). jsdom has no
-  ResizeObserver, so the test setup stubs it and chart tests read the words
-  around a chart, not its bars.
+- **Overview** (`features/overview`) is the menu at a glance: dish, category
+  and social-link counts from the session's `limits`, and a "Finish your menu"
+  checklist built from the restaurant + dishes by `menuChecklist()` (a pure
+  function, unit tested). Each item's action is a nav key.
+- **Analytics** (`features/analytics`): `GET /api/analytics` for every
+  package, `GET /api/analytics/advanced` only when
+  `restaurant.plan.advanced_analytics` is on (the hook is disabled otherwise,
+  never fired and caught). Charts are recharts with `responsive`; colours are
+  theme tokens (`components/charts/chart-style.ts`), date helpers are
+  `shared/utils/format/date.ts`. jsdom has no ResizeObserver, so the test
+  setup stubs it and chart tests read the words around a chart, not its bars.
 
 ## Commands
 
 `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` ·
-`npm run test` · `npm run test:e2e` · `npm run format`
+`npm run test` · `npm run format` · `npm run format:check`

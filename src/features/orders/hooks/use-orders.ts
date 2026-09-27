@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tan
 import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
-import { fetchOrders, setOrderStatus } from '../api/order.api'
-import type { Order, OrderList, OrderStatus } from '../schemas/order.schema'
-import { orderKeys } from './order-keys'
+import { fetchOrders, setOrderStatus } from '@/features/orders/api/order.api'
+import type { Order, OrderList, OrderStatus } from '@/features/orders/schemas/order.schema'
+import { orderKeys } from '@/features/orders/hooks/order-keys'
 
 /**
  * Orders for the restaurant, newest first.

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { request } from '@/lib/api'
-import { userResponseSchema, type AuthUser } from '../schemas/user.schema'
+import { userResponseSchema, type AuthUser } from '@/features/auth/schemas/user.schema'
 
 /** GET /api/user — the signed-in owner, their restaurant, limits and features. */
 export async function fetchSession(signal?: AbortSignal): Promise<AuthUser> {

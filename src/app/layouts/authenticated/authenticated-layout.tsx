@@ -1,11 +1,12 @@
 import { X } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Sidebar, Topbar } from '@/shared/components/navigation'
+import { Sidebar } from '@/app/layouts/authenticated/sidebar/sidebar'
+import { Topbar } from '@/app/layouts/authenticated/topbar/topbar'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { useUiStore } from '@/stores/ui.store'
-import { NAV_ITEMS, type NavAccess, type NavItem } from './nav-items'
+import { NAV_ITEMS, type NavAccess, type NavItem } from '@/app/layouts/authenticated/nav-items'
 
 export type AuthenticatedLayoutProps = {
   activeKey: string
@@ -15,9 +16,9 @@ export type AuthenticatedLayoutProps = {
   packageName: string
   publicUrl?: string | null
   hasTemplate: boolean
-  features: NavAccess['features']
+  plan: NavAccess['plan']
   /** Sections the owner switched off. */
-  hiddenSections: readonly string[]
+  switchedOff: readonly string[]
   locale: Locale
   onLocaleChange: (locale: Locale) => void
   onLogout: () => void
@@ -35,8 +36,8 @@ export function AuthenticatedLayout({
   packageName,
   publicUrl,
   hasTemplate,
-  features,
-  hiddenSections,
+  plan,
+  switchedOff,
   locale,
   onLocaleChange,
   onLogout,
@@ -85,8 +86,8 @@ export function AuthenticatedLayout({
       collapsed={mobile ? false : collapsed}
       onToggleCollapse={toggleSidebar}
       hasTemplate={hasTemplate}
-      features={features}
-      hidden={hiddenSections}
+      plan={plan}
+      off={switchedOff}
     />
   )
 
@@ -156,7 +157,7 @@ export function AuthenticatedLayout({
           onLocaleChange={onLocaleChange}
           onOpenMobileNav={() => setMobileOpen(true)}
           onOpenPackage={() => goTo('package')}
-          onOpenProfile={() => goTo('account')}
+          onOpenAccount={() => goTo('account')}
           onLogout={onLogout}
         />
         {/* Full width: the menu builder lays cards out in a grid and wants

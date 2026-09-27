@@ -6,13 +6,13 @@
  */
 export const QUERY_ROOTS = {
   session: 'session',
-  stats: 'stats',
+  analytics: 'analytics',
   categories: 'categories',
   dishes: 'dishes',
-  settings: 'settings',
-  templates: 'templates',
+  restaurant: 'restaurant',
+  design: 'design',
   orders: 'orders',
-  packages: 'packages',
+  package: 'package',
   qr: 'qr',
   socialLinks: 'social-links',
 } as const

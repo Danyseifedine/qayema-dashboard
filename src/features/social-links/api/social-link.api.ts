@@ -6,7 +6,7 @@ import {
   type SocialLink,
   type SocialLinkFormValues,
   type SocialLinkList,
-} from '../schemas/social-link.schema'
+} from '@/features/social-links/schemas/social-link.schema'
 
 export function fetchSocialLinks(signal?: AbortSignal): Promise<SocialLinkList> {
   return request(socialLinkListSchema, { method: 'GET', url: '/api/social-links', signal })

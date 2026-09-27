@@ -1,0 +1,54 @@
+{
+  "page": {
+    "title": "Package",
+    "description": "What your menu can hold, and what a bigger package would give you.",
+    "fallbackName": "Free"
+  },
+  "current": {
+    "eyebrow": "Your package",
+    "endsOn": "Renews or ends on <date>{{date}}</date>",
+    "contactOnly": "Arranged with us directly.",
+    "dishes": "Dishes",
+    "categories": "Categories",
+    "socialLinks": "Social links",
+    "qrIncluded": "QR studio is included, so you can brand your code.",
+    "qrNotIncluded": "QR studio is not included on this package."
+  },
+  "card": {
+    "letsTalk": "Let's talk",
+    "free": "Free",
+    "perMonth": "/ month",
+    "limits": {
+      "dishes_one": "{{number}} dish",
+      "dishes_other": "{{number}} dishes",
+      "dishesUnlimited": "Unlimited dishes",
+      "categories_one": "{{number}} category",
+      "categories_other": "{{number}} categories",
+      "categoriesUnlimited": "Unlimited categories",
+      "socialLinks_one": "{{number}} social link",
+      "socialLinks_other": "{{number}} social links",
+      "socialLinksUnlimited": "Unlimited social links"
+    },
+    "qrStudio": "QR studio",
+    "basicQr": "Basic QR code",
+    "yours": "Your package",
+    "includedForEveryone": "Included for everyone",
+    "talkToUs": "Talk to us",
+    "request": "Request this package"
+  },
+  "request": {
+    "title": "Ask about {{name}}",
+    "description": "We will read this and reply by email to set your package up. Nothing changes and nothing is charged until then.",
+    "messageLabel": "Anything we should know?",
+    "optional": "optional",
+    "placeholder": "How many restaurants, how big your menu is, when you need it.",
+    "messageTooLong": "Keep this under 2000 characters.",
+    "cancel": "Cancel",
+    "submit": "Send request"
+  },
+  "toast": {
+    "sent": "Request sent",
+    "sentDescription": "We will be in touch shortly to set this up.",
+    "failed": "Could not send that request"
+  }
+}

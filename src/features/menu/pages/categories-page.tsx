@@ -1,16 +1,16 @@
 import { FolderPlus } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CategoryDialog } from '../categories/components/dialogs/category-dialog'
-import { CategoryCard } from '../categories/components/list/category-card'
+import { CategoryDialog } from '@/features/menu/categories/components/dialogs/category-dialog'
+import { CategoryCard } from '@/features/menu/categories/components/list/category-card'
 import {
   useCategories,
   useDeleteCategory,
   useReorderCategories,
-} from '../categories/hooks/use-categories'
-import type { Category } from '../categories/schemas/category.schema'
-import { SortableCard, SortableList } from '../components/dnd'
-import { LimitNotice } from '../components/limits/limit-notice'
+} from '@/features/menu/categories/hooks/use-categories'
+import type { Category } from '@/features/menu/categories/schemas/category.schema'
+import { SortableCard, SortableList } from '@/features/menu/components/dnd'
+import { LimitNotice } from '@/shared/components/data-display/badges/limit-notice'
 import { ConfirmDialog, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'

@@ -11,7 +11,7 @@ import {
 import { HelperText, Input, Label, Textarea } from '@/shared/components/ui'
 import { MAIN_LANGUAGE, languageDir, languageName } from '@/shared/constants/menu-languages'
 import { cn } from '@/shared/utils/dom/cn'
-import { LocaleTabs } from './locale-tabs'
+import { LocaleTabs } from '@/shared/components/forms/translatable/locale-tabs'
 
 export type TranslatableFieldProps<T extends FieldValues> = {
   control: Control<T>

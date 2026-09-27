@@ -1,24 +1,34 @@
 // Layout
-export { Field, type FieldProps } from './layout/field'
-export { FieldGroup, Form, FormActions, FormSection } from './layout/form'
+export { Field, type FieldProps } from '@/shared/components/forms/layout/field'
+export { FieldGroup, Form, FormActions, FormSection } from '@/shared/components/forms/layout/form'
 
 // Fields
-export { ChoiceField, type ChoiceFieldProps, type ChoiceOption } from './fields/choice-field'
-export { ColorField, type ColorFieldProps } from './fields/color-field'
-export { ComboboxField, type ComboboxFieldProps } from './fields/combobox-field'
-export { PhoneField, type PhoneFieldProps } from './fields/phone-field'
-export { PriceField, type PriceFieldProps } from './fields/price-field'
-export { SwitchField, type SwitchFieldProps } from './fields/switch-field'
-export { TextField, type TextFieldProps } from './fields/text-field'
-export { TextareaField, type TextareaFieldProps } from './fields/textarea-field'
-export { UrlField, type UrlFieldProps } from './fields/url-field'
+export {
+  ChoiceField,
+  type ChoiceFieldProps,
+  type ChoiceOption,
+} from '@/shared/components/forms/fields/choice-field'
+export { ColorField, type ColorFieldProps } from '@/shared/components/forms/fields/color-field'
+export {
+  ComboboxField,
+  type ComboboxFieldProps,
+} from '@/shared/components/forms/fields/combobox-field'
+export { PhoneField, type PhoneFieldProps } from '@/shared/components/forms/fields/phone-field'
+export { PriceField, type PriceFieldProps } from '@/shared/components/forms/fields/price-field'
+export { SwitchField, type SwitchFieldProps } from '@/shared/components/forms/fields/switch-field'
+export { TextField, type TextFieldProps } from '@/shared/components/forms/fields/text-field'
+export {
+  TextareaField,
+  type TextareaFieldProps,
+} from '@/shared/components/forms/fields/textarea-field'
+export { UrlField, type UrlFieldProps } from '@/shared/components/forms/fields/url-field'
 
 // Translatable
-export { LocaleTabs, type LocaleTabsProps } from './translatable/locale-tabs'
+export {
+  LocaleTabs,
+  type LocaleTabsProps,
+} from '@/shared/components/forms/translatable/locale-tabs'
 export {
   TranslatableTextField,
   type TranslatableFieldProps,
-} from './translatable/translatable-text-field'
-
-// Media
-export { ImageField, type ImageFieldProps, type ImageFieldValue } from './media/image-field'
+} from '@/shared/components/forms/translatable/translatable-text-field'

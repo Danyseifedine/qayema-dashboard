@@ -7,26 +7,26 @@ import {
   FieldGroup,
   Form,
   FormActions,
-  ImageField,
   PriceField,
   SwitchField,
   TranslatableTextField,
 } from '@/shared/components/forms'
+import { ImageField } from '@/features/uploads'
 import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
-import type { Category } from '../../../categories/schemas/category.schema'
-import { useSaveDish } from '../../hooks/use-dishes'
-import { useMenuLanguages } from '@/features/settings/hooks/use-menu-languages'
+import type { Category } from '@/features/menu/categories/schemas/category.schema'
+import { useSaveDish } from '@/features/menu/dishes/hooks/use-dishes'
+import { useMenuLanguages } from '@/features/auth'
 import { toMenuTextForm } from '@/shared/utils/string/menu-text'
 import {
   dishFormSchema,
   type Dish,
   type DishFormInput,
   type DishFormValues,
-} from '../../schemas/dish.schema'
+} from '@/features/menu/dishes/schemas/dish.schema'
 
 export type DishDialogProps = {
   open: boolean
