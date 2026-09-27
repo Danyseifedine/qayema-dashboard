@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n'
 import type { AxiosRequestConfig } from 'axios'
 import type { ZodType } from 'zod'
 import { api } from './client'
@@ -30,9 +31,8 @@ export async function request<T>(schema: ZodType<T>, config: AxiosRequestConfig)
       })
     }
 
-    throw toApiError(
-      new Error(`The server sent an unexpected response for ${config.url ?? 'this request'}.`),
-    )
+    // The URL is in the log above; the owner only needs to know it failed.
+    throw toApiError(new Error(t('errors.unexpected')))
   }
 
   return result.data

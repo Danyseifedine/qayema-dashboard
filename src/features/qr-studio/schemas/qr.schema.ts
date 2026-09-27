@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 
 /**
  * Mirrors ../qayema/app/Http/Controllers/Api/QrController.php (the payload)
@@ -29,7 +30,7 @@ export type LogoSize = (typeof LOGO_SIZES)[number]
 export type CardTheme = (typeof CARD_THEMES)[number]
 
 const HEX = /^#[0-9a-fA-F]{6}$/
-const colour = z.string().regex(HEX, 'Use a colour like #1F6FEB.')
+const colour = z.string().regex(HEX, { error: () => t('qr:schema.colour') })
 
 export const qrDesignSchema = z.object({
   dot_style: z.enum(DOT_STYLES),
@@ -89,9 +90,18 @@ export const qrResponseSchema = z.object({ data: qrSchema })
  * on the way out.
  */
 export const qrFormSchema = qrDesignSchema.extend({
-  title: z.string().trim().max(60, 'Keep the title under 60 characters.'),
-  subtitle: z.string().trim().max(80, 'Keep the subtitle under 80 characters.'),
-  cta: z.string().trim().max(60, 'Keep this under 60 characters.'),
+  title: z
+    .string()
+    .trim()
+    .max(60, { error: () => t('qr:schema.titleMax') }),
+  subtitle: z
+    .string()
+    .trim()
+    .max(80, { error: () => t('qr:schema.subtitleMax') }),
+  cta: z
+    .string()
+    .trim()
+    .max(60, { error: () => t('qr:schema.ctaMax') }),
 })
 
 export type QrFormValues = z.infer<typeof qrFormSchema>

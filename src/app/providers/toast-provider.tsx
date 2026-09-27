@@ -1,12 +1,12 @@
 import { Toaster } from 'sonner'
-import { LOCALE_DIR } from '@/shared/constants/locales'
+import { localeDir } from '@/shared/constants/locales'
 import { usePreferencesStore } from '@/stores/preferences.store'
 
 /**
  * Mounts the toaster.
  *
  * It sits in the top outer corner, which mirrors with the language: top right
- * in English, top left in Arabic. Colours come from the token layer, so it
+ * in a left-to-right language, top left in a right-to-left one. Colours come from the token layer, so it
  * follows the theme.
  */
 export function ToastProvider() {
@@ -16,8 +16,8 @@ export function ToastProvider() {
   return (
     <Toaster
       theme={theme}
-      dir={LOCALE_DIR[locale]}
-      position={locale === 'ar' ? 'top-left' : 'top-right'}
+      dir={localeDir(locale)}
+      position={localeDir(locale) === 'rtl' ? 'top-left' : 'top-right'}
       closeButton
       duration={4000}
       toastOptions={{

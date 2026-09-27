@@ -12,13 +12,6 @@ export type StatsRange = (typeof STATS_RANGES)[number]
 /** Ranges every package gets; the others need advanced analytics. */
 export const BASIC_RANGES: readonly StatsRange[] = ['7d', '30d']
 
-export const RANGE_LABELS: Record<StatsRange, string> = {
-  '7d': '7 days',
-  '30d': '30 days',
-  '90d': '90 days',
-  all: 'All time',
-}
-
 const count = z.number().int().nonnegative()
 
 export const statsSummarySchema = z.object({
@@ -72,27 +65,13 @@ export const advancedStatsSchema = z.object({
   hours: z.array(count).length(24),
   /** Views by weekday, Monday first. */
   weekdays: z.array(count).length(7),
-  devices: breakdownSchema,
-  browsers: breakdownSchema,
-  systems: breakdownSchema,
   languages: breakdownSchema,
   actions: z.record(z.enum(GUEST_ACTIONS), count),
   top_added: namedCountSchema,
   top_categories: namedCountSchema,
   searches: termsSchema,
   missed_searches: termsSchema,
-  orders: z
-    .object({
-      count,
-      cancelled: count,
-      revenue: z.number().nonnegative(),
-      average: z.number().nonnegative(),
-      currency: z.string(),
-      top_dishes: z.array(
-        z.object({ name: z.string(), quantity: count, revenue: z.number().nonnegative() }),
-      ),
-    })
-    .nullable(),
+  /** Null when the package does not take orders. */
   funnel: z.object({ visitors: count, carted: count, ordered: count }).nullable(),
 })
 

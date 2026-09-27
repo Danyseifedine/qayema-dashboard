@@ -1,5 +1,6 @@
+import { useTranslation } from 'react-i18next'
 import { Segmented } from '@/shared/components/ui'
-import { LOCALES, LOCALE_SHORT, type Locale } from '@/shared/constants/locales'
+import { LOCALES, localeLabel, localeShort, type Locale } from '@/shared/constants/locales'
 
 export type LanguageSwitcherProps = {
   value: Locale
@@ -12,16 +13,19 @@ export type LanguageSwitcherProps = {
  * own glyph rather than a transliteration.
  */
 export function LanguageSwitcher({ value, onChange, className }: LanguageSwitcherProps) {
+  const { t } = useTranslation()
+
   return (
     <Segmented
-      aria-label="Interface language"
+      aria-label={t('languageSwitcher.label')}
       size="sm"
       value={value}
       onChange={onChange}
       className={className}
       options={LOCALES.map((locale) => ({
         value: locale,
-        label: locale === 'ar' ? 'ع' : LOCALE_SHORT[locale],
+        label: localeShort(locale),
+        title: localeLabel(locale),
       }))}
     />
   )

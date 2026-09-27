@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
 import { Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
@@ -14,11 +15,6 @@ export type PackageCardProps = {
   onRequest: () => void
 }
 
-/** A limit of null is unlimited, which reads better as a word than a symbol. */
-function limitText(value: number | null, noun: string): string {
-  return value === null ? `Unlimited ${noun}` : `${value.toLocaleString()} ${noun}`
-}
-
 /**
  * One package.
  *
@@ -27,14 +23,21 @@ function limitText(value: number | null, noun: string): string {
  * every restaurant already has it.
  */
 export function PackageCard({ pkg, current, locale, onRequest }: PackageCardProps) {
+  const { t } = useTranslation('packages')
   const name = translated(pkg.name, locale)
   const description = translated(pkg.description, locale)
+
+  /** A limit of null is unlimited, which reads better as a word than a symbol. */
+  const limitText = (value: number | null, noun: 'dishes' | 'categories' | 'socialLinks') =>
+    value === null
+      ? t(`card.limits.${noun}Unlimited`)
+      : t(`card.limits.${noun}`, { count: value, number: value.toLocaleString() })
 
   const lines = [
     limitText(pkg.features.dish_limit, 'dishes'),
     limitText(pkg.features.category_limit, 'categories'),
-    limitText(pkg.features.social_link_limit, 'social links'),
-    pkg.features.qr_studio ? 'QR studio' : 'Basic QR code',
+    limitText(pkg.features.social_link_limit, 'socialLinks'),
+    pkg.features.qr_studio ? t('card.qrStudio') : t('card.basicQr'),
   ]
 
   return (
@@ -50,9 +53,13 @@ export function PackageCard({ pkg, current, locale, onRequest }: PackageCardProp
 
       <p className="mt-2 flex items-baseline gap-1.5">
         {pkg.price_cents === null ? (
-          <span className="font-display text-[24px] leading-none text-accent">Let's talk</span>
+          <span className="font-display text-[24px] leading-none text-accent">
+            {t('card.letsTalk')}
+          </span>
         ) : pkg.price_cents === 0 ? (
-          <span className="font-display text-[24px] leading-none text-accent">Free</span>
+          <span className="font-display text-[24px] leading-none text-accent">
+            {t('card.free')}
+          </span>
         ) : (
           <>
             <Money
@@ -61,7 +68,7 @@ export function PackageCard({ pkg, current, locale, onRequest }: PackageCardProp
               locale={locale}
               className="font-display text-[24px] leading-none text-accent"
             />
-            <span className="text-[12px] text-[var(--muted)]">/ month</span>
+            <span className="text-[12px] text-[var(--muted)]">{t('card.perMonth')}</span>
           </>
         )}
       </p>
@@ -82,15 +89,15 @@ export function PackageCard({ pkg, current, locale, onRequest }: PackageCardProp
       <div className="mt-auto pt-4">
         {current ? (
           <Button variant="secondary" block disabled>
-            Your package
+            {t('card.yours')}
           </Button>
         ) : pkg.is_default ? (
           <Button variant="ghost" block disabled>
-            Included for everyone
+            {t('card.includedForEveryone')}
           </Button>
         ) : (
           <Button block onClick={onRequest}>
-            {pkg.is_contact_only ? 'Talk to us' : 'Request this package'}
+            {pkg.is_contact_only ? t('card.talkToUs') : t('card.request')}
           </Button>
         )}
       </div>

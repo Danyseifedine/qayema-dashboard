@@ -1,13 +1,12 @@
 import { useMemo } from 'react'
 import type { Control } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ComboboxField, FormSection } from '@/shared/components/forms'
 import { CURRENCY_OPTIONS } from '@/shared/constants/currencies'
 import type { SettingsFormValues } from '../../schemas/settings.schema'
 
 export type LocalisationSectionProps = {
   control: Control<SettingsFormValues>
-  /** Read-only: the language the owner writes in, fixed at onboarding. */
-  languageName: string
 }
 
 /**
@@ -27,43 +26,34 @@ function timezoneOptions(): { value: string; label: string }[] {
   return names.map((name) => ({ value: name, label: name.replace(/_/g, ' ') }))
 }
 
-/** Money, language and time: the three things every price and hour depends on. */
-export function LocalisationSection({ control, languageName }: LocalisationSectionProps) {
+/** Money and time: what every price and every opening hour depends on. */
+export function LocalisationSection({ control }: LocalisationSectionProps) {
+  const { t } = useTranslation('settings')
   const timezones = useMemo(timezoneOptions, [])
 
   return (
-    <FormSection title="Language, money and time" description="Applied across your whole menu.">
+    <FormSection title={t('localisation.title')} description={t('localisation.description')}>
       <ComboboxField
         control={control}
         name="currency"
-        label="Currency"
+        label={t('localisation.currencyLabel')}
         required
         options={CURRENCY_OPTIONS}
-        placeholder="Search currencies"
-        emptyText="No currency matches that"
-        hint="Changing this relabels existing prices; it does not convert them."
+        placeholder={t('localisation.currencyPlaceholder')}
+        emptyText={t('localisation.currencyEmpty')}
+        hint={t('localisation.currencyHint')}
       />
 
       <ComboboxField
         control={control}
         name="timezone"
-        label="Timezone"
+        label={t('localisation.timezoneLabel')}
         required
         options={timezones}
-        placeholder="Search timezones"
-        emptyText="No timezone matches that"
-        hint="Used to work out whether you are open right now."
+        placeholder={t('localisation.timezonePlaceholder')}
+        emptyText={t('localisation.timezoneEmpty')}
+        hint={t('localisation.timezoneHint')}
       />
-
-      <div className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-medium">Menu language</span>
-        <p className="rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--field)] px-3.5 py-2.5 text-[14px] text-[var(--muted)]">
-          {languageName}
-        </p>
-        <p className="text-[12px] text-[var(--muted)]">
-          Chosen when you set up your menu. Talk to us if it needs to change.
-        </p>
-      </div>
     </FormSection>
   )
 }

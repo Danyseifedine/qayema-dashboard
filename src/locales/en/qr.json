@@ -1,0 +1,108 @@
+{
+  "page": {
+    "title": "QR code",
+    "description": "Guests scan this to open your menu. Download it as it is, or make it your own.",
+    "png": "PNG",
+    "svg": "SVG",
+    "formatHint": "PNG for sharing and most printers. SVG stays sharp at any size — use it for a large print.",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "copyFailed": "Could not copy the link",
+    "downloadFailed": "Could not download the QR code",
+    "openCard": "Open the printable table card",
+    "cardUnsaved": "The card shows your saved design. Save to see these changes on it.",
+    "scansTitle": "Scans",
+    "scansDescription": "Menu visits that came through this QR code.",
+    "colours": "Colours",
+    "shapes": "Shapes",
+    "logo": "Logo",
+    "card": "Printable card",
+    "cardDescription": "The table card around the code. It does not change how the code scans.",
+    "resetToSimple": "Reset to simple",
+    "save": "Save",
+    "lockedTitle": "Customizing is not on your package",
+    "lockedDescription": "Your QR code works as it is. Colours, shapes, a logo and the printable card come with a package that includes the QR studio."
+  },
+  "contrast": {
+    "title": "This may not scan",
+    "warning_one": "The {{parts}} is too close to the background colour for every phone to read. Pick a darker colour or a lighter background.",
+    "warning_other": "The {{parts}} are too close to the background colour for every phone to read. Pick a darker colour or a lighter background.",
+    "separator": ", ",
+    "lastSeparator": " and ",
+    "parts": {
+      "dots": "dots",
+      "gradient": "gradient",
+      "cornerFrames": "corner frames",
+      "cornerCentres": "corner centres"
+    }
+  },
+  "stats": {
+    "today": "Today",
+    "week": "This week",
+    "month": "This month",
+    "total": "All time"
+  },
+  "colours": {
+    "dots": "Dots",
+    "background": "Background",
+    "cornerFrames": "Corner frames",
+    "cornerCentres": "Corner centres",
+    "gradient": "Gradient",
+    "gradientDescription": "Blend the dots into a second colour.",
+    "secondColour": "Second colour",
+    "direction": "Direction",
+    "linear": "Across",
+    "radial": "From the centre"
+  },
+  "shapes": {
+    "dots": "Dots",
+    "cornerFrames": "Corner frames",
+    "cornerFramesHint": "The three big squares a camera looks for first.",
+    "cornerCentres": "Corner centres",
+    "square": "Square",
+    "dotsStyle": "Dots",
+    "rounded": "Rounded",
+    "extraRounded": "Extra rounded",
+    "classy": "Classy",
+    "classyRounded": "Classy rounded",
+    "circle": "Circle"
+  },
+  "logo": {
+    "label": "Your logo in the middle",
+    "description": "Error correction rises so the code still scans with part of it covered.",
+    "noLogo": "Add a logo on the Restaurant page first.",
+    "size": "Logo size",
+    "sizeHint": "A larger logo covers more of the code. If it stops scanning, go smaller.",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large"
+  },
+  "card": {
+    "theme": "Card",
+    "themeHint": "“Your colour” uses your menu's main colour.",
+    "light": "Light",
+    "dark": "Dark",
+    "brand": "Your colour",
+    "title": "Title",
+    "subtitle": "Subtitle",
+    "subtitlePlaceholder": "Scan · Browse · Order",
+    "cta": "Call to action",
+    "ctaPlaceholder": "Scan to see the menu",
+    "optional": "optional",
+    "showUrl": "Show the link under the code"
+  },
+  "preview": {
+    "label": "Your menu's QR code"
+  },
+  "toast": {
+    "saved": "QR code saved",
+    "savedDescription": "Your printed codes keep working — only the look changed.",
+    "saveFailed": "Could not save your QR code"
+  },
+  "schema": {
+    "colour": "Use a colour like #1F6FEB.",
+    "titleMax": "Keep the title under 60 characters.",
+    "subtitleMax": "Keep the subtitle under 80 characters.",
+    "ctaMax": "Keep this under 60 characters."
+  }
+}

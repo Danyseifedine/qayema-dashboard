@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { env } from '@/config/env'
 import { safeRedirect } from '@/lib/security/safe-redirect'
 import { Alert, Button } from '@/shared/components/ui'
@@ -27,6 +28,7 @@ export type SessionGateProps = {
  * who reaches the dashboard URL directly without having finished.
  */
 export function SessionGate({ children }: SessionGateProps) {
+  const { t } = useTranslation()
   const session = useSession()
 
   if (session.isPending) {
@@ -34,7 +36,7 @@ export function SessionGate({ children }: SessionGateProps) {
       <div className="grid min-h-dvh place-items-center bg-[var(--bg)] text-[var(--muted)]">
         <p className="flex items-center gap-2.5 text-[14px]">
           <Loader2 aria-hidden className="size-4 animate-spin" />
-          Checking your session…
+          {t('session.checking')}
         </p>
       </div>
     )
@@ -50,13 +52,13 @@ export function SessionGate({ children }: SessionGateProps) {
         <div className="w-full max-w-md">
           <Alert
             variant={unauthenticated ? 'info' : 'error'}
-            title={unauthenticated ? 'Taking you to sign in' : 'We could not load your account'}
+            title={unauthenticated ? t('session.redirectingTitle') : t('session.loadFailed')}
           >
-            {unauthenticated ? 'One moment…' : session.error.message}
+            {unauthenticated ? t('session.redirectingBody') : session.error.message}
           </Alert>
           {unauthenticated ? null : (
             <Button className="mt-4" block onClick={() => void session.refetch()}>
-              Try again
+              {t('session.retry')}
             </Button>
           )}
         </div>
@@ -71,12 +73,11 @@ export function SessionGate({ children }: SessionGateProps) {
     return (
       <div className="grid min-h-dvh place-items-center bg-[var(--bg)] px-4">
         <div className="w-full max-w-md">
-          <Alert variant="info" title="Let's finish setting up">
-            Your restaurant is not ready yet. Finish the short setup and you will land right back
-            here.
+          <Alert variant="info" title={t('session.onboardingTitle')}>
+            {t('session.onboardingBody')}
           </Alert>
           <Button className="mt-4" block onClick={() => safeRedirect(ONBOARDING_URL)}>
-            Continue setup
+            {t('session.continueSetup')}
           </Button>
         </div>
       </div>

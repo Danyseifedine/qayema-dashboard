@@ -1,13 +1,9 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
 import { fetchOrders, setOrderStatus } from '../api/order.api'
-import {
-  ORDER_STATUS_LABELS,
-  type Order,
-  type OrderList,
-  type OrderStatus,
-} from '../schemas/order.schema'
+import type { Order, OrderList, OrderStatus } from '../schemas/order.schema'
 import { orderKeys } from './order-keys'
 
 /**
@@ -37,9 +33,14 @@ export function useSetOrderStatus() {
   return useMutation<Order, ApiError, { id: number; status: OrderStatus }>({
     mutationFn: ({ id, status }) => setOrderStatus(id, status),
     onSuccess: (order) => {
-      toast.success(`Order ${order.reference} marked ${ORDER_STATUS_LABELS[order.status]}`)
+      toast.success(
+        t('orders:toast.updated', {
+          reference: order.reference,
+          status: t(`orders:status.${order.status}`),
+        }),
+      )
       void queryClient.invalidateQueries({ queryKey: orderKeys.all })
     },
-    onError: (error) => toast.error('Could not update that order', error),
+    onError: (error) => toast.error(t('orders:toast.updateFailed'), error),
   })
 }

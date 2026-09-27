@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { KeyRound } from 'lucide-react'
 import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Form, FormActions, FormSection, TextField } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
@@ -20,6 +21,7 @@ const EMPTY: PasswordFormValues = {
 }
 
 export function PasswordSection({ hasPassword }: PasswordSectionProps) {
+  const { t } = useTranslation('account')
   const save = useSavePassword(hasPassword)
 
   const schema = useMemo(() => passwordFormSchema(hasPassword), [hasPassword])
@@ -51,12 +53,8 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
   return (
     <Form onSubmit={onSubmit}>
       <FormSection
-        title={hasPassword ? 'Password' : 'Set a password'}
-        description={
-          hasPassword
-            ? 'Changing this signs out every other browser you stayed signed in on.'
-            : 'You signed up with Google. Adding a password gives you a second way in.'
-        }
+        title={hasPassword ? t('password.changeTitle') : t('password.setTitle')}
+        description={hasPassword ? t('password.changeDescription') : t('password.setDescription')}
       >
         {formError ? <Alert variant="error">{formError}</Alert> : null}
 
@@ -64,7 +62,7 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
           <TextField
             control={form.control}
             name="current_password"
-            label="Current password"
+            label={t('password.currentLabel')}
             required
             password
             autoComplete="current-password"
@@ -75,17 +73,17 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
         <TextField
           control={form.control}
           name="password"
-          label={hasPassword ? 'New password' : 'Password'}
+          label={hasPassword ? t('password.newLabel') : t('password.passwordLabel')}
           required
           password
           autoComplete="new-password"
-          hint="At least 8 characters."
+          hint={t('password.hint')}
         />
 
         <TextField
           control={form.control}
           name="password_confirmation"
-          label="Confirm password"
+          label={t('password.confirmLabel')}
           required
           password
           autoComplete="new-password"
@@ -93,7 +91,7 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
 
         <FormActions>
           <Button type="submit" loading={save.isPending}>
-            {hasPassword ? 'Change password' : 'Set password'}
+            {hasPassword ? t('password.changeSubmit') : t('password.setSubmit')}
           </Button>
         </FormActions>
       </FormSection>

@@ -1,0 +1,36 @@
+{
+  "page": {
+    "title": "Orders",
+    "description": "What guests ordered from your menu. Each one also reaches you on WhatsApp."
+  },
+  "status": {
+    "placed": "New",
+    "done": "Done",
+    "cancelled": "Cancelled"
+  },
+  "filter": {
+    "label": "Filter orders by status",
+    "all": "All"
+  },
+  "empty": {
+    "title": "No orders yet",
+    "description": "When a guest orders from your menu it lands here, and on your WhatsApp.",
+    "filteredTitle": "Nothing with that status",
+    "filteredDescription": "Try another status, or All."
+  },
+  "waiting_one": "{{count}} order is still waiting.",
+  "waiting_other": "{{count}} orders are still waiting.",
+  "cancelDialog": {
+    "title": "Cancel this order?",
+    "description": "It stays in your history, marked cancelled. The guest is not told, so let them know yourself.",
+    "confirm": "Cancel order"
+  },
+  "card": {
+    "markDone": "Done",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "updated": "Order {{reference}} marked {{status}}",
+    "updateFailed": "Could not update that order"
+  }
+}

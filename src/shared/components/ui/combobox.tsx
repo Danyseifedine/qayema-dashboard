@@ -1,6 +1,7 @@
 import { useCombobox } from 'downshift'
 import { Check, ChevronDown } from 'lucide-react'
 import { useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 import { controlClass } from './control-class'
 import { FieldShell, type FieldTone } from './field-shell'
@@ -57,7 +58,7 @@ export function Combobox({
   onChange,
   placeholder,
   searchable = true,
-  emptyText = 'No matches',
+  emptyText,
   disabled = false,
   tone = 'default',
   embedded = false,
@@ -68,6 +69,7 @@ export function Combobox({
   className,
   ...aria
 }: ComboboxProps) {
+  const { t } = useTranslation()
   const shellRef = useRef<HTMLDivElement>(null)
   const [flipUp, setFlipUp] = useState(false)
   // `null` means "not filtering": the input mirrors the selected label.
@@ -180,7 +182,7 @@ export function Combobox({
       )}
     >
       {isOpen && filtered.length === 0 ? (
-        <li className="px-3 py-5 text-center text-[13px] text-[var(--muted)]">{emptyText}</li>
+        <li className="px-3 py-5 text-center text-[13px] text-[var(--muted)]">{emptyText ?? t('combobox.noMatches')}</li>
       ) : null}
 
       {isOpen

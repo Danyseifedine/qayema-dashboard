@@ -1,5 +1,6 @@
 import { Share2 } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { LimitNotice } from '@/features/menu/components/limits/limit-notice'
 import { ConfirmDialog, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
@@ -17,6 +18,7 @@ import { PLATFORM_LABELS, SOCIAL_PLATFORMS, type SocialLink } from '../schemas/s
  * package says.
  */
 export function SocialLinksPage() {
+  const { t } = useTranslation('social')
   const links = useSocialLinks()
   const remove = useDeleteSocialLink()
 
@@ -43,10 +45,10 @@ export function SocialLinksPage() {
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LimitNotice
-          label="Social links"
+          label={t('page.limitLabel')}
           used={links.data?.meta.used ?? 0}
           limit={links.data?.meta.limit ?? null}
-          description="Shown as icons at the bottom of your menu, so guests can follow you."
+          description={t('page.limitDescription')}
         />
         <Button
           size="sm"
@@ -54,21 +56,13 @@ export function SocialLinksPage() {
           disabled={atLimit || allPlatformsUsed}
           onClick={() => setDialog({ open: true, link: null })}
         >
-          Add link
+          {t('page.add')}
         </Button>
       </div>
 
-      {atLimit && !allPlatformsUsed ? (
-        <Alert variant="warning">
-          You have used every social link your plan allows. Remove one to add another.
-        </Alert>
-      ) : null}
+      {atLimit && !allPlatformsUsed ? <Alert variant="warning">{t('page.atLimit')}</Alert> : null}
 
-      {allPlatformsUsed ? (
-        <Alert variant="info">
-          Every platform your menu can show already has a link. Edit one to point it somewhere else.
-        </Alert>
-      ) : null}
+      {allPlatformsUsed ? <Alert variant="info">{t('page.allPlatformsUsed')}</Alert> : null}
 
       {links.isPending ? (
         <div className="flex flex-col gap-2">
@@ -82,11 +76,13 @@ export function SocialLinksPage() {
         <EmptyState
           fill
           icon={Share2}
-          title="No social links yet"
-          description={`Add ${Object.values(PLATFORM_LABELS).join(', ')} or wherever else guests can find you.`}
+          title={t('page.emptyTitle')}
+          description={t('page.emptyDescription', {
+            platforms: Object.values(PLATFORM_LABELS).join(', '),
+          })}
           action={
             <Button disabled={atLimit} onClick={() => setDialog({ open: true, link: null })}>
-              Add your first link
+              {t('page.addFirst')}
             </Button>
           }
         />
@@ -109,9 +105,9 @@ export function SocialLinksPage() {
         open={pendingDelete !== null}
         destructive
         loading={remove.isPending}
-        title="Remove this link?"
-        description="It disappears from your menu straight away. You can add it back at any time."
-        confirmLabel="Remove"
+        title={t('page.removeTitle')}
+        description={t('page.removeDescription')}
+        confirmLabel={t('page.removeConfirm')}
         onConfirm={() => {
           if (pendingDelete) {
             remove.mutate(pendingDelete.id, { onSuccess: () => setPendingDelete(null) })

@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ComboboxField, Form, FormActions, UrlField } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
@@ -33,6 +34,7 @@ const PLACEHOLDERS: Record<SocialPlatform, string> = {
 }
 
 export function SocialLinkDialog({ open, link, taken, onClose }: SocialLinkDialogProps) {
+  const { t } = useTranslation('social')
   const ref = useRef<HTMLDialogElement>(null)
   const save = useSaveSocialLink(link?.id ?? null)
 
@@ -108,10 +110,10 @@ export function SocialLinkDialog({ open, link, taken, onClose }: SocialLinkDialo
       <Form onSubmit={onSubmit} className="gap-0">
         <div className="p-5 pb-0">
           <h2 className="font-display text-[19px] leading-tight">
-            {link ? 'Edit link' : 'Add a social link'}
+            {link ? t('dialog.editTitle') : t('dialog.addTitle')}
           </h2>
           <p className="mt-1.5 text-[13px] leading-snug text-[var(--muted)]">
-            Guests see these as icons at the bottom of your menu.
+            {t('dialog.description')}
           </p>
 
           {formError ? (
@@ -123,29 +125,29 @@ export function SocialLinkDialog({ open, link, taken, onClose }: SocialLinkDialo
           <ComboboxField
             control={form.control}
             name="platform"
-            label="Platform"
+            label={t('dialog.platformLabel')}
             required
             searchable={false}
             options={available.map((value) => ({ value, label: PLATFORM_LABELS[value] }))}
-            placeholder="Choose a platform"
+            placeholder={t('dialog.platformPlaceholder')}
           />
 
           <UrlField
             control={form.control}
             name="url"
-            label="Link"
+            label={t('dialog.linkLabel')}
             required
             placeholder={PLACEHOLDERS[platform] ?? 'https://'}
-            hint="Paste the full address, including https://"
+            hint={t('dialog.linkHint')}
           />
         </div>
 
         <FormActions className="mt-4 border-t-[0.5px] border-[var(--line)] p-3.5">
           <Button variant="ghost" onClick={onClose} disabled={save.isPending}>
-            Cancel
+            {t('dialog.cancel')}
           </Button>
           <Button type="submit" loading={save.isPending}>
-            {link ? 'Save link' : 'Add link'}
+            {link ? t('dialog.saveSubmit') : t('dialog.addSubmit')}
           </Button>
         </FormActions>
       </Form>

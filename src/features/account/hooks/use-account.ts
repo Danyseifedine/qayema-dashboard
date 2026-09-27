@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sessionKeys } from '@/features/auth/hooks/use-session'
 import type { AuthUser } from '@/features/auth/schemas/user.schema'
+import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
 import { updatePassword, updateProfile, type PasswordPayload } from '../api/account.api'
@@ -15,10 +16,10 @@ export function useSaveProfile() {
   return useMutation<AuthUser, ApiError, string>({
     mutationFn: updateProfile,
     onSuccess: (user) => {
-      toast.success('Profile saved')
+      toast.success(t('account:toast.profileSaved'))
       queryClient.setQueryData(sessionKeys.current(), user)
     },
-    onError: (error) => toast.error('Could not save your profile', error),
+    onError: (error) => toast.error(t('account:toast.profileFailed'), error),
   })
 }
 
@@ -34,14 +35,16 @@ export function useSavePassword(hasPassword: boolean) {
     mutationFn: updatePassword,
     onSuccess: () => {
       toast.success(
-        hasPassword ? 'Password changed' : 'Password set',
-        'Any other browser you stayed signed in on has been signed out.',
+        hasPassword ? t('account:toast.passwordChanged') : t('account:toast.passwordSet'),
+        t('account:toast.passwordSignedOut'),
       )
       void queryClient.invalidateQueries({ queryKey: sessionKeys.all })
     },
     onError: (error) =>
       toast.error(
-        hasPassword ? 'Could not change your password' : 'Could not set a password',
+        hasPassword
+          ? t('account:toast.passwordChangeFailed')
+          : t('account:toast.passwordSetFailed'),
         error,
       ),
   })

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { menuTextSchema } from '@/shared/utils/string/menu-text'
 
 /**
  * Mirrors ../qayema/app/Http/Resources/UserResource.php.
@@ -19,8 +20,12 @@ const limit = z.object({
 
 export const restaurantSchema = z.object({
   id: z.number(),
-  name: translatable,
+  /** One entry per menu language. */
+  name: menuTextSchema,
   slug: z.string(),
+  /** What the menu is written in: English, then the second language if any. */
+  languages: z.array(z.string()).min(1),
+  /** What the menu opens in: one of `languages`. */
   default_locale: z.string(),
   is_active: z.boolean(),
   template_id: z.number().nullable(),
@@ -43,6 +48,8 @@ export const restaurantSchema = z.object({
     categories: limit,
     social_links: limit,
   }),
+  /** Optional dashboard sections the owner switched off. */
+  hidden_sections: z.array(z.string()),
   features: z.object({
     qr_studio: z.boolean(),
     ordering: z.boolean(),

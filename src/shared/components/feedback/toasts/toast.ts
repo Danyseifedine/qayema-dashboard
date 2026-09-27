@@ -1,4 +1,5 @@
 import { toast as sonner } from 'sonner'
+import { t } from '@/lib/i18n'
 import { ApiError } from '@/shared/types/api'
 
 /**
@@ -35,9 +36,7 @@ function describe(error: unknown): string | undefined {
 
   if (error.isRateLimited) {
     const wait = error.retryAfter
-    return wait === null
-      ? 'Too many requests. Wait a moment and try again.'
-      : `Too many requests. Try again in ${wait} seconds.`
+    return wait === null ? t('errors.rateLimited') : t('errors.rateLimitedIn', { count: wait })
   }
 
   // A 422's field messages are shown on the fields themselves, so the toast

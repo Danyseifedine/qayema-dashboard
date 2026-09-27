@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "باقتك",
+    "description": "ما تتّسع له قائمتك، وما تمنحك إياه باقة أكبر.",
+    "fallbackName": "مجانية"
+  },
+  "current": {
+    "eyebrow": "باقتك",
+    "endsOn": "تتجدّد أو تنتهي في <date>{{date}}</date>",
+    "contactOnly": "مُتّفق عليها معنا مباشرةً.",
+    "dishes": "الأطباق",
+    "categories": "الأقسام",
+    "socialLinks": "روابط التواصل الاجتماعي",
+    "qrIncluded": "استوديو QR مشمول، فيمكنك تصميم رمزك بهويتك.",
+    "qrNotIncluded": "استوديو QR غير مشمول في هذه الباقة."
+  },
+  "card": {
+    "letsTalk": "لنتحدّث",
+    "free": "مجانية",
+    "perMonth": "/ شهريًا",
+    "limits": {
+      "dishes_zero": "بلا أطباق",
+      "dishes_one": "طبق واحد",
+      "dishes_two": "طبقان",
+      "dishes_few": "{{number}} أطباق",
+      "dishes_many": "{{number}} طبقًا",
+      "dishes_other": "{{number}} طبق",
+      "dishesUnlimited": "أطباق بلا حدود",
+      "categories_zero": "بلا أقسام",
+      "categories_one": "قسم واحد",
+      "categories_two": "قسمان",
+      "categories_few": "{{number}} أقسام",
+      "categories_many": "{{number}} قسمًا",
+      "categories_other": "{{number}} قسم",
+      "categoriesUnlimited": "أقسام بلا حدود",
+      "socialLinks_zero": "بلا روابط تواصل اجتماعي",
+      "socialLinks_one": "رابط تواصل اجتماعي واحد",
+      "socialLinks_two": "رابطا تواصل اجتماعي",
+      "socialLinks_few": "{{number}} روابط تواصل اجتماعي",
+      "socialLinks_many": "{{number}} رابطًا للتواصل الاجتماعي",
+      "socialLinks_other": "{{number}} رابط للتواصل الاجتماعي",
+      "socialLinksUnlimited": "روابط تواصل اجتماعي بلا حدود"
+    },
+    "qrStudio": "استوديو QR",
+    "basicQr": "رمز QR أساسي",
+    "yours": "باقتك",
+    "includedForEveryone": "متاحة للجميع",
+    "talkToUs": "تواصل معنا",
+    "request": "اطلب هذه الباقة"
+  },
+  "request": {
+    "title": "استفسار عن {{name}}",
+    "description": "سنقرأ رسالتك ونردّ عليك بالبريد الإلكتروني لتفعيل باقتك. لن يتغيّر شيء ولن يُحتسب أي مبلغ قبل ذلك.",
+    "messageLabel": "هل من شيء يجب أن نعرفه؟",
+    "optional": "اختياري",
+    "placeholder": "كم مطعمًا لديك، وما حجم قائمتك، ومتى تحتاج الباقة.",
+    "messageTooLong": "اجعل الرسالة أقل من 2000 حرف.",
+    "cancel": "إلغاء",
+    "submit": "إرسال الطلب"
+  },
+  "toast": {
+    "sent": "تم إرسال الطلب",
+    "sentDescription": "سنتواصل معك قريبًا لإعداد ذلك.",
+    "failed": "تعذّر إرسال الطلب"
+  }
+}

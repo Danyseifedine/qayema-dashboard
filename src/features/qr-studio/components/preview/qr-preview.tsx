@@ -1,5 +1,6 @@
 import QRCodeStyling, { type Options } from 'qr-code-styling'
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type QrPreviewProps = {
@@ -14,6 +15,7 @@ export type QrPreviewProps = {
  * a frame of its own background colour, which is also its quiet zone here.
  */
 export function QrPreview({ options, size = 232, className }: QrPreviewProps) {
+  const { t } = useTranslation('qr')
   const host = useRef<HTMLDivElement>(null)
   const code = useRef<QRCodeStyling | null>(null)
 
@@ -46,7 +48,7 @@ export function QrPreview({ options, size = 232, className }: QrPreviewProps) {
       <div
         ref={host}
         role="img"
-        aria-label="Your menu's QR code"
+        aria-label={t('preview.label')}
         style={{ width: size, height: size }}
         className="[&>svg]:block [&>svg]:h-full [&>svg]:w-full"
       />

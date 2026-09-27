@@ -1,29 +1,29 @@
+import { LANGUAGES, languageMeta } from '@/lib/i18n'
+
 /**
- * The two locales the product ships in. Translatable API fields arrive as
- * `{en, ar}` objects (see ../qayema/app/Http/Resources/SettingsResource.php),
- * so this list drives the locale tabs on translatable form fields.
+ * The dashboard's own interface languages: one per folder in `src/locales/`
+ * (see `lib/i18n`). The languages a *menu* is written in are a separate list,
+ * per restaurant — see `menu-languages.ts`.
  */
-export const LOCALES = ['en', 'ar'] as const
+export const LOCALES = LANGUAGES
 
-export type Locale = (typeof LOCALES)[number]
+/** A language the dashboard can be shown in, by its code ("en", "ar"). */
+export type Locale = string
 
-export const LOCALE_LABELS: Record<Locale, string> = {
-  en: 'English',
-  ar: 'العربية',
+export function isLocale(value: unknown): value is Locale {
+  return typeof value === 'string' && LOCALES.includes(value)
 }
 
-/** Short badge text for the locale tabs. */
-export const LOCALE_SHORT: Record<Locale, string> = {
-  en: 'EN',
-  ar: 'AR',
+/** The language's own name for itself: "English", "العربية". */
+export function localeLabel(locale: Locale): string {
+  return languageMeta(locale).name
 }
 
-export const LOCALE_DIR: Record<Locale, 'ltr' | 'rtl'> = {
-  en: 'ltr',
-  ar: 'rtl',
+/** What the language switcher shows: "EN", "ع". */
+export function localeShort(locale: Locale): string {
+  return languageMeta(locale).short
 }
 
-/** A value that carries one string per locale. */
-export type Translatable = Record<Locale, string>
-
-export const emptyTranslatable = (): Translatable => ({ en: '', ar: '' })
+export function localeDir(locale: Locale): 'ltr' | 'rtl' {
+  return languageMeta(locale).dir
+}

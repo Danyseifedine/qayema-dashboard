@@ -31,18 +31,30 @@ describe('dishFormSchema', () => {
     expect(result.data?.category_id).toBe(3)
   })
 
-  it('still requires a name in at least one language', () => {
+  it('requires the name in English, the language every menu has', () => {
     const result = dishFormSchema.safeParse({
       ...base,
-      name: { en: '', ar: '' },
+      name: { en: '', fr: 'Pain' },
       category_id: 3,
     })
 
     expect(result.success).toBe(false)
-    expect(
-      result.error?.issues.some(
-        (i) => i.message === 'A dish name is required in at least one language.',
-      ),
-    ).toBe(true)
+    expect(result.error?.issues).toContainEqual(
+      expect.objectContaining({
+        path: ['name', 'en'],
+        message: 'A dish name is required in English.',
+      }),
+    )
+  })
+
+  it('takes whatever languages the menu is written in', () => {
+    const result = dishFormSchema.safeParse({
+      ...base,
+      name: { en: 'Bread', tr: 'Ekmek' },
+      ingredients: { en: '', tr: '' },
+      category_id: 3,
+    })
+
+    expect(result.success).toBe(true)
   })
 })

@@ -1,8 +1,10 @@
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import qMark from '@/assets/images/brand/qayema-q.svg'
 import wordmark from '@/assets/images/brand/qayema-wordmark.png'
 import {
   NAV_GROUPS,
+  isNavItemHidden,
   isNavItemLocked,
   type NavAccess,
   type NavItem,
@@ -20,6 +22,8 @@ export type SidebarProps = {
   hasTemplate: boolean
   /** Plan features from the session payload. */
   features: NavAccess['features']
+  /** Sections the owner switched off on the Features page; left out entirely. */
+  hidden: readonly string[]
   className?: string
 }
 
@@ -34,13 +38,15 @@ export function Sidebar({
   onToggleCollapse,
   hasTemplate,
   features,
+  hidden,
   className,
 }: SidebarProps) {
+  const { t } = useTranslation()
   const isLocked = (item: NavItem) => isNavItemLocked(item.key, { hasTemplate, features })
 
   return (
     <nav
-      aria-label="Dashboard"
+      aria-label={t('app.dashboard')}
       className={cn(
         'flex h-full flex-col border-e-[0.5px] border-[var(--line)] bg-[var(--surface)]',
         'transition-[width] duration-300 [transition-timing-function:var(--ease-qayema)]',
@@ -50,40 +56,49 @@ export function Sidebar({
     >
       <div
         className={cn(
-          'flex h-[68px] shrink-0 items-center border-b-[0.5px] border-[var(--line)]',
-          collapsed ? 'justify-center px-2' : 'px-4',
+          'flex h-[68px] shrink-0 items-center justify-center border-b-[0.5px] border-[var(--line)]',
+          collapsed ? 'px-2' : 'px-4',
         )}
       >
         {collapsed ? (
           <img src={qMark} alt="Qayema" className="size-8" />
         ) : (
-          <img src={wordmark} alt="Qayema" className="h-9 w-auto" />
+          <img src={wordmark} alt="Qayema" className="h-[22px] w-auto" />
         )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-3">
-        {NAV_GROUPS.map((group) => (
-          <SidebarGroup key={group.key} label={group.label} collapsed={collapsed}>
-            {group.items.map((item) => (
-              <SidebarItem
-                key={item.key}
-                icon={item.icon}
-                label={item.label}
-                active={item.key === activeKey}
-                collapsed={collapsed}
-                locked={isLocked(item)}
-                onSelect={() => onSelect(item)}
-              />
-            ))}
-          </SidebarGroup>
-        ))}
+        {NAV_GROUPS.map((group) => {
+          const items = group.items.filter((item) => !isNavItemHidden(item.key, hidden))
+          // A group whose every section is switched off loses its heading too.
+          if (items.length === 0) return null
+          return (
+            <SidebarGroup
+              key={group.key}
+              label={group.labelKey ? t(group.labelKey) : undefined}
+              collapsed={collapsed}
+            >
+              {items.map((item) => (
+                <SidebarItem
+                  key={item.key}
+                  icon={item.icon}
+                  label={t(item.labelKey)}
+                  active={item.key === activeKey}
+                  collapsed={collapsed}
+                  locked={isLocked(item)}
+                  onSelect={() => onSelect(item)}
+                />
+              ))}
+            </SidebarGroup>
+          )
+        })}
       </div>
 
       <div className="hidden shrink-0 border-t-[0.5px] border-[var(--line)] p-3 lg:block">
         <button
           type="button"
           onClick={onToggleCollapse}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           className={cn(
             'flex w-full items-center gap-3 rounded-[var(--radius-control)] px-3 py-2.5',
             'text-[13px] text-[var(--muted)] transition-colors duration-200',
@@ -97,7 +112,7 @@ export function Sidebar({
           ) : (
             <>
               <PanelLeftClose aria-hidden className="size-[18px] shrink-0 rtl:rotate-180" />
-              <span>Collapse</span>
+              <span>{t('sidebar.collapseShort')}</span>
             </>
           )}
         </button>

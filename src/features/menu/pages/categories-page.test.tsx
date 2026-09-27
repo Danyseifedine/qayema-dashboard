@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { makeCategory, resetFactories } from '@/test/mocks/factories/menu'
+import { makeSessionUser } from '@/test/mocks/factories/session'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
 import { CategoriesPage } from './categories-page'
 
@@ -22,6 +23,7 @@ describe('CategoriesPage', () => {
     resetCsrfToken(api)
     installCsrfInterceptor(api)
     mock.onGet('/api/csrf-token').reply(200, { token: 'csrf' })
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
   })
 
   afterEach(() => {
@@ -74,6 +76,53 @@ describe('CategoriesPage', () => {
     })
 
     expect(await screen.findByText('Category added')).toBeInTheDocument()
+  })
+
+  it('gives a French menu an EN and FR tab and saves both', async () => {
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser({ languages: ['en', 'fr'] }) })
+    mock.onGet('/api/categories').reply(200, { data: [], meta: { used: 0, limit: 10 } })
+    mock.onPost('/api/categories').reply(201, { data: makeCategory({ id: 9 }) })
+
+    const user = userEvent.setup()
+    renderWithProviders(<CategoriesPage locale="en" onOpenDishes={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Add your first category' }))
+    const dialog = screen.getByRole('dialog')
+    await waitFor(() =>
+      expect(within(dialog).getAllByRole('tab', { name: 'FR' }).length).toBeGreaterThan(0),
+    )
+    expect(within(dialog).queryByRole('tab', { name: 'AR' })).not.toBeInTheDocument()
+
+    await user.type(within(dialog).getByLabelText(/^Name/), 'Drinks')
+    await user.click(within(dialog).getAllByRole('tab', { name: 'FR' })[0]!)
+    await user.type(within(dialog).getByLabelText(/^Name/), 'Boissons')
+    await user.click(within(dialog).getByRole('button', { name: 'Add category' }))
+
+    await waitFor(() => {
+      const post = mock.history.post.find((r) => r.url === '/api/categories')
+      expect(JSON.parse(post!.data as string).name).toEqual({ en: 'Drinks', fr: 'Boissons' })
+    })
+  })
+
+  it('asks for the name in English even when the other language is filled', async () => {
+    mock.onGet('/api/categories').reply(200, { data: [], meta: { used: 0, limit: 10 } })
+
+    const user = userEvent.setup()
+    renderWithProviders(<CategoriesPage locale="en" onOpenDishes={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Add your first category' }))
+    const dialog = screen.getByRole('dialog')
+    await waitFor(() =>
+      expect(within(dialog).getAllByRole('tab', { name: 'AR' }).length).toBeGreaterThan(0),
+    )
+    await user.click(within(dialog).getAllByRole('tab', { name: 'AR' })[0]!)
+    await user.type(within(dialog).getByLabelText(/^Name/), 'مشروبات')
+    await user.click(within(dialog).getByRole('button', { name: 'Add category' }))
+
+    expect(
+      await within(dialog).findByText(/A category name is required in English/),
+    ).toBeInTheDocument()
+    expect(mock.history.post.filter((r) => r.url === '/api/categories')).toHaveLength(0)
   })
 
   it('tells the owner when a save fails', async () => {

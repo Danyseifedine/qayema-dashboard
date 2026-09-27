@@ -1,4 +1,5 @@
 import { useMutation, useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
 import { fetchPackages, requestPackage, type PackageRequestPayload } from '../api/package.api'
@@ -23,8 +24,8 @@ export function useRequestPackage() {
   return useMutation<PackageRequestResult, ApiError, PackageRequestPayload>({
     mutationFn: requestPackage,
     onSuccess: () => {
-      toast.success('Request sent', 'We will be in touch shortly to set this up.')
+      toast.success(t('packages:toast.sent'), t('packages:toast.sentDescription'))
     },
-    onError: (error) => toast.error('Could not send that request', error),
+    onError: (error) => toast.error(t('packages:toast.failed'), error),
   })
 }

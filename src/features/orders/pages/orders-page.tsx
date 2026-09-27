@@ -1,5 +1,6 @@
 import { ReceiptText } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConfirmDialog, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert } from '@/shared/components/ui'
 import { StatusFilter } from '../components/detail/status-filter'
@@ -15,6 +16,7 @@ import type { Order, OrderStatus } from '../schemas/order.schema'
  * tick things off, and it refreshes itself while it is open.
  */
 export function OrdersPage() {
+  const { t } = useTranslation('orders')
   const [filter, setFilter] = useState<OrderStatus | null>(null)
   const [pendingCancel, setPendingCancel] = useState<Order | null>(null)
 
@@ -33,10 +35,8 @@ export function OrdersPage() {
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div>
-        <h2 className="font-display text-[19px] leading-tight">Orders</h2>
-        <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">
-          What guests ordered from your menu. Each one also reaches you on WhatsApp.
-        </p>
+        <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
+        <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">{t('page.description')}</p>
       </div>
 
       <StatusFilter value={filter} onChange={setFilter} openCount={openCount} />
@@ -53,19 +53,13 @@ export function OrdersPage() {
         <EmptyState
           fill
           icon={ReceiptText}
-          title={filter === null ? 'No orders yet' : 'Nothing with that status'}
-          description={
-            filter === null
-              ? 'When a guest orders from your menu it lands here, and on your WhatsApp.'
-              : 'Try another status, or All.'
-          }
+          title={filter === null ? t('empty.title') : t('empty.filteredTitle')}
+          description={filter === null ? t('empty.description') : t('empty.filteredDescription')}
         />
       ) : (
         <>
           {openCount > 0 && filter !== 'placed' ? (
-            <Alert variant="info">
-              {openCount === 1 ? '1 order is' : `${openCount} orders are`} still waiting.
-            </Alert>
+            <Alert variant="info">{t('waiting', { count: openCount })}</Alert>
           ) : null}
 
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
@@ -86,9 +80,9 @@ export function OrdersPage() {
         open={pendingCancel !== null}
         destructive
         loading={setStatus.isPending}
-        title="Cancel this order?"
-        description="It stays in your history, marked cancelled. The guest is not told, so let them know yourself."
-        confirmLabel="Cancel order"
+        title={t('cancelDialog.title')}
+        description={t('cancelDialog.description')}
+        confirmLabel={t('cancelDialog.confirm')}
         onConfirm={() => {
           if (pendingCancel) {
             setStatus.mutate(

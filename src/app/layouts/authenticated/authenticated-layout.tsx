@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Sidebar, Topbar } from '@/shared/components/navigation'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
@@ -15,6 +16,8 @@ export type AuthenticatedLayoutProps = {
   publicUrl?: string | null
   hasTemplate: boolean
   features: NavAccess['features']
+  /** Sections the owner switched off. */
+  hiddenSections: readonly string[]
   locale: Locale
   onLocaleChange: (locale: Locale) => void
   onLogout: () => void
@@ -33,6 +36,7 @@ export function AuthenticatedLayout({
   publicUrl,
   hasTemplate,
   features,
+  hiddenSections,
   locale,
   onLocaleChange,
   onLogout,
@@ -42,6 +46,7 @@ export function AuthenticatedLayout({
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
   const mobileOpen = useUiStore((state) => state.mobileNavOpen)
   const setMobileOpen = useUiStore((state) => state.setMobileNavOpen)
+  const { t } = useTranslation()
 
   // Escape closes the drawer, and an open drawer must not scroll the page
   // behind it.
@@ -81,6 +86,7 @@ export function AuthenticatedLayout({
       onToggleCollapse={toggleSidebar}
       hasTemplate={hasTemplate}
       features={features}
+      hidden={hiddenSections}
     />
   )
 
@@ -100,7 +106,7 @@ export function AuthenticatedLayout({
         <button
           type="button"
           tabIndex={mobileOpen ? 0 : -1}
-          aria-label="Close navigation"
+          aria-label={t('layout.closeNavigation')}
           onClick={() => setMobileOpen(false)}
           className={cn(
             'absolute inset-0 bg-black/40 transition-opacity duration-300',
@@ -119,7 +125,7 @@ export function AuthenticatedLayout({
             type="button"
             tabIndex={mobileOpen ? 0 : -1}
             onClick={() => setMobileOpen(false)}
-            aria-label="Close navigation"
+            aria-label={t('layout.closeNavigation')}
             className="absolute -end-11 top-3 grid size-9 place-items-center rounded-full bg-[var(--surface)] text-[var(--muted)] shadow-lg"
           >
             <X aria-hidden className="size-4" />
@@ -130,7 +136,7 @@ export function AuthenticatedLayout({
       {/* Content column */}
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
-          title={activeItem?.label ?? 'Dashboard'}
+          title={activeItem ? t(activeItem.labelKey) : t('app.dashboard')}
           subtitle={
             publicUrl ? (
               <a

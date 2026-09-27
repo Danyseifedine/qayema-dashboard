@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts'
 import type { Locale } from '@/shared/constants/locales'
 import type { StatsSummary } from '../../schemas/stats.schema'
@@ -10,18 +11,23 @@ export type VisitsChartProps = {
 
 /** Menu views per day, with the QR scans among them. */
 export function VisitsChart({ series, locale }: VisitsChartProps) {
+  const { t } = useTranslation('overview')
   const views = series.reduce((sum, point) => sum + point.views, 0)
   const scans = series.reduce((sum, point) => sum + point.qr_scans, 0)
 
   return (
     <figure
       role="img"
-      aria-label={`${views.toLocaleString()} views over ${series.length} days, ${scans.toLocaleString()} of them QR scans.`}
+      aria-label={t('analytics.visits.chartLabel', {
+        count: series.length,
+        views: views.toLocaleString(),
+        scans: scans.toLocaleString(),
+      })}
       className="m-0"
     >
       <div className="flex gap-4 pb-2 text-[12px] text-[var(--muted)]">
-        <Legend color={CHART_COLORS.primary} label="Views" />
-        <Legend color={CHART_COLORS.secondary} label="QR scans" />
+        <Legend color={CHART_COLORS.primary} label={t('analytics.visits.views')} />
+        <Legend color={CHART_COLORS.secondary} label={t('analytics.visits.qrScans')} />
       </div>
       {/* Time runs left to right in both languages. */}
       <div dir="ltr">
@@ -54,7 +60,7 @@ export function VisitsChart({ series, locale }: VisitsChartProps) {
           <Area
             type="monotone"
             dataKey="views"
-            name="Views"
+            name={t('analytics.visits.views')}
             stroke={CHART_COLORS.primary}
             strokeWidth={2}
             fill="url(#views-fill)"
@@ -62,7 +68,7 @@ export function VisitsChart({ series, locale }: VisitsChartProps) {
           <Area
             type="monotone"
             dataKey="qr_scans"
-            name="QR scans"
+            name={t('analytics.visits.qrScans')}
             stroke={CHART_COLORS.secondary}
             strokeWidth={2}
             fill="none"

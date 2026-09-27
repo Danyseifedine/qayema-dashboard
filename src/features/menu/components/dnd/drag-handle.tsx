@@ -1,5 +1,6 @@
 import { GripVertical } from 'lucide-react'
 import type { ComponentProps } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type DragHandleProps = ComponentProps<'button'> & {
@@ -20,10 +21,11 @@ export type DragHandleProps = ComponentProps<'button'> & {
  * editing. The handle is sized past the 44px touch target.
  */
 export function DragHandle({ overlay = false, className, ...props }: DragHandleProps) {
+  const { t } = useTranslation('menu')
   return (
     <button
       type="button"
-      aria-label="Reorder"
+      aria-label={t('dragHandle.label')}
       className={cn(
         'grid size-11 shrink-0 cursor-grab touch-none place-items-center rounded-[var(--radius-control)]',
         'transition-colors active:cursor-grabbing',

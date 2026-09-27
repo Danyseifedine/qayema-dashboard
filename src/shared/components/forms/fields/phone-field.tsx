@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { Combobox, FieldShell, controlClass } from '@/shared/components/ui'
 import { COUNTRIES } from '@/shared/constants/countries'
@@ -37,15 +38,18 @@ export function PhoneField<T extends FieldValues>({
   placeholder = '71 234 567',
   className,
 }: PhoneFieldProps<T>) {
+  const { t } = useTranslation()
   const { field: phone, fieldState: phoneState } = useController({ control, name })
   const { field: country, fieldState: countryState } = useController({ control, name: countryName })
 
   // Searchable by code, dial code or country name: typing "leb", "961" or
-  // "LB" all find Lebanon, which a 28-item native list could not do.
+  // "LB" all find Lebanon, which a 28-item native list could not do. The
+  // name is in the dashboard's language, so "لبنان" finds it too.
+  const countryNames = t('countries', { returnObjects: true }) as Record<string, string | undefined>
   const countryOptions = COUNTRIES.map((item) => ({
     value: item.code,
     label: `${item.code} ${item.dial}`,
-    description: item.label,
+    description: countryNames[item.code] ?? item.label,
     leading: (
       <span aria-hidden className="text-[15px]">
         {item.flag}
@@ -68,7 +72,7 @@ export function PhoneField<T extends FieldValues>({
           <div className="flex shrink-0 items-center border-e-[0.5px] border-[var(--line)] ps-1.5">
             <Combobox
               embedded
-              aria-label="Country"
+              aria-label={t('phoneField.country')}
               name={country.name}
               inputRef={country.ref}
               value={(country.value as string) ?? null}

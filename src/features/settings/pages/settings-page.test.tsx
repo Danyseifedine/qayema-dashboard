@@ -9,12 +9,14 @@ import { SettingsPage } from './settings-page'
 
 let mock: MockAdapter
 
-type Translatable = { en: string | null; ar: string | null }
+type MenuText = Record<string, string | null>
 
 type SettingsFixture = {
-  name: Translatable
-  description: Translatable
+  languages: string[]
+  second_locale: string | null
   default_locale: string
+  name: MenuText
+  description: MenuText
   slug: string
   google_maps_url: string | null
   phone: string | null
@@ -27,9 +29,11 @@ type SettingsFixture = {
 }
 
 const settings: SettingsFixture = {
+  languages: ['en', 'ar'],
+  second_locale: 'ar',
+  default_locale: 'en',
   name: { en: 'Beit Qayema', ar: null },
   description: { en: 'Lebanese home cooking.', ar: null },
-  default_locale: 'en',
   slug: 'beit-qayema',
   google_maps_url: 'https://maps.google.com/beit',
   phone: '70123456',
@@ -93,6 +97,7 @@ describe('SettingsPage', () => {
           id: 1,
           name: { en: 'Beit Qayema', ar: null },
           slug: 'beit-qayema',
+          languages: ['en', 'ar'],
           default_locale: 'en',
           is_active: true,
           template_id: 1,
@@ -110,6 +115,7 @@ describe('SettingsPage', () => {
             categories: { used: 0, limit: 10 },
             social_links: { used: 0, limit: 2 },
           },
+          hidden_sections: [],
           features: { qr_studio: false, ordering: false, advanced_analytics: false },
         },
       },
@@ -123,7 +129,6 @@ describe('SettingsPage', () => {
         'https://qayema.test/beit-qayema',
       ),
     )
-    expect(screen.getByText('English')).toBeInTheDocument()
   })
 
   it('keeps save switched off until something changes', async () => {
@@ -141,7 +146,7 @@ describe('SettingsPage', () => {
     expect(screen.getByText('You have unsaved changes.')).toBeInTheDocument()
   })
 
-  it('sends only what the server accepts, with empty text as null', async () => {
+  it('sends only what the server accepts, one entry per menu language', async () => {
     stub({ description: { en: null, ar: null }, google_maps_url: null })
     mock.onPatch('/api/settings').reply(200, { data: settings })
 
@@ -155,8 +160,11 @@ describe('SettingsPage', () => {
       const patch = mock.history.patch.find((r) => r.url === '/api/settings')
       expect(patch).toBeDefined()
       const body = JSON.parse(patch!.data as string)
-      expect(body.name).toBe('Beit Qayema Two')
-      expect(body.description).toBeNull()
+      expect(body.name).toEqual({ en: 'Beit Qayema Two', ar: '' })
+      // Blank text clears that language.
+      expect(body.description).toEqual({ en: '', ar: '' })
+      expect(body.second_locale).toBe('ar')
+      expect(body.default_locale).toBe('en')
       expect(body.google_maps_url).toBeNull()
       // The slug is immutable, and an untouched image sends no key at all.
       expect(body).not.toHaveProperty('slug')
@@ -316,5 +324,81 @@ describe('SettingsPage', () => {
     renderWithProviders(<SettingsPage />)
 
     expect(await screen.findByRole('button', { name: /Try again/ })).toBeInTheDocument()
+  })
+
+  describe('menu languages', () => {
+    it('gives the name and description a tab per menu language', async () => {
+      stub()
+      renderWithProviders(<SettingsPage />)
+
+      await screen.findByLabelText(/^Restaurant name/)
+      const tabs = screen.getAllByRole('tablist', { name: 'Content language' })
+      expect(tabs).toHaveLength(2)
+      expect(screen.getAllByRole('tab', { name: 'AR' })).toHaveLength(2)
+    })
+
+    it('switches the second language, keeping the old text and saying so', async () => {
+      stub()
+      mock.onPatch('/api/settings').reply(200, { data: settings })
+      const user = userEvent.setup()
+      renderWithProviders(<SettingsPage />)
+
+      await user.click(await screen.findByRole('combobox', { name: /Second language/ }))
+      await user.click(await screen.findByRole('option', { name: /French/ }))
+
+      expect(
+        screen.getByText(/What you wrote in Arabic is kept\. Switch back to Arabic/),
+      ).toBeInTheDocument()
+      expect(screen.getAllByRole('tab', { name: 'FR' })).toHaveLength(2)
+
+      await user.click(screen.getByRole('radio', { name: /French/ }))
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      await waitFor(() => {
+        const patch = mock.history.patch.find((r) => r.url === '/api/settings')
+        const body = JSON.parse(patch!.data as string)
+        expect(body.second_locale).toBe('fr')
+        expect(body.default_locale).toBe('fr')
+        // Arabic is not sent at all, so the server keeps it.
+        expect(Object.keys(body.name)).toEqual(['en', 'fr'])
+      })
+    })
+
+    it('makes an English-only menu that opens in English', async () => {
+      stub({ default_locale: 'ar' })
+      mock.onPatch('/api/settings').reply(200, { data: settings })
+      const user = userEvent.setup()
+      renderWithProviders(<SettingsPage />)
+
+      await user.click(await screen.findByRole('combobox', { name: /Second language/ }))
+      await user.click(await screen.findByRole('option', { name: /None/ }))
+
+      expect(screen.queryByRole('tablist', { name: 'Content language' })).not.toBeInTheDocument()
+      expect(screen.getByText(/opens in English and has no language switch/)).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      await waitFor(() => {
+        const patch = mock.history.patch.find((r) => r.url === '/api/settings')
+        const body = JSON.parse(patch!.data as string)
+        expect(body.second_locale).toBeNull()
+        expect(body.default_locale).toBe('en')
+        expect(body.name).toEqual({ en: 'Beit Qayema' })
+      })
+    })
+
+    it('asks for the name in English', async () => {
+      stub()
+      const user = userEvent.setup()
+      renderWithProviders(<SettingsPage />)
+
+      await user.clear(await screen.findByLabelText(/^Restaurant name/))
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      expect(
+        await screen.findByText('The restaurant name is required in English.'),
+      ).toBeInTheDocument()
+      expect(mock.history.patch).toHaveLength(0)
+    })
   })
 })

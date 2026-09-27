@@ -12,7 +12,7 @@ export function Label({ required, optionalText, className, children, ...props }:
   return (
     <label
       className={cn(
-        'label-caps flex items-center justify-between text-[var(--muted)]',
+        'label-caps flex items-center justify-between gap-2 text-[var(--muted)]',
         className,
       )}
       {...props}

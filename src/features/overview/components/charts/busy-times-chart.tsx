@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from 'react-i18next'
 import { Bar, BarChart, Cell, Tooltip, XAxis } from 'recharts'
 import type { Locale } from '@/shared/constants/locales'
 import { AXIS_TICK, CHART_COLORS, TOOLTIP_STYLE, formatHour, weekdayNames } from './chart-style'
@@ -15,30 +16,37 @@ export type BusyTimesChartProps = {
  * the busiest of each picked out and said in words.
  */
 export function BusyTimesChart({ hours, weekdays, locale }: BusyTimesChartProps) {
+  const { t } = useTranslation('overview')
   const days = weekdayNames(locale)
   const longDays = weekdayNames(locale, 'long')
   const peakHour = indexOfMax(hours)
   const peakDay = indexOfMax(weekdays)
 
   if (peakHour === null || peakDay === null) {
-    return <p className="py-6 text-[13px] text-[var(--muted)]">Not enough visits yet.</p>
+    return (
+      <p className="py-6 text-[13px] text-[var(--muted)]">{t('analytics.busiest.notEnough')}</p>
+    )
   }
 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[13px]">
-        Busiest around <strong className="font-semibold">{formatHour(peakHour)}</strong>, and on{' '}
-        <strong className="font-semibold">{longDays[peakDay]}</strong>.
+        <Trans
+          ns="overview"
+          i18nKey="analytics.busiest.sentence"
+          values={{ hour: formatHour(peakHour), day: longDays[peakDay] }}
+          components={{ strong: <strong className="font-semibold" /> }}
+        />
       </p>
       <div className="grid grid-cols-1 gap-5 md:grid-cols-[3fr_2fr]">
         <Bars
-          label="By hour"
+          label={t('analytics.busiest.byHour')}
           data={hours.map((views, hour) => ({ name: formatHour(hour), views }))}
           peak={peakHour}
           tickInterval={5}
         />
         <Bars
-          label="By day"
+          label={t('analytics.busiest.byDay')}
           data={weekdays.map((views, day) => ({ name: days[day]!, views }))}
           peak={peakDay}
           tickInterval={0}
@@ -59,6 +67,8 @@ function Bars({
   peak: number
   tickInterval: number
 }) {
+  const { t } = useTranslation('overview')
+
   return (
     <figure className="m-0" aria-label={label}>
       <figcaption className="pb-1 text-[12px] text-[var(--muted)]">{label}</figcaption>
@@ -79,7 +89,7 @@ function Bars({
           <Tooltip
             cursor={{ fill: 'var(--hover-wash)' }}
             contentStyle={TOOLTIP_STYLE}
-            formatter={(value) => [Number(value).toLocaleString(), 'Views']}
+            formatter={(value) => [Number(value).toLocaleString(), t('analytics.busiest.views')]}
           />
           <Bar dataKey="views" radius={[4, 4, 0, 0]}>
             {data.map((entry, index) => (

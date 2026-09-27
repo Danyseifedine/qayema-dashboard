@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -13,12 +14,14 @@ export type ErrorStateProps = {
 
 /** Shown when a query fails. Always offers a way to try again. */
 export function ErrorState({
-  title = 'That did not load',
+  title,
   description,
   onRetry,
-  retryLabel = 'Try again',
+  retryLabel,
   className,
 }: ErrorStateProps) {
+  const { t } = useTranslation()
+
   return (
     <div
       role="alert"
@@ -30,7 +33,9 @@ export function ErrorState({
     >
       <AlertTriangle aria-hidden className="size-5 text-status-danger" />
       <div className="flex flex-col gap-1">
-        <p className="text-[15px] font-medium text-status-danger">{title}</p>
+        <p className="text-[15px] font-medium text-status-danger">
+          {title ?? t('errorState.title')}
+        </p>
         {description ? (
           <p className="mx-auto max-w-sm text-[13px] leading-relaxed text-[var(--muted)]">
             {description}
@@ -39,7 +44,7 @@ export function ErrorState({
       </div>
       {onRetry ? (
         <Button variant="secondary" size="sm" onClick={onRetry}>
-          {retryLabel}
+          {retryLabel ?? t('errorState.retry')}
         </Button>
       ) : null}
     </div>

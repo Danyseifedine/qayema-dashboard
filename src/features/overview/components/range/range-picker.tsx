@@ -1,11 +1,7 @@
 import { Lock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Segmented } from '@/shared/components/ui'
-import {
-  BASIC_RANGES,
-  RANGE_LABELS,
-  STATS_RANGES,
-  type StatsRange,
-} from '../../schemas/stats.schema'
+import { BASIC_RANGES, STATS_RANGES, type StatsRange } from '../../schemas/stats.schema'
 
 export type RangePickerProps = {
   value: StatsRange
@@ -16,9 +12,11 @@ export type RangePickerProps = {
 
 /** 7 and 30 days for every package; 90 days and all time with advanced analytics. */
 export function RangePicker({ value, onChange, advanced }: RangePickerProps) {
+  const { t } = useTranslation('overview')
+
   return (
     <Segmented
-      aria-label="Range"
+      aria-label={t('analytics.range.label')}
       size="sm"
       value={value}
       onChange={onChange}
@@ -26,10 +24,10 @@ export function RangePicker({ value, onChange, advanced }: RangePickerProps) {
         const locked = !advanced && !BASIC_RANGES.includes(range)
         return {
           value: range,
-          label: RANGE_LABELS[range],
+          label: t(`analytics.range.options.${range}`),
           disabled: locked,
           icon: locked ? <Lock aria-hidden className="size-3" /> : undefined,
-          title: locked ? 'Comes with advanced analytics' : undefined,
+          title: locked ? t('analytics.range.locked') : undefined,
         }
       })}
     />

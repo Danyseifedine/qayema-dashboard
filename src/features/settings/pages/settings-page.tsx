@@ -1,22 +1,27 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ExternalLink } from 'lucide-react'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useSession } from '@/features/auth/hooks/use-session'
 import { Form, FormActions } from '@/shared/components/forms'
 import { ErrorState } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
-import { LOCALE_LABELS, type Locale } from '@/shared/constants/locales'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { cn } from '@/shared/utils/dom/cn'
 import { ContactSection } from '../components/contact/contact-section'
 import { LocalisationSection } from '../components/localisation/localisation-section'
+import { MenuLanguagesSection } from '../components/localisation/menu-languages-section'
 import { OpeningHoursSection } from '../components/localisation/opening-hours-section'
 import { BrandingSection } from '../components/media/branding-section'
 import { IdentitySection } from '../components/profile/identity-section'
 import { useSaveSettings, useSettings } from '../hooks/use-settings'
+import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
+import { toMenuTextForm } from '@/shared/utils/string/menu-text'
 import {
+  NO_SECOND_LANGUAGE,
   WEEKDAYS,
+  formLanguages,
   settingsSchema,
   type Settings,
   type SettingsFormValues,
@@ -28,8 +33,10 @@ const CLOSED_WEEK = Object.fromEntries(
 ) as SettingsFormValues['opening_hours']
 
 const EMPTY: SettingsFormValues = {
-  name: '',
-  description: '',
+  second_locale: NO_SECOND_LANGUAGE,
+  default_locale: MAIN_LANGUAGE,
+  name: { [MAIN_LANGUAGE]: '' },
+  description: { [MAIN_LANGUAGE]: '' },
   google_maps_url: '',
   country_code: '',
   phone: '',
@@ -42,18 +49,16 @@ const EMPTY: SettingsFormValues = {
 }
 
 /**
- * Everything about the restaurant itself: its name, how guests reach it, the
- * money its prices are in, and the two pictures the menu is built around.
- *
- * The owner writes in one language, chosen at onboarding, so the translatable
- * columns are edited as plain fields and written back to that locale.
+ * Everything about the restaurant itself: its name, the languages its menu is
+ * written in, how guests reach it, the money its prices are in, and the two
+ * pictures the menu is built around.
  */
 function toFormValues(settings: Settings): SettingsFormValues {
-  const locale = (settings.default_locale === 'ar' ? 'ar' : 'en') satisfies Locale
-
   return {
-    name: settings.name[locale] ?? settings.name.en ?? settings.name.ar ?? '',
-    description: settings.description[locale] ?? '',
+    second_locale: settings.second_locale ?? NO_SECOND_LANGUAGE,
+    default_locale: settings.default_locale,
+    name: toMenuTextForm(settings.name, settings.languages),
+    description: toMenuTextForm(settings.description, settings.languages),
     google_maps_url: settings.google_maps_url ?? '',
     country_code: settings.country_code ?? '',
     phone: settings.phone ?? '',
@@ -81,6 +86,7 @@ function toFormValues(settings: Settings): SettingsFormValues {
 }
 
 export function SettingsPage() {
+  const { t } = useTranslation('settings')
   const settings = useSettings()
   const save = useSaveSettings()
   // The menu is served from the API's domain, not the dashboard's, so the
@@ -109,17 +115,22 @@ export function SettingsPage() {
     form.reset(toFormValues(data))
   }, [data, form])
 
-  const languageName = useMemo(
-    () => (data?.default_locale === 'ar' ? LOCALE_LABELS.ar : LOCALE_LABELS.en),
-    [data?.default_locale],
-  )
+  // The tabs follow the language picked in this form, before it is saved.
+  const languages = formLanguages(form.watch('second_locale'))
 
   const onSubmit = form.handleSubmit((values) => {
     clearFormError()
+    // Only the languages the menu will have are sent. Text in a language the
+    // owner just switched away from stays on the server, hidden.
+    const chosen = formLanguages(values.second_locale)
+    const pick = (text: Record<string, string>) =>
+      Object.fromEntries(chosen.map((code) => [code, text[code] ?? '']))
     save.mutate(
       {
-        name: values.name,
-        description: values.description || null,
+        second_locale: values.second_locale === NO_SECOND_LANGUAGE ? null : values.second_locale,
+        default_locale: values.default_locale,
+        name: pick(values.name),
+        description: pick(values.description),
         google_maps_url: values.google_maps_url || null,
         country_code: values.country_code || null,
         phone: values.phone,
@@ -165,9 +176,9 @@ export function SettingsPage() {
     <div className="flex flex-1 flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="font-display text-[19px] leading-tight">Restaurant</h2>
+          <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
           <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">
-            What guests see at the top of your menu, and how they reach you.
+            {t('page.description')}
           </p>
         </div>
         {data ? (
@@ -188,7 +199,7 @@ export function SettingsPage() {
       </div>
 
       {formError ? (
-        <Alert variant="error" title="That did not save" onDismiss={clearFormError}>
+        <Alert variant="error" title={t('page.saveFailedTitle')} onDismiss={clearFormError}>
           {formError}
         </Alert>
       ) : null}
@@ -197,7 +208,12 @@ export function SettingsPage() {
         {/* Two columns once there is room: a single column of inputs across a
             wide screen leaves most of it empty and the save button miles down. */}
         <div className="grid items-start gap-4 xl:grid-cols-2">
-          <IdentitySection control={form.control} languageName={languageName} />
+          <IdentitySection control={form.control} languages={languages} />
+          <MenuLanguagesSection
+            control={form.control}
+            setValue={form.setValue}
+            savedSecond={data?.second_locale ?? null}
+          />
           <ContactSection
             control={form.control}
             locationUrl={form.watch('google_maps_url')}
@@ -208,7 +224,7 @@ export function SettingsPage() {
               })
             }
           />
-          <LocalisationSection control={form.control} languageName={languageName} />
+          <LocalisationSection control={form.control} />
           <OpeningHoursSection control={form.control} />
           <BrandingSection
             control={form.control}
@@ -227,7 +243,7 @@ export function SettingsPage() {
           )}
         >
           <span className="text-[12.5px] text-[var(--muted)]">
-            {dirty ? 'You have unsaved changes.' : 'Everything is saved.'}
+            {dirty ? t('page.unsavedChanges') : t('page.allSaved')}
           </span>
           <div className="flex gap-3">
             <Button
@@ -236,10 +252,10 @@ export function SettingsPage() {
               disabled={!dirty || save.isPending}
               onClick={() => data && form.reset(toFormValues(data))}
             >
-              Undo changes
+              {t('page.undoChanges')}
             </Button>
             <Button type="submit" loading={save.isPending} disabled={!dirty}>
-              Save changes
+              {t('page.saveChanges')}
             </Button>
           </div>
         </FormActions>

@@ -1,0 +1,131 @@
+{
+  "shared": {
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "optional": "optional",
+    "name": "Name",
+    "addCategoryFirst": "Add a category first",
+    "goToCategories": "Go to categories"
+  },
+  "dragHandle": {
+    "label": "Reorder"
+  },
+  "categoriesPage": {
+    "title": "Categories",
+    "description": "Categories group your dishes on the menu. Drag to change the order guests see.",
+    "add": "Add category",
+    "atLimit": "You have used every category your plan allows. Delete one to add another.",
+    "emptyTitle": "No categories yet",
+    "emptyDescription": "Start with something like Starters, Mains or Drinks. You can rename and reorder them any time.",
+    "emptyAction": "Add your first category",
+    "goToDishes": "Go to dishes",
+    "deleteTitle": "Delete this category?",
+    "deleteDescription": "Its dishes are kept and simply lose their category, so you can move them somewhere else."
+  },
+  "categoryCard": {
+    "untitled": "Untitled category",
+    "notTranslated": "Not translated into {{language}}",
+    "dishCount_one": "{{count}} dish",
+    "dishCount_other": "{{count}} dishes",
+    "edit": "Edit {{name}}",
+    "editUnnamed": "Edit category",
+    "delete": "Delete {{name}}",
+    "deleteUnnamed": "Delete category"
+  },
+  "categoryDialog": {
+    "titleNew": "New category",
+    "titleEdit": "Edit category",
+    "nameHint": "Needed in English; the other language can be added later.",
+    "description": "Description",
+    "descriptionHint": "One line under the heading on your menu.",
+    "save": "Save",
+    "add": "Add category"
+  },
+  "categoryFilter": {
+    "label": "Filter dishes by category",
+    "all": "All",
+    "untitled": "Untitled",
+    "noCategory": "No category",
+    "noCategoryHint": "Dishes whose category was deleted"
+  },
+  "categoryToast": {
+    "added": "Category added",
+    "renamed": "Category renamed",
+    "addFailed": "Could not add that category",
+    "renameFailed": "Could not rename that category",
+    "deleted": "Category deleted",
+    "deletedDetail": "Its dishes were kept and now have no category.",
+    "deleteFailed": "Could not delete that category",
+    "reorderFailed": "Could not save the new order"
+  },
+  "categorySchema": {
+    "nameRequired": "A category name is required in English."
+  },
+  "dishesPage": {
+    "title": "Dishes",
+    "description": "Everything guests can order. Drag to change the order they appear in.",
+    "add": "Add dish",
+    "atLimit": "You have used every dish your plan allows. Delete one to add another.",
+    "noCategoriesDescription": "Every dish belongs to a category, so your menu has some structure before you start filling it.",
+    "orphansTitle": "These dishes have no category",
+    "orphansDescription": "Their category was deleted. Add a category, then edit each dish to move it there.",
+    "emptyTitle": "No dishes yet",
+    "emptyDescription": "Add your first dish with a name, a price and a photo.",
+    "emptyFilteredTitle": "Nothing in this category",
+    "emptyFilteredDescription": "Add a dish here, or pick another category above.",
+    "emptyAction": "Add a dish",
+    "deleteTitle": "Delete this dish?",
+    "deleteDescription": "This removes the dish and its photo from your menu. It cannot be undone."
+  },
+  "dishCard": {
+    "untitled": "Untitled dish",
+    "soldOut": "Sold out",
+    "available": "Available",
+    "hidden": "Hidden",
+    "isAvailable": "{{name}} is available",
+    "isAvailableUnnamed": "Dish is available",
+    "edit": "Edit {{name}}",
+    "editUnnamed": "Edit dish",
+    "delete": "Delete {{name}}",
+    "deleteUnnamed": "Delete dish"
+  },
+  "dishDialog": {
+    "titleNew": "New dish",
+    "titleEdit": "Edit dish",
+    "needsCategory": "Every dish belongs to a category.",
+    "untitledCategory": "Untitled category",
+    "ingredients": "Ingredients",
+    "ingredientsHint": "Free text, shown under the dish on your menu.",
+    "price": "Price",
+    "priceHint": "Leave empty to hide the price.",
+    "category": "Category",
+    "categoryPlaceholder": "Choose a category",
+    "photo": "Photo",
+    "photoHint": "Cropped to 1200 x 900 and converted to WebP.",
+    "available": "Available",
+    "availableDescription": "Turn this off to keep the dish on your menu but marked sold out.",
+    "save": "Save dish",
+    "add": "Add dish"
+  },
+  "dishToast": {
+    "added": "Dish added",
+    "saved": "Dish saved",
+    "addFailed": "Could not add that dish",
+    "saveFailed": "Could not save that dish",
+    "deleted": "Dish deleted",
+    "deleteFailed": "Could not delete that dish",
+    "reorderFailed": "Could not save the new order"
+  },
+  "dishSchema": {
+    "priceInvalid": "Enter a price, or leave it empty.",
+    "priceNegative": "A price cannot be negative.",
+    "priceTooHigh": "That price is too high.",
+    "categoryRequired": "Choose a category.",
+    "nameRequired": "A dish name is required in English."
+  },
+  "fields": {
+    "name": "name",
+    "description": "description",
+    "ingredients": "ingredients"
+  }
+}

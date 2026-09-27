@@ -1,4 +1,5 @@
 import {
+  ChartNoAxesColumn,
   Crown,
   LayoutDashboard,
   LayoutList,
@@ -8,29 +9,43 @@ import {
   ReceiptText,
   Store,
   Share2,
+  ToggleRight,
   UserRound,
   UtensilsCrossed,
 } from 'lucide-react'
+import type common from '@/locales/en/common.json'
 
 /** The package flags a section can be gated on, as `/api/user` reports them. */
 export type PlanFeature = 'qr_studio' | 'ordering' | 'advanced_analytics'
+
+/**
+ * A section's name, as a key into `common.json`. The table below is built at
+ * module load, so it holds keys and the sidebar translates them at render;
+ * translating here would freeze the names in whatever language loaded first.
+ */
+export type NavLabelKey = `nav.${keyof typeof common.nav}`
 
 export type NavItem = {
   /** Stable id, and the route path once the router is wired up. */
   key: string
   path: string
-  label: string
+  labelKey: NavLabelKey
   icon: LucideIcon
   /** Hidden until the owner has picked a template. */
   requiresTemplate?: boolean
   /** Hidden unless the restaurant's plan includes the feature. */
   requiresFeature?: PlanFeature
+  /**
+   * The owner may switch this section off on the Features page. Must match
+   * `Restaurant::HIDEABLE_SECTIONS` in ../qayema.
+   */
+  hideable?: true
 }
 
 export type NavGroup = {
   key: string
   /** Omitted for the first group, which needs no heading. */
-  label?: string
+  labelKey?: NavLabelKey
   items: NavItem[]
 }
 
@@ -43,66 +58,90 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     key: 'main',
     items: [
-      { key: 'overview', path: '/', label: 'Overview', icon: LayoutDashboard },
+      { key: 'overview', path: '/', labelKey: 'nav.overview', icon: LayoutDashboard },
+      {
+        key: 'analytics',
+        path: '/analytics',
+        labelKey: 'nav.analytics',
+        icon: ChartNoAxesColumn,
+        hideable: true,
+      },
       {
         key: 'categories',
         path: '/menu/categories',
-        label: 'Categories',
+        labelKey: 'nav.categories',
         icon: LayoutList,
         requiresTemplate: true,
       },
       {
         key: 'dishes',
         path: '/menu/dishes',
-        label: 'Dishes',
+        labelKey: 'nav.dishes',
         icon: UtensilsCrossed,
         requiresTemplate: true,
       },
       {
         key: 'orders',
         path: '/orders',
-        label: 'Orders',
+        labelKey: 'nav.orders',
         icon: ReceiptText,
         requiresTemplate: true,
         requiresFeature: 'ordering',
+        hideable: true,
       },
-      { key: 'templates', path: '/templates', label: 'Templates', icon: Palette },
+      { key: 'templates', path: '/templates', labelKey: 'nav.templates', icon: Palette },
     ],
   },
   {
     key: 'reach',
-    label: 'Reach',
+    labelKey: 'nav.reach',
     items: [
       {
         key: 'qr',
         path: '/qr',
-        label: 'QR Studio',
+        labelKey: 'nav.qr',
         icon: QrCode,
         requiresTemplate: true,
         requiresFeature: 'qr_studio',
+        hideable: true,
       },
-      { key: 'social-links', path: '/social-links', label: 'Social links', icon: Share2 },
+      {
+        key: 'social-links',
+        path: '/social-links',
+        labelKey: 'nav.socialLinks',
+        icon: Share2,
+        hideable: true,
+      },
     ],
   },
   {
     key: 'account',
-    label: 'Account',
+    labelKey: 'nav.account',
     items: [
-      { key: 'package', path: '/package', label: 'Package', icon: Crown },
+      { key: 'package', path: '/package', labelKey: 'nav.package', icon: Crown },
       {
         key: 'settings',
         path: '/settings',
-        label: 'Restaurant',
+        labelKey: 'nav.restaurant',
         icon: Store,
         requiresTemplate: true,
       },
-      { key: 'account', path: '/account', label: 'Profile', icon: UserRound },
+      { key: 'features', path: '/features', labelKey: 'nav.features', icon: ToggleRight },
+      { key: 'account', path: '/account', labelKey: 'nav.profile', icon: UserRound },
     ],
   },
 ]
 
 /** Every item, flattened, for lookups by key. */
 export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items)
+
+/** The sections an owner can switch off, in sidebar order. */
+export const HIDEABLE_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.hideable)
+
+/** Whether the owner switched this section off. Only hideable sections can be. */
+export function isNavItemHidden(key: string, hidden: readonly string[]): boolean {
+  return hidden.includes(key) && HIDEABLE_ITEMS.some((item) => item.key === key)
+}
 
 export type NavAccess = {
   hasTemplate: boolean

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
 import { fetchQr, saveQr } from '../api/qr.api'
@@ -20,8 +21,8 @@ export function useSaveQr() {
     mutationFn: saveQr,
     onSuccess: (qr) => {
       queryClient.setQueryData(qrKeys.all, qr)
-      toast.success('QR code saved', 'Your printed codes keep working — only the look changed.')
+      toast.success(t('qr:toast.saved'), t('qr:toast.savedDescription'))
     },
-    onError: (error) => toast.error('Could not save your QR code', error),
+    onError: (error) => toast.error(t('qr:toast.saveFailed'), error),
   })
 }

@@ -1,94 +1,51 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
+import { makeDish } from '@/test/mocks/factories/menu'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
 import { OverviewPage } from './overview-page'
 
 let mock: MockAdapter
 
-/** A stat tile by its label. The same words can also be a chart legend. */
-function tile(label: string): HTMLElement {
-  const term = screen.getAllByText(label).find((element) => element.tagName === 'DT')
-  if (!term?.parentElement) throw new Error(`No tile labelled "${label}"`)
-  return term.parentElement
+const LIMITS = {
+  dishes: { used: 12, limit: 40 },
+  categories: { used: 4, limit: 10 },
+  social_links: { used: 2, limit: 2 },
 }
 
-function summary(overrides: Record<string, unknown> = {}) {
-  return {
-    range: '30d',
-    timezone: 'Asia/Beirut',
-    totals: { views: 120, unique_visitors: 80, qr_scans: 90, views_today: 7, orders: 12 },
-    series: [
-      { date: '2026-09-25', views: 50, qr_scans: 40 },
-      { date: '2026-09-26', views: 70, qr_scans: 50 },
-    ],
-    last_visit_at: '2026-09-26T10:00:00Z',
-    ...overrides,
-  }
-}
+const CLOSED = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null }
 
-const NONE = {
-  dish_add: 0,
-  category_open: 0,
-  search: 0,
-  search_miss: 0,
-  whatsapp: 0,
-  map: 0,
-  call: 0,
-  social: 0,
-  language: 0,
-}
-
-function advanced(overrides: Record<string, unknown> = {}) {
-  const hours = Array.from({ length: 24 }, () => 0)
-  hours[20] = 30
-  hours[13] = 10
-  return {
-    range: '30d',
-    previous: { views: 100, unique_visitors: 80, qr_scans: 100, orders: 0 },
-    hours,
-    weekdays: [1, 2, 3, 4, 20, 5, 6],
-    devices: [
-      { key: 'mobile', count: 90 },
-      { key: 'desktop', count: 30 },
-    ],
-    browsers: [{ key: 'Safari', count: 120 }],
-    systems: [{ key: 'unknown', count: 120 }],
-    languages: [
-      { key: 'ar', count: 80 },
-      { key: 'en', count: 40 },
-    ],
-    actions: { ...NONE, dish_add: 40, whatsapp: 9, search: 3, search_miss: 2 },
-    top_added: [{ name: 'Falafel', count: 25 }],
-    top_categories: [{ name: 'Mains', count: 14 }],
-    searches: [{ term: 'falafel', count: 3 }],
-    missed_searches: [{ term: 'sushi', count: 2 }],
-    orders: {
-      count: 12,
-      cancelled: 1,
-      revenue: 240.5,
-      average: 20.04,
+function stub(settings: Record<string, unknown> = {}, dishes = [makeDish()]) {
+  mock.onGet('/api/settings').reply(200, {
+    data: {
+      languages: ['en', 'ar'],
+      second_locale: 'ar',
+      default_locale: 'en',
+      name: { en: 'Olive', ar: null },
+      description: { en: 'Grill house', ar: null },
+      slug: 'olive',
+      google_maps_url: null,
+      phone: '+96170000000',
+      country_code: 'LB',
       currency: 'USD',
-      top_dishes: [{ name: 'Falafel', quantity: 30, revenue: 150 }],
+      opening_hours: { ...CLOSED, fri: { open: '12:00', close: '23:00' } },
+      timezone: 'Asia/Beirut',
+      logo_url: 'https://cdn.test/logo.webp',
+      cover_url: null,
+      ...settings,
     },
-    funnel: { visitors: 80, carted: 20, ordered: 12 },
-    ...overrides,
-  }
+  })
+  mock
+    .onGet('/api/dishes')
+    .reply(200, { data: dishes, meta: { used: dishes.length, limit: 40, currency: 'USD' } })
 }
 
-function stubSummary(range = '30d', overrides: Record<string, unknown> = {}) {
-  mock
-    .onGet('/api/stats', { params: { range } })
-    .reply(200, { data: summary({ range, ...overrides }) })
-}
-
-function stubAdvanced(range = '30d', overrides: Record<string, unknown> = {}) {
-  mock
-    .onGet('/api/stats/advanced', { params: { range } })
-    .reply(200, { data: advanced({ range, ...overrides }) })
+/** A count tile by its label. */
+function tile(label: string): HTMLElement {
+  return screen.getByText(label, { selector: 'dt' }).parentElement!
 }
 
 describe('OverviewPage', () => {
@@ -106,206 +63,97 @@ describe('OverviewPage', () => {
     resetCsrfToken(api)
   })
 
-  describe('on a package with basic analytics', () => {
-    it('shows the headline numbers for the last 30 days', async () => {
-      stubSummary()
-      renderWithProviders(<OverviewPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
+  it('counts what is on the menu against the package', () => {
+    stub()
+    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
 
-      await screen.findByText('Menu views')
-      expect(tile('Menu views')).toHaveTextContent('120')
-      expect(tile('Menu views')).toHaveTextContent('7 today')
-      expect(tile('QR scans')).toHaveTextContent('90')
-      expect(tile('Orders')).toHaveTextContent('12')
-    })
-
-    it('splits visits into QR scans and links', async () => {
-      stubSummary()
-      renderWithProviders(<OverviewPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
-
-      const arrive = await screen.findByRole('list', { name: 'How guests arrive' })
-      expect(within(arrive).getByText('Scanned the QR code').closest('li')).toHaveTextContent('75%')
-      expect(within(arrive).getByText('Opened a link').closest('li')).toHaveTextContent('30')
-    })
-
-    it('never asks for the advanced numbers', async () => {
-      stubSummary()
-      renderWithProviders(<OverviewPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
-
-      await screen.findByText('Menu views')
-      expect(mock.history.get.some((call) => call.url === '/api/stats/advanced')).toBe(false)
-      expect(screen.queryByText(/vs before/)).not.toBeInTheDocument()
-    })
-
-    it('locks the longer ranges', async () => {
-      stubSummary()
-      renderWithProviders(<OverviewPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
-
-      await screen.findByText('Menu views')
-      expect(screen.getByRole('tab', { name: '90 days' })).toBeDisabled()
-      expect(screen.getByRole('tab', { name: 'All time' })).toBeDisabled()
-      expect(screen.getByRole('tab', { name: '7 days' })).toBeEnabled()
-    })
-
-    it('switches between 30 and 7 days', async () => {
-      stubSummary()
-      stubSummary('7d', {
-        totals: { views: 9, unique_visitors: 5, qr_scans: 4, views_today: 1, orders: 2 },
-      })
-      const user = userEvent.setup()
-      renderWithProviders(<OverviewPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
-
-      await screen.findByText('Menu views')
-      await user.click(screen.getByRole('tab', { name: '7 days' }))
-
-      await waitFor(() => expect(tile('Menu views')).toHaveTextContent('9'))
-    })
-
-    it('shows what advanced analytics would add, with a way to the packages', async () => {
-      stubSummary()
-      const onOpenPackage = vi.fn()
-      const user = userEvent.setup()
-      renderWithProviders(
-        <OverviewPage locale="en" advanced={false} onOpenPackage={onOpenPackage} />,
-      )
-
-      expect(await screen.findByText('Advanced analytics')).toBeInTheDocument()
-      await user.click(screen.getByRole('button', { name: 'See packages' }))
-      expect(onOpenPackage).toHaveBeenCalledOnce()
-    })
-
-    it('leaves orders out when the package does not take them', async () => {
-      stubSummary('30d', {
-        totals: { views: 1, unique_visitors: 1, qr_scans: 0, views_today: 0, orders: null },
-      })
-      renderWithProviders(<OverviewPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
-
-      await screen.findByText('Menu views')
-      expect(screen.queryByText('Orders')).not.toBeInTheDocument()
-    })
-
-    it('says so when there are no visits yet', async () => {
-      stubSummary('30d', {
-        totals: { views: 0, unique_visitors: 0, qr_scans: 0, views_today: 0, orders: 0 },
-      })
-      renderWithProviders(<OverviewPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
-
-      expect(await screen.findByText(/No visits in this range yet\. Share/)).toBeInTheDocument()
-    })
-
-    it('shows an error with a retry when the numbers cannot load', async () => {
-      mock.onGet('/api/stats').reply(500, { message: 'Server error', code: 'server_error' })
-      renderWithProviders(<OverviewPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
-
-      expect(await screen.findByRole('button', { name: /try again/i })).toBeInTheDocument()
-    })
+    expect(tile('Dishes')).toHaveTextContent('12 / 40')
+    expect(tile('Categories')).toHaveTextContent('4 / 10')
+    expect(tile('Social links')).toHaveTextContent('2 / 2')
+    // Stays "12 / 40" on an Arabic page instead of flipping to "40 / 12".
+    expect(screen.getByText('12 / 40')).toHaveAttribute('dir', 'ltr')
   })
 
-  describe('with advanced analytics', () => {
-    it('compares each number with the period before', async () => {
-      stubSummary()
-      stubAdvanced()
-      renderWithProviders(<OverviewPage locale="en" advanced onOpenPackage={vi.fn()} />)
+  it('never shows an unlimited allowance as a number', () => {
+    stub()
+    renderWithProviders(
+      <OverviewPage limits={{ ...LIMITS, dishes: { used: 300, limit: null } }} onOpen={vi.fn()} />,
+    )
 
-      await waitFor(() => expect(tile('Menu views')).toHaveTextContent('↑ 20%'))
-      expect(tile('QR scans')).toHaveTextContent('↓ 10%')
-      expect(tile('Visitors')).toHaveTextContent('Same as before')
-      // 12 orders from none has no percentage.
-      expect(tile('Orders')).toHaveTextContent('Nothing to compare yet')
-    })
+    expect(tile('Dishes')).toHaveTextContent('No limit on your package')
+    expect(tile('Dishes')).not.toHaveTextContent('/')
+  })
 
-    it('opens the longer ranges', async () => {
-      stubSummary()
-      stubAdvanced()
-      stubSummary('90d')
-      stubAdvanced('90d')
-      const user = userEvent.setup()
-      renderWithProviders(<OverviewPage locale="en" advanced onOpenPackage={vi.fn()} />)
+  it('shows how much of the menu is finished', async () => {
+    stub()
+    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
 
-      await screen.findByText('Menu views')
-      await user.click(screen.getByRole('tab', { name: '90 days' }))
+    // Done: logo, description, hours, phone, categories, dishes, social.
+    // To do: cover, location, the one dish's photo.
+    expect(await screen.findByText('7 of 10 done')).toBeInTheDocument()
+    expect(screen.getByRole('progressbar', { name: 'Menu checklist' })).toHaveAttribute(
+      'aria-valuenow',
+      '7',
+    )
+  })
 
-      await waitFor(() =>
-        expect(
-          mock.history.get.some(
-            (call) => call.url === '/api/stats/advanced' && call.params?.range === '90d',
-          ),
-        ).toBe(true),
-      )
-      expect(screen.queryByText('See packages')).not.toBeInTheDocument()
-    })
+  it('sends each missing item to the page that fixes it', async () => {
+    stub({}, [makeDish({ image_url: null }), makeDish({ image_url: null })])
+    const onOpen = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={onOpen} />)
 
-    it('says when guests are busiest', async () => {
-      stubSummary()
-      stubAdvanced()
-      renderWithProviders(<OverviewPage locale="en" advanced onOpenPackage={vi.fn()} />)
+    await user.click(await screen.findByRole('button', { name: 'Add: A cover photo' }))
+    expect(onOpen).toHaveBeenLastCalledWith('settings')
 
-      const busiest = await screen.findByText(/Busiest around/)
-      expect(busiest).toHaveTextContent('Busiest around 20:00, and on Friday.')
-    })
+    await user.click(screen.getByRole('button', { name: 'Fix: 2 dishes have no photo' }))
+    expect(onOpen).toHaveBeenLastCalledWith('dishes')
+  })
 
-    it('counts what guests did, searches together', async () => {
-      stubSummary()
-      stubAdvanced()
-      renderWithProviders(<OverviewPage locale="en" advanced onOpenPackage={vi.fn()} />)
+  it('lists what is left before what is done', async () => {
+    stub()
+    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
 
-      await screen.findByText('WhatsApp taps')
-      expect(tile('WhatsApp taps')).toHaveTextContent('9')
-      expect(tile('Searched')).toHaveTextContent('5')
-      expect(tile('Added to cart')).toHaveTextContent('40')
-    })
+    const rows = within(await screen.findByRole('list', { name: 'To do' })).getAllByRole('listitem')
+    expect(rows.slice(0, 3).map((row) => row.textContent)).toEqual([
+      expect.stringContaining('A cover photo'),
+      expect.stringContaining('Your location'),
+      expect.stringContaining('1 dish has no photo'),
+    ])
+  })
 
-    it('lists what guests could not find', async () => {
-      stubSummary()
-      stubAdvanced()
-      renderWithProviders(<OverviewPage locale="en" advanced onOpenPackage={vi.fn()} />)
+  it('offers no button for what is already done', async () => {
+    stub()
+    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
 
-      const missed = await screen.findByRole('list', { name: 'Searched but not found' })
-      expect(within(missed).getByText('sushi')).toBeInTheDocument()
-    })
+    const logo = (await screen.findByText('Your logo')).closest('li')!
+    expect(within(logo).queryByRole('button')).not.toBeInTheDocument()
+    expect(logo).toHaveTextContent('(done)')
+  })
 
-    it('shows order value and the funnel', async () => {
-      stubSummary()
-      stubAdvanced()
-      renderWithProviders(<OverviewPage locale="en" advanced onOpenPackage={vi.fn()} />)
+  it('says so when everything is done', async () => {
+    stub(
+      {
+        cover_url: 'https://cdn.test/cover.webp',
+        google_maps_url: 'https://maps.google.com/?q=1,2',
+      },
+      [makeDish({ image_url: 'https://cdn.test/a.webp' })],
+    )
+    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
 
-      await screen.findByText('Order value')
-      expect(tile('Order value')).toHaveTextContent('240.50')
-      const funnel = screen.getByRole('list', { name: 'From visit to order' })
-      expect(within(funnel).getByText('Placed an order').closest('li')).toHaveTextContent('15%')
-    })
+    expect(await screen.findByText('10 of 10 done')).toBeInTheDocument()
+    expect(screen.getByText('Everything guests look for is on your menu.')).toBeInTheDocument()
+  })
 
-    it('names devices and languages for people', async () => {
-      stubSummary()
-      stubAdvanced()
-      renderWithProviders(<OverviewPage locale="en" advanced onOpenPackage={vi.fn()} />)
+  it('shows an error with a retry when the checklist cannot load', async () => {
+    mock.onGet('/api/settings').reply(500, { message: 'Server error', code: 'server_error' })
+    mock
+      .onGet('/api/dishes')
+      .reply(200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } })
+    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
 
-      const devices = await screen.findByRole('list', { name: 'Devices' })
-      expect(within(devices).getByText('Phone').closest('li')).toHaveTextContent('75%')
-      const languages = screen.getByRole('list', { name: 'Languages' })
-      expect(within(languages).getByText('العربية')).toBeInTheDocument()
-      expect(within(screen.getByRole('list', { name: 'Systems' })).getByText('Unknown'))
-    })
-
-    it('drops the cart and order parts when the package does not take orders', async () => {
-      stubSummary()
-      stubAdvanced('30d', { orders: null, funnel: null })
-      renderWithProviders(<OverviewPage locale="en" advanced onOpenPackage={vi.fn()} />)
-
-      await screen.findByText('WhatsApp taps')
-      expect(screen.queryByText('Added to cart')).not.toBeInTheDocument()
-      expect(screen.queryByText('From visit to order')).not.toBeInTheDocument()
-      expect(screen.queryByText('Order value')).not.toBeInTheDocument()
-    })
-
-    it('keeps the summary up when only the advanced part fails', async () => {
-      stubSummary()
-      mock
-        .onGet('/api/stats/advanced')
-        .reply(500, { message: 'Server error', code: 'server_error' })
-      renderWithProviders(<OverviewPage locale="en" advanced onOpenPackage={vi.fn()} />)
-
-      expect(await screen.findByRole('button', { name: /try again/i })).toBeInTheDocument()
-      expect(screen.getByText('Menu views')).toBeInTheDocument()
-    })
+    expect(await screen.findByRole('button', { name: /try again/i })).toBeInTheDocument()
+    // The counts come from the session, so they stay up.
+    expect(tile('Dishes')).toHaveTextContent('12')
   })
 })

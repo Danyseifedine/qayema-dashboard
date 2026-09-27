@@ -1,10 +1,9 @@
 import { Menu } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { PackagePill } from './package-pill'
-import { LanguageSwitcher } from './language-switcher'
-import { ThemeToggle } from './theme-toggle'
 import { UserMenu } from './user-menu'
 
 export type TopbarProps = {
@@ -41,6 +40,8 @@ export function Topbar({
   onOpenProfile,
   onLogout,
 }: TopbarProps) {
+  const { t } = useTranslation()
+
   return (
     <header
       className={cn(
@@ -53,7 +54,7 @@ export function Topbar({
         <button
           type="button"
           onClick={onOpenMobileNav}
-          aria-label="Open navigation"
+          aria-label={t('layout.openNavigation')}
           className={cn(
             'grid size-9 shrink-0 place-items-center rounded-[var(--radius-control)] lg:hidden',
             'text-[var(--muted)] transition-colors hover:bg-[var(--hover-wash)] hover:text-[var(--text)]',
@@ -71,16 +72,12 @@ export function Topbar({
         </div>
 
         <PackagePill label={packageName} onClick={onOpenPackage} />
-        <LanguageSwitcher
-          value={locale}
-          onChange={onLocaleChange}
-          className="hidden sm:inline-flex"
-        />
-        <ThemeToggle className="hidden sm:block" />
         <UserMenu
           name={user.name}
           email={user.email}
           publicUrl={publicUrl}
+          locale={locale}
+          onLocaleChange={onLocaleChange}
           onOpenProfile={onOpenProfile}
           onLogout={onLogout}
         />

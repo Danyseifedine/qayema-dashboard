@@ -1,34 +1,17 @@
-import { LOCALE_LABELS, type Locale } from '@/shared/constants/locales'
+import { t } from '@/lib/i18n'
+import { MENU_LANGUAGES } from '@/shared/constants/menu-languages'
 import type { Breakdown } from '../../schemas/stats.schema'
 import type { RankedItem } from '../charts/ranked-list'
 
-const DEVICES: Record<string, string> = {
-  mobile: 'Phone',
-  tablet: 'Tablet',
-  desktop: 'Computer',
-}
-
-function isLocale(key: string): key is Locale {
-  return key in LOCALE_LABELS
-}
-
-/** A breakdown as ranked rows, each with its share of the whole. */
-export function breakdownItems(
-  breakdown: Breakdown,
-  kind: 'device' | 'language' | 'plain',
-): RankedItem[] {
+/** Visits by language as ranked rows, each with its share of the whole. */
+export function languageItems(breakdown: Breakdown): RankedItem[] {
   const total = breakdown.reduce((sum, row) => sum + row.count, 0)
 
   return breakdown.map((row) => ({
     id: row.key,
     label:
-      row.key === 'unknown'
-        ? 'Unknown'
-        : kind === 'device'
-          ? (DEVICES[row.key] ?? row.key)
-          : kind === 'language' && isLocale(row.key)
-            ? LOCALE_LABELS[row.key]
-            : row.key,
+      MENU_LANGUAGES[row.key]?.name ??
+      (row.key === 'unknown' ? t('overview:analytics.languages.unknown') : row.key),
     value: row.count,
     detail: total > 0 ? `${Math.round((row.count / total) * 100)}%` : undefined,
   }))

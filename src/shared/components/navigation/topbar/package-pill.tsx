@@ -1,4 +1,5 @@
 import { Crown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type PackagePillProps = {
@@ -13,13 +14,15 @@ export type PackagePillProps = {
  * the dashboard comes from it. Clicking it opens the package page.
  */
 export function PackagePill({ label, onClick, className }: PackagePillProps) {
+  const { t } = useTranslation()
+
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={`${label} package. Open your package.`}
+      aria-label={t('packagePill.label', { name: label })}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-[var(--radius-control)] border-[0.5px] px-3 py-1.5',
+        'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border-[0.5px] px-3.5',
         'border-accent-border bg-accent-wash text-[12.5px] font-medium text-accent',
         'transition-colors duration-200 hover:bg-accent-wash-hover',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',

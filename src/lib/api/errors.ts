@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { t } from '@/lib/i18n'
 import { ApiError, type ApiValidationErrors } from '@/shared/types/api'
 
 type LaravelErrorBody = {
@@ -39,7 +40,7 @@ export function toApiError(error: unknown): ApiError {
 
     if (!response) {
       return new ApiError({
-        message: 'We could not reach the server. Check your connection and try again.',
+        message: t('errors.network'),
         status: 0,
         code: 'network_error',
       })
@@ -51,7 +52,7 @@ export function toApiError(error: unknown): ApiError {
       message:
         typeof body.message === 'string' && body.message.length > 0
           ? body.message
-          : 'Something went wrong. Please try again.',
+          : t('errors.generic'),
       status: response.status,
       code: typeof body.code === 'string' ? body.code : null,
       errors: readValidationErrors(body.errors),
@@ -66,10 +67,7 @@ export function toApiError(error: unknown): ApiError {
   // A thrown Error carries a message worth keeping, e.g. the schema-mismatch
   // text built by `request()`; replacing it loses the only useful detail.
   return new ApiError({
-    message:
-      error instanceof Error && error.message !== ''
-        ? error.message
-        : 'Something went wrong. Please try again.',
+    message: error instanceof Error && error.message !== '' ? error.message : t('errors.generic'),
     status: 0,
     code: 'unknown_error',
   })

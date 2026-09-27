@@ -1,4 +1,5 @@
 import { Crown } from 'lucide-react'
+import { Trans, useTranslation } from 'react-i18next'
 import { LimitBadge } from '@/shared/components/data-display'
 import type { AuthRestaurant } from '@/features/auth/schemas/user.schema'
 import { cn } from '@/shared/utils/dom/cn'
@@ -29,10 +30,11 @@ export function CurrentPackageCard({
   qrStudio,
   className,
 }: CurrentPackageCardProps) {
+  const { t } = useTranslation('packages')
   const rows = [
-    { label: 'Dishes', value: limits.dishes },
-    { label: 'Categories', value: limits.categories },
-    { label: 'Social links', value: limits.social_links },
+    { id: 'dishes', label: t('current.dishes'), value: limits.dishes },
+    { id: 'categories', label: t('current.categories'), value: limits.categories },
+    { id: 'social_links', label: t('current.socialLinks'), value: limits.social_links },
   ]
 
   return (
@@ -45,7 +47,7 @@ export function CurrentPackageCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[12px] tracking-[0.08em] text-[var(--muted)] uppercase">
-            Your package
+            {t('current.eyebrow')}
           </p>
           <h2 className="mt-1 flex items-center gap-2 font-display text-[22px] leading-tight text-accent">
             <Crown aria-hidden className="size-5" />
@@ -54,24 +56,28 @@ export function CurrentPackageCard({
         </div>
         {endsAt !== null ? (
           <p className="text-[12.5px] text-[var(--muted)]">
-            Renews or ends on{' '}
-            <span className="text-[var(--text)]">
-              {new Date(endsAt).toLocaleDateString(undefined, {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
-            </span>
+            <Trans
+              ns="packages"
+              i18nKey="current.endsOn"
+              values={{
+                date: new Date(endsAt).toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                }),
+              }}
+              components={{ date: <span className="text-[var(--text)]" /> }}
+            />
           </p>
         ) : isContactOnly ? (
-          <p className="text-[12.5px] text-[var(--muted)]">Arranged with us directly.</p>
+          <p className="text-[12.5px] text-[var(--muted)]">{t('current.contactOnly')}</p>
         ) : null}
       </div>
 
       <dl className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
         {rows.map((row) => (
           <div
-            key={row.label}
+            key={row.id}
             className="flex items-center justify-between gap-2 rounded-[10px] bg-[var(--surface)] px-3 py-2.5"
           >
             <dt className="text-[13px] text-[var(--muted)]">{row.label}</dt>
@@ -83,9 +89,7 @@ export function CurrentPackageCard({
       </dl>
 
       <p className="mt-3 text-[12.5px] text-[var(--muted)]">
-        {qrStudio
-          ? 'QR studio is included, so you can brand your code.'
-          : 'QR studio is not included on this package.'}
+        {qrStudio ? t('current.qrIncluded') : t('current.qrNotIncluded')}
       </p>
     </section>
   )

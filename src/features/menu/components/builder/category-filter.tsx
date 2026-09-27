@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
@@ -28,6 +29,7 @@ export function CategoryFilter({
   orphanCount,
   locale,
 }: CategoryFilterProps) {
+  const { t } = useTranslation('menu')
   const chip = (active: boolean) =>
     cn(
       'shrink-0 rounded-[var(--radius-control)] border-[0.5px] px-3.5 py-2 text-[13px] transition-colors',
@@ -40,7 +42,7 @@ export function CategoryFilter({
   return (
     <div
       role="tablist"
-      aria-label="Filter dishes by category"
+      aria-label={t('categoryFilter.label')}
       className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <button
@@ -50,7 +52,7 @@ export function CategoryFilter({
         onClick={() => onChange(null)}
         className={chip(value === null)}
       >
-        All
+        {t('categoryFilter.all')}
       </button>
 
       {categories.map((category) => {
@@ -65,7 +67,7 @@ export function CategoryFilter({
             onClick={() => onChange(category.id)}
             className={chip(active)}
           >
-            {name.missing ? 'Untitled' : name.text}
+            {name.missing ? t('categoryFilter.untitled') : name.text}
             <span className="ms-1.5 tabular-nums opacity-60">{category.dishes_count ?? 0}</span>
           </button>
         )
@@ -78,9 +80,9 @@ export function CategoryFilter({
           aria-selected={value === UNCATEGORISED}
           onClick={() => onChange(UNCATEGORISED)}
           className={chip(value === UNCATEGORISED)}
-          title="Dishes whose category was deleted"
+          title={t('categoryFilter.noCategoryHint')}
         >
-          No category
+          {t('categoryFilter.noCategory')}
           <span className="ms-1.5 tabular-nums opacity-60">{orphanCount}</span>
         </button>
       ) : null}

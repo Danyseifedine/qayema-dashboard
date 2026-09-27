@@ -1,34 +1,46 @@
+import { useTranslation } from 'react-i18next'
 import { Segmented } from '@/shared/components/ui'
-import { LOCALES, LOCALE_SHORT, type Locale } from '@/shared/constants/locales'
+import { languageName } from '@/shared/constants/menu-languages'
 
 /** Stable empty default, so the prop does not change identity per render. */
-const NONE: Locale[] = []
+const NONE: string[] = []
 
 export type LocaleTabsProps = {
-  value: Locale
-  onChange: (locale: Locale) => void
-  /** Locales whose value is still empty, marked with a dot. */
-  incomplete?: Locale[]
+  /** The menu's languages, English first. */
+  languages: readonly string[]
+  value: string
+  onChange: (language: string) => void
+  /** Languages whose value is still empty or invalid, marked with a dot. */
+  incomplete?: string[]
   className?: string
 }
 
 /**
- * EN/AR switch above a translatable field. A dot marks a locale that has no
- * text yet, so an owner can see at a glance that the Arabic name is missing
- * without opening the tab.
+ * One tab per menu language above a translatable field. A dot marks a
+ * language that still needs attention, so an owner can see at a glance that
+ * the French name is missing without opening the tab.
  */
-export function LocaleTabs({ value, onChange, incomplete = NONE, className }: LocaleTabsProps) {
+export function LocaleTabs({
+  languages,
+  value,
+  onChange,
+  incomplete = NONE,
+  className,
+}: LocaleTabsProps) {
+  const { t } = useTranslation()
+
   return (
     <Segmented
-      aria-label="Content language"
+      aria-label={t('localeTabs.label')}
       size="sm"
       value={value}
       onChange={onChange}
       className={className}
-      options={LOCALES.map((locale) => ({
-        value: locale,
-        label: LOCALE_SHORT[locale],
-        badge: incomplete.includes(locale) ? '•' : undefined,
+      options={languages.map((code) => ({
+        value: code,
+        label: code.toUpperCase(),
+        title: languageName(code),
+        badge: incomplete.includes(code) ? '•' : undefined,
       }))}
     />
   )

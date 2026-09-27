@@ -7,13 +7,17 @@ import { useUiStore } from '@/stores/ui.store'
 import { AuthenticatedLayout } from './authenticated-layout'
 import type { NavItem } from './nav-items'
 
+const NONE_HIDDEN: string[] = []
+
 function Harness({
   hasTemplate = true,
   qrStudio = true,
+  hidden = NONE_HIDDEN,
   onLogout = vi.fn(),
 }: {
   hasTemplate?: boolean
   qrStudio?: boolean
+  hidden?: string[]
   onLogout?: () => void
 }) {
   const [activeKey, setActiveKey] = useState('overview')
@@ -31,6 +35,7 @@ function Harness({
       publicUrl="https://qayema.test/beit-qayema"
       hasTemplate={hasTemplate}
       features={{ qr_studio: qrStudio, ordering: qrStudio, advanced_analytics: qrStudio }}
+      hiddenSections={hidden}
       locale={locale}
       onLocaleChange={setLocale}
       onLogout={onLogout}
@@ -113,6 +118,8 @@ describe('AuthenticatedLayout', () => {
 
     expect(document.documentElement).toHaveAttribute('dir', 'ltr')
 
+    // Language lives in the account menu, not the top bar.
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
     await user.click(screen.getByRole('tab', { name: 'ع' }))
 
     await waitFor(() => {
@@ -130,12 +137,13 @@ describe('AuthenticatedLayout', () => {
 
     expect(document.documentElement.dataset.theme).toBe('light')
 
-    await user.click(screen.getByRole('switch', { name: 'Switch to dark theme' }))
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
+    await user.click(screen.getByRole('switch', { name: 'Dark mode' }))
 
     expect(document.documentElement.dataset.theme).toBe('dark')
     expect(usePreferencesStore.getState().theme).toBe('dark')
 
-    await user.click(screen.getByRole('switch', { name: 'Switch to light theme' }))
+    await user.click(screen.getByRole('switch', { name: 'Dark mode' }))
     expect(document.documentElement.dataset.theme).toBe('light')
   })
 
@@ -144,7 +152,7 @@ describe('AuthenticatedLayout', () => {
     const user = userEvent.setup()
     render(<Harness onLogout={onLogout} />)
 
-    await user.click(screen.getByRole('button', { expanded: false }))
+    await user.click(screen.getByRole('button', { name: 'Account menu' }))
 
     const menu = screen.getByRole('menu')
     expect(within(menu).getByText('owner@example.com')).toBeInTheDocument()
@@ -155,6 +163,36 @@ describe('AuthenticatedLayout', () => {
 
     await user.click(within(menu).getByRole('menuitem', { name: /Log out/ }))
     expect(onLogout).toHaveBeenCalledOnce()
+  })
+
+  it('keeps only the package and the account in the top bar', () => {
+    render(<Harness />)
+
+    expect(screen.getByRole('button', { name: /Free package/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Account menu' })).toBeInTheDocument()
+    // Closed menu: no language tabs or theme switch on the bar itself.
+    expect(screen.queryByRole('tab', { name: 'ع' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('switch', { name: 'Dark mode' })).not.toBeInTheDocument()
+  })
+
+  it('leaves switched-off sections out of the sidebar', () => {
+    render(<Harness hidden={['orders', 'qr', 'social-links']} />)
+
+    const nav = screen.getByRole('navigation', { name: 'Dashboard' })
+    expect(within(nav).queryByRole('button', { name: 'Orders' })).not.toBeInTheDocument()
+    expect(within(nav).getByRole('button', { name: 'Analytics' })).toBeInTheDocument()
+    // Every section in "Reach" is off, so its heading goes too.
+    expect(within(nav).queryByText('Reach')).not.toBeInTheDocument()
+    expect(within(nav).getByRole('button', { name: 'Features' })).toBeInTheDocument()
+  })
+
+  it('never hides a core section, whatever the list says', () => {
+    render(<Harness hidden={['overview', 'dishes', 'features']} />)
+
+    const nav = screen.getByRole('navigation', { name: 'Dashboard' })
+    for (const name of ['Overview', 'Dishes', 'Features']) {
+      expect(within(nav).getByRole('button', { name })).toBeInTheDocument()
+    }
   })
 
   it('opens and closes the mobile drawer', async () => {

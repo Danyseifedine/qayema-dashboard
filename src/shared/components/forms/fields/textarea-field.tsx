@@ -62,7 +62,9 @@ export function TextareaField<T extends FieldValues>({
           />
           {maxLength ? (
             <HelperText className="text-end tabular-nums">
-              {value.length} / {maxLength}
+              <span dir="ltr">
+                {value.length} / {maxLength}
+              </span>
             </HelperText>
           ) : null}
         </div>

@@ -1,40 +1,41 @@
-import { Store } from 'lucide-react'
 import type { Control } from 'react-hook-form'
-import { FormSection, TextField, TextareaField } from '@/shared/components/forms'
+import { useTranslation } from 'react-i18next'
+import { FormSection, TranslatableTextField } from '@/shared/components/forms'
 import type { SettingsFormValues } from '../../schemas/settings.schema'
 
 export type IdentitySectionProps = {
   control: Control<SettingsFormValues>
-  /** The language these are written in, chosen at onboarding and fixed after. */
-  languageName: string
+  /** The menu's languages as currently chosen in the form, English first. */
+  languages: readonly string[]
 }
 
-/** What the restaurant is called and how it introduces itself. */
-export function IdentitySection({ control, languageName }: IdentitySectionProps) {
+/** What the restaurant is called and how it introduces itself, in each menu language. */
+export function IdentitySection({ control, languages }: IdentitySectionProps) {
+  const { t } = useTranslation('settings')
+
   return (
-    <FormSection
-      title="Restaurant"
-      description={`What guests see on your menu, written in ${languageName}.`}
-    >
-      <TextField
+    <FormSection title={t('identity.title')} description={t('identity.description')}>
+      <TranslatableTextField
         control={control}
         name="name"
-        label="Restaurant name"
+        languages={languages}
+        label={t('identity.nameLabel')}
         required
-        leadingIcon={<Store />}
         maxLength={255}
-        placeholder="Beit Qayema"
-        hint="The heading at the top of your public menu. This is not your own name."
+        placeholder={{ en: 'Beit Qayema' }}
+        hint={t('identity.nameHint')}
       />
 
-      <TextareaField
+      <TranslatableTextField
         control={control}
         name="description"
-        label="Description"
-        optionalText="optional"
+        languages={languages}
+        label={t('identity.descriptionLabel')}
+        optionalText={t('optional')}
+        multiline
         rows={3}
         maxLength={2000}
-        placeholder="A sentence or two about your food."
+        placeholder={{ en: 'A sentence or two about your food.' }}
       />
     </FormSection>
   )

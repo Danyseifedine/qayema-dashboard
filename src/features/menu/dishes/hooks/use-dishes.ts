@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import { categoryKeys } from '../../categories/hooks/category-keys'
+import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
 import {
@@ -36,13 +37,16 @@ export function useSaveDish(id: number | null) {
   return useMutation<Dish, ApiError, DishPayload>({
     mutationFn: (payload) => (id === null ? createDish(payload) : updateDish(id, payload)),
     onSuccess: () => {
-      toast.success(id === null ? 'Dish added' : 'Dish saved')
+      toast.success(id === null ? t('menu:dishToast.added') : t('menu:dishToast.saved'))
       void queryClient.invalidateQueries({ queryKey: dishKeys.all })
       // A new dish changes the category's dish count.
       void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
     },
     onError: (error) =>
-      toast.error(id === null ? 'Could not add that dish' : 'Could not save that dish', error),
+      toast.error(
+        id === null ? t('menu:dishToast.addFailed') : t('menu:dishToast.saveFailed'),
+        error,
+      ),
   })
 }
 
@@ -52,11 +56,11 @@ export function useDeleteDish() {
   return useMutation<void, ApiError, number>({
     mutationFn: deleteDish,
     onSuccess: () => {
-      toast.success('Dish deleted')
+      toast.success(t('menu:dishToast.deleted'))
       void queryClient.invalidateQueries({ queryKey: dishKeys.all })
       void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
     },
-    onError: (error) => toast.error('Could not delete that dish', error),
+    onError: (error) => toast.error(t('menu:dishToast.deleteFailed'), error),
   })
 }
 
@@ -148,7 +152,7 @@ export function useReorderDishes() {
 
     onError: (error, _ordered, context) => {
       if (context?.previous) queryClient.setQueryData(dishKeys.lists(), context.previous)
-      toast.error('Could not save the new order', error)
+      toast.error(t('menu:dishToast.reorderFailed'), error)
       void queryClient.invalidateQueries({ queryKey: dishKeys.lists() })
     },
   })

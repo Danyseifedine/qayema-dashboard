@@ -1,4 +1,5 @@
 import { Palette } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { CardGridSkeleton, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
@@ -17,6 +18,7 @@ export type TemplatesPageProps = {
  * every package: what a package grants is limits and features, never a look.
  */
 export function TemplatesPage({ locale }: TemplatesPageProps) {
+  const { t } = useTranslation('templates')
   const templates = useTemplates()
   const select = useSelectTemplate()
 
@@ -27,24 +29,21 @@ export function TemplatesPage({ locale }: TemplatesPageProps) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="font-display text-[19px] leading-tight">Menu designs</h2>
+          <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
           <p className="mt-1 text-[13px] text-[var(--muted)]">
-            {current === null
-              ? 'Pick a design to open up the rest of your dashboard.'
-              : 'Switching between designs is always free.'}
+            {current === null ? t('page.pickPrompt') : t('page.switchFree')}
           </p>
         </div>
       </div>
 
       {current === null ? (
-        <Alert variant="info" title="Your menu needs a design">
-          Your dishes, QR code and settings unlock as soon as you choose one. You can change your
-          mind whenever you like.
+        <Alert variant="info" title={t('needsDesign.title')}>
+          {t('needsDesign.description')}
         </Alert>
       ) : null}
 
       {select.isError ? (
-        <Alert variant="error" title="Could not switch design">
+        <Alert variant="error" title={t('toast.switchFailed')}>
           {select.error.message}
         </Alert>
       ) : null}
@@ -57,11 +56,7 @@ export function TemplatesPage({ locale }: TemplatesPageProps) {
           onRetry={() => void templates.refetch()}
         />
       ) : list.length === 0 ? (
-        <EmptyState
-          icon={Palette}
-          title="No designs available"
-          description="No menu designs are published yet. Check back shortly."
-        />
+        <EmptyState icon={Palette} title={t('empty.title')} description={t('empty.description')} />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {list.map((template) => (

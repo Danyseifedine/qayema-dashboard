@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { request } from '@/lib/api'
+import type { MenuTextForm } from '@/shared/utils/string/menu-text'
 import {
   dishCollectionSchema,
   dishListSchema,
@@ -9,8 +10,9 @@ import {
 } from '../schemas/dish.schema'
 
 export type DishPayload = {
-  name: { en: string; ar: string }
-  ingredients: { en: string; ar: string }
+  /** One entry per menu language; a blank one clears that language. */
+  name: MenuTextForm
+  ingredients: MenuTextForm
   price: number | null
   category_id: number
   is_available: boolean
@@ -38,8 +40,9 @@ export async function createDish(payload: DishPayload): Promise<Dish> {
 }
 
 /**
- * A partial update, except for the translatable maps: the server keeps only
- * the locales present in the payload, so both are always sent.
+ * A partial update. The translatable maps carry every menu language, so a
+ * blank one clears it; a language the menu no longer uses is never sent and
+ * stays saved on the server.
  */
 export async function updateDish(id: number, payload: DishPayload): Promise<Dish> {
   const { data } = await request(dishResponseSchema, {

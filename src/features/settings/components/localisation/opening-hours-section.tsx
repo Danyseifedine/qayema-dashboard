@@ -1,9 +1,15 @@
 import type { Control } from 'react-hook-form'
 import { useController } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { FormSection, TextField } from '@/shared/components/forms'
 import { Switch } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
-import { WEEKDAYS, WEEKDAY_LABELS, type SettingsFormValues } from '../../schemas/settings.schema'
+import {
+  WEEKDAYS,
+  weekdayLabel,
+  type SettingsFormValues,
+  type Weekday,
+} from '../../schemas/settings.schema'
 
 export type OpeningHoursSectionProps = {
   control: Control<SettingsFormValues>
@@ -17,11 +23,10 @@ export type OpeningHoursSectionProps = {
  * without retyping. Only the switch decides what is saved.
  */
 export function OpeningHoursSection({ control }: OpeningHoursSectionProps) {
+  const { t } = useTranslation('settings')
+
   return (
-    <FormSection
-      title="Opening hours"
-      description="Shown at the top of your menu, and used to say whether you are open right now."
-    >
+    <FormSection title={t('openingHours.title')} description={t('openingHours.description')}>
       <div className="flex flex-col gap-2">
         {WEEKDAYS.map((day) => (
           <DayRow key={day} control={control} day={day} />
@@ -31,15 +36,11 @@ export function OpeningHoursSection({ control }: OpeningHoursSectionProps) {
   )
 }
 
-function DayRow({
-  control,
-  day,
-}: {
-  control: Control<SettingsFormValues>
-  day: (typeof WEEKDAYS)[number]
-}) {
+function DayRow({ control, day }: { control: Control<SettingsFormValues>; day: Weekday }) {
+  const { t } = useTranslation('settings')
   const { field } = useController({ control, name: `opening_hours.${day}.closed` })
   const closed = field.value === true
+  const label = weekdayLabel(day)
 
   return (
     <div
@@ -48,7 +49,7 @@ function DayRow({
         'border-[0.5px] border-[var(--line)] bg-[var(--field)]',
       )}
     >
-      <span className="text-[13.5px] font-medium">{WEEKDAY_LABELS[day]}</span>
+      <span className="text-[13.5px] font-medium">{label}</span>
 
       <div
         className={cn(
@@ -59,7 +60,7 @@ function DayRow({
         <TextField
           control={control}
           name={`opening_hours.${day}.open`}
-          aria-label={`${WEEKDAY_LABELS[day]} opens`}
+          aria-label={t('openingHours.dayOpens', { day: label })}
           disabled={closed}
           placeholder="09:00"
           forceLtr
@@ -71,7 +72,7 @@ function DayRow({
         <TextField
           control={control}
           name={`opening_hours.${day}.close`}
-          aria-label={`${WEEKDAY_LABELS[day]} closes`}
+          aria-label={t('openingHours.dayCloses', { day: label })}
           disabled={closed}
           placeholder="22:00"
           forceLtr
@@ -83,9 +84,9 @@ function DayRow({
         <Switch
           checked={!closed}
           onChange={(open) => field.onChange(!open)}
-          aria-label={`${WEEKDAY_LABELS[day]} is open`}
+          aria-label={t('openingHours.dayIsOpen', { day: label })}
         />
-        <span className="w-12">{closed ? 'Closed' : 'Open'}</span>
+        <span className="w-12">{closed ? t('openingHours.closed') : t('openingHours.open')}</span>
       </label>
     </div>
   )

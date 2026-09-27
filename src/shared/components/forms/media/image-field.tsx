@@ -1,5 +1,6 @@
 import { ImagePlus, Trash2, UploadCloud } from 'lucide-react'
 import { useCallback, useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { useTempUpload, type UploadContext } from '@/features/uploads'
 import { ACCEPTED_IMAGE_ACCEPT } from '@/lib/security/input-guards'
@@ -71,6 +72,7 @@ export function ImageField<T extends FieldValues>({
   removable = true,
   className,
 }: ImageFieldProps<T>) {
+  const { t } = useTranslation()
   const { field, fieldState } = useController({ control, name })
   const value = field.value as ImageFieldValue
 
@@ -152,14 +154,14 @@ export function ImageField<T extends FieldValues>({
             />
             <div className="min-w-0">
               <p className="truncate text-[14px] font-medium tracking-[-0.012em]">
-                {value?.name ?? 'Current image'}
+                {value?.name ?? t('imageField.currentImage')}
               </p>
               {value ? (
                 <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--muted)]">
                   <span>{value.optimizedSize}</span>
                   {value.savedPercent > 0 ? (
                     <span className="rounded-full bg-status-success-wash px-2 py-0.5 text-[11.5px] font-medium text-status-success">
-                      {value.savedPercent}% smaller
+                      {t('imageField.smaller', { percent: value.savedPercent })}
                     </span>
                   ) : null}
                 </p>
@@ -180,7 +182,7 @@ export function ImageField<T extends FieldValues>({
               disabled={disabled || uploading}
               loading={uploading}
             >
-              Replace
+              {t('imageField.replace')}
             </Button>
             {removable ? (
               <Button
@@ -193,7 +195,7 @@ export function ImageField<T extends FieldValues>({
                 leadingIcon={<Trash2 className="size-3.5" />}
                 className="text-status-danger hover:bg-status-danger-wash"
               >
-                Remove
+                {t('imageField.remove')}
               </Button>
             ) : null}
           </div>
@@ -233,7 +235,7 @@ export function ImageField<T extends FieldValues>({
             <div className="flex w-full max-w-[220px] flex-col gap-2">
               <div
                 role="progressbar"
-                aria-label="Upload progress"
+                aria-label={t('imageField.uploadProgress')}
                 aria-valuenow={progress ?? undefined}
                 aria-valuemin={0}
                 aria-valuemax={100}
@@ -258,11 +260,17 @@ export function ImageField<T extends FieldValues>({
             </span>
           )}
           <span className="text-[15px] font-medium tracking-[-0.012em]">
-            {uploading ? 'Uploading…' : 'Drop an image or '}
-            {!uploading ? <span className="font-display text-accent italic">browse</span> : null}
+            {uploading ? (
+              t('imageField.uploading')
+            ) : (
+              <Trans
+                i18nKey="imageField.drop"
+                components={{ browse: <span className="font-display text-accent italic" /> }}
+              />
+            )}
           </span>
           <span className="text-[12px] leading-[1.5] text-[var(--muted)]">
-            JPEG, PNG or WebP · up to 10 MB
+            {t('imageField.formats')}
           </span>
         </div>
       )}

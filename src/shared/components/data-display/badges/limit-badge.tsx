@@ -19,11 +19,14 @@ export function LimitBadge({ used, limit, className }: LimitBadgeProps) {
     )
   }
 
+  // A count reads left to right in both languages; without this an Arabic
+  // page shows "6 / 40" as "40 / 6".
   const full = used >= limit
   const near = !full && used >= limit * 0.8
 
   return (
     <span
+      dir="ltr"
       className={cn(
         'inline-flex items-center rounded-full px-2 py-0.5 text-[11.5px] font-medium tabular-nums',
         full && 'bg-status-danger-wash text-status-danger',

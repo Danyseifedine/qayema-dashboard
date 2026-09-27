@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
 import {
@@ -31,14 +32,14 @@ export function useSaveCategory(id: number | null) {
   return useMutation<Category, ApiError, CategoryPayload>({
     mutationFn: (payload) => (id === null ? createCategory(payload) : updateCategory(id, payload)),
     onSuccess: () => {
-      toast.success(id === null ? 'Category added' : 'Category renamed')
+      toast.success(id === null ? t('menu:categoryToast.added') : t('menu:categoryToast.renamed'))
       void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
     },
     onError: (error) => {
       // A 422 also lands on the field; the toast makes sure a failure is
       // noticed even when the offending field is scrolled out of view.
       toast.error(
-        id === null ? 'Could not add that category' : 'Could not rename that category',
+        id === null ? t('menu:categoryToast.addFailed') : t('menu:categoryToast.renameFailed'),
         error,
       )
     },
@@ -55,11 +56,11 @@ export function useDeleteCategory() {
   return useMutation<void, ApiError, number>({
     mutationFn: deleteCategory,
     onSuccess: () => {
-      toast.success('Category deleted', 'Its dishes were kept and now have no category.')
+      toast.success(t('menu:categoryToast.deleted'), t('menu:categoryToast.deletedDetail'))
       void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
       void queryClient.invalidateQueries({ queryKey: ['dishes'] })
     },
-    onError: (error) => toast.error('Could not delete that category', error),
+    onError: (error) => toast.error(t('menu:categoryToast.deleteFailed'), error),
   })
 }
 
@@ -103,7 +104,7 @@ export function useReorderCategories() {
       }
       // The cards visibly snap back, so say why. There is no success toast
       // here: the new order on screen is the confirmation.
-      toast.error('Could not save the new order', error)
+      toast.error(t('menu:categoryToast.reorderFailed'), error)
       void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
     },
   })

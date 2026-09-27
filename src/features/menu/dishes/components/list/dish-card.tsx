@@ -1,5 +1,6 @@
 import { ImageOff, Pencil, Trash2 } from 'lucide-react'
 import { memo, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
 import { Button, Switch } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
@@ -43,6 +44,7 @@ export const DishCard = memo(function DishCard({
   onToggleAvailability,
   className,
 }: DishCardProps) {
+  const { t } = useTranslation('menu')
   const name = translated(dish.name, locale)
   const ingredients = translated(dish.ingredients, locale)
   const price = dish.price === null ? null : Number(dish.price)
@@ -77,7 +79,7 @@ export const DishCard = memo(function DishCard({
           {handle}
           {!dish.is_available ? (
             <span className="rounded-full bg-overlay-pill px-2 py-1 text-[10px] font-medium tracking-[0.08em] text-white uppercase">
-              Sold out
+              {t('dishCard.soldOut')}
             </span>
           ) : null}
         </div>
@@ -91,7 +93,7 @@ export const DishCard = memo(function DishCard({
               name.missing && 'text-[var(--faint)] italic',
             )}
           >
-            {name.missing ? 'Untitled dish' : name.text}
+            {name.missing ? t('dishCard.untitled') : name.text}
           </h3>
           {price !== null ? (
             <Money
@@ -114,9 +116,13 @@ export const DishCard = memo(function DishCard({
             <Switch
               checked={dish.is_available}
               onChange={(isAvailable) => onToggleAvailability(dish, isAvailable)}
-              aria-label={`${name.text || 'Dish'} is available`}
+              aria-label={
+                name.text
+                  ? t('dishCard.isAvailable', { name: name.text })
+                  : t('dishCard.isAvailableUnnamed')
+              }
             />
-            <span>{dish.is_available ? 'Available' : 'Hidden'}</span>
+            <span>{dish.is_available ? t('dishCard.available') : t('dishCard.hidden')}</span>
           </label>
 
           <div className="flex items-center gap-0.5">
@@ -124,7 +130,9 @@ export const DishCard = memo(function DishCard({
               variant="ghost"
               size="icon"
               onClick={() => onEdit(dish)}
-              aria-label={`Edit ${name.text || 'dish'}`}
+              aria-label={
+                name.text ? t('dishCard.edit', { name: name.text }) : t('dishCard.editUnnamed')
+              }
             >
               <Pencil aria-hidden className="size-4" />
             </Button>
@@ -132,7 +140,9 @@ export const DishCard = memo(function DishCard({
               variant="ghost"
               size="icon"
               onClick={() => onDelete(dish)}
-              aria-label={`Delete ${name.text || 'dish'}`}
+              aria-label={
+                name.text ? t('dishCard.delete', { name: name.text }) : t('dishCard.deleteUnnamed')
+              }
               className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
             >
               <Trash2 aria-hidden className="size-4" />

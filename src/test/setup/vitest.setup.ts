@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
+// Tests read the English text, so every file starts in English.
+import '@/lib/i18n'
 
 afterEach(() => {
   cleanup()

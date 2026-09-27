@@ -1,5 +1,6 @@
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { memo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
 import { PLATFORM_LABELS, type SocialLink } from '../../schemas/social-link.schema'
@@ -24,6 +25,7 @@ export const SocialLinkCard = memo(function SocialLinkCard({
   onDelete,
   className,
 }: SocialLinkCardProps) {
+  const { t } = useTranslation('social')
   const label = PLATFORM_LABELS[link.platform]
 
   return (
@@ -60,7 +62,7 @@ export const SocialLinkCard = memo(function SocialLinkCard({
           variant="ghost"
           size="icon"
           onClick={() => onEdit(link)}
-          aria-label={`Edit ${label} link`}
+          aria-label={t('card.edit', { platform: label })}
         >
           <Pencil aria-hidden className="size-4" />
         </Button>
@@ -68,7 +70,7 @@ export const SocialLinkCard = memo(function SocialLinkCard({
           variant="ghost"
           size="icon"
           onClick={() => onDelete(link)}
-          aria-label={`Remove ${label} link`}
+          aria-label={t('card.remove', { platform: label })}
           className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
         >
           <Trash2 aria-hidden className="size-4" />

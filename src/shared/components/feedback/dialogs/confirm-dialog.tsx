@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -25,13 +26,14 @@ export function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation()
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -68,7 +70,7 @@ export function ConfirmDialog({
       </div>
       <div className="flex justify-end gap-2.5 border-t-[0.5px] border-[var(--line)] p-3.5">
         <Button variant="ghost" onClick={onCancel} disabled={loading}>
-          {cancelLabel}
+          {cancelLabel ?? t('confirmDialog.cancel')}
         </Button>
         <Button
           variant={destructive ? 'danger' : 'primary'}
@@ -76,7 +78,7 @@ export function ConfirmDialog({
           loading={loading}
           autoFocus
         >
-          {confirmLabel}
+          {confirmLabel ?? t('confirmDialog.confirm')}
         </Button>
       </div>
     </dialog>

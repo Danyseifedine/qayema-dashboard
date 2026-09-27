@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Form, FormActions, TranslatableTextField } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
@@ -11,6 +12,8 @@ import {
   type CategoryFormValues,
 } from '../../schemas/category.schema'
 import { useSaveCategory } from '../../hooks/use-categories'
+import { useMenuLanguages } from '@/features/settings/hooks/use-menu-languages'
+import { toMenuTextForm } from '@/shared/utils/string/menu-text'
 
 export type CategoryDialogProps = {
   open: boolean
@@ -19,16 +22,24 @@ export type CategoryDialogProps = {
   onClose: () => void
 }
 
-const EMPTY: CategoryFormValues = { name: { en: '', ar: '' }, description: { en: '', ar: '' } }
+/** Form values for the menu's languages, from a saved category or blank. */
+function toFormValues(category: Category | null, languages: readonly string[]): CategoryFormValues {
+  return {
+    name: toMenuTextForm(category?.name, languages),
+    description: toMenuTextForm(category?.description, languages),
+  }
+}
 
-/** Create or edit a category. A name in either language is enough; the description is optional. */
+/** Create or edit a category. The name is needed in English; the description is optional. */
 export function CategoryDialog({ open, category, onClose }: CategoryDialogProps) {
+  const { t } = useTranslation('menu')
   const ref = useRef<HTMLDialogElement>(null)
   const save = useSaveCategory(category?.id ?? null)
+  const languages = useMenuLanguages()
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
-    defaultValues: EMPTY,
+    defaultValues: toFormValues(null, languages),
   })
 
   const { formError, applyApiError, clearFormError } = useApiFormErrors(form.setError)
@@ -37,18 +48,8 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
   useEffect(() => {
     if (!open) return
     clearFormError()
-    form.reset(
-      category
-        ? {
-            name: { en: category.name.en ?? '', ar: category.name.ar ?? '' },
-            description: {
-              en: category.description.en ?? '',
-              ar: category.description.ar ?? '',
-            },
-          }
-        : EMPTY,
-    )
-  }, [open, category, form, clearFormError])
+    form.reset(toFormValues(category, languages))
+  }, [open, category, languages, form, clearFormError])
 
   useEffect(() => {
     const dialog = ref.current
@@ -83,7 +84,7 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
       <Form onSubmit={onSubmit} className="gap-0">
         <div className="p-5 pb-0">
           <h2 className="font-display text-[19px] leading-tight">
-            {category ? 'Edit category' : 'New category'}
+            {category ? t('categoryDialog.titleEdit') : t('categoryDialog.titleNew')}
           </h2>
 
           {formError ? (
@@ -95,32 +96,37 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
           <TranslatableTextField
             control={form.control}
             name="name"
-            label="Name"
+            languages={languages}
+            label={t('shared.name')}
             required
             maxLength={255}
             placeholder={{ en: 'Starters', ar: 'المقبلات' }}
-            hint="One language is enough; the other can be added later."
+            hint={languages.length > 1 ? t('categoryDialog.nameHint') : undefined}
           />
 
           <TranslatableTextField
             control={form.control}
             name="description"
-            label="Description"
+            languages={languages}
+            label={t('categoryDialog.description')}
             multiline
             rows={2}
             maxLength={300}
-            optionalText="optional"
-            placeholder={{ en: 'Served from noon until close', ar: 'تقدّم من الظهر حتى الإغلاق' }}
-            hint="One line under the heading on your menu."
+            optionalText={t('shared.optional')}
+            placeholder={{
+              en: 'Served from noon until close',
+              ar: 'تقدّم من الظهر حتى الإغلاق',
+            }}
+            hint={t('categoryDialog.descriptionHint')}
           />
         </div>
 
         <FormActions className="mt-4 border-t-[0.5px] border-[var(--line)] p-3.5">
           <Button variant="ghost" onClick={onClose} disabled={save.isPending}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button type="submit" loading={save.isPending}>
-            {category ? 'Save' : 'Add category'}
+            {category ? t('categoryDialog.save') : t('categoryDialog.add')}
           </Button>
         </FormActions>
       </Form>

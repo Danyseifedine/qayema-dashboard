@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { Input } from '@/shared/components/ui'
 import { Field } from '../layout/field'
@@ -29,6 +30,7 @@ export function ColorField<T extends FieldValues>({
   disabled,
   className,
 }: ColorFieldProps<T>) {
+  const { t } = useTranslation()
   const { field, fieldState } = useController({ control, name })
   const value = typeof field.value === 'string' && HEX.test(field.value) ? field.value : '#000000'
 
@@ -46,7 +48,11 @@ export function ColorField<T extends FieldValues>({
             value={value.toLowerCase()}
             onChange={(event) => commit(event.target.value)}
             disabled={disabled}
-            aria-label={typeof label === 'string' ? `${label}, picker` : 'Colour picker'}
+            aria-label={
+              typeof label === 'string'
+                ? t('colorField.picker', { label })
+                : t('colorField.pickerFallback')
+            }
             className="size-11 shrink-0 cursor-pointer rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-1 disabled:cursor-not-allowed [&::-moz-color-swatch]:rounded-[6px] [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-[6px] [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
           />
           <Input

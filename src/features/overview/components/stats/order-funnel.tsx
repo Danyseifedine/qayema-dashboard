@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { AdvancedStats } from '../../schemas/stats.schema'
 
 export type OrderFunnelProps = {
@@ -9,18 +10,19 @@ export type OrderFunnelProps = {
  * visitors got that far.
  */
 export function OrderFunnel({ funnel }: OrderFunnelProps) {
+  const { t } = useTranslation('overview')
   const steps = [
-    { label: 'Opened the menu', value: funnel.visitors },
-    { label: 'Added something to the cart', value: funnel.carted },
-    { label: 'Placed an order', value: funnel.ordered },
+    { id: 'visitors', label: t('analytics.funnel.visitors'), value: funnel.visitors },
+    { id: 'carted', label: t('analytics.funnel.carted'), value: funnel.carted },
+    { id: 'ordered', label: t('analytics.funnel.ordered'), value: funnel.ordered },
   ]
 
   return (
-    <ol className="flex flex-col gap-3" aria-label="From visit to order">
+    <ol className="flex flex-col gap-3" aria-label={t('analytics.funnel.title')}>
       {steps.map((step) => {
         const share = funnel.visitors > 0 ? Math.min(step.value / funnel.visitors, 1) : 0
         return (
-          <li key={step.label} className="flex flex-col gap-1">
+          <li key={step.id} className="flex flex-col gap-1">
             <div className="flex items-baseline justify-between gap-3 text-[13px]">
               <span>{step.label}</span>
               <span className="shrink-0 tabular-nums">

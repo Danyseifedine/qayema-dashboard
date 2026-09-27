@@ -1,7 +1,8 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { memo, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
-import type { Locale } from '@/shared/constants/locales'
+import { localeLabel, type Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
 import type { Category } from '../../schemas/category.schema'
@@ -33,6 +34,7 @@ export const CategoryCard = memo(function CategoryCard({
   onDelete,
   className,
 }: CategoryCardProps) {
+  const { t } = useTranslation('menu')
   const name = translated(category.name, locale)
   const description = translated(category.description, locale)
   const count = category.dishes_count ?? 0
@@ -59,14 +61,14 @@ export const CategoryCard = memo(function CategoryCard({
               name.missing && 'text-[var(--faint)] italic',
             )}
           >
-            {name.missing ? 'Untitled category' : name.text}
+            {name.missing ? t('categoryCard.untitled') : name.text}
           </span>
           {name.isFallback ? (
             <span
-              title={`Not translated into ${locale === 'en' ? 'English' : 'Arabic'}`}
+              title={t('categoryCard.notTranslated', { language: localeLabel(locale) })}
               className="shrink-0 rounded-full bg-status-warn-wash px-1.5 py-0.5 text-[10px] font-medium text-status-warn"
             >
-              {locale === 'en' ? 'AR' : 'EN'}
+              {name.language?.toUpperCase()}
             </span>
           ) : null}
         </span>
@@ -76,7 +78,7 @@ export const CategoryCard = memo(function CategoryCard({
           </span>
         ) : null}
         <span className="mt-0.5 block text-[12px] text-[var(--faint)]">
-          {count === 1 ? '1 dish' : `${count} dishes`}
+          {t('categoryCard.dishCount', { count })}
         </span>
       </button>
 
@@ -84,7 +86,9 @@ export const CategoryCard = memo(function CategoryCard({
         variant="ghost"
         size="icon"
         onClick={() => onEdit(category)}
-        aria-label={`Edit ${name.text || 'category'}`}
+        aria-label={
+          name.text ? t('categoryCard.edit', { name: name.text }) : t('categoryCard.editUnnamed')
+        }
       >
         <Pencil aria-hidden className="size-4" />
       </Button>
@@ -92,7 +96,11 @@ export const CategoryCard = memo(function CategoryCard({
         variant="ghost"
         size="icon"
         onClick={() => onDelete(category)}
-        aria-label={`Delete ${name.text || 'category'}`}
+        aria-label={
+          name.text
+            ? t('categoryCard.delete', { name: name.text })
+            : t('categoryCard.deleteUnnamed')
+        }
         className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
       >
         <Trash2 aria-hidden className="size-4" />

@@ -1,0 +1,25 @@
+{
+  "page": {
+    "title": "Menu designs",
+    "pickPrompt": "Pick a design to open up the rest of your dashboard.",
+    "switchFree": "Switching between designs is always free."
+  },
+  "needsDesign": {
+    "title": "Your menu needs a design",
+    "description": "Your dishes, QR code and settings unlock as soon as you choose one. You can change your mind whenever you like."
+  },
+  "empty": {
+    "title": "No designs available",
+    "description": "No menu designs are published yet. Check back shortly."
+  },
+  "card": {
+    "inUse": "In use",
+    "currentlyInUse": "Currently in use",
+    "use": "Use this design"
+  },
+  "toast": {
+    "applied": "Design applied",
+    "appliedDescription": "Your menu now uses this design.",
+    "switchFailed": "Could not switch design"
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "shared": {
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "optional": "اختياري",
+    "name": "الاسم",
+    "addCategoryFirst": "أضف قسمًا أولًا",
+    "goToCategories": "الانتقال إلى الأقسام"
+  },
+  "dragHandle": {
+    "label": "تغيير الترتيب"
+  },
+  "categoriesPage": {
+    "title": "الأقسام",
+    "description": "تنظّم الأقسام أطباقك في القائمة. اسحبها لتغيير الترتيب الذي يراه الزبائن.",
+    "add": "إضافة قسم",
+    "atLimit": "استخدمت كل الأقسام التي تسمح بها باقتك. احذف قسمًا لإضافة آخر.",
+    "emptyTitle": "لا توجد أقسام بعد",
+    "emptyDescription": "ابدأ بأقسام مثل المقبلات والأطباق الرئيسية والمشروبات. يمكنك إعادة تسميتها وترتيبها في أي وقت.",
+    "emptyAction": "أضف قسمك الأول",
+    "goToDishes": "الانتقال إلى الأطباق",
+    "deleteTitle": "حذف هذا القسم؟",
+    "deleteDescription": "تبقى أطباقه محفوظة لكنها تصبح بلا قسم، فيمكنك نقلها إلى قسم آخر."
+  },
+  "categoryCard": {
+    "untitled": "قسم بلا اسم",
+    "notTranslated": "غير مترجم إلى {{language}}",
+    "dishCount_zero": "لا أطباق",
+    "dishCount_one": "طبق واحد",
+    "dishCount_two": "طبقان",
+    "dishCount_few": "{{count}} أطباق",
+    "dishCount_many": "{{count}} طبقًا",
+    "dishCount_other": "{{count}} طبق",
+    "edit": "تعديل {{name}}",
+    "editUnnamed": "تعديل القسم",
+    "delete": "حذف {{name}}",
+    "deleteUnnamed": "حذف القسم"
+  },
+  "categoryDialog": {
+    "titleNew": "قسم جديد",
+    "titleEdit": "تعديل القسم",
+    "nameHint": "مطلوب بالإنجليزية، ويمكن إضافة اللغة الأخرى لاحقًا.",
+    "description": "الوصف",
+    "descriptionHint": "سطر واحد يظهر تحت العنوان في قائمتك.",
+    "save": "حفظ",
+    "add": "إضافة القسم"
+  },
+  "categoryFilter": {
+    "label": "تصفية الأطباق حسب القسم",
+    "all": "الكل",
+    "untitled": "بلا اسم",
+    "noCategory": "بلا قسم",
+    "noCategoryHint": "أطباق حُذف قسمها"
+  },
+  "categoryToast": {
+    "added": "تمت إضافة القسم",
+    "renamed": "تمت إعادة تسمية القسم",
+    "addFailed": "تعذّرت إضافة القسم",
+    "renameFailed": "تعذّرت إعادة تسمية القسم",
+    "deleted": "تم حذف القسم",
+    "deletedDetail": "بقيت أطباقه محفوظة وأصبحت بلا قسم.",
+    "deleteFailed": "تعذّر حذف القسم",
+    "reorderFailed": "تعذّر حفظ الترتيب الجديد"
+  },
+  "categorySchema": {
+    "nameRequired": "اسم القسم مطلوب بالإنجليزية."
+  },
+  "dishesPage": {
+    "title": "الأطباق",
+    "description": "كل ما يمكن للزبائن طلبه. اسحب لتغيير ترتيب ظهوره.",
+    "add": "إضافة طبق",
+    "atLimit": "استخدمت كل الأطباق التي تسمح بها باقتك. احذف طبقًا لإضافة آخر.",
+    "noCategoriesDescription": "كل طبق ينتمي إلى قسم، لتكون لقائمتك بنية واضحة قبل أن تبدأ بملئها.",
+    "orphansTitle": "هذه الأطباق بلا قسم",
+    "orphansDescription": "حُذف قسمها. أضف قسمًا، ثم عدّل كل طبق لنقله إليه.",
+    "emptyTitle": "لا توجد أطباق بعد",
+    "emptyDescription": "أضف طبقك الأول مع اسمه وسعره وصورته.",
+    "emptyFilteredTitle": "لا شيء في هذا القسم",
+    "emptyFilteredDescription": "أضف طبقًا هنا، أو اختر قسمًا آخر من الأعلى.",
+    "emptyAction": "أضف طبقًا",
+    "deleteTitle": "حذف هذا الطبق؟",
+    "deleteDescription": "سيُحذف الطبق وصورته من قائمتك. لا يمكن التراجع عن ذلك."
+  },
+  "dishCard": {
+    "untitled": "طبق بلا اسم",
+    "soldOut": "نفد",
+    "available": "متوفر",
+    "hidden": "مخفي",
+    "isAvailable": "{{name}} متوفر",
+    "isAvailableUnnamed": "الطبق متوفر",
+    "edit": "تعديل {{name}}",
+    "editUnnamed": "تعديل الطبق",
+    "delete": "حذف {{name}}",
+    "deleteUnnamed": "حذف الطبق"
+  },
+  "dishDialog": {
+    "titleNew": "طبق جديد",
+    "titleEdit": "تعديل الطبق",
+    "needsCategory": "كل طبق ينتمي إلى قسم.",
+    "untitledCategory": "قسم بلا اسم",
+    "ingredients": "المكوّنات",
+    "ingredientsHint": "نص حر يظهر تحت الطبق في قائمتك.",
+    "price": "السعر",
+    "priceHint": "اتركه فارغًا لإخفاء السعر.",
+    "category": "القسم",
+    "categoryPlaceholder": "اختر قسمًا",
+    "photo": "الصورة",
+    "photoHint": "تُقصّ إلى 1200 x 900 وتُحوَّل إلى WebP.",
+    "available": "متوفر",
+    "availableDescription": "أوقفه لإبقاء الطبق في قائمتك مع وسمه بأنه نفد.",
+    "save": "حفظ الطبق",
+    "add": "إضافة الطبق"
+  },
+  "dishToast": {
+    "added": "تمت إضافة الطبق",
+    "saved": "تم حفظ الطبق",
+    "addFailed": "تعذّرت إضافة الطبق",
+    "saveFailed": "تعذّر حفظ الطبق",
+    "deleted": "تم حذف الطبق",
+    "deleteFailed": "تعذّر حذف الطبق",
+    "reorderFailed": "تعذّر حفظ الترتيب الجديد"
+  },
+  "dishSchema": {
+    "priceInvalid": "أدخل سعرًا، أو اتركه فارغًا.",
+    "priceNegative": "لا يمكن أن يكون السعر سالبًا.",
+    "priceTooHigh": "هذا السعر مرتفع جدًا.",
+    "categoryRequired": "اختر قسمًا.",
+    "nameRequired": "اسم الطبق مطلوب بالإنجليزية."
+  },
+  "fields": {
+    "name": "الاسم",
+    "description": "الوصف",
+    "ingredients": "المكونات"
+  }
+}

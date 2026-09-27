@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "Profile",
+    "description": "You, the person: your name and how you sign in. Nothing here reaches your menu.",
+    "editRestaurant": "Edit your restaurant instead",
+    "loadFailed": "We could not load your account."
+  },
+  "profile": {
+    "title": "You",
+    "description": "Who you are. Not what your restaurant is called.",
+    "nameLabel": "Your name",
+    "nameHint": "Shown in the dashboard and on emails we send you. Guests never see it.",
+    "emailLabel": "Email",
+    "emailHint": "You sign in with this address, so it cannot be changed here.",
+    "save": "Save"
+  },
+  "password": {
+    "changeTitle": "Password",
+    "setTitle": "Set a password",
+    "changeDescription": "Changing this signs out every other browser you stayed signed in on.",
+    "setDescription": "You signed up with Google. Adding a password gives you a second way in.",
+    "currentLabel": "Current password",
+    "newLabel": "New password",
+    "passwordLabel": "Password",
+    "hint": "At least 8 characters.",
+    "confirmLabel": "Confirm password",
+    "changeSubmit": "Change password",
+    "setSubmit": "Set password"
+  },
+  "toast": {
+    "profileSaved": "Profile saved",
+    "profileFailed": "Could not save your profile",
+    "passwordChanged": "Password changed",
+    "passwordSet": "Password set",
+    "passwordSignedOut": "Any other browser you stayed signed in on has been signed out.",
+    "passwordChangeFailed": "Could not change your password",
+    "passwordSetFailed": "Could not set a password"
+  },
+  "validation": {
+    "nameTooShort": "Your name must be at least 2 characters.",
+    "nameTooLong": "Your name may not be longer than 100 characters.",
+    "nameInvalidChars": "Your name contains characters that are not allowed.",
+    "passwordTooShort_one": "Use at least {{count}} character.",
+    "passwordTooShort_other": "Use at least {{count}} characters.",
+    "passwordTooLong": "That password is too long.",
+    "currentRequired": "Enter your current password.",
+    "mismatch": "The two passwords do not match."
+  }
+}

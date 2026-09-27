@@ -1,4 +1,5 @@
 import type { Control } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { FieldGroup, FormSection, ImageField } from '@/shared/components/forms'
 import type { SettingsFormValues } from '../../schemas/settings.schema'
 
@@ -17,28 +18,30 @@ export function BrandingSection({
   currentLogoUrl,
   currentCoverUrl,
 }: BrandingSectionProps) {
+  const { t } = useTranslation('settings')
+
   return (
-    <FormSection title="Branding" description="JPEG, PNG or WebP, up to 10 MB each.">
+    <FormSection title={t('branding.title')} description={t('branding.description')}>
       <FieldGroup>
         <ImageField
           control={control}
           name="logo"
-          label="Logo"
+          label={t('branding.logoLabel')}
           required
           aspect="square"
           context="logo"
           removable={false}
           currentUrl={currentLogoUrl}
-          hint="Every menu shows a logo, so this can be replaced but not removed."
+          hint={t('branding.logoHint')}
         />
         <ImageField
           control={control}
           name="cover_image"
-          label="Cover image"
-          optionalText="optional"
+          label={t('branding.coverLabel')}
+          optionalText={t('optional')}
           context="cover_image"
           currentUrl={currentCoverUrl}
-          hint="Cropped to 1920 x 600 and converted to WebP."
+          hint={t('branding.coverHint')}
         />
       </FieldGroup>
     </FormSection>

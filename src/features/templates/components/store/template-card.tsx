@@ -1,4 +1,5 @@
 import { Check, ImageOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
@@ -28,6 +29,7 @@ export function TemplateCard({
   busy = false,
   onSelect,
 }: TemplateCardProps) {
+  const { t } = useTranslation('templates')
   const name = translated(template.name, locale)
   const description = translated(template.description, locale)
 
@@ -56,7 +58,7 @@ export function TemplateCard({
           <div className="absolute end-2 top-2 flex gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-full bg-gold px-2.5 py-1 text-[11px] font-medium text-ink">
               <Check aria-hidden className="size-3" />
-              In use
+              {t('card.inUse')}
             </span>
           </div>
         ) : null}
@@ -75,11 +77,11 @@ export function TemplateCard({
         <div className="mt-auto pt-3">
           {active ? (
             <Button variant="secondary" block disabled>
-              Currently in use
+              {t('card.currentlyInUse')}
             </Button>
           ) : (
             <Button block loading={busy} onClick={onSelect}>
-              Use this design
+              {t('card.use')}
             </Button>
           )}
         </div>

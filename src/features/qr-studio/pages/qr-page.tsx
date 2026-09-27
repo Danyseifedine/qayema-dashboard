@@ -1,7 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import type { TFunction } from 'i18next'
 import { Copy, Download, ExternalLink, RotateCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ErrorState, toast } from '@/shared/components/feedback'
 import { Form, FormActions, FormSection } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
@@ -43,15 +45,14 @@ const LOOK_FIELDS = [
  * code already on the tables keeps working whatever is saved here.
  */
 export function QrPage() {
+  const { t } = useTranslation('qr')
   const qr = useQr()
 
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div>
-        <h2 className="font-display text-[19px] leading-tight">QR code</h2>
-        <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">
-          Guests scan this to open your menu. Download it as it is, or make it your own.
-        </p>
+        <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
+        <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">{t('page.description')}</p>
       </div>
 
       {qr.isPending ? (
@@ -69,6 +70,7 @@ export function QrPage() {
 }
 
 function QrStudio({ qr }: { qr: Qr }) {
+  const { t } = useTranslation('qr')
   const save = useSaveQr()
   const [downloading, setDownloading] = useState<'png' | 'svg' | null>(null)
 
@@ -94,7 +96,7 @@ function QrStudio({ qr }: { qr: Qr }) {
     try {
       await downloadQr(options, fileName, extension)
     } catch {
-      toast.error('Could not download the QR code')
+      toast.error(t('page.downloadFailed'))
     } finally {
       setDownloading(null)
     }
@@ -107,9 +109,9 @@ function QrStudio({ qr }: { qr: Qr }) {
     link.searchParams.delete('qr')
     try {
       await navigator.clipboard.writeText(link.toString())
-      toast.success('Link copied')
+      toast.success(t('page.linkCopied'))
     } catch {
-      toast.error('Could not copy the link')
+      toast.error(t('page.copyFailed'))
     }
   }
 
@@ -134,9 +136,8 @@ function QrStudio({ qr }: { qr: Qr }) {
         </div>
 
         {weak.length > 0 ? (
-          <Alert variant="warning" title="This may not scan">
-            The {listParts(weak)} {weak.length === 1 ? 'is' : 'are'} too close to the background
-            colour for every phone to read. Pick a darker colour or a lighter background.
+          <Alert variant="warning" title={t('contrast.title')}>
+            {t('contrast.warning', { count: weak.length, parts: listParts(weak, t) })}
           </Alert>
         ) : null}
 
@@ -147,7 +148,7 @@ function QrStudio({ qr }: { qr: Qr }) {
             disabled={downloading !== null}
             onClick={() => void download('png')}
           >
-            PNG
+            {t('page.png')}
           </Button>
           <Button
             variant="secondary"
@@ -156,12 +157,10 @@ function QrStudio({ qr }: { qr: Qr }) {
             disabled={downloading !== null}
             onClick={() => void download('svg')}
           >
-            SVG
+            {t('page.svg')}
           </Button>
         </div>
-        <p className="text-[12px] leading-snug text-[var(--muted)]">
-          PNG for sharing and most printers. SVG stays sharp at any size — use it for a large print.
-        </p>
+        <p className="text-[12px] leading-snug text-[var(--muted)]">{t('page.formatHint')}</p>
 
         <div className="flex items-center gap-2 rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] py-1.5 ps-3.5 pe-1.5">
           <span dir="ltr" className="min-w-0 flex-1 truncate text-[13px] text-[var(--muted)]">
@@ -173,7 +172,7 @@ function QrStudio({ qr }: { qr: Qr }) {
             leadingIcon={<Copy aria-hidden className="size-4" />}
             onClick={() => void copyLink()}
           >
-            Copy link
+            {t('page.copyLink')}
           </Button>
         </div>
 
@@ -185,38 +184,33 @@ function QrStudio({ qr }: { qr: Qr }) {
             className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-[var(--gold-on)] underline-offset-4 hover:underline"
           >
             <ExternalLink aria-hidden className="size-4" />
-            Open the printable table card
+            {t('page.openCard')}
           </a>
         ) : null}
         {qr.card_url && dirty ? (
-          <p className="text-[12px] leading-snug text-[var(--muted)]">
-            The card shows your saved design. Save to see these changes on it.
-          </p>
+          <p className="text-[12px] leading-snug text-[var(--muted)]">{t('page.cardUnsaved')}</p>
         ) : null}
       </aside>
 
       <div className="flex min-w-0 flex-col gap-4">
         {qr.stats ? (
-          <FormSection title="Scans" description="Menu visits that came through this QR code.">
+          <FormSection title={t('page.scansTitle')} description={t('page.scansDescription')}>
             <QrStats stats={qr.stats} />
           </FormSection>
         ) : null}
 
         {qr.unlocked ? (
           <Form onSubmit={onSubmit}>
-            <FormSection title="Colours">
+            <FormSection title={t('page.colours')}>
               <ColourControls form={form} />
             </FormSection>
-            <FormSection title="Shapes">
+            <FormSection title={t('page.shapes')}>
               <ShapeControls control={form.control} />
             </FormSection>
-            <FormSection title="Logo">
+            <FormSection title={t('page.logo')}>
               <LogoControls control={form.control} hasLogo={qr.logo_data_url !== null} />
             </FormSection>
-            <FormSection
-              title="Printable card"
-              description="The table card around the code. It does not change how the code scans."
-            >
+            <FormSection title={t('page.card')} description={t('page.cardDescription')}>
               <CardControls control={form.control} brandColor={qr.brand_color} />
             </FormSection>
 
@@ -227,17 +221,16 @@ function QrStudio({ qr }: { qr: Qr }) {
                 onClick={resetToSimple}
                 disabled={save.isPending}
               >
-                Reset to simple
+                {t('page.resetToSimple')}
               </Button>
               <Button type="submit" loading={save.isPending} disabled={!dirty}>
-                Save
+                {t('page.save')}
               </Button>
             </FormActions>
           </Form>
         ) : (
-          <Alert variant="info" title="Customizing is not on your package">
-            Your QR code works as it is. Colours, shapes, a logo and the printable card come with a
-            package that includes the QR studio.
+          <Alert variant="info" title={t('page.lockedTitle')}>
+            {t('page.lockedDescription')}
           </Alert>
         )}
       </div>
@@ -245,7 +238,20 @@ function QrStudio({ qr }: { qr: Qr }) {
   )
 }
 
-function listParts(parts: WeakPart[]): string {
-  if (parts.length === 1) return parts[0]!
-  return `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`
+/** Each weak part's name, by the value `weakParts()` gives it. */
+const PART_KEYS = {
+  dots: 'contrast.parts.dots',
+  gradient: 'contrast.parts.gradient',
+  'corner frames': 'contrast.parts.cornerFrames',
+  'corner centres': 'contrast.parts.cornerCentres',
+} as const satisfies Record<WeakPart, string>
+
+/**
+ * "dots, gradient and corner centres". The separators are translated rather
+ * than left to Intl.ListFormat, whose English adds a comma before "and".
+ */
+function listParts(parts: WeakPart[], t: TFunction<'qr'>): string {
+  const names = parts.map((part) => t(PART_KEYS[part]))
+  if (names.length === 1) return names[0]!
+  return `${names.slice(0, -1).join(t('contrast.separator'))}${t('contrast.lastSeparator')}${names.at(-1)}`
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 import { translatableTextSchema } from '../../menu/categories/schemas/category.schema'
 
 /** Mirrors ../qayema/app/Http/Resources/PackageResource.php. */
@@ -42,7 +43,10 @@ export const packageRequestResultSchema = z.object({
 
 /** The optional note an owner can add to a request. */
 export const requestPackageFormSchema = z.object({
-  message: z.string().trim().max(2000, 'Keep this under 2000 characters.'),
+  message: z
+    .string()
+    .trim()
+    .max(2000, { error: () => t('packages:request.messageTooLong') }),
 })
 
 export type Package = z.infer<typeof packageSchema>

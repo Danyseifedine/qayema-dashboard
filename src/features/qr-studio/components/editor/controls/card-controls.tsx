@@ -1,4 +1,5 @@
 import type { Control } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ChoiceField, SwitchField, TextField, type ChoiceOption } from '@/shared/components/forms'
 import type { CardTheme, QrFormValues } from '../../../schemas/qr.schema'
 
@@ -20,10 +21,11 @@ export function CardControls({
   /** The menu's main colour, so "Your colour" shows the real one. */
   brandColor: string
 }) {
+  const { t } = useTranslation('qr')
   const themes: ChoiceOption<CardTheme>[] = [
-    { value: 'light', label: 'Light', preview: swatch('#FFFFFF') },
-    { value: 'dark', label: 'Dark', preview: swatch('#111418') },
-    { value: 'brand', label: 'Your colour', preview: swatch(brandColor) },
+    { value: 'light', label: t('card.light'), preview: swatch('#FFFFFF') },
+    { value: 'dark', label: t('card.dark'), preview: swatch('#111418') },
+    { value: 'brand', label: t('card.brand'), preview: swatch(brandColor) },
   ]
 
   return (
@@ -31,28 +33,28 @@ export function CardControls({
       <ChoiceField
         control={control}
         name="card_theme"
-        label="Card"
+        label={t('card.theme')}
         options={themes}
-        hint="“Your colour” uses your menu's main colour."
+        hint={t('card.themeHint')}
       />
-      <TextField control={control} name="title" label="Title" maxLength={60} />
+      <TextField control={control} name="title" label={t('card.title')} maxLength={60} />
       <TextField
         control={control}
         name="subtitle"
-        label="Subtitle"
-        optionalText="optional"
+        label={t('card.subtitle')}
+        optionalText={t('card.optional')}
         maxLength={80}
-        placeholder="Scan · Browse · Order"
+        placeholder={t('card.subtitlePlaceholder')}
       />
       <TextField
         control={control}
         name="cta"
-        label="Call to action"
-        optionalText="optional"
+        label={t('card.cta')}
+        optionalText={t('card.optional')}
         maxLength={60}
-        placeholder="Scan to see the menu"
+        placeholder={t('card.ctaPlaceholder')}
       />
-      <SwitchField control={control} name="show_url" label="Show the link under the code" />
+      <SwitchField control={control} name="show_url" label={t('card.showUrl')} />
     </>
   )
 }

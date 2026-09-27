@@ -1,30 +1,44 @@
-import { ChevronDown, ExternalLink, LogOut, UserRound } from 'lucide-react'
+import { ExternalLink, Languages, LogOut, Moon, UserRound } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Switch } from '@/shared/components/ui'
+import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
+import { usePreferencesStore } from '@/stores/preferences.store'
+import { LanguageSwitcher } from './language-switcher'
 
 export type UserMenuProps = {
   name: string
   email: string
   /** Public menu URL, so the owner can see what guests see. */
   publicUrl?: string | null
+  locale: Locale
+  onLocaleChange: (locale: Locale) => void
   onOpenProfile: () => void
   onLogout: () => void
   className?: string
 }
 
 /**
- * Avatar button with a dropdown. Closes on outside click, on Escape, and
- * returns focus to the trigger so keyboard users are not stranded.
+ * Avatar button with a dropdown: the account, the public menu, and the two
+ * preferences (language, dark mode), which are changed rarely enough not to
+ * need a place in the top bar. Closes on outside click, on Escape, and returns
+ * focus to the trigger so keyboard users are not stranded.
  */
 export function UserMenu({
   name,
   email,
   publicUrl,
+  locale,
+  onLocaleChange,
   onOpenProfile,
   onLogout,
   className,
 }: UserMenuProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const dark = usePreferencesStore((state) => state.theme === 'dark')
+  const setTheme = usePreferencesStore((state) => state.setTheme)
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
@@ -59,25 +73,15 @@ export function UserMenu({
         onClick={() => setOpen((value) => !value)}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={t('userMenu.trigger')}
         className={cn(
-          'flex items-center gap-2 rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] p-1 ps-1 pe-2',
-          'transition-colors duration-200 hover:bg-[var(--hover-wash)]',
+          'grid size-9 place-items-center rounded-full bg-gold text-[13px] font-medium text-ink',
+          'transition-[box-shadow] duration-200 hover:shadow-[0_0_0_3px_var(--ring-accent)]',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+          open && 'shadow-[0_0_0_3px_var(--ring-accent)]',
         )}
       >
-        <span
-          aria-hidden
-          className="grid size-7 shrink-0 place-items-center rounded-full bg-gold text-[12px] font-medium text-ink"
-        >
-          {initial}
-        </span>
-        <ChevronDown
-          aria-hidden
-          className={cn(
-            'size-3.5 text-[var(--muted)] transition-transform duration-200',
-            open && 'rotate-180',
-          )}
-        />
+        <span aria-hidden>{initial}</span>
       </button>
 
       {open ? (
@@ -105,7 +109,7 @@ export function UserMenu({
                 className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-[var(--text)] transition-colors hover:bg-[var(--hover-wash)]"
               >
                 <ExternalLink aria-hidden className="size-4 text-[var(--muted)]" />
-                View public menu
+                {t('userMenu.viewPublicMenu')}
               </a>
             ) : null}
 
@@ -119,9 +123,32 @@ export function UserMenu({
               className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-[var(--text)] transition-colors hover:bg-[var(--hover-wash)]"
             >
               <UserRound aria-hidden className="size-4 text-[var(--muted)]" />
-              Profile
+              {t('userMenu.profile')}
             </button>
+          </div>
 
+          <div
+            role="group"
+            aria-label={t('userMenu.preferences')}
+            className="mt-1.5 border-t-[0.5px] border-[var(--line)] pt-1.5"
+          >
+            <div className="flex items-center gap-2.5 px-2.5 py-1.5 text-[13.5px]">
+              <Languages aria-hidden className="size-4 text-[var(--muted)]" />
+              <span className="me-auto">{t('userMenu.language')}</span>
+              <LanguageSwitcher value={locale} onChange={onLocaleChange} />
+            </div>
+            <label className="flex cursor-pointer items-center gap-2.5 px-2.5 py-2 text-[13.5px]">
+              <Moon aria-hidden className="size-4 text-[var(--muted)]" />
+              <span className="me-auto">{t('userMenu.darkMode')}</span>
+              <Switch
+                checked={dark}
+                onChange={(on) => setTheme(on ? 'dark' : 'light')}
+                aria-label={t('userMenu.darkMode')}
+              />
+            </label>
+          </div>
+
+          <div className="mt-1.5 border-t-[0.5px] border-[var(--line)] pt-1.5">
             <button
               role="menuitem"
               type="button"
@@ -132,7 +159,7 @@ export function UserMenu({
               className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-status-danger transition-colors hover:bg-status-danger-wash"
             >
               <LogOut aria-hidden className="size-4 rtl:rotate-180" />
-              Log out
+              {t('userMenu.logOut')}
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { LayoutList, Plus, UtensilsCrossed } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useCategories } from '../categories/hooks/use-categories'
 import { CategoryFilter, UNCATEGORISED } from '../components/builder/category-filter'
 import { SortableCard, SortableList } from '../components/dnd'
@@ -35,6 +36,7 @@ export type DishesPageProps = {
  * because this is edited from a phone more often than a desk.
  */
 export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
+  const { t } = useTranslation('menu')
   const categories = useCategories()
   const dishes = useDishes()
 
@@ -94,10 +96,10 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LimitNotice
-          label="Dishes"
+          label={t('dishesPage.title')}
           used={dishes.data?.meta.used ?? 0}
           limit={dishes.data?.meta.limit ?? null}
-          description="Everything guests can order. Drag to change the order they appear in."
+          description={t('dishesPage.description')}
         />
         <Button
           size="sm"
@@ -105,23 +107,19 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
           disabled={atLimit || noCategories}
           onClick={() => setDialog({ open: true, dish: null })}
         >
-          Add dish
+          {t('dishesPage.add')}
         </Button>
       </div>
 
-      {atLimit ? (
-        <Alert variant="warning">
-          You have used every dish your plan allows. Delete one to add another.
-        </Alert>
-      ) : null}
+      {atLimit ? <Alert variant="warning">{t('dishesPage.atLimit')}</Alert> : null}
 
       {noCategories && dishList.length === 0 ? (
         <EmptyState
           fill
           icon={LayoutList}
-          title="Add a category first"
-          description="Every dish belongs to a category, so your menu has some structure before you start filling it."
-          action={<Button onClick={onOpenCategories}>Go to categories</Button>}
+          title={t('shared.addCategoryFirst')}
+          description={t('dishesPage.noCategoriesDescription')}
+          action={<Button onClick={onOpenCategories}>{t('shared.goToCategories')}</Button>}
         />
       ) : (
         <>
@@ -129,11 +127,11 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
             // Deleting a category keeps its dishes. They are still on the
             // menu and still count against the limit, so they must stay
             // visible and reassignable.
-            <Alert variant="warning" title="These dishes have no category">
-              Their category was deleted. Add a category, then edit each dish to move it there.
+            <Alert variant="warning" title={t('dishesPage.orphansTitle')}>
+              {t('dishesPage.orphansDescription')}
               <div className="mt-2">
                 <Button size="sm" onClick={onOpenCategories}>
-                  Go to categories
+                  {t('shared.goToCategories')}
                 </Button>
               </div>
             </Alert>
@@ -157,14 +155,20 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
             <EmptyState
               fill
               icon={UtensilsCrossed}
-              title={dishList.length === 0 ? 'No dishes yet' : 'Nothing in this category'}
+              title={
+                dishList.length === 0
+                  ? t('dishesPage.emptyTitle')
+                  : t('dishesPage.emptyFilteredTitle')
+              }
               description={
                 dishList.length === 0
-                  ? 'Add your first dish with a name, a price and a photo.'
-                  : 'Add a dish here, or pick another category above.'
+                  ? t('dishesPage.emptyDescription')
+                  : t('dishesPage.emptyFilteredDescription')
               }
               action={
-                <Button onClick={() => setDialog({ open: true, dish: null })}>Add a dish</Button>
+                <Button onClick={() => setDialog({ open: true, dish: null })}>
+                  {t('dishesPage.emptyAction')}
+                </Button>
               }
             />
           ) : (
@@ -210,9 +214,9 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
         open={pendingDelete !== null}
         destructive
         loading={remove.isPending}
-        title="Delete this dish?"
-        description="This removes the dish and its photo from your menu. It cannot be undone."
-        confirmLabel="Delete"
+        title={t('dishesPage.deleteTitle')}
+        description={t('dishesPage.deleteDescription')}
+        confirmLabel={t('shared.delete')}
         onConfirm={() => {
           if (pendingDelete) {
             remove.mutate(pendingDelete.id, { onSuccess: () => setPendingDelete(null) })

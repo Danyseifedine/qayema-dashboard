@@ -1,6 +1,7 @@
 import { api } from './client'
 import { installAuthRedirectInterceptor } from './interceptors/auth-redirect'
 import { installCsrfInterceptor } from './interceptors/csrf'
+import { installLocaleInterceptor } from './interceptors/locale'
 
 let installed = false
 
@@ -12,6 +13,7 @@ export function configureApi(options: { onUnauthenticated?: () => void } = {}): 
   if (installed) return
   installed = true
 
+  installLocaleInterceptor(api)
   installCsrfInterceptor(api)
   installAuthRedirectInterceptor(api, options)
 }

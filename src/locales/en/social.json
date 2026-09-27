@@ -1,0 +1,45 @@
+{
+  "page": {
+    "limitLabel": "Social links",
+    "limitDescription": "Shown as icons at the bottom of your menu, so guests can follow you.",
+    "add": "Add link",
+    "atLimit": "You have used every social link your plan allows. Remove one to add another.",
+    "allPlatformsUsed": "Every platform your menu can show already has a link. Edit one to point it somewhere else.",
+    "emptyTitle": "No social links yet",
+    "emptyDescription": "Add {{platforms}} or wherever else guests can find you.",
+    "addFirst": "Add your first link",
+    "removeTitle": "Remove this link?",
+    "removeDescription": "It disappears from your menu straight away. You can add it back at any time.",
+    "removeConfirm": "Remove"
+  },
+  "card": {
+    "edit": "Edit {{platform}} link",
+    "remove": "Remove {{platform}} link"
+  },
+  "dialog": {
+    "addTitle": "Add a social link",
+    "editTitle": "Edit link",
+    "description": "Guests see these as icons at the bottom of your menu.",
+    "platformLabel": "Platform",
+    "platformPlaceholder": "Choose a platform",
+    "linkLabel": "Link",
+    "linkHint": "Paste the full address, including https://",
+    "cancel": "Cancel",
+    "addSubmit": "Add link",
+    "saveSubmit": "Save link"
+  },
+  "toast": {
+    "added": "Link added",
+    "saved": "Link saved",
+    "addFailed": "Could not add that link",
+    "saveFailed": "Could not save that link",
+    "removed": "Link removed",
+    "removedDescription": "It no longer appears on your menu.",
+    "removeFailed": "Could not remove that link"
+  },
+  "validation": {
+    "urlInvalid": "Enter the full link, starting with https://",
+    "urlTooLong": "That link is too long.",
+    "urlScheme": "A link must start with http:// or https://"
+  }
+}

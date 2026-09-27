@@ -1,4 +1,5 @@
 import { Store } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useSession } from '@/features/auth/hooks/use-session'
 import { ErrorState } from '@/shared/components/feedback'
 import { Button } from '@/shared/components/ui'
@@ -18,6 +19,7 @@ export type AccountPageProps = {
 }
 
 export function AccountPage({ onOpenRestaurant }: AccountPageProps) {
+  const { t } = useTranslation('account')
   const session = useSession()
   const user = session.data
 
@@ -25,9 +27,9 @@ export function AccountPage({ onOpenRestaurant }: AccountPageProps) {
     <div className="flex flex-1 flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="font-display text-[19px] leading-tight">Profile</h2>
+          <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
           <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">
-            You, the person: your name and how you sign in. Nothing here reaches your menu.
+            {t('page.description')}
           </p>
         </div>
         <Button
@@ -36,7 +38,7 @@ export function AccountPage({ onOpenRestaurant }: AccountPageProps) {
           leadingIcon={<Store className="size-4" />}
           onClick={onOpenRestaurant}
         >
-          Edit your restaurant instead
+          {t('page.editRestaurant')}
         </Button>
       </div>
 
@@ -48,7 +50,7 @@ export function AccountPage({ onOpenRestaurant }: AccountPageProps) {
         </div>
       ) : session.isError || user === undefined ? (
         <ErrorState
-          description={session.error?.message ?? 'We could not load your account.'}
+          description={session.error?.message ?? t('page.loadFailed')}
           onRetry={() => void session.refetch()}
         />
       ) : (

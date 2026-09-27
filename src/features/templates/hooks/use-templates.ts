@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { QUERY_ROOTS } from '@/lib/query/keys'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
@@ -27,10 +28,10 @@ export function useSelectTemplate() {
   return useMutation<TemplateList, ApiError, number>({
     mutationFn: selectTemplate,
     onSuccess: (list) => {
-      toast.success('Design applied', 'Your menu now uses this design.')
+      toast.success(t('templates:toast.applied'), t('templates:toast.appliedDescription'))
       queryClient.setQueryData(templateKeys.list(), list)
       void queryClient.invalidateQueries({ queryKey: [QUERY_ROOTS.session] })
     },
-    onError: (error) => toast.error('Could not switch design', error),
+    onError: (error) => toast.error(t('templates:toast.switchFailed'), error),
   })
 }

@@ -1,0 +1,133 @@
+{
+  "optional": "optional",
+  "page": {
+    "title": "Restaurant",
+    "description": "What guests see at the top of your menu, and how they reach you.",
+    "saveFailedTitle": "That did not save",
+    "unsavedChanges": "You have unsaved changes.",
+    "allSaved": "Everything is saved.",
+    "undoChanges": "Undo changes",
+    "saveChanges": "Save changes"
+  },
+  "toast": {
+    "savedTitle": "Settings saved",
+    "savedDescription": "Your menu shows these straight away.",
+    "saveFailed": "Could not save your settings"
+  },
+  "identity": {
+    "title": "Restaurant",
+    "description": "What guests see at the top of your menu.",
+    "nameLabel": "Restaurant name",
+    "nameHint": "The heading at the top of your public menu. This is not your own name.",
+    "descriptionLabel": "Description"
+  },
+  "menuLanguages": {
+    "title": "Menu languages",
+    "description": "Your menu is always in English. Add one more language for guests who read it.",
+    "secondLabel": "Second language",
+    "noSecond": "None — English only",
+    "searchPlaceholder": "Search languages",
+    "empty": "No language matches that",
+    "secondHint": "Dishes, categories and your restaurant's name get a tab for it.",
+    "keptNotice": "What you wrote in {{language}} is kept. Switch back to {{language}} and it all returns.",
+    "openingLabel": "The menu opens in",
+    "openingHint": "Guests can switch to the other language from the menu.",
+    "englishOnly": "The menu opens in English and has no language switch."
+  },
+  "contact": {
+    "title": "Contact",
+    "description": "How guests reach you from your menu.",
+    "phoneLabel": "Phone",
+    "phoneHint": "Shown as a tap-to-call link."
+  },
+  "location": {
+    "label": "Location",
+    "hint": "Paste a link from Google Maps, or use where you are now.",
+    "finding": "Finding you",
+    "useCurrent": "Use my current location",
+    "openInMaps": "Open in Google Maps",
+    "mapTitle": "Where your restaurant is",
+    "noCoordinates": "This link has no coordinates in it, so there is no map to show. It still works for guests.",
+    "errors": {
+      "unsupported": "This browser cannot share a location.",
+      "denied": "Location is blocked for this site. Allow it in your browser, then try again.",
+      "unavailable": "Your device could not work out where it is. Paste a map link instead.",
+      "timeout": "That took too long. Try again, or paste a map link instead.",
+      "unknown": "We could not get your location. Paste a map link instead."
+    }
+  },
+  "localisation": {
+    "title": "Money and time",
+    "description": "Applied across your whole menu.",
+    "currencyLabel": "Currency",
+    "currencyPlaceholder": "Search currencies",
+    "currencyEmpty": "No currency matches that",
+    "currencyHint": "Changing this relabels existing prices; it does not convert them.",
+    "timezoneLabel": "Timezone",
+    "timezonePlaceholder": "Search timezones",
+    "timezoneEmpty": "No timezone matches that",
+    "timezoneHint": "Used to work out whether you are open right now."
+  },
+  "openingHours": {
+    "title": "Opening hours",
+    "description": "Shown at the top of your menu, and used to say whether you are open right now.",
+    "dayOpens": "{{day}} opens",
+    "dayCloses": "{{day}} closes",
+    "dayIsOpen": "{{day}} is open",
+    "closed": "Closed",
+    "open": "Open"
+  },
+  "weekdays": {
+    "mon": "Monday",
+    "tue": "Tuesday",
+    "wed": "Wednesday",
+    "thu": "Thursday",
+    "fri": "Friday",
+    "sat": "Saturday",
+    "sun": "Sunday"
+  },
+  "branding": {
+    "title": "Branding",
+    "description": "JPEG, PNG or WebP, up to 10 MB each.",
+    "logoLabel": "Logo",
+    "logoHint": "Every menu shows a logo, so this can be replaced but not removed.",
+    "coverLabel": "Cover image",
+    "coverHint": "Cropped to 1920 x 600 and converted to WebP."
+  },
+  "validation": {
+    "uploadUnreadable": "That upload could not be read. Please try again.",
+    "timeFormat": "Use a time like 09:00.",
+    "chooseLanguage": "Please choose a language from the list.",
+    "linkInvalid": "Enter a valid link, starting with https://",
+    "linkTooLong": "That link is too long.",
+    "chooseCountry": "Please choose a country from the list.",
+    "phoneRequired": "A phone number is required.",
+    "phoneTooLong": "That phone number is too long.",
+    "phoneInvalid": "Please enter a valid phone number using digits only.",
+    "chooseCurrency": "Please choose a currency from the list.",
+    "chooseTimezone": "Choose a timezone.",
+    "nameRequiredInEnglish": "The restaurant name is required in English.",
+    "defaultLocaleInvalid": "The menu can only open in English or its second language.",
+    "nameTooShort": "The restaurant name must be at least 2 characters.",
+    "nameInvalidChars": "The restaurant name contains characters that are not allowed."
+  },
+  "fields": {
+    "restaurantName": "restaurant name",
+    "description": "description"
+  },
+  "features": {
+    "title": "Features",
+    "description": "Switch off the sections you don't use. They leave the sidebar; nothing in them is deleted, and switching one back on brings it all back.",
+    "show": "Show {{section}}",
+    "saveFailed": "Could not update your sections",
+    "sections": {
+      "analytics": "How guests find your menu and what they do on it.",
+      "orders": "Orders guests place from your menu.",
+      "qr": "Design and download your menu's QR code.",
+      "social-links": "The social accounts shown on your menu."
+    },
+    "ordersNote": "Hiding Orders only hides this page. Guests can still order from your menu.",
+    "notOnPackage": "Not on your package",
+    "listTitle": "Sidebar sections"
+  }
+}

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
-import { checkImageFile } from '@/lib/security/input-guards'
+import { t } from '@/lib/i18n'
+import { MAX_IMAGE_EDGE, checkImageFile } from '@/lib/security/input-guards'
 import { ApiError } from '@/shared/types/api'
 import { uploadTempImage } from '../api/temp-upload.api'
 import type { TempUpload, UploadContext } from '../schemas/temp-upload.schema'
@@ -37,7 +38,11 @@ export function useTempUpload(context: UploadContext) {
     async (file: File): Promise<TempUpload | null> => {
       const rejection = await checkImageFile(file)
       if (rejection) {
-        setState({ ...IDLE, error: rejection.message })
+        // The guard's own wording is English; its code picks the translation.
+        setState({
+          ...IDLE,
+          error: t(`upload.rejected.${rejection.code}`, { max: MAX_IMAGE_EDGE }),
+        })
         return null
       }
 
@@ -76,20 +81,18 @@ export function useTempUpload(context: UploadContext) {
 
 function messageFor(error: unknown): string {
   if (!(error instanceof ApiError)) {
-    return 'That image could not be uploaded. Please try again.'
+    return t('upload.failed')
   }
 
   if (error.isRateLimited) {
     const wait = error.retryAfter
-    return wait === null
-      ? 'Too many uploads in a row. Wait a moment before trying again.'
-      : `Too many uploads in a row. Try again in ${wait} seconds.`
+    return wait === null ? t('upload.rateLimited') : t('upload.rateLimitedIn', { count: wait })
   }
 
   // A body PHP refused outright never reaches validation, so it arrives as a
   // 413 rather than a 422 about the file field.
   if (error.status === 413 || error.code === 'payload_too_large') {
-    return 'That image is too large. Images must be 10 MB or smaller.'
+    return t('upload.tooLarge')
   }
 
   // A 422 names the file field; show the server's own wording.

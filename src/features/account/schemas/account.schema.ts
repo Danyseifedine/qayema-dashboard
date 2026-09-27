@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 
 /**
  * Mirrors ../qayema/app/Http/Requests/UpdateAccountRequest.php and
@@ -14,9 +15,9 @@ export const profileFormSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, 'Your name must be at least 2 characters.')
-    .max(100, 'Your name may not be longer than 100 characters.')
-    .regex(NO_CONTROL_CHARS, 'Your name contains characters that are not allowed.'),
+    .min(2, { error: () => t('account:validation.nameTooShort') })
+    .max(100, { error: () => t('account:validation.nameTooLong') })
+    .regex(NO_CONTROL_CHARS, { error: () => t('account:validation.nameInvalidChars') }),
 })
 
 /** Laravel's `Password::defaults()` is eight characters. */
@@ -32,8 +33,10 @@ export function passwordFormSchema(hasPassword: boolean) {
       current_password: z.string(),
       password: z
         .string()
-        .min(MIN_PASSWORD, `Use at least ${MIN_PASSWORD} characters.`)
-        .max(255, 'That password is too long.'),
+        .min(MIN_PASSWORD, {
+          error: () => t('account:validation.passwordTooShort', { count: MIN_PASSWORD }),
+        })
+        .max(255, { error: () => t('account:validation.passwordTooLong') }),
       password_confirmation: z.string(),
     })
     .superRefine((values, ctx) => {
@@ -41,7 +44,7 @@ export function passwordFormSchema(hasPassword: boolean) {
         ctx.addIssue({
           code: 'custom',
           path: ['current_password'],
-          message: 'Enter your current password.',
+          message: t('account:validation.currentRequired'),
         })
       }
 
@@ -49,7 +52,7 @@ export function passwordFormSchema(hasPassword: boolean) {
         ctx.addIssue({
           code: 'custom',
           path: ['password_confirmation'],
-          message: 'The two passwords do not match.',
+          message: t('account:validation.mismatch'),
         })
       }
     })

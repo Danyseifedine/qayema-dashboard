@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { request } from '@/lib/api'
+import type { MenuTextForm } from '@/shared/utils/string/menu-text'
 import {
   categoryCollectionSchema,
   categoryListSchema,
@@ -8,10 +9,10 @@ import {
   type CategoryList,
 } from '../schemas/category.schema'
 
-/** Only non-blank locales are sent; the server drops empty ones anyway. */
+/** One entry per menu language; a blank one clears that language. */
 export type CategoryPayload = {
-  name: { en: string; ar: string }
-  description: { en: string; ar: string }
+  name: MenuTextForm
+  description: MenuTextForm
 }
 
 export function fetchCategories(signal?: AbortSignal): Promise<CategoryList> {
@@ -28,9 +29,9 @@ export async function createCategory(payload: CategoryPayload): Promise<Category
 }
 
 /**
- * The update rules mark `name` as required, not `sometimes`, so a rename must
- * always send both locales or the missing one is wiped. The description is
- * sent in full every time for the same reason; blanks clear it.
+ * Every menu language is sent each time; a blank one clears that language.
+ * Text in a language the menu no longer uses is never sent, so the server
+ * keeps it for if the owner switches back.
  */
 export async function updateCategory(id: number, payload: CategoryPayload): Promise<Category> {
   const { data } = await request(categoryResponseSchema, {

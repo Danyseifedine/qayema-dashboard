@@ -1,20 +1,31 @@
 import { useState, type ReactNode } from 'react'
-import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
+import {
+  get,
+  useController,
+  useFormState,
+  useWatch,
+  type Control,
+  type FieldPath,
+  type FieldValues,
+} from 'react-hook-form'
 import { HelperText, Input, Label, Textarea } from '@/shared/components/ui'
-import { LOCALES, LOCALE_DIR, LOCALE_LABELS, type Locale } from '@/shared/constants/locales'
+import { MAIN_LANGUAGE, languageDir, languageName } from '@/shared/constants/menu-languages'
 import { cn } from '@/shared/utils/dom/cn'
 import { LocaleTabs } from './locale-tabs'
 
 export type TranslatableFieldProps<T extends FieldValues> = {
   control: Control<T>
-  /** Base path of the `{en, ar}` object, e.g. `name`. */
+  /** Base path of the `{en, fr, …}` object, e.g. `name`. */
   name: FieldPath<T>
+  /** The menu's languages, English first. One language shows no tabs. */
+  languages: readonly string[]
   label?: ReactNode
   hint?: ReactNode
+  /** Marks English as required: the one language every name must have. */
   required?: boolean
   optionalText?: ReactNode
   disabled?: boolean
-  placeholder?: Partial<Record<Locale, string>>
+  placeholder?: Partial<Record<string, string>>
   maxLength?: number
   /** Renders a textarea instead of a single-line input. */
   multiline?: boolean
@@ -23,16 +34,17 @@ export type TranslatableFieldProps<T extends FieldValues> = {
 }
 
 /**
- * One control per locale behind an EN/AR switch.
+ * One control per menu language behind a tab switch.
  *
- * Translatable API fields arrive as `{en, ar}` objects, and Laravel reports
- * their errors as `name.en` / `name.ar`. This reads both sub-fields so an
- * error on the hidden locale still shows: the tab gets a dot and the message
- * appears under the control.
+ * Translatable API fields arrive as `{en, fr}` objects, and Laravel reports
+ * their errors as `name.en` / `name.fr`. Every language's value and error is
+ * read, so a problem on a hidden tab still shows: the tab gets a dot and the
+ * message appears under the control.
  */
 export function TranslatableTextField<T extends FieldValues>({
   control,
   name,
+  languages,
   label,
   hint,
   required,
@@ -44,26 +56,29 @@ export function TranslatableTextField<T extends FieldValues>({
   rows = 4,
   className,
 }: TranslatableFieldProps<T>) {
-  const [active, setActive] = useState<Locale>('en')
+  const [chosen, setChosen] = useState<string>(MAIN_LANGUAGE)
+  // The menu's languages can change under an open form (Settings); fall back
+  // to English rather than point at a tab that is gone.
+  const active = languages.includes(chosen) ? chosen : (languages[0] ?? MAIN_LANGUAGE)
 
-  const en = useController({ control, name: `${name}.en` as FieldPath<T> })
-  const ar = useController({ control, name: `${name}.ar` as FieldPath<T> })
-  const byLocale = { en, ar } as const
+  const current = useController({ control, name: `${name}.${active}` as FieldPath<T> })
+  const all = (useWatch({ control, name }) ?? {}) as Record<string, string | null | undefined>
+  const { errors } = useFormState({ control, name })
+  const errorOf = (code: string) =>
+    (get(errors, `${name}.${code}`) as { message?: string } | undefined)?.message
 
-  const current = byLocale[active]
   const value = (current.field.value as string | null | undefined) ?? ''
   const error = current.fieldState.error?.message
 
-  // A locale is flagged when it has an error, or when it is empty on a
+  // A language is flagged when it has an error, or when English is empty on a
   // required field. Either way the owner needs to open that tab.
-  const incomplete = LOCALES.filter((locale) => {
-    const entry = byLocale[locale]
-    const text = ((entry.field.value as string | null | undefined) ?? '').trim()
-    return Boolean(entry.fieldState.error) || (required && text === '')
-  })
+  const incomplete = languages.filter(
+    (code) =>
+      Boolean(errorOf(code)) ||
+      (required && code === MAIN_LANGUAGE && (all[code] ?? '').trim() === ''),
+  )
 
-  const otherLocale = active === 'en' ? 'ar' : 'en'
-  const otherError = byLocale[otherLocale].fieldState.error?.message
+  const hidden = languages.find((code) => code !== active && errorOf(code))
   const controlId = `${String(name)}-${active}`
   const describedBy = error ? `${controlId}-error` : hint ? `${controlId}-hint` : undefined
 
@@ -73,7 +88,7 @@ export function TranslatableTextField<T extends FieldValues>({
     value,
     onChange: current.field.onChange,
     onBlur: current.field.onBlur,
-    dir: LOCALE_DIR[active],
+    dir: languageDir(active),
     lang: active,
     placeholder: placeholder?.[active],
     disabled,
@@ -93,7 +108,14 @@ export function TranslatableTextField<T extends FieldValues>({
         ) : (
           <span />
         )}
-        <LocaleTabs value={active} onChange={setActive} incomplete={incomplete} />
+        {languages.length > 1 ? (
+          <LocaleTabs
+            languages={languages}
+            value={active}
+            onChange={setChosen}
+            incomplete={incomplete}
+          />
+        ) : null}
       </div>
 
       {multiline ? (
@@ -111,15 +133,17 @@ export function TranslatableTextField<T extends FieldValues>({
           ) : hint ? (
             <HelperText id={`${controlId}-hint`}>{hint}</HelperText>
           ) : null}
-          {!error && otherError ? (
+          {!error && hidden ? (
             <HelperText tone="error">
-              {LOCALE_LABELS[otherLocale]}: {otherError}
+              {languageName(hidden)}: {errorOf(hidden)}
             </HelperText>
           ) : null}
         </div>
         {maxLength ? (
           <HelperText className="shrink-0 tabular-nums">
-            {value.length} / {maxLength}
+            <span dir="ltr">
+              {value.length} / {maxLength}
+            </span>
           </HelperText>
         ) : null}
       </div>

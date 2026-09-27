@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "الملف الشخصي",
+    "description": "أنت كشخص: اسمك وطريقة تسجيل دخولك. لا شيء هنا يظهر في قائمتك.",
+    "editRestaurant": "عدّل مطعمك بدلًا من ذلك",
+    "loadFailed": "تعذّر تحميل حسابك."
+  },
+  "profile": {
+    "title": "أنت",
+    "description": "من أنت، وليس اسم مطعمك.",
+    "nameLabel": "اسمك",
+    "nameHint": "يظهر في لوحة التحكم وفي الرسائل التي نرسلها إليك. لا يراه الزبائن أبدًا.",
+    "emailLabel": "البريد الإلكتروني",
+    "emailHint": "تسجّل الدخول بهذا العنوان، لذا لا يمكن تغييره هنا.",
+    "save": "حفظ"
+  },
+  "password": {
+    "changeTitle": "كلمة المرور",
+    "setTitle": "تعيين كلمة مرور",
+    "changeDescription": "تغييرها يسجّل خروجك من كل متصفح آخر بقيت مسجّلًا فيه.",
+    "setDescription": "لقد سجّلت عبر Google. إضافة كلمة مرور تمنحك طريقة ثانية للدخول.",
+    "currentLabel": "كلمة المرور الحالية",
+    "newLabel": "كلمة المرور الجديدة",
+    "passwordLabel": "كلمة المرور",
+    "hint": "8 أحرف على الأقل.",
+    "confirmLabel": "تأكيد كلمة المرور",
+    "changeSubmit": "تغيير كلمة المرور",
+    "setSubmit": "تعيين كلمة المرور"
+  },
+  "toast": {
+    "profileSaved": "تم حفظ الملف الشخصي",
+    "profileFailed": "تعذّر حفظ ملفك الشخصي",
+    "passwordChanged": "تم تغيير كلمة المرور",
+    "passwordSet": "تم تعيين كلمة المرور",
+    "passwordSignedOut": "تم تسجيل خروجك من أي متصفح آخر كنت مسجّلًا فيه.",
+    "passwordChangeFailed": "تعذّر تغيير كلمة المرور",
+    "passwordSetFailed": "تعذّر تعيين كلمة مرور"
+  },
+  "validation": {
+    "nameTooShort": "يجب أن يتكون اسمك من حرفين على الأقل.",
+    "nameTooLong": "لا يمكن أن يزيد اسمك عن 100 حرف.",
+    "nameInvalidChars": "يحتوي اسمك على أحرف غير مسموح بها.",
+    "passwordTooShort_zero": "استخدم {{count}} حرف على الأقل.",
+    "passwordTooShort_one": "استخدم حرفًا واحدًا على الأقل.",
+    "passwordTooShort_two": "استخدم حرفين على الأقل.",
+    "passwordTooShort_few": "استخدم {{count}} أحرف على الأقل.",
+    "passwordTooShort_many": "استخدم {{count}} حرفًا على الأقل.",
+    "passwordTooShort_other": "استخدم {{count}} حرف على الأقل.",
+    "passwordTooLong": "كلمة المرور هذه طويلة جدًا.",
+    "currentRequired": "أدخل كلمة المرور الحالية.",
+    "mismatch": "كلمتا المرور غير متطابقتين."
+  }
+}

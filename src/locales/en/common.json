@@ -1,0 +1,171 @@
+{
+  "app": {
+    "dashboard": "Dashboard",
+    "freePackage": "Free",
+    "logoutFailed": "Could not log out",
+    "lockedTitle": "Choose a menu design first",
+    "lockedBody": "Your menu, QR code and settings open up once you pick a design. Picking one is free, and you can switch whenever you like.",
+    "browseDesigns": "Browse designs",
+    "notBuiltTitle": "Not built yet",
+    "notBuiltBody": "This section has its folder and its place in the navigation. The form library, the shell and the API client are done; the pages come next."
+  },
+  "nav": {
+    "overview": "Overview",
+    "analytics": "Analytics",
+    "categories": "Categories",
+    "dishes": "Dishes",
+    "orders": "Orders",
+    "templates": "Templates",
+    "reach": "Reach",
+    "qr": "QR Studio",
+    "socialLinks": "Social links",
+    "account": "Account",
+    "package": "Package",
+    "restaurant": "Restaurant",
+    "profile": "Profile",
+    "features": "Features"
+  },
+  "layout": {
+    "openNavigation": "Open navigation",
+    "closeNavigation": "Close navigation"
+  },
+  "sidebar": {
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar",
+    "collapseShort": "Collapse"
+  },
+  "packagePill": {
+    "label": "{{name}} package. Open your package."
+  },
+  "userMenu": {
+    "trigger": "Account menu",
+    "viewPublicMenu": "View public menu",
+    "profile": "Profile",
+    "preferences": "Preferences",
+    "language": "Language",
+    "darkMode": "Dark mode",
+    "logOut": "Log out"
+  },
+  "languageSwitcher": {
+    "label": "Interface language"
+  },
+  "localeTabs": {
+    "label": "Content language"
+  },
+  "menuLanguages": {
+    "en": "English",
+    "ar": "Arabic",
+    "fr": "French",
+    "es": "Spanish",
+    "tr": "Turkish",
+    "de": "German",
+    "it": "Italian",
+    "ru": "Russian",
+    "zh": "Chinese",
+    "hi": "Hindi",
+    "pt": "Portuguese"
+  },
+  "countries": {
+    "LB": "Lebanon",
+    "AE": "United Arab Emirates",
+    "SA": "Saudi Arabia",
+    "EG": "Egypt",
+    "JO": "Jordan",
+    "KW": "Kuwait",
+    "QA": "Qatar",
+    "BH": "Bahrain",
+    "OM": "Oman",
+    "SY": "Syria",
+    "IQ": "Iraq",
+    "TR": "Turkey",
+    "US": "United States",
+    "GB": "United Kingdom",
+    "FR": "France",
+    "DE": "Germany",
+    "IT": "Italy",
+    "ES": "Spain",
+    "GR": "Greece",
+    "NL": "Netherlands",
+    "PT": "Portugal",
+    "RU": "Russia",
+    "CN": "China",
+    "JP": "Japan",
+    "KR": "South Korea",
+    "IN": "India",
+    "AU": "Australia",
+    "CA": "Canada"
+  },
+  "alert": {
+    "dismiss": "Dismiss"
+  },
+  "combobox": {
+    "noMatches": "No matches"
+  },
+  "confirmDialog": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "errorState": {
+    "title": "That did not load",
+    "retry": "Try again"
+  },
+  "statTile": {
+    "nothingToCompare": "Nothing to compare yet",
+    "same": "Same as before",
+    "vsBefore": "vs before"
+  },
+  "colorField": {
+    "picker": "{{label}}, picker",
+    "pickerFallback": "Colour picker"
+  },
+  "phoneField": {
+    "country": "Country"
+  },
+  "textField": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "imageField": {
+    "currentImage": "Current image",
+    "smaller": "{{percent}}% smaller",
+    "replace": "Replace",
+    "remove": "Remove",
+    "uploadProgress": "Upload progress",
+    "uploading": "Uploading…",
+    "drop": "Drop an image or <browse>browse</browse>",
+    "formats": "JPEG, PNG or WebP · up to 10 MB"
+  },
+  "menuText": {
+    "tooLong": "Keep the {{what}} under {{max}} characters."
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "We could not reach the server. Check your connection and try again.",
+    "rateLimited": "Too many requests. Wait a moment and try again.",
+    "rateLimitedIn_one": "Too many requests. Try again in {{count}} second.",
+    "rateLimitedIn_other": "Too many requests. Try again in {{count}} seconds.",
+    "unexpected": "The server sent an unexpected response."
+  },
+  "session": {
+    "checking": "Checking your session…",
+    "redirectingTitle": "Taking you to sign in",
+    "redirectingBody": "One moment…",
+    "loadFailed": "We could not load your account",
+    "retry": "Try again",
+    "onboardingTitle": "Let's finish setting up",
+    "onboardingBody": "Your restaurant is not ready yet. Finish the short setup and you will land right back here.",
+    "continueSetup": "Continue setup"
+  },
+  "upload": {
+    "failed": "That image could not be uploaded. Please try again.",
+    "rateLimited": "Too many uploads in a row. Wait a moment before trying again.",
+    "rateLimitedIn_one": "Too many uploads in a row. Try again in {{count}} second.",
+    "rateLimitedIn_other": "Too many uploads in a row. Try again in {{count}} seconds.",
+    "tooLarge": "That image is too large. Images must be 10 MB or smaller.",
+    "rejected": {
+      "type": "Images must be JPEG, PNG, or WebP.",
+      "size": "Images must be 10 MB or smaller.",
+      "dimensions": "Images must be at most {{max}} × {{max}} pixels."
+    }
+  }
+}

@@ -1,22 +1,27 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
+import { menuTextField, menuTextSchema, requireEnglish } from '@/shared/utils/string/menu-text'
 
 /**
- * Mirrors ../qayema/app/Http/Resources/CategoryResource.php and the
- * Store/Update request rules.
- *
- * Names are translatable maps, never plain strings: the API rejects a string
- * with a 422 and always answers with both locale keys present.
+ * An `{en, ar}` pair, as the platform's own content (packages, templates)
+ * comes. A restaurant's menu text uses `menuTextSchema` instead, keyed by the
+ * restaurant's own languages.
  */
 export const translatableTextSchema = z.object({
   en: z.string().nullable(),
   ar: z.string().nullable(),
 })
 
+/**
+ * Mirrors ../qayema/app/Http/Resources/CategoryResource.php and the
+ * Store/Update request rules. Names are maps with one entry per menu
+ * language, never plain strings.
+ */
 export const categorySchema = z.object({
   id: z.number().int(),
-  name: translatableTextSchema,
+  name: menuTextSchema,
   /** One optional line under the heading on the public menu. */
-  description: translatableTextSchema,
+  description: menuTextSchema,
   display_order: z.number().int(),
   // Always sent in practice, but the resource marks it conditional.
   dishes_count: z.number().int().optional(),
@@ -40,28 +45,16 @@ export type Category = z.infer<typeof categorySchema>
 export type CategoryList = z.infer<typeof categoryListSchema>
 
 /**
- * Form input. The server requires a name in at least one language, so the
- * same rule is applied here rather than waiting for the 422.
+ * Form input, one entry per menu language. The server requires the name in
+ * English, so the same rule is applied here rather than waiting for the 422.
  */
 export const categoryFormSchema = z
   .object({
-    name: z.object({
-      en: z.string().trim().max(255, 'Keep the name under 255 characters.'),
-      ar: z.string().trim().max(255, 'Keep the name under 255 characters.'),
-    }),
-    description: z.object({
-      en: z.string().trim().max(300, 'Keep the description under 300 characters.'),
-      ar: z.string().trim().max(300, 'Keep the description under 300 characters.'),
-    }),
+    name: menuTextField(255, () => t('menu:fields.name')),
+    description: menuTextField(300, () => t('menu:fields.description')),
   })
-  .superRefine((values, ctx) => {
-    if (values.name.en === '' && values.name.ar === '') {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['name', 'en'],
-        message: 'A category name is required in at least one language.',
-      })
-    }
-  })
+  .superRefine((values, ctx) =>
+    requireEnglish(values.name, 'name', t('menu:categorySchema.nameRequired'), ctx),
+  )
 
 export type CategoryFormValues = z.infer<typeof categoryFormSchema>

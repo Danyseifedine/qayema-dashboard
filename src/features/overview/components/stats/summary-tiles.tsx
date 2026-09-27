@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { StatTile } from '@/shared/components/data-display'
 import { changeBetween } from '@/shared/utils/format/change'
 import type { AdvancedStats, StatsSummary } from '../../schemas/stats.schema'
@@ -13,6 +14,7 @@ export type SummaryTilesProps = {
 
 /** The headline numbers for the range. */
 export function SummaryTiles({ totals, previous }: SummaryTilesProps) {
+  const { t } = useTranslation('overview')
   const change = (key: 'views' | 'unique_visitors' | 'qr_scans' | 'orders', current: number) => {
     if (previous === undefined) return undefined
     const before = previous?.[key]
@@ -22,24 +24,24 @@ export function SummaryTiles({ totals, previous }: SummaryTilesProps) {
   return (
     <dl className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
       <StatTile
-        label="Menu views"
+        label={t('analytics.summary.views')}
         value={totals.views.toLocaleString()}
         change={change('views', totals.views)}
-        hint={`${totals.views_today.toLocaleString()} today`}
+        hint={t('analytics.summary.viewsToday', { views: totals.views_today.toLocaleString() })}
       />
       <StatTile
-        label="Visitors"
+        label={t('analytics.summary.visitors')}
         value={totals.unique_visitors.toLocaleString()}
         change={change('unique_visitors', totals.unique_visitors)}
       />
       <StatTile
-        label="QR scans"
+        label={t('analytics.summary.qrScans')}
         value={totals.qr_scans.toLocaleString()}
         change={change('qr_scans', totals.qr_scans)}
       />
       {totals.orders !== null ? (
         <StatTile
-          label="Orders"
+          label={t('analytics.summary.orders')}
           value={totals.orders.toLocaleString()}
           change={change('orders', totals.orders)}
         />

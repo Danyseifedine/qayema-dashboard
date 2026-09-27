@@ -1,5 +1,6 @@
 import { Eye, EyeOff } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { FieldTrailingButton, Input } from '@/shared/components/ui'
 import { Field } from '../layout/field'
@@ -53,19 +54,20 @@ export function TextField<T extends FieldValues>({
   type = 'text',
   className,
 }: TextFieldProps<T>) {
+  const { t } = useTranslation()
   const [revealed, setRevealed] = useState(false)
   const { field, fieldState } = useController({ control, name })
   const value = (field.value as string | null | undefined) ?? ''
 
   const counter = maxLength ? (
-    <span className="tabular-nums">
+    <span dir="ltr" className="tabular-nums">
       {value.length} / {maxLength}
     </span>
   ) : null
 
   const reveal = password ? (
     <FieldTrailingButton
-      label={revealed ? 'Hide password' : 'Show password'}
+      label={revealed ? t('textField.hidePassword') : t('textField.showPassword')}
       onClick={() => setRevealed((open) => !open)}
     >
       {revealed ? <EyeOff /> : <Eye />}

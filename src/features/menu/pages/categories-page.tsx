@@ -1,5 +1,6 @@
 import { FolderPlus } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { CategoryDialog } from '../categories/components/dialogs/category-dialog'
 import { CategoryCard } from '../categories/components/list/category-card'
 import {
@@ -27,6 +28,7 @@ export type CategoriesPageProps = {
  * of their own rather than sharing a screen with the dishes grid.
  */
 export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
+  const { t } = useTranslation('menu')
   const categories = useCategories()
   const reorder = useReorderCategories()
   const remove = useDeleteCategory()
@@ -53,10 +55,10 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LimitNotice
-          label="Categories"
+          label={t('categoriesPage.title')}
           used={categories.data?.meta.used ?? 0}
           limit={categories.data?.meta.limit ?? null}
-          description="Categories group your dishes on the menu. Drag to change the order guests see."
+          description={t('categoriesPage.description')}
         />
         <Button
           size="sm"
@@ -64,15 +66,11 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
           disabled={atLimit}
           onClick={() => setDialog({ open: true, category: null })}
         >
-          Add category
+          {t('categoriesPage.add')}
         </Button>
       </div>
 
-      {atLimit ? (
-        <Alert variant="warning">
-          You have used every category your plan allows. Delete one to add another.
-        </Alert>
-      ) : null}
+      {atLimit ? <Alert variant="warning">{t('categoriesPage.atLimit')}</Alert> : null}
 
       {categories.isPending ? (
         <div className="flex flex-col gap-2">
@@ -89,11 +87,11 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
         <EmptyState
           fill
           icon={FolderPlus}
-          title="No categories yet"
-          description="Start with something like Starters, Mains or Drinks. You can rename and reorder them any time."
+          title={t('categoriesPage.emptyTitle')}
+          description={t('categoriesPage.emptyDescription')}
           action={
             <Button onClick={() => setDialog({ open: true, category: null })}>
-              Add your first category
+              {t('categoriesPage.emptyAction')}
             </Button>
           }
         />
@@ -118,7 +116,7 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
           </SortableList>
 
           <Button variant="ghost" className="self-start" onClick={onOpenDishes}>
-            Go to dishes
+            {t('categoriesPage.goToDishes')}
           </Button>
         </>
       )}
@@ -133,9 +131,9 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
         open={pendingDelete !== null}
         destructive
         loading={remove.isPending}
-        title="Delete this category?"
-        description="Its dishes are kept and simply lose their category, so you can move them somewhere else."
-        confirmLabel="Delete"
+        title={t('categoriesPage.deleteTitle')}
+        description={t('categoriesPage.deleteDescription')}
+        confirmLabel={t('shared.delete')}
         onConfirm={() => {
           if (pendingDelete) {
             remove.mutate(pendingDelete.id, { onSuccess: () => setPendingDelete(null) })

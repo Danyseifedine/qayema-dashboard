@@ -1,5 +1,6 @@
 import { ExternalLink, LocateFixed, MapPin } from 'lucide-react'
 import type { Control, FieldValues, FieldPath } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { UrlField } from '@/shared/components/forms'
 import { Button, HelperText } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
@@ -32,6 +33,7 @@ export function LocationField<T extends FieldValues>({
   value,
   onPick,
 }: LocationFieldProps<T>) {
+  const { t } = useTranslation('settings')
   const { locating, error, locate } = useCurrentLocation()
   const coordinates = parseMapCoordinates(value)
 
@@ -40,9 +42,9 @@ export function LocationField<T extends FieldValues>({
       <UrlField
         control={control}
         name={name}
-        label="Location"
-        optionalText="optional"
-        hint="Paste a link from Google Maps, or use where you are now."
+        label={t('location.label')}
+        optionalText={t('optional')}
+        hint={t('location.hint')}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -54,7 +56,7 @@ export function LocationField<T extends FieldValues>({
           leadingIcon={<LocateFixed className="size-3.5" />}
           onClick={() => locate((point) => onPick(googleMapsUrlFor(point)))}
         >
-          {locating ? 'Finding you' : 'Use my current location'}
+          {locating ? t('location.finding') : t('location.useCurrent')}
         </Button>
 
         {value ? (
@@ -68,7 +70,7 @@ export function LocationField<T extends FieldValues>({
               'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
             )}
           >
-            Open in Google Maps
+            {t('location.openInMaps')}
             <ExternalLink aria-hidden className="size-3" />
           </a>
         ) : null}
@@ -80,7 +82,7 @@ export function LocationField<T extends FieldValues>({
         <figure className="flex flex-col gap-1.5">
           <iframe
             key={`${coordinates.lat},${coordinates.lng}`}
-            title="Where your restaurant is"
+            title={t('location.mapTitle')}
             src={mapEmbedUrlFor(coordinates)}
             loading="lazy"
             /* OpenStreetMap's tile policy requires a real Referer and forbids a
@@ -105,9 +107,7 @@ export function LocationField<T extends FieldValues>({
       ) : value ? (
         // A shortened share link hides its coordinates behind a redirect, so
         // there is nothing to draw. Say so rather than showing a blank frame.
-        <HelperText>
-          This link has no coordinates in it, so there is no map to show. It still works for guests.
-        </HelperText>
+        <HelperText>{t('location.noCoordinates')}</HelperText>
       ) : null}
     </div>
   )

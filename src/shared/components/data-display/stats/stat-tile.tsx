@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type StatTileProps = {
@@ -40,14 +41,16 @@ export function StatTile({ label, value, hint, change, className }: StatTileProp
 }
 
 function Change({ value }: { value: number | null }) {
+  const { t } = useTranslation()
+
   if (value === null) {
-    return <span className="text-[var(--muted)]">Nothing to compare yet</span>
+    return <span className="text-[var(--muted)]">{t('statTile.nothingToCompare')}</span>
   }
 
   const percent = Math.round(value * 100)
 
   if (percent === 0) {
-    return <span className="text-[var(--muted)]">Same as before</span>
+    return <span className="text-[var(--muted)]">{t('statTile.same')}</span>
   }
 
   return (
@@ -59,7 +62,7 @@ function Change({ value }: { value: number | null }) {
       )}
     >
       {percent > 0 ? '↑' : '↓'} {Math.abs(percent)}%
-      <span className="font-normal text-[var(--muted)]"> vs before</span>
+      <span className="font-normal text-[var(--muted)]"> {t('statTile.vsBefore')}</span>
     </span>
   )
 }

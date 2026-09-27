@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import type { FieldValues, Path, UseFormSetError } from 'react-hook-form'
+import { t } from '@/lib/i18n'
 import { ApiError } from '@/shared/types/api'
 
 /**
@@ -16,7 +17,7 @@ export function useApiFormErrors<T extends FieldValues>(setError: UseFormSetErro
   const clear = useCallback(() => setFormError(null), [])
 
   const apply = useCallback(
-    (error: unknown, fallbackMessage = 'Something went wrong. Please try again.') => {
+    (error: unknown, fallbackMessage: string = t('errors.generic')) => {
       if (error instanceof ApiError && error.isValidation && error.errors) {
         const entries = Object.entries(error.errors)
         let matched = 0

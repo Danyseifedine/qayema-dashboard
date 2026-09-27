@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 
 /**
  * The platforms the public menu can render an icon for. Mirrors
@@ -43,12 +44,11 @@ export const socialLinkResponseSchema = z.object({ data: socialLinkSchema })
 export const socialLinkFormSchema = z.object({
   platform: platformSchema,
   url: z
-    .url('Enter the full link, starting with https://')
-    .max(500, 'That link is too long.')
-    .refine(
-      (value) => value.startsWith('http://') || value.startsWith('https://'),
-      'A link must start with http:// or https://',
-    ),
+    .url({ error: () => t('social:validation.urlInvalid') })
+    .max(500, { error: () => t('social:validation.urlTooLong') })
+    .refine((value) => value.startsWith('http://') || value.startsWith('https://'), {
+      error: () => t('social:validation.urlScheme'),
+    }),
 })
 
 export type SocialPlatform = z.infer<typeof platformSchema>

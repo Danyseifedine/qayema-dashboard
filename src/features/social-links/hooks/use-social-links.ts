@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
 import {
@@ -34,11 +35,11 @@ export function useSaveSocialLink(id: number | null) {
     mutationFn: (payload) =>
       id === null ? createSocialLink(payload) : updateSocialLink(id, payload),
     onSuccess: () => {
-      toast.success(id === null ? 'Link added' : 'Link saved')
+      toast.success(id === null ? t('social:toast.added') : t('social:toast.saved'))
       void queryClient.invalidateQueries({ queryKey: socialLinkKeys.all })
     },
     onError: (error) =>
-      toast.error(id === null ? 'Could not add that link' : 'Could not save that link', error),
+      toast.error(id === null ? t('social:toast.addFailed') : t('social:toast.saveFailed'), error),
   })
 }
 
@@ -48,9 +49,9 @@ export function useDeleteSocialLink() {
   return useMutation<void, ApiError, number>({
     mutationFn: deleteSocialLink,
     onSuccess: () => {
-      toast.success('Link removed', 'It no longer appears on your menu.')
+      toast.success(t('social:toast.removed'), t('social:toast.removedDescription'))
       void queryClient.invalidateQueries({ queryKey: socialLinkKeys.all })
     },
-    onError: (error) => toast.error('Could not remove that link', error),
+    onError: (error) => toast.error(t('social:toast.removeFailed'), error),
   })
 }

@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { t } from '@/lib/i18n'
 
 export type Coordinates = { lat: number; lng: number }
 
@@ -85,7 +86,7 @@ export function useCurrentLocation(): CurrentLocationState {
 
   const locate = useCallback((onFound: (coordinates: Coordinates) => void) => {
     if (typeof navigator === 'undefined' || navigator.geolocation === undefined) {
-      setError('This browser cannot share a location.')
+      setError(t('settings:location.errors.unsupported'))
       return
     }
 
@@ -111,12 +112,12 @@ export function useCurrentLocation(): CurrentLocationState {
 function describe(failure: GeolocationPositionError): string {
   switch (failure.code) {
     case failure.PERMISSION_DENIED:
-      return 'Location is blocked for this site. Allow it in your browser, then try again.'
+      return t('settings:location.errors.denied')
     case failure.POSITION_UNAVAILABLE:
-      return 'Your device could not work out where it is. Paste a map link instead.'
+      return t('settings:location.errors.unavailable')
     case failure.TIMEOUT:
-      return 'That took too long. Try again, or paste a map link instead.'
+      return t('settings:location.errors.timeout')
     default:
-      return 'We could not get your location. Paste a map link instead.'
+      return t('settings:location.errors.unknown')
   }
 }

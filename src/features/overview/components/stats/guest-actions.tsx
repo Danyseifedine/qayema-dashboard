@@ -1,15 +1,19 @@
+import { useTranslation } from 'react-i18next'
 import { StatTile } from '@/shared/components/data-display'
 import type { AdvancedStats, GuestAction } from '../../schemas/stats.schema'
 
-const ACTIONS: { label: string; keys: GuestAction[]; ordering?: boolean }[] = [
-  { label: 'Added to cart', keys: ['dish_add'], ordering: true },
-  { label: 'Opened a category', keys: ['category_open'] },
-  { label: 'Searched', keys: ['search', 'search_miss'] },
-  { label: 'WhatsApp taps', keys: ['whatsapp'] },
-  { label: 'Opened the map', keys: ['map'] },
-  { label: 'Called you', keys: ['call'] },
-  { label: 'Followed a social link', keys: ['social'] },
-  { label: 'Changed language', keys: ['language'] },
+type ActionLabel =
+  'dishAdd' | 'categoryOpen' | 'search' | 'whatsapp' | 'map' | 'call' | 'social' | 'language'
+
+const ACTIONS: { label: ActionLabel; keys: GuestAction[]; ordering?: boolean }[] = [
+  { label: 'dishAdd', keys: ['dish_add'], ordering: true },
+  { label: 'categoryOpen', keys: ['category_open'] },
+  { label: 'search', keys: ['search', 'search_miss'] },
+  { label: 'whatsapp', keys: ['whatsapp'] },
+  { label: 'map', keys: ['map'] },
+  { label: 'call', keys: ['call'] },
+  { label: 'social', keys: ['social'] },
+  { label: 'language', keys: ['language'] },
 ]
 
 export type GuestActionsProps = {
@@ -18,14 +22,19 @@ export type GuestActionsProps = {
   takesOrders: boolean
 }
 
-/** What guests did once the menu was open. */
+/**
+ * What guests did once the menu was open. A tap is all the menu can see: the
+ * call, the chat or the follow that comes after happens in another app.
+ */
 export function GuestActions({ actions, takesOrders }: GuestActionsProps) {
+  const { t } = useTranslation('overview')
+
   return (
     <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
       {ACTIONS.filter((action) => takesOrders || !action.ordering).map((action) => (
         <StatTile
           key={action.label}
-          label={action.label}
+          label={t(`analytics.actions.labels.${action.label}`)}
           value={action.keys.reduce((sum, key) => sum + actions[key], 0).toLocaleString()}
         />
       ))}

@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import {
   ComboboxField,
   FieldGroup,
@@ -18,6 +19,8 @@ import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
 import type { Category } from '../../../categories/schemas/category.schema'
 import { useSaveDish } from '../../hooks/use-dishes'
+import { useMenuLanguages } from '@/features/settings/hooks/use-menu-languages'
+import { toMenuTextForm } from '@/shared/utils/string/menu-text'
 import {
   dishFormSchema,
   type Dish,
@@ -49,14 +52,16 @@ export function DishDialog({
   onClose,
   onOpenCategories,
 }: DishDialogProps) {
+  const { t } = useTranslation('menu')
   const ref = useRef<HTMLDialogElement>(null)
   const save = useSaveDish(dish?.id ?? null)
+  const languages = useMenuLanguages()
 
   const form = useForm<DishFormInput, unknown, DishFormValues>({
     resolver: zodResolver(dishFormSchema),
     defaultValues: {
-      name: { en: '', ar: '' },
-      ingredients: { en: '', ar: '' },
+      name: toMenuTextForm(null, languages),
+      ingredients: toMenuTextForm(null, languages),
       price: null,
       category_id: defaultCategoryId ?? categories[0]?.id ?? null,
       is_available: true,
@@ -85,8 +90,8 @@ export function DishDialog({
     const current = dishRef.current
     clearFormError()
     form.reset({
-      name: { en: current?.name.en ?? '', ar: current?.name.ar ?? '' },
-      ingredients: { en: current?.ingredients.en ?? '', ar: current?.ingredients.ar ?? '' },
+      name: toMenuTextForm(current?.name, languages),
+      ingredients: toMenuTextForm(current?.ingredients, languages),
       price: current?.price === null || current?.price === undefined ? null : Number(current.price),
       category_id:
         current?.category_id ?? defaultCategoryId ?? categoriesRef.current[0]?.id ?? null,
@@ -94,7 +99,7 @@ export function DishDialog({
       image: null,
       delete_image: false,
     })
-  }, [open, dishId, defaultCategoryId, form, clearFormError])
+  }, [open, dishId, defaultCategoryId, languages, form, clearFormError])
 
   useEffect(() => {
     const dialog = ref.current
@@ -122,7 +127,10 @@ export function DishDialog({
 
   const options = categories.map((category) => {
     const name = translated(category.name, locale)
-    return { value: String(category.id), label: name.missing ? 'Untitled category' : name.text }
+    return {
+      value: String(category.id),
+      label: name.missing ? t('dishDialog.untitledCategory') : name.text,
+    }
   })
 
   return (
@@ -144,7 +152,7 @@ export function DishDialog({
       <Form onSubmit={onSubmit} className="gap-0">
         <div className="p-5 pb-0">
           <h2 className="font-display text-[19px] leading-tight">
-            {dish ? 'Edit dish' : 'New dish'}
+            {dish ? t('dishDialog.titleEdit') : t('dishDialog.titleNew')}
           </h2>
 
           {formError ? (
@@ -154,8 +162,8 @@ export function DishDialog({
           ) : null}
 
           {options.length === 0 ? (
-            <Alert variant="warning" title="Add a category first" className="mt-3">
-              Every dish belongs to a category.
+            <Alert variant="warning" title={t('shared.addCategoryFirst')} className="mt-3">
+              {t('dishDialog.needsCategory')}
               <div className="mt-2">
                 <Button
                   size="sm"
@@ -165,7 +173,7 @@ export function DishDialog({
                     onOpenCategories()
                   }}
                 >
-                  Go to categories
+                  {t('shared.goToCategories')}
                 </Button>
               </div>
             </Alert>
@@ -173,8 +181,9 @@ export function DishDialog({
 
           <TranslatableTextField
             control={form.control}
+            languages={languages}
             name="name"
-            label="Name"
+            label={t('shared.name')}
             required
             maxLength={255}
             placeholder={{ en: 'Lamb shank', ar: 'موزات الغنم' }}
@@ -182,13 +191,14 @@ export function DishDialog({
 
           <TranslatableTextField
             control={form.control}
+            languages={languages}
             name="ingredients"
-            label="Ingredients"
+            label={t('dishDialog.ingredients')}
             multiline
             rows={3}
             maxLength={2000}
-            optionalText="optional"
-            hint="Free text, shown under the dish on your menu."
+            optionalText={t('shared.optional')}
+            hint={t('dishDialog.ingredientsHint')}
           />
 
           <FieldGroup>
@@ -196,51 +206,55 @@ export function DishDialog({
               control={form.control}
               name="price"
               currency={currency}
-              label="Price"
-              hint="Leave empty to hide the price."
+              label={t('dishDialog.price')}
+              hint={t('dishDialog.priceHint')}
             />
             <ComboboxField
               control={form.control}
               name="category_id"
-              label="Category"
+              label={t('dishDialog.category')}
               required
               numeric
               searchable={false}
               options={options}
               disabled={options.length === 0}
-              placeholder={options.length === 0 ? 'Add a category first' : 'Choose a category'}
+              placeholder={
+                options.length === 0
+                  ? t('shared.addCategoryFirst')
+                  : t('dishDialog.categoryPlaceholder')
+              }
             />
           </FieldGroup>
 
           <ImageField
             control={form.control}
             name="image"
-            label="Photo"
-            optionalText="optional"
+            label={t('dishDialog.photo')}
+            optionalText={t('shared.optional')}
             context="dish"
             currentUrl={dish?.image_url ?? null}
-            hint="Cropped to 1200 x 900 and converted to WebP."
+            hint={t('dishDialog.photoHint')}
           />
 
           <SwitchField
             control={form.control}
             name="is_available"
-            label="Available"
-            description="Turn this off to keep the dish on your menu but marked sold out."
+            label={t('dishDialog.available')}
+            description={t('dishDialog.availableDescription')}
           />
         </div>
 
         <FormActions className="mt-4 border-t-[0.5px] border-[var(--line)] p-3.5">
           <Button variant="ghost" onClick={onClose} disabled={save.isPending}>
-            Cancel
+            {t('shared.cancel')}
           </Button>
           <Button
             type="submit"
             loading={save.isPending}
             disabled={options.length === 0}
-            title={options.length === 0 ? 'Add a category first' : undefined}
+            title={options.length === 0 ? t('shared.addCategoryFirst') : undefined}
           >
-            {dish ? 'Save dish' : 'Add dish'}
+            {dish ? t('dishDialog.save') : t('dishDialog.add')}
           </Button>
         </FormActions>
       </Form>

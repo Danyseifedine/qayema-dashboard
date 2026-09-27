@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, Info, XCircle, X } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type AlertVariant = 'error' | 'warning' | 'success' | 'info'
@@ -40,9 +41,10 @@ export function Alert({
   title,
   children,
   onDismiss,
-  dismissLabel = 'Dismiss',
+  dismissLabel,
   className,
 }: AlertProps) {
+  const { t } = useTranslation()
   const Icon = ICONS[variant]
 
   return (
@@ -63,7 +65,7 @@ export function Alert({
       {onDismiss ? (
         <button
           type="button"
-          aria-label={dismissLabel}
+          aria-label={dismissLabel ?? t('alert.dismiss')}
           onClick={onDismiss}
           className="-m-1 shrink-0 rounded-md p-1 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
         >

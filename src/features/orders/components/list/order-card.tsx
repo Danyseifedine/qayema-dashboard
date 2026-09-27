@@ -1,9 +1,10 @@
 import { Check, X } from 'lucide-react'
 import { memo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
-import { ORDER_STATUS_LABELS, type Order } from '../../schemas/order.schema'
+import type { Order } from '../../schemas/order.schema'
 
 export type OrderCardProps = {
   order: Order
@@ -31,6 +32,7 @@ export const OrderCard = memo(function OrderCard({
   onCancel,
   className,
 }: OrderCardProps) {
+  const { t } = useTranslation('orders')
   const placed = order.placed_at === null ? null : new Date(order.placed_at)
 
   return (
@@ -62,7 +64,7 @@ export const OrderCard = memo(function OrderCard({
             TONE[order.status],
           )}
         >
-          {ORDER_STATUS_LABELS[order.status]}
+          {t(`status.${order.status}`)}
         </span>
       </div>
 
@@ -104,7 +106,7 @@ export const OrderCard = memo(function OrderCard({
               leadingIcon={<Check className="size-3.5" />}
               onClick={() => onMarkDone(order)}
             >
-              Done
+              {t('card.markDone')}
             </Button>
             <Button
               size="sm"
@@ -114,7 +116,7 @@ export const OrderCard = memo(function OrderCard({
               onClick={() => onCancel(order)}
               className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
             >
-              Cancel
+              {t('card.cancel')}
             </Button>
           </div>
         ) : null}

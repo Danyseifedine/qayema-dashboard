@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { translatableTextSchema } from '../../categories/schemas/category.schema'
+import { t } from '@/lib/i18n'
+import { menuTextField, menuTextSchema, requireEnglish } from '@/shared/utils/string/menu-text'
 
 /**
  * Mirrors ../qayema/app/Http/Resources/DishResource.php.
@@ -9,14 +10,15 @@ import { translatableTextSchema } from '../../categories/schemas/category.schema
  */
 export const dishSchema = z.object({
   id: z.number().int(),
-  name: translatableTextSchema,
-  ingredients: translatableTextSchema,
+  /** One entry per menu language. */
+  name: menuTextSchema,
+  ingredients: menuTextSchema,
   price: z.string().nullable(),
   is_available: z.boolean(),
   display_order: z.number().int(),
   // Null once its category has been deleted; the dish survives, orphaned.
   category_id: z.number().int().nullable(),
-  category: z.object({ id: z.number().int(), name: translatableTextSchema }).nullable().optional(),
+  category: z.object({ id: z.number().int(), name: menuTextSchema }).nullable().optional(),
   image_url: z.url().nullable(),
 })
 
@@ -41,18 +43,12 @@ const MAX_PRICE = 99_999_999.99
 
 export const dishFormSchema = z
   .object({
-    name: z.object({
-      en: z.string().trim().max(255, 'Keep the name under 255 characters.'),
-      ar: z.string().trim().max(255, 'Keep the name under 255 characters.'),
-    }),
-    ingredients: z.object({
-      en: z.string().trim().max(2000, 'Keep the ingredients under 2000 characters.'),
-      ar: z.string().trim().max(2000, 'Keep the ingredients under 2000 characters.'),
-    }),
+    name: menuTextField(255, () => t('menu:fields.name')),
+    ingredients: menuTextField(2000, () => t('menu:fields.ingredients')),
     price: z
-      .number('Enter a price, or leave it empty.')
-      .min(0, 'A price cannot be negative.')
-      .max(MAX_PRICE, 'That price is too high.')
+      .number({ error: () => t('menu:dishSchema.priceInvalid') })
+      .min(0, { error: () => t('menu:dishSchema.priceNegative') })
+      .max(MAX_PRICE, { error: () => t('menu:dishSchema.priceTooHigh') })
       .nullable(),
     // Nullable on the way in so the form can start empty, but the parse
     // must yield a real id: a literal 0 used to slip through and be
@@ -61,7 +57,12 @@ export const dishFormSchema = z
       .number()
       .int()
       .nullable()
-      .pipe(z.number('Choose a category.').int().positive('Choose a category.')),
+      .pipe(
+        z
+          .number({ error: () => t('menu:dishSchema.categoryRequired') })
+          .int()
+          .positive({ error: () => t('menu:dishSchema.categoryRequired') }),
+      ),
     is_available: z.boolean(),
     image: z
       .object({
@@ -75,15 +76,9 @@ export const dishFormSchema = z
     /** Set when the owner removes an existing image without picking a new one. */
     delete_image: z.boolean(),
   })
-  .superRefine((values, ctx) => {
-    if (values.name.en === '' && values.name.ar === '') {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['name', 'en'],
-        message: 'A dish name is required in at least one language.',
-      })
-    }
-  })
+  .superRefine((values, ctx) =>
+    requireEnglish(values.name, 'name', t('menu:dishSchema.nameRequired'), ctx),
+  )
 
 export type DishFormInput = z.input<typeof dishFormSchema>
 export type DishFormValues = z.output<typeof dishFormSchema>

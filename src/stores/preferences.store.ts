@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { LOCALE_DIR, type Locale } from '@/shared/constants/locales'
+import { i18n } from '@/lib/i18n'
+import { isLocale, localeDir, type Locale } from '@/shared/constants/locales'
 
 export type Theme = 'light' | 'dark'
 
@@ -38,7 +39,7 @@ function initialTheme(): Theme {
 function readStoredLocale(): Locale | null {
   try {
     const value = localStorage.getItem(LOCALE_KEY)
-    return value === 'en' || value === 'ar' ? value : null
+    return isLocale(value) ? value : null
   } catch {
     return null
   }
@@ -52,10 +53,14 @@ function persistLocale(locale: Locale): void {
   }
 }
 
-/** Keeps <html lang/dir> in step, which every logical style depends on. */
+/**
+ * Keeps <html lang/dir> in step, which every logical style depends on, and
+ * switches the text the dashboard shows.
+ */
 function applyLocale(locale: Locale): void {
   document.documentElement.lang = locale
-  document.documentElement.dir = LOCALE_DIR[locale]
+  document.documentElement.dir = localeDir(locale)
+  void i18n.changeLanguage(locale)
 }
 
 type PreferencesState = {

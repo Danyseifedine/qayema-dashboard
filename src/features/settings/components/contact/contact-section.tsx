@@ -1,4 +1,5 @@
 import type { Control } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { FormSection, PhoneField } from '@/shared/components/forms'
 import type { SettingsFormValues } from '../../schemas/settings.schema'
 import { LocationField } from './location-field'
@@ -12,15 +13,17 @@ export type ContactSectionProps = {
 
 /** How a guest reaches the restaurant: a number to call and a place to go. */
 export function ContactSection({ control, locationUrl, onPickLocation }: ContactSectionProps) {
+  const { t } = useTranslation('settings')
+
   return (
-    <FormSection title="Contact" description="How guests reach you from your menu.">
+    <FormSection title={t('contact.title')} description={t('contact.description')}>
       <PhoneField
         control={control}
         name="phone"
         countryName="country_code"
-        label="Phone"
+        label={t('contact.phoneLabel')}
         required
-        hint="Shown as a tap-to-call link."
+        hint={t('contact.phoneHint')}
       />
 
       <LocationField

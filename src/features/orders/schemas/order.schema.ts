@@ -5,13 +5,6 @@ export const ORDER_STATUSES = ['placed', 'done', 'cancelled'] as const
 
 export const orderStatusSchema = z.enum(ORDER_STATUSES)
 
-/** What each status is called in the dashboard. */
-export const ORDER_STATUS_LABELS: Record<(typeof ORDER_STATUSES)[number], string> = {
-  placed: 'New',
-  done: 'Done',
-  cancelled: 'Cancelled',
-}
-
 /**
  * One line, as it was ordered. The name and price are copies taken when the
  * guest ordered, not a lookup against today's menu — a dish renamed or

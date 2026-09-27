@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSession } from '@/features/auth/hooks/use-session'
 import { CardGridSkeleton, ErrorState } from '@/shared/components/feedback'
 import type { Locale } from '@/shared/constants/locales'
@@ -20,6 +21,7 @@ export type PackagesPageProps = {
  * assigns the package, and the limits move on the next session read.
  */
 export function PackagesPage({ locale }: PackagesPageProps) {
+  const { t } = useTranslation('packages')
   const packages = usePackages()
   const session = useSession()
   const [requesting, setRequesting] = useState<Package | null>(null)
@@ -33,15 +35,17 @@ export function PackagesPage({ locale }: PackagesPageProps) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="font-display text-[19px] leading-tight">Your package</h2>
-        <p className="mt-1 text-[13px] text-[var(--muted)]">
-          What your menu can hold, and what a bigger package would give you.
-        </p>
+        <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
+        <p className="mt-1 text-[13px] text-[var(--muted)]">{t('page.description')}</p>
       </div>
 
       {restaurant !== null ? (
         <CurrentPackageCard
-          name={currentName === '' || currentName.missing ? (current ?? 'Free') : currentName.text}
+          name={
+            currentName === '' || currentName.missing
+              ? (current ?? t('page.fallbackName'))
+              : currentName.text
+          }
           isContactOnly={restaurant.package.is_contact_only}
           endsAt={restaurant.package.ends_at}
           limits={restaurant.limits}

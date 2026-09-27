@@ -1,4 +1,5 @@
 import { request } from '@/lib/api'
+import type { MenuTextForm } from '@/shared/utils/string/menu-text'
 import { settingsResponseSchema, type Settings } from '../schemas/settings.schema'
 
 /**
@@ -6,8 +7,13 @@ import { settingsResponseSchema, type Settings } from '../schemas/settings.schem
  * the payload on purpose: the public address is fixed at onboarding.
  */
 export type SettingsPayload = {
-  name: string
-  description: string | null
+  /** Null for an English-only menu. */
+  second_locale: string | null
+  /** What the menu opens in: 'en' or the second language. */
+  default_locale: string
+  /** One entry per menu language; a blank one clears it. */
+  name: MenuTextForm
+  description: MenuTextForm
   google_maps_url: string | null
   country_code: string | null
   phone: string
