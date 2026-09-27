@@ -20,21 +20,6 @@
   "toast": {
     "applied": "Design applied",
     "appliedDescription": "Your menu now uses this design.",
-    "switchFailed": "Could not switch design",
-    "colorSaved": "Colour saved",
-    "colorSavedDescription": "Your menu uses the new colour now.",
-    "colorFailed": "Could not save the colour"
-  },
-  "color": {
-    "title": "Menu colour",
-    "description": "The colour of the category tabs, the + on every dish and the cart button on your menu.",
-    "label": "Main colour",
-    "previewLabel": "How it looks on your menu",
-    "previewTabActive": "Starters",
-    "previewTab": "Mains",
-    "previewDish": "Grilled halloumi",
-    "reset": "Reset to Qayema gold",
-    "save": "Save colour",
-    "invalid": "Use a colour like #F8D38D."
+    "switchFailed": "Could not switch design"
   }
 }

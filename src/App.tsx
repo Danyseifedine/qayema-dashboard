@@ -20,6 +20,7 @@ import { SocialLinksPage } from '@/features/social-links'
 import { AccountPage } from '@/features/account'
 import { FeaturesPage } from '@/features/restaurant'
 import { RestaurantPage } from '@/features/restaurant'
+import { ColorsFontsPage } from '@/features/colors-fonts'
 import { DesignPage } from '@/features/design'
 import { Alert, Button } from '@/shared/components/ui'
 import { translated } from '@/shared/utils/string/translated'
@@ -93,6 +94,8 @@ function Dashboard({ user }: { user: AuthUser }) {
         />
       ) : activeKey === 'design' ? (
         <DesignPage locale={locale} />
+      ) : activeKey === 'colors-fonts' ? (
+        <ColorsFontsPage locale={locale} />
       ) : activeKey === 'categories' ? (
         <CategoriesPage locale={contentLocale} onOpenDishes={() => setActiveKey('dishes')} />
       ) : activeKey === 'dishes' ? (

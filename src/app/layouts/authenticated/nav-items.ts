@@ -8,6 +8,7 @@ import {
   QrCode,
   ReceiptText,
   Store,
+  SwatchBook,
   Share2,
   ToggleRight,
   UserRound,
@@ -71,6 +72,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { key: 'dishes', labelKey: 'nav.dishes', icon: UtensilsCrossed, requiresTemplate: true },
       // Always open: it is how an owner gets out of the locked state.
       { key: 'design', labelKey: 'nav.design', icon: Palette },
+      // Colours are the design's, so they wait for one to be chosen.
+      {
+        key: 'colors-fonts',
+        labelKey: 'nav.colorsFonts',
+        icon: SwatchBook,
+        requiresTemplate: true,
+      },
     ],
   },
   {

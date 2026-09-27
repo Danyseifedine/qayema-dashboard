@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sessionKeys } from '@/features/auth'
+import { colorsFontsKeys } from '@/features/colors-fonts'
 import type { AuthUser } from '@/features/auth'
 import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
@@ -30,6 +31,8 @@ export function useSaveSwitchedOff() {
     },
     onSuccess: (off) => {
       queryClient.setQueryData<AuthUser>(sessionKeys.current(), (user) => withOff(user, off))
+      // "Multiple languages" decides which scripts get a font picker.
+      void queryClient.invalidateQueries({ queryKey: colorsFontsKeys.all })
     },
     onError: (error, _off, context) => {
       queryClient.setQueryData(sessionKeys.current(), context?.previous)

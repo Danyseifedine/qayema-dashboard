@@ -1,10 +1,5 @@
 import { request } from '@/lib/api'
-import {
-  designListSchema,
-  designSettingsResponseSchema,
-  type DesignList,
-  type DesignSettings,
-} from '@/features/design/schemas/design.schema'
+import { designListSchema, type DesignList } from '@/features/design/schemas/design.schema'
 
 export function fetchDesigns(signal?: AbortSignal): Promise<DesignList> {
   return request(designListSchema, { method: 'GET', url: '/api/templates', signal })
@@ -21,16 +16,4 @@ export function selectDesign(templateId: number): Promise<DesignList> {
     url: '/api/templates/select',
     data: { template_id: templateId },
   })
-}
-
-/**
- * Saves some of the active design's settings. Only the keys sent change; the
- * answer is every setting the menu is now drawn with.
- */
-export function saveDesignSettings(settings: DesignSettings): Promise<DesignSettings> {
-  return request(designSettingsResponseSchema, {
-    method: 'PUT',
-    url: '/api/template-settings',
-    data: { settings },
-  }).then((response) => response.data.settings)
 }

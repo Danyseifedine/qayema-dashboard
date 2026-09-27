@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sessionKeys } from '@/features/auth'
 import type { AuthUser } from '@/features/auth'
 import { t } from '@/lib/i18n'
+import { colorsFontsKeys } from '@/features/colors-fonts'
 import { categoryKeys, dishKeys } from '@/features/menu'
 import { restaurantKeys } from '@/features/restaurant/hooks/restaurant-keys'
 import { toast } from '@/shared/components/feedback'
@@ -23,7 +24,7 @@ export function useSaveMenuLanguages() {
         user?.restaurant ? { ...user, restaurant: { ...user.restaurant, ...saved } } : user,
       )
       // Menu text follows the languages: every list that shows it reloads.
-      for (const key of [restaurantKeys.all, categoryKeys.all, dishKeys.all]) {
+      for (const key of [restaurantKeys.all, categoryKeys.all, dishKeys.all, colorsFontsKeys.all]) {
         void queryClient.invalidateQueries({ queryKey: key })
       }
       toast.success(t('features:languages.saved'))

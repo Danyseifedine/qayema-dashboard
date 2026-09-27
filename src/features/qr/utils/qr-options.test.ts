@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { QrDesign } from '@/features/qr/schemas/qr.schema'
-import { contrast, qrOptions, weakParts } from '@/features/qr/utils/qr-options'
+import { qrOptions, weakParts } from '@/features/qr/utils/qr-options'
+import { contrast } from '@/shared/utils/color/contrast'
 
 /**
  * The same cases as ../qayema/tests/Unit/Services/QrStyleTest.php, with the

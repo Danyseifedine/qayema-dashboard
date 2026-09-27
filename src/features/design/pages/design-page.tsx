@@ -3,36 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { CardGridSkeleton, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
-import { MenuColorSection } from '@/features/design/components/color/menu-color-section'
 import { DesignCard } from '@/features/design/components/store/design-card'
-import {
-  useSaveDesignSettings,
-  useSelectDesign,
-  useDesigns,
-} from '@/features/design/hooks/use-designs'
-import type { Design, DesignSettings } from '@/features/design/schemas/design.schema'
-
-const HEX = /^#[0-9a-fA-F]{6}$/
-
-/**
- * The design in use's main colour, when it lets the owner choose one: what it
- * is now and what it starts as. Null for a design that ships a fixed look.
- */
-function primaryColor(
-  template: Design | undefined,
-  settings: DesignSettings,
-): { color: string; defaultColor: string } | null {
-  const field = template?.settings_schema?.find(
-    (row) => row.key === 'primary_color' && row.type === 'color',
-  )
-  if (!field || typeof field.default !== 'string' || !HEX.test(field.default)) return null
-
-  const saved = settings.primary_color
-  return {
-    color: typeof saved === 'string' && HEX.test(saved) ? saved : field.default,
-    defaultColor: field.default,
-  }
-}
+import { useSelectDesign, useDesigns } from '@/features/design/hooks/use-designs'
 
 export type DesignPageProps = {
   locale: Locale
@@ -49,14 +21,9 @@ export function DesignPage({ locale }: DesignPageProps) {
   const { t } = useTranslation('design')
   const designs = useDesigns()
   const select = useSelectDesign()
-  const saveSettings = useSaveDesignSettings()
 
   const list = designs.data?.data ?? []
   const current = designs.data?.meta.current ?? null
-  const color = primaryColor(
-    list.find((template) => template.id === current),
-    designs.data?.meta.settings ?? {},
-  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -79,15 +46,6 @@ export function DesignPage({ locale }: DesignPageProps) {
         <Alert variant="error" title={t('toast.switchFailed')}>
           {select.error.message}
         </Alert>
-      ) : null}
-
-      {color ? (
-        <MenuColorSection
-          color={color.color}
-          defaultColor={color.defaultColor}
-          saving={saveSettings.isPending}
-          onSave={(primary_color) => saveSettings.mutate({ primary_color })}
-        />
       ) : null}
 
       {designs.isPending ? (

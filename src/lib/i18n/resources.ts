@@ -1,5 +1,6 @@
 import type account from '@/locales/en/account.json'
 import type analytics from '@/locales/en/analytics.json'
+import type colorsFonts from '@/locales/en/colors-fonts.json'
 import type common from '@/locales/en/common.json'
 import type design from '@/locales/en/design.json'
 import type features from '@/locales/en/features.json'
@@ -26,6 +27,7 @@ declare module 'i18next' {
       analytics: typeof analytics
       menu: typeof menu
       design: typeof design
+      'colors-fonts': typeof colorsFonts
       orders: typeof orders
       qr: typeof qr
       'social-links': typeof socialLinks

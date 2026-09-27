@@ -55,6 +55,7 @@ explained in §2 of the backend `CLAUDE.md`.
 | Analytics                 | `analytics`                                            | `/api/analytics[/advanced]`                     |
 | Categories, Dishes (MENU) | `menu` (sub-features `categories`, `dishes`)           | `/api/categories`, `/api/dishes`                |
 | Design (MENU)             | `design`                                               | `/api/templates` (a design is a `Template` row) |
+| Colors & fonts (MENU)     | `colors-fonts`                                         | `/api/colors-fonts`                             |
 | Orders (GUESTS)           | `orders`                                               | `/api/orders`                                   |
 | QR code (GUESTS)          | `qr`                                                   | `/api/qr`                                       |
 | Social links (GUESTS)     | `social-links`                                         | `/api/social-links`                             |
@@ -102,7 +103,7 @@ qayema-dashboard/
     │   ├── constants/               countries, currencies, locales (UI languages), menu-languages
     │   ├── hooks/                   use-api-form-errors
     │   ├── types/                   api.ts
-    │   └── utils/                   dom/cn, format/{money,change,date}, string/{menu-text,translated}
+    │   └── utils/                   dom/cn, color/contrast, format/{money,change,date}, string/{menu-text,translated}
     ├── features/                    One folder per row of the vocabulary table (§3)
     └── test/                        setup/vitest.setup.ts, utils/render-with-providers, mocks/factories
 ```
@@ -152,7 +153,8 @@ main item on the roadmap (§10).
 sidebar, the topbar title, the locks and the Features switches:
 
 - `requiresTemplate`: locked until a design is chosen (Categories, Dishes,
-  Orders, QR code, Restaurant). Design is always open: it is the way out.
+  Colors & fonts, Orders, QR code, Restaurant). Design is always open: it is
+  the way out.
 - `requiresPlan`: locked unless `restaurant.plan[flag]` is true (Orders needs
   `ordering`). Gating a new section is one line here, not a new branch.
 - `hideable`: leaves the sidebar when its key is in `restaurant.switched_off`
@@ -189,7 +191,7 @@ Sanctum stateful auth. The SPA's responsibilities:
   discovers the files at build time, so **adding a language is copying
   `locales/en/` and translating it**; nothing else changes.
 - Namespaces are the feature folders: `common` (the shell and shared
-  components), `overview`, `analytics`, `menu`, `design`, `orders`, `qr`,
+  components), `overview`, `analytics`, `menu`, `design`, `colors-fonts`, `orders`, `qr`,
   `social-links`, `restaurant`, `features`, `package`, `account`. A new
   namespace is registered once in `lib/i18n/resources.ts`, which types the keys.
 - `lib/i18n/translations.test.ts` fails on any key missing from a language or

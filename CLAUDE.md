@@ -62,7 +62,7 @@ No third-party error telemetry.
   overrides.
 - **Translations:** `src/locales/<code>/` holds `meta.json` (name, short
   label, `ltr`/`rtl`) and one JSON per namespace, named after the feature
-  (`common`, `overview`, `analytics`, `menu`, `design`, `orders`, `qr`,
+  (`common`, `overview`, `analytics`, `menu`, `design`, `colors-fonts`, `orders`, `qr`,
   `social-links`, `restaurant`, `features`, `package`, `account`).
   **To add a language, copy `src/locales/en/` to `src/locales/<code>/` and
   translate it** — it is found at build time and appears in the switcher;
@@ -115,9 +115,18 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   languages carries its own pickers (second language, opening language) saved
   with `PUT /api/menu-languages`; the Restaurant page's text fields just
   follow `useMenuLanguages()` (from `features/auth`, it reads the session).
-- **Design page** (`features/design`): the designs (backend `Template` rows,
-  `/api/templates`) and the Menu colour card (`PUT /api/template-settings`,
-  which merges — sending one colour keeps the others).
+- **Design page** (`features/design`): picking a design (backend `Template`
+  rows, `/api/templates`). Switching invalidates Colors & fonts and the QR
+  studio, since both follow the design.
+- **Colors & fonts** (`features/colors-fonts`, `GET/PUT /api/colors-fonts`):
+  the colours are whatever the design in use declares — never name a colour
+  in code; a new design with five colours shows five fields with labels from
+  its schema. Each design remembers its own. Save sends only changed colours,
+  and `null` when one is back on its default. A `contrast_with` pair warns
+  below 4.5:1 (`shared/utils/color/contrast.ts`). Fonts: one picker per
+  writing system the menu uses (English + Spanish = one), options and a
+  sample line from the API, saved on tap (optimistic). The Features page and
+  the menu-languages save invalidate it.
 - An order is written once by the guest who placed it. The dashboard may change
   its `status` and nothing else.
 - The QR preview mirrors the printable card: `features/qr/utils/qr-options.ts`

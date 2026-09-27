@@ -20,21 +20,6 @@
   "toast": {
     "applied": "تم تطبيق التصميم",
     "appliedDescription": "قائمتك تستخدم هذا التصميم الآن.",
-    "switchFailed": "تعذّر تغيير التصميم",
-    "colorSaved": "تم حفظ اللون",
-    "colorSavedDescription": "قائمتك تستخدم اللون الجديد الآن.",
-    "colorFailed": "تعذّر حفظ اللون"
-  },
-  "color": {
-    "title": "لون القائمة",
-    "description": "لون تبويبات الأقسام، وزر + على كل طبق، وزر السلة في قائمتك.",
-    "label": "اللون الرئيسي",
-    "previewLabel": "كيف يبدو في قائمتك",
-    "previewTabActive": "المقبلات",
-    "previewTab": "الأطباق الرئيسية",
-    "previewDish": "حلوم مشوي",
-    "reset": "العودة إلى الذهبي الأصلي",
-    "save": "حفظ اللون",
-    "invalid": "استخدم لونًا مثل ‎#F8D38D."
+    "switchFailed": "تعذّر تغيير التصميم"
   }
 }
