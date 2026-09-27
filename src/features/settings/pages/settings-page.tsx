@@ -11,17 +11,15 @@ import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { cn } from '@/shared/utils/dom/cn'
 import { ContactSection } from '../components/contact/contact-section'
 import { LocalisationSection } from '../components/localisation/localisation-section'
-import { MenuLanguagesSection } from '../components/localisation/menu-languages-section'
 import { OpeningHoursSection } from '../components/localisation/opening-hours-section'
 import { BrandingSection } from '../components/media/branding-section'
 import { IdentitySection } from '../components/profile/identity-section'
 import { useSaveSettings, useSettings } from '../hooks/use-settings'
 import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
+import { useMenuLanguages } from '../hooks/use-menu-languages'
 import { toMenuTextForm } from '@/shared/utils/string/menu-text'
 import {
-  NO_SECOND_LANGUAGE,
   WEEKDAYS,
-  formLanguages,
   settingsSchema,
   type Settings,
   type SettingsFormValues,
@@ -33,8 +31,6 @@ const CLOSED_WEEK = Object.fromEntries(
 ) as SettingsFormValues['opening_hours']
 
 const EMPTY: SettingsFormValues = {
-  second_locale: NO_SECOND_LANGUAGE,
-  default_locale: MAIN_LANGUAGE,
   name: { [MAIN_LANGUAGE]: '' },
   description: { [MAIN_LANGUAGE]: '' },
   google_maps_url: '',
@@ -55,8 +51,6 @@ const EMPTY: SettingsFormValues = {
  */
 function toFormValues(settings: Settings): SettingsFormValues {
   return {
-    second_locale: settings.second_locale ?? NO_SECOND_LANGUAGE,
-    default_locale: settings.default_locale,
     name: toMenuTextForm(settings.name, settings.languages),
     description: toMenuTextForm(settings.description, settings.languages),
     google_maps_url: settings.google_maps_url ?? '',
@@ -92,6 +86,9 @@ export function SettingsPage() {
   // The menu is served from the API's domain, not the dashboard's, so the
   // address has to come from the session rather than being built from the slug.
   const publicUrl = useSession().data?.restaurant?.public_url ?? null
+  // The menu's languages, set on the Features page: a tab each for the name
+  // and description, English alone while "Multiple languages" is off.
+  const languages = useMenuLanguages()
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -115,20 +112,14 @@ export function SettingsPage() {
     form.reset(toFormValues(data))
   }, [data, form])
 
-  // The tabs follow the language picked in this form, before it is saved.
-  const languages = formLanguages(form.watch('second_locale'))
-
   const onSubmit = form.handleSubmit((values) => {
     clearFormError()
-    // Only the languages the menu will have are sent. Text in a language the
-    // owner just switched away from stays on the server, hidden.
-    const chosen = formLanguages(values.second_locale)
+    // Only the menu's languages are sent; text in any other language stays
+    // on the server, hidden.
     const pick = (text: Record<string, string>) =>
-      Object.fromEntries(chosen.map((code) => [code, text[code] ?? '']))
+      Object.fromEntries(languages.map((code) => [code, text[code] ?? '']))
     save.mutate(
       {
-        second_locale: values.second_locale === NO_SECOND_LANGUAGE ? null : values.second_locale,
-        default_locale: values.default_locale,
         name: pick(values.name),
         description: pick(values.description),
         google_maps_url: values.google_maps_url || null,
@@ -209,11 +200,6 @@ export function SettingsPage() {
             wide screen leaves most of it empty and the save button miles down. */}
         <div className="grid items-start gap-4 xl:grid-cols-2">
           <IdentitySection control={form.control} languages={languages} />
-          <MenuLanguagesSection
-            control={form.control}
-            setValue={form.setValue}
-            savedSecond={data?.second_locale ?? null}
-          />
           <ContactSection
             control={form.control}
             locationUrl={form.watch('google_maps_url')}

@@ -87,13 +87,16 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
 - Section gating is data-driven: `requiresFeature` on a nav item is matched
   against `restaurant.features` by key. Adding a gated section is one line in
   `nav-items.ts`, not another branch in `isNavItemLocked`.
-- **Owner-hidden sections:** a nav item with `hideable: true` gets a switch on
-  the Features page (`features/settings/pages/features-page.tsx`); switched
-  off, it leaves the sidebar (`isNavItemHidden`), its Overview checklist items
-  go, and an open page hands over to Overview. Stored per restaurant
-  (`PUT /api/sections`, `restaurant.hidden_sections`), optimistic through the
-  session cache. The list must match `Restaurant::HIDEABLE_SECTIONS`. Hiding is
-  cosmetic: hiding Orders does not stop guests ordering.
+- **Features page** (`features/settings/pages/features-page.tsx`): one switch
+  each for Orders, QR Studio, Analytics and Multiple languages, stored in
+  `restaurant.hidden_sections` (`PUT /api/sections`, optimistic through the
+  session cache; must match `Restaurant::OPTIONAL_FEATURES`). A nav item with
+  `hideable: true` (analytics, orders) leaves the sidebar when off
+  (`isNavItemHidden`), and an open page hands over to Overview. QR Studio off
+  keeps the QR code page with the plain code (`qr.switched_off`). Multiple
+  languages carries its own pickers (second language, opening language) saved
+  with `PUT /api/menu-languages`; Settings no longer sets languages, its text
+  fields just follow `useMenuLanguages()`.
 - An order is written once by the guest who placed it. The dashboard may change
   its `status` and nothing else.
 - The QR preview mirrors the printable card: `qr-studio/components/preview/qr-options.ts`

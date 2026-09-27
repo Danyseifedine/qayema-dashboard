@@ -34,9 +34,6 @@ describe('isNavItemLocked', () => {
 
   it('locks a section when the plan does not include its feature', () => {
     expect(
-      isNavItemLocked('qr', { hasTemplate: true, features: { ...ALL_FEATURES, qr_studio: false } }),
-    ).toBe(true)
-    expect(
       isNavItemLocked('orders', {
         hasTemplate: true,
         features: { ...ALL_FEATURES, ordering: false },
@@ -45,7 +42,16 @@ describe('isNavItemLocked', () => {
 
     // Gating is data-driven, so one flag being off leaves the other alone.
     expect(
-      isNavItemLocked('qr', { hasTemplate: true, features: { ...ALL_FEATURES, ordering: false } }),
+      isNavItemLocked('analytics', {
+        hasTemplate: true,
+        features: { ...ALL_FEATURES, ordering: false },
+      }),
+    ).toBe(false)
+  })
+
+  it("keeps the QR code page open without the studio: the plain code is everyone's", () => {
+    expect(
+      isNavItemLocked('qr', { hasTemplate: true, features: { ...ALL_FEATURES, qr_studio: false } }),
     ).toBe(false)
   })
 

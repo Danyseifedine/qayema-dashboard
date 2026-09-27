@@ -81,6 +81,7 @@ function session(current = 'free') {
         name: { en: 'Beit Qayema', ar: null },
         slug: 'beit-qayema',
         languages: ['en', 'ar'],
+        second_locale: 'ar',
         default_locale: 'en',
         is_active: true,
         template_id: 1,

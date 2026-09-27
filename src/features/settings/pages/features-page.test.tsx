@@ -5,11 +5,15 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
-import { FeaturesPage } from './features-page'
+import { FeaturesPage, type FeaturesPageProps } from './features-page'
 
 let mock: MockAdapter
 
 const ALL = { qr_studio: true, ordering: true, advanced_analytics: true }
+
+function page(props: Partial<FeaturesPageProps> = {}) {
+  return <FeaturesPage hidden={[]} features={ALL} secondLocale="ar" defaultLocale="en" {...props} />
+}
 
 describe('FeaturesPage', () => {
   beforeEach(() => {
@@ -26,23 +30,23 @@ describe('FeaturesPage', () => {
     resetCsrfToken(api)
   })
 
-  it('has a switch for each optional section, on while it shows', () => {
-    renderWithProviders(<FeaturesPage hidden={['orders']} features={ALL} />)
+  it('has a switch for orders, the QR studio, analytics and multiple languages', () => {
+    renderWithProviders(page({ hidden: ['orders'] }))
 
-    expect(screen.getByRole('switch', { name: 'Show Analytics' })).toBeChecked()
-    expect(screen.getByRole('switch', { name: 'Show Orders' })).not.toBeChecked()
-    expect(screen.getByRole('switch', { name: 'Show QR Studio' })).toBeChecked()
-    expect(screen.getByRole('switch', { name: 'Show Social links' })).toBeChecked()
-    // Core sections have no switch.
-    expect(screen.queryByRole('switch', { name: 'Show Dishes' })).not.toBeInTheDocument()
+    const switches = screen
+      .getAllByRole('switch')
+      .map((element) => element.getAttribute('aria-label'))
+    expect(switches).toEqual(['Orders on', 'QR Studio on', 'Analytics on', 'Multiple languages on'])
+    expect(screen.getByRole('switch', { name: 'Orders on' })).not.toBeChecked()
+    expect(screen.getByRole('switch', { name: 'Analytics on' })).toBeChecked()
   })
 
-  it('saves the whole list when a section is switched off', async () => {
+  it('saves the whole list when a feature is switched off', async () => {
     mock.onPut('/api/sections').reply(200, { data: { hidden: ['orders', 'analytics'] } })
     const user = userEvent.setup()
-    renderWithProviders(<FeaturesPage hidden={['orders']} features={ALL} />)
+    renderWithProviders(page({ hidden: ['orders'] }))
 
-    await user.click(screen.getByRole('switch', { name: 'Show Analytics' }))
+    await user.click(screen.getByRole('switch', { name: 'Analytics on' }))
 
     await waitFor(() => expect(mock.history.put).toHaveLength(1))
     expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
@@ -50,25 +54,55 @@ describe('FeaturesPage', () => {
     })
   })
 
-  it('switches a section back on', async () => {
-    mock.onPut('/api/sections').reply(200, { data: { hidden: [] } })
-    const user = userEvent.setup()
-    renderWithProviders(<FeaturesPage hidden={['orders']} features={ALL} />)
+  it('says what switching orders and the QR studio off means', () => {
+    renderWithProviders(page({ hidden: ['orders', 'qr'] }))
 
-    await user.click(screen.getByRole('switch', { name: 'Show Orders' }))
+    expect(screen.getByText(/Guests can't order from your menu/)).toBeInTheDocument()
+    expect(screen.getByText(/plain black QR code stays/)).toBeInTheDocument()
+  })
+
+  it('chooses the second language inside the languages row', async () => {
+    mock.onPut('/api/menu-languages').reply(200, {
+      data: { languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' },
+    })
+    const user = userEvent.setup()
+    renderWithProviders(page())
+
+    await user.click(screen.getByRole('combobox', { name: /Second language/ }))
+    await user.click(await screen.findByRole('option', { name: /French/ }))
 
     await waitFor(() => expect(mock.history.put).toHaveLength(1))
-    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({ hidden: [] })
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      second_locale: 'fr',
+      default_locale: 'en',
+    })
   })
 
-  it('says hiding Orders does not stop guests ordering', () => {
-    renderWithProviders(<FeaturesPage hidden={['orders']} features={ALL} />)
+  it('sets which language the menu opens in', async () => {
+    mock.onPut('/api/menu-languages').reply(200, {
+      data: { languages: ['en', 'ar'], second_locale: 'ar', default_locale: 'ar' },
+    })
+    const user = userEvent.setup()
+    renderWithProviders(page())
 
-    expect(screen.getByText(/Guests can still order from your menu/)).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: 'Arabic' }))
+
+    await waitFor(() => expect(mock.history.put).toHaveLength(1))
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      second_locale: 'ar',
+      default_locale: 'ar',
+    })
   })
 
-  it('marks a section the package does not include', () => {
-    renderWithProviders(<FeaturesPage hidden={[]} features={{ ...ALL, qr_studio: false }} />)
+  it('hides the language choice while multiple languages are off', () => {
+    renderWithProviders(page({ hidden: ['languages'] }))
+
+    expect(screen.queryByRole('combobox', { name: /Second language/ })).not.toBeInTheDocument()
+    expect(screen.getByText(/Your menu shows English only/)).toBeInTheDocument()
+  })
+
+  it('marks a feature the package does not include', () => {
+    renderWithProviders(page({ features: { ...ALL, qr_studio: false } }))
 
     expect(screen.getByText('Not on your package')).toBeInTheDocument()
   })

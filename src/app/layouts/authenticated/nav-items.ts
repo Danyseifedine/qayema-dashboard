@@ -36,8 +36,8 @@ export type NavItem = {
   /** Hidden unless the restaurant's plan includes the feature. */
   requiresFeature?: PlanFeature
   /**
-   * The owner may switch this section off on the Features page. Must match
-   * `Restaurant::HIDEABLE_SECTIONS` in ../qayema.
+   * Leaves the sidebar when the owner switches its feature off on the
+   * Features page (same key in `Restaurant::OPTIONAL_FEATURES`, ../qayema).
    */
   hideable?: true
 }
@@ -101,16 +101,15 @@ export const NAV_GROUPS: NavGroup[] = [
         path: '/qr',
         labelKey: 'nav.qr',
         icon: QrCode,
+        // Always open: the plain code is every restaurant's. The studio's
+        // styling is what the package and the Features switch decide.
         requiresTemplate: true,
-        requiresFeature: 'qr_studio',
-        hideable: true,
       },
       {
         key: 'social-links',
         path: '/social-links',
         labelKey: 'nav.socialLinks',
         icon: Share2,
-        hideable: true,
       },
     ],
   },

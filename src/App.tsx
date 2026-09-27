@@ -104,7 +104,7 @@ function Dashboard({ user }: { user: AuthUser }) {
       ) : activeKey === 'orders' ? (
         <OrdersPage />
       ) : activeKey === 'qr' ? (
-        <QrPage />
+        <QrPage onOpenFeatures={() => setActiveKey('features')} />
       ) : activeKey === 'social-links' ? (
         <SocialLinksPage />
       ) : activeKey === 'package' ? (
@@ -112,7 +112,12 @@ function Dashboard({ user }: { user: AuthUser }) {
       ) : activeKey === 'settings' ? (
         <SettingsPage />
       ) : activeKey === 'features' ? (
-        <FeaturesPage hidden={hiddenSections} features={features} />
+        <FeaturesPage
+          hidden={hiddenSections}
+          features={features}
+          secondLocale={restaurant.second_locale}
+          defaultLocale={restaurant.default_locale}
+        />
       ) : activeKey === 'account' ? (
         <AccountPage onOpenRestaurant={() => setActiveKey('settings')} />
       ) : (

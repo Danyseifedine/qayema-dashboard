@@ -65,6 +65,8 @@ export type QrStats = z.infer<typeof qrStatsSchema>
 
 export const qrSchema = z.object({
   unlocked: z.boolean(),
+  /** Locked by the owner's own switch on the Features page, not the package. */
+  switched_off: z.boolean(),
   /** What the code encodes. Never changes with the design. */
   url: z.string(),
   display_url: z.string(),

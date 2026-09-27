@@ -44,7 +44,12 @@ const LOOK_FIELDS = [
  * to make it the restaurant's own. The link it encodes never changes, so a
  * code already on the tables keeps working whatever is saved here.
  */
-export function QrPage() {
+export type QrPageProps = {
+  /** Opens the Features page, where the owner switches the studio back on. */
+  onOpenFeatures: () => void
+}
+
+export function QrPage({ onOpenFeatures }: QrPageProps) {
   const { t } = useTranslation('qr')
   const qr = useQr()
 
@@ -63,13 +68,13 @@ export function QrPage() {
       ) : qr.isError ? (
         <ErrorState description={qr.error.message} onRetry={() => void qr.refetch()} />
       ) : (
-        <QrStudio qr={qr.data} />
+        <QrStudio qr={qr.data} onOpenFeatures={onOpenFeatures} />
       )}
     </div>
   )
 }
 
-function QrStudio({ qr }: { qr: Qr }) {
+function QrStudio({ qr, onOpenFeatures }: { qr: Qr; onOpenFeatures: () => void }) {
   const { t } = useTranslation('qr')
   const save = useSaveQr()
   const [downloading, setDownloading] = useState<'png' | 'svg' | null>(null)
@@ -228,6 +233,14 @@ function QrStudio({ qr }: { qr: Qr }) {
               </Button>
             </FormActions>
           </Form>
+        ) : qr.switched_off ? (
+          // The owner's own switch, not the package: send them to it.
+          <Alert variant="info" title={t('page.offTitle')}>
+            <p>{t('page.offDescription')}</p>
+            <Button variant="secondary" size="sm" className="mt-3" onClick={onOpenFeatures}>
+              {t('page.openFeatures')}
+            </Button>
+          </Alert>
         ) : (
           <Alert variant="info" title={t('page.lockedTitle')}>
             {t('page.lockedDescription')}

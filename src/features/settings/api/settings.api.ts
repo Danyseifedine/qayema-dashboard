@@ -7,10 +7,6 @@ import { settingsResponseSchema, type Settings } from '../schemas/settings.schem
  * the payload on purpose: the public address is fixed at onboarding.
  */
 export type SettingsPayload = {
-  /** Null for an English-only menu. */
-  second_locale: string | null
-  /** What the menu opens in: 'en' or the second language. */
-  default_locale: string
   /** One entry per menu language; a blank one clears it. */
   name: MenuTextForm
   description: MenuTextForm

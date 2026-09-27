@@ -25,6 +25,8 @@ export const restaurantSchema = z.object({
   slug: z.string(),
   /** What the menu is written in: English, then the second language if any. */
   languages: z.array(z.string()).min(1),
+  /** The second language chosen, kept even while "Multiple languages" is off. */
+  second_locale: z.string().nullable(),
   /** What the menu opens in: one of `languages`. */
   default_locale: z.string(),
   is_active: z.boolean(),

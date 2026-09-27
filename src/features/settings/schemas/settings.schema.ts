@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { t } from '@/lib/i18n'
 import { CURRENCIES } from '@/shared/constants/currencies'
 import { COUNTRIES } from '@/shared/constants/countries'
-import { MAIN_LANGUAGE, MENU_LANGUAGES } from '@/shared/constants/menu-languages'
 import {
   menuTextField,
   menuTextSchema,
@@ -40,19 +39,11 @@ export const uploadedImageSchema = z.object({
   savedPercent: z.number(),
 })
 
-/** The form's value for "no second language". */
-export const NO_SECOND_LANGUAGE = 'none'
-
-/** The languages the form's current choice gives the menu, English first. */
-export function formLanguages(secondLocale: string): string[] {
-  return secondLocale === NO_SECOND_LANGUAGE ? [MAIN_LANGUAGE] : [MAIN_LANGUAGE, secondLocale]
-}
-
 /**
  * Mirrors ../qayema/app/Http/Resources/SettingsResource.php.
  *
- * `slug` and `default_locale` are read-only: the public address is fixed once
- * onboarding sets it, and the language the owner writes in is chosen there too.
+ * `slug` is read-only: the public address is fixed once onboarding sets it.
+ * The menu's languages are set on the Features page; text here follows them.
  */
 /** Monday first, as the API keys them. */
 export const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
@@ -81,9 +72,6 @@ export const settingsResponseSchema = z.object({
   data: z.object({
     /** What the menu is written in: English, then the second language if any. */
     languages: z.array(z.string()).min(1),
-    second_locale: z.string().nullable(),
-    /** What the menu opens in: one of `languages`. */
-    default_locale: z.string(),
     name: menuTextSchema,
     description: menuTextSchema,
     slug: z.string(),
@@ -124,16 +112,6 @@ const dayFormSchema = z
 
 export const settingsSchema = z
   .object({
-    /** A code from MENU_LANGUAGES, or NO_SECOND_LANGUAGE for an English-only menu. */
-    second_locale: z
-      .string()
-      .refine(
-        (value) =>
-          value === NO_SECOND_LANGUAGE || (value !== MAIN_LANGUAGE && value in MENU_LANGUAGES),
-        { error: () => t('settings:validation.chooseLanguage') },
-      ),
-    default_locale: z.string(),
-
     /** One entry per menu language; English is required. */
     name: menuTextField(255, () => t('settings:fields.restaurantName')),
     description: menuTextField(2000, () => t('settings:fields.description')),
@@ -190,14 +168,6 @@ export const settingsSchema = z
   .superRefine((values, ctx) => {
     requireEnglish(values.name, 'name', t('settings:validation.nameRequiredInEnglish'), ctx)
     checkNames(values.name, ctx)
-
-    if (!formLanguages(values.second_locale).includes(values.default_locale)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['default_locale'],
-        message: t('settings:validation.defaultLocaleInvalid'),
-      })
-    }
   })
 
 /** What the server checks on every written name: two characters, no control characters. */

@@ -22,8 +22,6 @@ function stub(settings: Record<string, unknown> = {}, dishes = [makeDish()]) {
   mock.onGet('/api/settings').reply(200, {
     data: {
       languages: ['en', 'ar'],
-      second_locale: 'ar',
-      default_locale: 'en',
       name: { en: 'Olive', ar: null },
       description: { en: 'Grill house', ar: null },
       slug: 'olive',

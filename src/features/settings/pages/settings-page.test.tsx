@@ -4,6 +4,7 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
+import { makeSessionUser } from '@/test/mocks/factories/session'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
 import { SettingsPage } from './settings-page'
 
@@ -63,6 +64,8 @@ describe('SettingsPage', () => {
     resetCsrfToken(api)
     installCsrfInterceptor(api)
     mock.onGet('/api/csrf-token').reply(200, { token: 'csrf' })
+    // The menu's languages come from the session: English and Arabic here.
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
   })
 
   afterEach(() => {
@@ -98,6 +101,7 @@ describe('SettingsPage', () => {
           name: { en: 'Beit Qayema', ar: null },
           slug: 'beit-qayema',
           languages: ['en', 'ar'],
+          second_locale: 'ar',
           default_locale: 'en',
           is_active: true,
           template_id: 1,
@@ -163,8 +167,8 @@ describe('SettingsPage', () => {
       expect(body.name).toEqual({ en: 'Beit Qayema Two', ar: '' })
       // Blank text clears that language.
       expect(body.description).toEqual({ en: '', ar: '' })
-      expect(body.second_locale).toBe('ar')
-      expect(body.default_locale).toBe('en')
+      // The languages themselves are set on the Features page, not here.
+      expect(body).not.toHaveProperty('second_locale')
       expect(body.google_maps_url).toBeNull()
       // The slug is immutable, and an untouched image sends no key at all.
       expect(body).not.toHaveProperty('slug')
@@ -332,58 +336,30 @@ describe('SettingsPage', () => {
       renderWithProviders(<SettingsPage />)
 
       await screen.findByLabelText(/^Restaurant name/)
-      const tabs = screen.getAllByRole('tablist', { name: 'Content language' })
-      expect(tabs).toHaveLength(2)
+      await waitFor(() =>
+        expect(screen.getAllByRole('tablist', { name: 'Content language' })).toHaveLength(2),
+      )
       expect(screen.getAllByRole('tab', { name: 'AR' })).toHaveLength(2)
+      // Choosing the languages lives on the Features page now.
+      expect(screen.queryByRole('combobox', { name: /Second language/ })).not.toBeInTheDocument()
     })
 
-    it('switches the second language, keeping the old text and saying so', async () => {
+    it('edits English only on an English-only menu', async () => {
       stub()
+      mock.onGet('/api/user').reply(200, { data: makeSessionUser({ languages: ['en'] }) })
       mock.onPatch('/api/settings').reply(200, { data: settings })
       const user = userEvent.setup()
       renderWithProviders(<SettingsPage />)
 
-      await user.click(await screen.findByRole('combobox', { name: /Second language/ }))
-      await user.click(await screen.findByRole('option', { name: /French/ }))
-
-      expect(
-        screen.getByText(/What you wrote in Arabic is kept\. Switch back to Arabic/),
-      ).toBeInTheDocument()
-      expect(screen.getAllByRole('tab', { name: 'FR' })).toHaveLength(2)
-
-      await user.click(screen.getByRole('radio', { name: /French/ }))
-      await user.click(screen.getByRole('button', { name: 'Save changes' }))
-
-      await waitFor(() => {
-        const patch = mock.history.patch.find((r) => r.url === '/api/settings')
-        const body = JSON.parse(patch!.data as string)
-        expect(body.second_locale).toBe('fr')
-        expect(body.default_locale).toBe('fr')
-        // Arabic is not sent at all, so the server keeps it.
-        expect(Object.keys(body.name)).toEqual(['en', 'fr'])
-      })
-    })
-
-    it('makes an English-only menu that opens in English', async () => {
-      stub({ default_locale: 'ar' })
-      mock.onPatch('/api/settings').reply(200, { data: settings })
-      const user = userEvent.setup()
-      renderWithProviders(<SettingsPage />)
-
-      await user.click(await screen.findByRole('combobox', { name: /Second language/ }))
-      await user.click(await screen.findByRole('option', { name: /None/ }))
-
+      const name = await screen.findByLabelText(/^Restaurant name/)
       expect(screen.queryByRole('tablist', { name: 'Content language' })).not.toBeInTheDocument()
-      expect(screen.getByText(/opens in English and has no language switch/)).toBeInTheDocument()
 
+      await user.type(name, '!')
       await user.click(screen.getByRole('button', { name: 'Save changes' }))
 
       await waitFor(() => {
-        const patch = mock.history.patch.find((r) => r.url === '/api/settings')
-        const body = JSON.parse(patch!.data as string)
-        expect(body.second_locale).toBeNull()
-        expect(body.default_locale).toBe('en')
-        expect(body.name).toEqual({ en: 'Beit Qayema' })
+        const body = JSON.parse(mock.history.patch[0]!.data as string)
+        expect(body.name).toEqual({ en: 'Beit Qayema!' })
       })
     })
 

@@ -61,7 +61,7 @@ describe('AuthenticatedLayout', () => {
       'Categories',
       'Dishes',
       'Templates',
-      'QR Studio',
+      'QR code',
       'Package',
       'Restaurant',
     ]) {
@@ -91,13 +91,13 @@ describe('AuthenticatedLayout', () => {
     expect(screen.getByRole('heading', { name: 'Templates' })).toBeInTheDocument()
   })
 
-  it('locks the sections that need a template or the QR feature', () => {
+  it('locks the sections that need a template', () => {
     render(<Harness hasTemplate={false} qrStudio={false} />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     expect(within(nav).getByRole('button', { name: 'Categories' })).toBeDisabled()
     expect(within(nav).getByRole('button', { name: 'Dishes' })).toBeDisabled()
-    expect(within(nav).getByRole('button', { name: 'QR Studio' })).toBeDisabled()
+    expect(within(nav).getByRole('button', { name: 'QR code' })).toBeDisabled()
     // Templates is how an owner escapes the locked state, so it stays open.
     expect(within(nav).getByRole('button', { name: 'Templates' })).toBeEnabled()
   })
@@ -176,13 +176,13 @@ describe('AuthenticatedLayout', () => {
   })
 
   it('leaves switched-off sections out of the sidebar', () => {
-    render(<Harness hidden={['orders', 'qr', 'social-links']} />)
+    render(<Harness hidden={['orders', 'analytics', 'qr']} />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     expect(within(nav).queryByRole('button', { name: 'Orders' })).not.toBeInTheDocument()
-    expect(within(nav).getByRole('button', { name: 'Analytics' })).toBeInTheDocument()
-    // Every section in "Reach" is off, so its heading goes too.
-    expect(within(nav).queryByText('Reach')).not.toBeInTheDocument()
+    expect(within(nav).queryByRole('button', { name: 'Analytics' })).not.toBeInTheDocument()
+    // The QR studio switched off still leaves the plain QR code page.
+    expect(within(nav).getByRole('button', { name: 'QR code' })).toBeInTheDocument()
     expect(within(nav).getByRole('button', { name: 'Features' })).toBeInTheDocument()
   })
 

@@ -8,8 +8,6 @@ const CLOSED = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: nul
 function settings(overrides: Partial<Settings> = {}): Settings {
   return {
     languages: ['en', 'ar'],
-    second_locale: 'ar',
-    default_locale: 'en',
     name: { en: 'Olive', ar: null },
     description: { en: null, ar: null },
     slug: 'olive',
