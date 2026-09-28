@@ -7,12 +7,11 @@ import { menuTextField, menuTextSchema, requireEnglish } from '@/shared/utils/st
  * Store/Update request rules. Names are maps with one entry per menu
  * language, never plain strings.
  */
-export const categorySchema = z.object({
+const categorySchema = z.object({
   id: z.number().int(),
   name: menuTextSchema,
   /** One optional line under the heading on the public menu. */
   description: menuTextSchema,
-  display_order: z.number().int(),
   // Always sent in practice, but the resource marks it conditional.
   dishes_count: z.number().int().optional(),
 })

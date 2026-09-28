@@ -9,9 +9,9 @@ import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/c
 import { safeRedirect } from '@/lib/security/safe-redirect'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { useUiStore } from '@/stores/ui.store'
-import { PACKAGE_CATALOGUE } from '@/test/mocks/factories/packages'
-import { EMPTY_PLAN, makeSessionUser } from '@/test/mocks/factories/session'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { PACKAGE_CATALOGUE } from '@/test/factories/packages'
+import { EMPTY_PLAN, makeSessionUser } from '@/test/factories/session'
+import { renderWithProviders } from '@/test/render-with-providers'
 
 vi.mock('@/lib/security/safe-redirect', () => ({ safeRedirect: vi.fn(() => true) }))
 
@@ -200,6 +200,7 @@ describe('App', () => {
     { path: '/qr', name: 'qr', action: 'onOpenFeatures', lands: 'features' },
     { path: '/qr', name: 'qr', action: 'onOpenPackage', lands: 'package' },
     { path: '/social-links', name: 'social-links' },
+    { path: '/features', name: 'features', action: 'onOpenPackage', lands: 'package' },
     { path: '/restaurant', name: 'restaurant' },
     { path: '/account', name: 'account', action: 'onOpenRestaurant', lands: 'restaurant' },
     { path: '/overview', name: 'overview', action: 'onOpen', lands: 'overview' },
@@ -335,7 +336,6 @@ describe('App', () => {
           slug: 'pro',
           name: { en: 'Pro', ar: 'برو' },
           is_contact_only: false,
-          starts_at: '2026-09-01T00:00:00Z',
           ends_at: '2026-10-05T00:00:00Z',
           days_left: 7,
         },
@@ -353,7 +353,6 @@ describe('App', () => {
           slug: 'pro',
           name: { en: 'Pro', ar: null },
           is_contact_only: false,
-          starts_at: null,
           ends_at: '2026-12-01T00:00:00Z',
           days_left: 8,
         },
@@ -378,7 +377,6 @@ describe('App', () => {
           slug: 'pro',
           name: { en: 'Pro', ar: 'برو' },
           is_contact_only: false,
-          starts_at: null,
           ends_at: null,
           days_left: null,
         },

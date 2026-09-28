@@ -5,7 +5,7 @@ import {
   type AppearanceChanges,
 } from '@/features/appearance/schemas/appearance.schema'
 
-/** GET /api/appearance — the design's settings and the menu's fonts. */
+/** GET /api/appearance: the design's settings and the menu's fonts. */
 export function fetchAppearance(signal?: AbortSignal): Promise<Appearance> {
   return request(appearanceResponseSchema, {
     method: 'GET',
@@ -15,7 +15,7 @@ export function fetchAppearance(signal?: AbortSignal): Promise<Appearance> {
 }
 
 /**
- * PUT /api/appearance — only the keys sent change. Answers with the whole
+ * PUT /api/appearance: only the keys sent change. Answers with the whole
  * page as it now stands.
  */
 export function saveAppearance(changes: AppearanceChanges): Promise<Appearance> {

@@ -17,7 +17,7 @@ function Harness({
   const about = useWatch({ control: form.control, name: 'about' })
   return (
     <>
-      <TextareaField control={form.control} name="about" label="About" {...props} />
+      <TextareaField control={form.control} name="about" label="About" maxLength={200} {...props} />
       <output data-testid="value">{JSON.stringify(about)}</output>
       <button type="button" onClick={() => form.setError('about', { message: 'Too long.' })}>
         Break
@@ -39,16 +39,15 @@ describe('TextareaField', () => {
     expect(screen.getByTestId('value')).toHaveTextContent('"Family run"')
   })
 
-  it('shows a null value as empty and has no counter by default', () => {
+  it('shows a null value as empty', () => {
     render(<Harness initial={null} />)
 
     expect(box()).toHaveValue('')
-    expect(screen.queryByText(/\//)).not.toBeInTheDocument()
   })
 
   it('counts characters under the control', async () => {
     const user = userEvent.setup()
-    render(<Harness maxLength={200} rows={2} />)
+    render(<Harness rows={2} />)
 
     expect(screen.getByText('0 / 200')).toBeInTheDocument()
     await user.type(box(), 'Hi')
@@ -58,19 +57,9 @@ describe('TextareaField', () => {
   })
 
   it('passes the rest of its props to the control', () => {
-    render(
-      <Harness
-        placeholder="Tell guests"
-        hint="Shown under the name."
-        required
-        optionalText="Optional"
-        disabled
-      />,
-    )
+    render(<Harness placeholder="Tell guests" optionalText="Optional" />)
 
     expect(box()).toHaveAttribute('placeholder', 'Tell guests')
-    expect(box()).toHaveAccessibleDescription('Shown under the name.')
-    expect(box()).toBeDisabled()
     expect(screen.getByText('Optional')).toBeInTheDocument()
   })
 

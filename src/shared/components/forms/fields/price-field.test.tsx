@@ -6,31 +6,12 @@ import { PriceField } from '@/shared/components/forms/fields/price-field'
 
 type Values = { price: number | null }
 
-function Harness({
-  initial = null,
-  placeholder,
-  disabled,
-  hint,
-}: {
-  initial?: number | null
-  placeholder?: string
-  disabled?: boolean
-  hint?: string
-}) {
+function Harness({ initial = null, hint }: { initial?: number | null; hint?: string }) {
   const form = useForm<Values>({ defaultValues: { price: initial } })
   const price = useWatch({ control: form.control, name: 'price' })
   return (
     <>
-      <PriceField
-        control={form.control}
-        name="price"
-        currency="USD"
-        label="Price"
-        required
-        hint={hint}
-        placeholder={placeholder}
-        disabled={disabled}
-      />
+      <PriceField control={form.control} name="price" currency="USD" label="Price" hint={hint} />
       <output data-testid="value">{JSON.stringify(price)}</output>
       <button type="button" onClick={() => form.setError('price', { message: 'Too low.' })}>
         Break
@@ -76,12 +57,10 @@ describe('PriceField', () => {
     expect(stored()).toBe('null')
   })
 
-  it('takes a placeholder, a hint and a disabled state', () => {
-    render(<Harness placeholder="9.99" hint="Before tax." disabled />)
+  it('shows its hint', () => {
+    render(<Harness hint="Before tax." />)
 
-    expect(box()).toHaveAttribute('placeholder', '9.99')
     expect(box()).toHaveAccessibleDescription('Before tax.')
-    expect(box()).toBeDisabled()
   })
 
   it('shows its error and marks itself invalid', async () => {

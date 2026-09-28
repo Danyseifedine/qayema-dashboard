@@ -4,7 +4,7 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { renderWithProviders } from '@/test/render-with-providers'
 import { SocialLinksPage } from '@/features/social-links/pages/social-links-page'
 
 let mock: MockAdapter

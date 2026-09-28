@@ -14,7 +14,6 @@ export type SocialLinkCardProps = {
   /** These take the link back so the page can pass callbacks of stable identity. */
   onEdit: (link: SocialLink) => void
   onDelete: (link: SocialLink) => void
-  className?: string
 }
 
 /**
@@ -26,7 +25,6 @@ export const SocialLinkCard = memo(function SocialLinkCard({
   link,
   onEdit,
   onDelete,
-  className,
 }: SocialLinkCardProps) {
   const { t } = useTranslation('social-links')
   const label = PLATFORM_LABELS[link.platform]
@@ -36,7 +34,6 @@ export const SocialLinkCard = memo(function SocialLinkCard({
       className={cn(
         'flex items-center gap-3 rounded-[14px] border-[0.5px] border-[var(--line)]',
         'bg-[var(--surface)] p-3 transition-colors hover:border-[var(--line-strong)]',
-        className,
       )}
     >
       <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-accent-wash text-accent">

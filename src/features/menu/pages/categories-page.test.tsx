@@ -4,9 +4,9 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeCategory, resetFactories } from '@/test/mocks/factories/menu'
-import { makeSessionUser } from '@/test/mocks/factories/session'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { makeCategory, resetFactories } from '@/test/factories/menu'
+import { makeSessionUser } from '@/test/factories/session'
+import { renderWithProviders } from '@/test/render-with-providers'
 import { CategoriesPage } from '@/features/menu/pages/categories-page'
 
 let mock: MockAdapter
@@ -525,11 +525,7 @@ describe('CategoriesPage', () => {
       response.resolve([
         200,
         {
-          data: [
-            { ...three[1]!, display_order: 1 },
-            { ...three[0]!, display_order: 2 },
-            { ...three[2]!, display_order: 3 },
-          ],
+          data: [three[1]!, three[0]!, three[2]!],
         },
       ])
       await waitFor(() => expect(order()).toEqual(['Mains', 'Starters', 'Drinks']))

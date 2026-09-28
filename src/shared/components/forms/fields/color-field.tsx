@@ -9,11 +9,9 @@ const HEX = /^#[0-9a-fA-F]{6}$/
 export type ColorFieldProps<T extends FieldValues> = {
   control: Control<T>
   name: FieldPath<T>
-  label: ReactNode
-  hint?: ReactNode
+  label: string
   /** A small control beside the label, e.g. a reset. */
   action?: ReactNode
-  disabled?: boolean
   className?: string
 }
 
@@ -28,9 +26,7 @@ export function ColorField<T extends FieldValues>({
   control,
   name,
   label,
-  hint,
   action,
-  disabled,
   className,
 }: ColorFieldProps<T>) {
   const { t } = useTranslation()
@@ -43,26 +39,15 @@ export function ColorField<T extends FieldValues>({
   const commit = (next: string) => field.onChange(next.toUpperCase())
 
   return (
-    <Field
-      label={label}
-      hint={hint}
-      action={action}
-      error={fieldState.error?.message}
-      className={className}
-    >
+    <Field label={label} action={action} error={fieldState.error?.message} className={className}>
       {({ id, describedBy, invalid }) => (
         <div className="flex items-center gap-2">
           <input
             type="color"
             value={value.toLowerCase()}
             onChange={(event) => commit(event.target.value)}
-            disabled={disabled}
-            aria-label={
-              typeof label === 'string'
-                ? t('colorField.picker', { label })
-                : t('colorField.pickerFallback')
-            }
-            className="size-11 shrink-0 cursor-pointer rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-1 disabled:cursor-not-allowed [&::-moz-color-swatch]:rounded-[6px] [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-[6px] [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
+            aria-label={t('colorField.picker', { label })}
+            className="size-11 shrink-0 cursor-pointer rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-1 [&::-moz-color-swatch]:rounded-[6px] [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-[6px] [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
           />
           <Input
             id={id}
@@ -79,7 +64,6 @@ export function ColorField<T extends FieldValues>({
               setTyping(null)
               field.onBlur()
             }}
-            disabled={disabled}
             dir="ltr"
             spellCheck={false}
             autoComplete="off"

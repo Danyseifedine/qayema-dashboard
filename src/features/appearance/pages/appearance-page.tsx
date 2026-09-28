@@ -16,7 +16,7 @@ export type AppearancePageProps = {
 
 /**
  * How the menu looks. The design's own settings (colours, switches, choices)
- * belong to the design in use — each declares its own and remembers what the
+ * belong to the design in use: each declares its own and remembers what the
  * owner picked for it. Fonts belong to the restaurant and follow it into every
  * design.
  */

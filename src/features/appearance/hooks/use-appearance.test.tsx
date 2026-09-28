@@ -11,7 +11,7 @@ import { useSaveFont } from '@/features/appearance/hooks/use-appearance'
 let mock: MockAdapter
 
 const PAGE = {
-  design: { id: 1, name: { en: 'Classic', ar: null } },
+  design: { name: { en: 'Classic', ar: null } },
   settings: [],
   fonts: [],
 }

@@ -19,7 +19,6 @@ export type CurrentPackageCardProps = {
   isDefault: boolean
   /** Ask for a package again, by slug: the one ending, or the one that ended. */
   onAskFor: (slug: string) => void
-  className?: string
 }
 
 /**
@@ -34,7 +33,6 @@ export function CurrentPackageCard({
   locale,
   isDefault,
   onAskFor,
-  className,
 }: CurrentPackageCardProps) {
   const { t } = useTranslation('package')
   const { package: pkg, lapsed, upcoming, limits, plan } = restaurant
@@ -52,12 +50,7 @@ export function CurrentPackageCard({
   ]
 
   return (
-    <section
-      className={cn(
-        'flex flex-col gap-4 rounded-[14px] border-[0.5px] border-accent-border bg-accent-wash p-4 sm:p-5',
-        className,
-      )}
-    >
+    <section className="flex flex-col gap-4 rounded-[14px] border-[0.5px] border-accent-border bg-accent-wash p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[12px] tracking-[0.08em] text-[var(--muted)] uppercase">

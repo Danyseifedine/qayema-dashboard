@@ -48,7 +48,7 @@ export function weekdayLabel(day: Weekday): string {
 /** One range, or null for a day the restaurant does not open. */
 const dayRangeSchema = z.object({ open: z.string(), close: z.string() }).nullable()
 
-export const openingHoursSchema = z.object({
+const openingHoursSchema = z.object({
   mon: dayRangeSchema,
   tue: dayRangeSchema,
   wed: dayRangeSchema,

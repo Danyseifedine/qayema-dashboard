@@ -25,7 +25,7 @@ import { dishKeys } from '@/features/menu/dishes/hooks/dish-keys'
  */
 export function useDishes(): UseQueryResult<DishList, ApiError> {
   return useQuery<DishList, ApiError>({
-    queryKey: dishKeys.lists(),
+    queryKey: dishKeys.list(),
     queryFn: ({ signal }) => fetchDishes(signal),
     staleTime: 30_000,
   })
@@ -76,11 +76,11 @@ export function useDishAvailability() {
       mutationFn: ({ id, isAvailable }) => setDishAvailability(id, isAvailable),
 
       onMutate: async ({ id, isAvailable }) => {
-        await queryClient.cancelQueries({ queryKey: dishKeys.lists() })
-        const previous = queryClient.getQueryData<DishList>(dishKeys.lists())
+        await queryClient.cancelQueries({ queryKey: dishKeys.list() })
+        const previous = queryClient.getQueryData<DishList>(dishKeys.list())
 
         if (previous) {
-          queryClient.setQueryData<DishList>(dishKeys.lists(), {
+          queryClient.setQueryData<DishList>(dishKeys.list(), {
             ...previous,
             data: previous.data.map((dish) =>
               dish.id === id ? { ...dish, is_available: isAvailable } : dish,
@@ -95,7 +95,7 @@ export function useDishAvailability() {
       // replaced in place. Refetching the whole menu to learn one boolean was
       // the most wasteful call in the app: it ran on every toggle.
       onSuccess: (saved) => {
-        queryClient.setQueryData<DishList>(dishKeys.lists(), (current) =>
+        queryClient.setQueryData<DishList>(dishKeys.list(), (current) =>
           current === undefined
             ? current
             : {
@@ -106,9 +106,9 @@ export function useDishAvailability() {
       },
 
       onError: (_error, _variables, context) => {
-        if (context?.previous) queryClient.setQueryData(dishKeys.lists(), context.previous)
+        if (context?.previous) queryClient.setQueryData(dishKeys.list(), context.previous)
         // Only a failure needs the truth from the server.
-        void queryClient.invalidateQueries({ queryKey: dishKeys.lists() })
+        void queryClient.invalidateQueries({ queryKey: dishKeys.list() })
       },
     },
   )
@@ -122,8 +122,8 @@ export function useReorderDishes() {
     mutationFn: (ordered) => reorderDishes(ordered.map((dish) => dish.id)),
 
     onMutate: async (ordered) => {
-      await queryClient.cancelQueries({ queryKey: dishKeys.lists() })
-      const previous = queryClient.getQueryData<DishList>(dishKeys.lists())
+      await queryClient.cancelQueries({ queryKey: dishKeys.list() })
+      const previous = queryClient.getQueryData<DishList>(dishKeys.list())
 
       if (previous) {
         const position = new Map(ordered.map((dish, index) => [dish.id, index]))
@@ -136,7 +136,7 @@ export function useReorderDishes() {
           return left - right
         })
 
-        queryClient.setQueryData<DishList>(dishKeys.lists(), { ...previous, data: sorted })
+        queryClient.setQueryData<DishList>(dishKeys.list(), { ...previous, data: sorted })
       }
 
       return { previous }
@@ -145,15 +145,15 @@ export function useReorderDishes() {
     // The reordered list comes back in full, so it replaces the optimistic
     // one directly instead of costing a second round trip.
     onSuccess: (ordered) => {
-      queryClient.setQueryData<DishList>(dishKeys.lists(), (current) =>
+      queryClient.setQueryData<DishList>(dishKeys.list(), (current) =>
         current === undefined ? current : { ...current, data: ordered },
       )
     },
 
     onError: (error, _ordered, context) => {
-      if (context?.previous) queryClient.setQueryData(dishKeys.lists(), context.previous)
+      if (context?.previous) queryClient.setQueryData(dishKeys.list(), context.previous)
       toast.error(t('menu:dishToast.reorderFailed'), error)
-      void queryClient.invalidateQueries({ queryKey: dishKeys.lists() })
+      void queryClient.invalidateQueries({ queryKey: dishKeys.list() })
     },
   })
 }

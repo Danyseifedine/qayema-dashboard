@@ -11,13 +11,11 @@ export type ComboboxFieldProps<T extends FieldValues> = {
   placeholder?: string
   hint?: ReactNode
   required?: boolean
-  optionalText?: ReactNode
   disabled?: boolean
   /** Stores the chosen value as a number, for an id or similar. */
   numeric?: boolean
   searchable?: boolean
   emptyText?: string
-  className?: string
 }
 
 /** A searchable select bound to a React Hook Form field. */
@@ -29,25 +27,16 @@ export function ComboboxField<T extends FieldValues>({
   placeholder,
   hint,
   required,
-  optionalText,
   disabled,
   numeric = false,
   searchable = true,
   emptyText,
-  className,
 }: ComboboxFieldProps<T>) {
   const { field, fieldState } = useController({ control, name })
   const value = field.value as string | number | null | undefined
 
   return (
-    <Field
-      label={label}
-      hint={hint}
-      required={required}
-      optionalText={optionalText}
-      error={fieldState.error?.message}
-      className={className}
-    >
+    <Field label={label} hint={hint} required={required} error={fieldState.error?.message}>
       {({ id, describedBy, invalid }) => (
         <Combobox
           id={id}

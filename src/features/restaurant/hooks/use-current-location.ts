@@ -28,8 +28,8 @@ const LAT_LNG = /(-?\d{1,3}(?:\.\d+)?)[,\s]+(-?\d{1,3}(?:\.\d+)?)/
 /**
  * Pulls a point out of a map link when one is written into it.
  *
- * Google writes coordinates several ways — `?q=`, `?ll=`, and `/@lat,lng,17z`
- * in a place URL — and a shortened `maps.app.goo.gl` link hides them behind a
+ * Google writes coordinates several ways (`?q=`, `?ll=`, and `/@lat,lng,17z`
+ * in a place URL), and a shortened `maps.app.goo.gl` link hides them behind a
  * redirect. Null means "no map to draw", not "bad link".
  */
 export function parseMapCoordinates(url: string | null | undefined): Coordinates | null {

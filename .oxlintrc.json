@@ -1,15 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["react", "typescript", "oxc"],
-  "ignorePatterns": [
-    "dist",
-    "coverage",
-    "node_modules",
-    "**/*.gen.ts",
-    "e2e/.report",
-    "e2e/.results",
-    "e2e/__snapshots__"
-  ],
+  "ignorePatterns": ["dist", "node_modules", "**/*.gen.ts", ".test-output", "e2e/snapshots"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",

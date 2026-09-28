@@ -15,10 +15,6 @@ export type PhoneFieldProps<T extends FieldValues> = {
   label?: ReactNode
   hint?: ReactNode
   required?: boolean
-  optionalText?: ReactNode
-  disabled?: boolean
-  placeholder?: string
-  className?: string
 }
 
 /**
@@ -33,10 +29,6 @@ export function PhoneField<T extends FieldValues>({
   label,
   hint,
   required,
-  optionalText,
-  disabled,
-  placeholder = '71 234 567',
-  className,
 }: PhoneFieldProps<T>) {
   const { t } = useTranslation()
   const { field: phone, fieldState: phoneState } = useController({ control, name })
@@ -59,16 +51,9 @@ export function PhoneField<T extends FieldValues>({
   const error = phoneState.error?.message ?? countryState.error?.message
 
   return (
-    <Field
-      label={label}
-      hint={hint}
-      required={required}
-      optionalText={optionalText}
-      error={error}
-      className={className}
-    >
+    <Field label={label} hint={hint} required={required} error={error}>
       {({ id, describedBy, invalid }) => (
-        <FieldShell tone={invalid ? 'error' : 'default'} disabled={disabled}>
+        <FieldShell tone={invalid ? 'error' : 'default'}>
           <div className="flex shrink-0 items-center border-e-[0.5px] border-[var(--line)] ps-1.5">
             <Combobox
               embedded
@@ -78,7 +63,6 @@ export function PhoneField<T extends FieldValues>({
               value={(country.value as string) ?? null}
               onChange={(next) => country.onChange(next)}
               onBlur={country.onBlur}
-              disabled={disabled}
               options={countryOptions}
               className="w-[132px]"
             />
@@ -94,8 +78,7 @@ export function PhoneField<T extends FieldValues>({
             inputMode="tel"
             dir="ltr"
             autoComplete="tel-national"
-            placeholder={placeholder}
-            disabled={disabled}
+            placeholder="71 234 567"
             aria-describedby={describedBy}
             aria-invalid={invalid || undefined}
             className={cn(controlClass, 'text-start tabular-nums')}

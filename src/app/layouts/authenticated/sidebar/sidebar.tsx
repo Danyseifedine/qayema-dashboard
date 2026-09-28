@@ -25,7 +25,6 @@ export type SidebarProps = {
   plan: NavAccess['plan']
   /** Sections the owner switched off on the Features page; left out entirely. */
   off: readonly string[]
-  className?: string
 }
 
 /**
@@ -40,7 +39,6 @@ export function Sidebar({
   hasTemplate,
   plan,
   off,
-  className,
 }: SidebarProps) {
   const { t } = useTranslation()
   const lockOf = (item: NavItem) => navLock(item.key, { hasTemplate, plan })
@@ -52,7 +50,6 @@ export function Sidebar({
         'flex h-full flex-col border-e-[0.5px] border-[var(--line)] bg-[var(--surface)]',
         'transition-[width] duration-300 [transition-timing-function:var(--ease-qayema)]',
         collapsed ? 'w-[72px]' : 'w-[248px]',
-        className,
       )}
     >
       <div

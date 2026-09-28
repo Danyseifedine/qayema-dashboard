@@ -6,12 +6,10 @@ import { DragHandle } from '@/features/menu/components/dnd/drag-handle'
 
 export type SortableCardProps = {
   id: number
-  disabled?: boolean
   /** True when the handle lands on a photo and needs its own background. */
   overlayHandle?: boolean
   /** Receives the handle to place wherever the card wants it. */
-  children: (parts: { handle: ReactNode; dragging: boolean }) => ReactNode
-  className?: string
+  children: (parts: { handle: ReactNode }) => ReactNode
 }
 
 /**
@@ -20,13 +18,7 @@ export type SortableCardProps = {
  * dnd-kit's keyboard sensor drives the same handle, so reordering works
  * without a pointer.
  */
-export function SortableCard({
-  id,
-  disabled = false,
-  overlayHandle = false,
-  children,
-  className,
-}: SortableCardProps) {
+export function SortableCard({ id, overlayHandle = false, children }: SortableCardProps) {
   const {
     attributes,
     listeners,
@@ -35,7 +27,7 @@ export function SortableCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, disabled })
+  } = useSortable({ id })
 
   // The handle is a prop on a memoised card, so it has to keep its identity
   // between renders or every card re-renders on every drag frame.
@@ -43,22 +35,21 @@ export function SortableCard({
     () => (
       <DragHandle
         ref={setActivatorNodeRef}
-        disabled={disabled}
         overlay={overlayHandle}
         {...attributes}
         {...listeners}
       />
     ),
-    [setActivatorNodeRef, disabled, overlayHandle, attributes, listeners],
+    [setActivatorNodeRef, overlayHandle, attributes, listeners],
   )
 
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn(isDragging && 'z-10 opacity-90 shadow-lift', className)}
+      className={cn(isDragging && 'z-10 opacity-90 shadow-lift')}
     >
-      {children({ handle, dragging: isDragging })}
+      {children({ handle })}
     </div>
   )
 }

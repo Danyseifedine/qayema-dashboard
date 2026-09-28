@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  passwordFormSchema,
-  passwordResponseSchema,
-  profileFormSchema,
-} from '@/features/account/schemas/account.schema'
+import { passwordFormSchema, profileFormSchema } from '@/features/account/schemas/account.schema'
 
 function messages(result: { success: boolean; error?: { issues: { message: string }[] } }) {
   return result.success ? [] : (result.error?.issues.map((issue) => issue.message) ?? [])
@@ -78,14 +74,5 @@ describe('passwordFormSchema', () => {
   it('refuses two passwords that differ', () => {
     const result = passwordFormSchema(false).safeParse({ ...valid, password_confirmation: 'nope' })
     expect(messages(result)).toEqual(['The two passwords do not match.'])
-  })
-})
-
-describe('passwordResponseSchema', () => {
-  it('reads the server answer', () => {
-    expect(passwordResponseSchema.parse({ message: 'Done.', has_password: true })).toEqual({
-      message: 'Done.',
-      has_password: true,
-    })
   })
 })

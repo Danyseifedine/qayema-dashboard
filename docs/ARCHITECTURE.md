@@ -1,4 +1,4 @@
-# Qayema Dashboard — Architecture
+# Qayema Dashboard: Architecture
 
 > Owner-facing SPA for Qayema. React 19 + Vite + TypeScript, talking to the
 > Laravel API in `../qayema` over a Sanctum session cookie. This document says
@@ -36,7 +36,7 @@ of re-implementing it, always report status truthfully.
    or `app`. Every import uses the `@/` alias, even inside a feature.
 6. **The tree below is the tree.** Adding a file into an existing folder is
    routine. Adding, renaming or removing a folder means updating §2 in the
-   same change — if that feels wrong, it is a design discussion first.
+   same change. If that feels wrong, it is a design discussion first.
 7. **Bilingual and RTL from day one.** Every user-visible string goes through
    i18n; layout uses logical CSS properties so Arabic RTL is free.
 
@@ -74,9 +74,13 @@ languages read from the session) and `uploads` (temp image upload and the
 qayema-dashboard/
 ├── CLAUDE.md                        Working rules for agents
 ├── docs/ARCHITECTURE.md             This file
-├── e2e/                             Playwright, whole product (§7): fixtures/, specs/, support/,
-│                                    __snapshots__/ (visual baselines), global-setup.ts
-├── playwright.config.ts             Servers, projects (desktop, phone, arabic-rtl, dark, visual)
+├── e2e/                             Playwright, whole product (§7)
+│   ├── playwright.config.ts         Servers, projects (desktop, phone, arabic-rtl, dark, visual)
+│   ├── global-setup.ts              composer e2e:reset before a run
+│   ├── specs/                       dashboard/, public/ (menu, portal, auth, onboarding),
+│   │                                admin/, quality/ (a11y, visual, errors)
+│   ├── support/                     fixtures.ts, helpers.ts, urls.ts, files/ (upload fixtures)
+│   └── snapshots/                   Visual baselines, per project (committed)
 ├── public/                          Served as-is
 └── src/
     ├── main.tsx                     Entry: providers + App
@@ -109,8 +113,8 @@ qayema-dashboard/
     │   ├── types/                   api.ts
     │   └── utils/                   dom/cn, color/contrast, format/{money,change,date,number}, string/{menu-text,translated}
     ├── features/                    One folder per row of the vocabulary table (§3)
-    └── test/                        setup/vitest.setup.ts, utils/render-with-providers,
-                                     mocks/factories/{session (FULL_PLAN, EMPTY_PLAN), packages, menu}
+    └── test/                        setup.ts, render-with-providers.tsx,
+                                     factories/{session (FULL_PLAN, EMPTY_PLAN), packages, menu}
 ```
 
 ---
@@ -121,11 +125,11 @@ Every `features/<name>/` has the same shape, so learning one teaches all:
 
 ```
 features/restaurant/
-├── api/          restaurant.api.ts, features.api.ts, menu-languages.api.ts   — HTTP + response schemas
-├── schemas/      restaurant.schema.ts                                        — response + form schemas
-├── hooks/        restaurant-keys.ts, use-restaurant.ts, use-features.ts, …   — queries and mutations
-├── components/   identity/ contact/ hours/ branding/                          — grouped by area
-├── pages/        restaurant-page.tsx, features-page.tsx (+ .test.tsx)         — what App.tsx renders
+├── api/          restaurant.api.ts, features.api.ts, menu-languages.api.ts   # HTTP + response schemas
+├── schemas/      restaurant.schema.ts                                        # response + form schemas
+├── hooks/        restaurant-keys.ts, use-restaurant.ts, use-features.ts, …   # queries and mutations
+├── components/   identity/ contact/ hours/ branding/                          # grouped by area
+├── pages/        restaurant-page.tsx, features-page.tsx (+ .test.tsx)         # what App.tsx renders
 └── index.ts      the ONLY path other features and app/ may import from
 ```
 
@@ -176,7 +180,7 @@ sidebar, the topbar title, the locks and the Features switches:
 different on purpose:
 
 - `'template'`: the row is disabled and the page says "Choose a menu design
-  first" — there is nothing to work on yet.
+  first"; there is nothing to work on yet.
 - `'plan'`: the row stays open with a chip naming the package that has it
   (`PlanBadge`), and the page is `PlanLockedPage`: what the section gives, that
   package, and "See packages". Analytics adds this week's views
@@ -245,29 +249,38 @@ Sanctum stateful auth. The SPA's responsibilities:
 
 ## 7. Testing
 
-| Layer                        | Tool                                              | Where                   |
-| ---------------------------- | ------------------------------------------------- | ----------------------- |
-| Unit (utils, schemas, items) | Vitest                                            | co-located `*.test.ts`  |
-| Component / page             | Vitest + Testing Library + `axios-mock-adapter`   | co-located `*.test.tsx` |
-| Translations                 | `lib/i18n/translations.test.ts` (parity, plurals) | `lib/i18n`              |
-| End-to-end                   | Playwright + `@axe-core/playwright`               | `e2e/specs/*.spec.ts`   |
+| Layer                        | Tool                                              | Where                    |
+| ---------------------------- | ------------------------------------------------- | ------------------------ |
+| Unit (utils, schemas, items) | Vitest                                            | co-located `*.test.ts`   |
+| Component / page             | Vitest + Testing Library + `axios-mock-adapter`   | co-located `*.test.tsx`  |
+| Translations                 | `lib/i18n/translations.test.ts` (parity, plurals) | `lib/i18n`               |
+| End-to-end                   | Playwright + `@axe-core/playwright`               | `e2e/specs/**/*.spec.ts` |
 
-Fixtures: `test/mocks/factories/` (`makeSessionUser`, `FULL_PLAN`,
-`EMPTY_PLAN`, `makePackage`, `PACKAGE_CATALOGUE`, menu factories),
-`test/utils/render-with-providers.tsx`. Tests run in English (set in
-`test/setup/vitest.setup.ts`, which also stubs `ResizeObserver` for recharts).
+Fixtures: `test/factories/` (`makeSessionUser`, `FULL_PLAN`, `EMPTY_PLAN`,
+`makePackage`, `PACKAGE_CATALOGUE`, menu factories),
+`test/render-with-providers.tsx`. Tests run in English (set in
+`test/setup.ts`, which also stubs `ResizeObserver` for recharts).
 `npm run test:coverage` fails under the thresholds in `vitest.config.ts`.
+Everything a run writes (coverage, the Playwright report and traces) goes to
+the git-ignored `.test-output/`.
 
 **End-to-end** (`e2e/`, `npm run e2e`): the real Laravel app with
 `APP_ENV=e2e` (port 8001, its own SQLite database, `composer e2e:reset` before
-each run) and Vite on 5174, both started by `playwright.config.ts`.
+each run) and Vite on 5174, both started by `e2e/playwright.config.ts`. The
+backend's side of it lives in `../qayema/tests/E2e/`.
 
-- `e2e/fixtures/test.ts`: `owner(input)` builds an owner through the backend's
+- Specs are grouped by surface: `specs/dashboard/` (one per page),
+  `specs/public/` (menu, portal, sign-in, onboarding), `specs/admin/`,
+  `specs/quality/` (axe, screenshots, error handling).
+- `e2e/support/fixtures.ts`: `owner(input)` builds an owner through the backend's
   test-only `POST /__e2e/scenario` and signs the browser in; `scenario`,
   `signIn`, `setPackage`, `expectAccessible` (axe, WCAG 2.1 A/AA, serious and
   critical fail), `either(en, ar)` for labels in both languages,
   `daysFromNow`. The `page` fixture fails the test on any uncaught browser
-  error or `console.error`.
+  error or `console.error`. `e2e/support/helpers.ts`: `callApi` (the owner
+  API with CSRF, to set something up behind the page), `openSidebar`,
+  `guestMenu`, `fixtureFile` (`support/files/`). A helper two specs need goes
+  there, never copied.
 - **Each test builds its own owner** and never changes shared data (packages,
   designs, the admin), so tests run in parallel and in any order. No retries.
 - Projects: `desktop` runs everything; `phone`, `arabic-rtl` and `dark` re-run

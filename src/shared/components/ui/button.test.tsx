@@ -56,15 +56,10 @@ describe('Button', () => {
     expect(button).not.toHaveClass('h-11')
   })
 
-  it('shows both icons at rest', () => {
-    render(
-      <Button leadingIcon={<svg data-testid="lead" />} trailingIcon={<svg data-testid="trail" />}>
-        Go
-      </Button>,
-    )
+  it('shows its icon at rest', () => {
+    render(<Button leadingIcon={<svg data-testid="lead" />}>Go</Button>)
 
     expect(screen.getByTestId('lead')).toBeInTheDocument()
-    expect(screen.getByTestId('trail')).toBeInTheDocument()
   })
 
   it('swaps the icons for a spinner and blocks clicks while loading', async () => {
@@ -75,7 +70,6 @@ describe('Button', () => {
         loading
         onClick={onClick}
         leadingIcon={<svg data-testid="lead" />}
-        trailingIcon={<svg data-testid="trail" />}
       >
         Save
       </Button>,
@@ -86,7 +80,6 @@ describe('Button', () => {
     expect(button).toHaveAttribute('aria-busy', 'true')
     expect(button.querySelector('.animate-spin')).not.toBeNull()
     expect(screen.queryByTestId('lead')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('trail')).not.toBeInTheDocument()
 
     await user.click(button)
     expect(onClick).not.toHaveBeenCalled()

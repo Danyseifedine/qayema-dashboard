@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { menuTextSchema, translatableTextSchema } from '@/shared/utils/string/menu-text'
+import { translatableTextSchema } from '@/shared/utils/string/menu-text'
 
 /**
  * Mirrors ../qayema/app/Http/Resources/UserResource.php.
@@ -29,22 +29,15 @@ const limit = z.object({
   limit: z.number().nullable(),
 })
 
-export const restaurantSchema = z.object({
-  id: z.number(),
-  /** One entry per menu language. */
-  name: menuTextSchema,
-  slug: z.string(),
+const restaurantSchema = z.object({
   /** What the menu is written in: English, then the second language if any. */
   languages: z.array(z.string()).min(1),
   /** The second language chosen, kept even while "Multiple languages" is off. */
   second_locale: z.string().nullable(),
   /** What the menu opens in: one of `languages`. */
   default_locale: z.string(),
-  is_active: z.boolean(),
   template_id: z.number().nullable(),
-  logo_url: z.string().nullable(),
   public_url: z.string(),
-  qr_url: z.string(),
   /**
    * The package actually in force. An assignment that has not started or has
    * ended reports as the default one, because that is where the limits below
@@ -53,8 +46,6 @@ export const restaurantSchema = z.object({
   package: z.object({
     ...packageSummary,
     is_contact_only: z.boolean(),
-    /** ISO-8601, or null when it has always applied. */
-    starts_at: z.string().nullable(),
     /** ISO-8601, or null when the package does not end. */
     ends_at: z.string().nullable(),
     /** Whole days until it ends, 0 on its last day; null when it does not end. */
@@ -63,9 +54,7 @@ export const restaurantSchema = z.object({
   /** The package the restaurant was given when it has ended. */
   lapsed: z.object({ ...packageSummary, ended_at: z.string().nullable() }).nullable(),
   /** The package the restaurant was given when it starts later. */
-  upcoming: z
-    .object({ ...packageSummary, starts_at: z.string().nullable(), ends_at: z.string().nullable() })
-    .nullable(),
+  upcoming: z.object({ ...packageSummary, starts_at: z.string().nullable() }).nullable(),
   limits: z.object({
     dishes: limit,
     categories: limit,
@@ -77,11 +66,9 @@ export const restaurantSchema = z.object({
   plan: planSchema,
 })
 
-export const userSchema = z.object({
-  id: z.number(),
+const userSchema = z.object({
   name: z.string(),
   email: z.email(),
-  role: z.string(),
   has_completed_onboarding: z.boolean(),
   has_password: z.boolean(),
   restaurant: restaurantSchema.nullable(),

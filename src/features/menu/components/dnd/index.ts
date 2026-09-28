@@ -1,2 +1,2 @@
-export { SortableCard, type SortableCardProps } from '@/features/menu/components/dnd/sortable-card'
-export { SortableList, type SortableListProps } from '@/features/menu/components/dnd/sortable-list'
+export { SortableCard } from '@/features/menu/components/dnd/sortable-card'
+export { SortableList } from '@/features/menu/components/dnd/sortable-list'

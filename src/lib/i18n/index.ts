@@ -7,7 +7,7 @@ import { initReactI18next } from 'react-i18next'
  * Each language is a folder, `src/locales/<code>/`, found at build time:
  * `meta.json` names it and gives its direction, and one JSON file per area
  * (`common.json`, `menu.json`, …) holds the text. **Adding a language is
- * copying `src/locales/en/` to `src/locales/<code>/` and translating it** —
+ * copying `src/locales/en/` to `src/locales/<code>/` and translating it**;
  * nothing here, nor anywhere else, has to change. Anything left untranslated
  * falls back to English, and `translations.test.ts` lists what is missing.
  */

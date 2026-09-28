@@ -8,8 +8,6 @@ export type SwitchProps = {
   'aria-label'?: string
   'aria-labelledby'?: string
   'aria-describedby'?: string
-  id?: string
-  name?: string
   className?: string
 }
 
@@ -23,8 +21,6 @@ export function Switch({
   checked,
   onChange,
   disabled = false,
-  id,
-  name,
   className,
   ...aria
 }: SwitchProps) {
@@ -32,8 +28,6 @@ export function Switch({
     <button
       type="button"
       role="switch"
-      id={id}
-      name={name}
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}

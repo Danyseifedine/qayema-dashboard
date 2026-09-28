@@ -18,12 +18,11 @@ export type UploadContext = (typeof UPLOAD_CONTEXTS)[number]
 
 /**
  * `POST /api/uploads/temp` answers with a flat body, not a `data` envelope.
- * The two size fields are pre-formatted display strings such as "42.3 KB",
- * never byte counts, so they are shown as-is and never used in arithmetic.
+ * The size is a pre-formatted display string such as "42.3 KB", never a byte
+ * count, so it is shown as-is and never used in arithmetic.
  */
 export const tempUploadSchema = z.object({
   key: z.uuid(),
-  original_size: z.string(),
   optimized_size: z.string(),
   saved_percent: z.number(),
 })

@@ -56,7 +56,6 @@ export type ButtonProps = ComponentProps<'button'> &
     /** Swaps the leading icon for a spinner and blocks interaction. */
     loading?: boolean
     leadingIcon?: ReactNode
-    trailingIcon?: ReactNode
   }
 
 export function Button({
@@ -66,7 +65,6 @@ export function Button({
   block,
   loading = false,
   leadingIcon,
-  trailingIcon,
   disabled,
   children,
   type = 'button',
@@ -82,7 +80,6 @@ export function Button({
     >
       {loading ? <Loader2 aria-hidden className="size-4 animate-spin" /> : leadingIcon}
       {children}
-      {!loading && trailingIcon}
     </button>
   )
 }

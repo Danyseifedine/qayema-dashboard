@@ -1,13 +1,14 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSession } from '@/features/auth'
 import { i18n } from '@/lib/i18n'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
-import { FULL_PLAN, makeSessionUser } from '@/test/mocks/factories/session'
+import { renderWithProviders } from '@/test/render-with-providers'
+import { PACKAGE_CATALOGUE } from '@/test/factories/packages'
+import { FULL_PLAN, makeSessionUser } from '@/test/factories/session'
 import { FeaturesPage, type FeaturesPageProps } from '@/features/restaurant/pages/features-page'
 
 let mock: MockAdapter
@@ -15,7 +16,16 @@ let mock: MockAdapter
 const ALL = FULL_PLAN
 
 function page(props: Partial<FeaturesPageProps> = {}) {
-  return <FeaturesPage off={[]} plan={ALL} secondLocale="ar" defaultLocale="en" {...props} />
+  return (
+    <FeaturesPage
+      off={[]}
+      plan={ALL}
+      secondLocale="ar"
+      defaultLocale="en"
+      onOpenPackage={() => {}}
+      {...props}
+    />
+  )
 }
 
 /** The page as the app mounts it: everything read from the session cache. */
@@ -28,6 +38,7 @@ function FromSession() {
       plan={restaurant.plan}
       secondLocale={restaurant.second_locale}
       defaultLocale={restaurant.default_locale}
+      onOpenPackage={() => {}}
     />
   )
 }
@@ -132,6 +143,46 @@ describe('FeaturesPage', () => {
     renderWithProviders(page({ plan: { ...ALL, qr_studio: false } }))
 
     expect(screen.getByText('Not on your package')).toBeInTheDocument()
+  })
+
+  it('shows a feature the package lacks as off, and it cannot be switched', () => {
+    // The owner never switched QR Studio off; without the package it is off
+    // anyway, and nothing is sent until the package includes it.
+    renderWithProviders(page({ plan: { ...ALL, qr_studio: false } }))
+
+    const qr = screen.getByRole('switch', { name: 'QR Studio on' })
+    expect(qr).toHaveAttribute('aria-checked', 'false')
+    expect(qr).toBeDisabled()
+    // Its "while this is off" warning is about switching it off yourself.
+    expect(screen.queryByText(/QR code goes back to plain/)).not.toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: 'Orders on' })).toBeEnabled()
+  })
+
+  it('names the package each missing feature comes with', async () => {
+    mock.onGet('/api/packages').reply(200, {
+      data: PACKAGE_CATALOGUE,
+      meta: { current: 'free' },
+    })
+    renderWithProviders(page({ plan: { ...ALL, ordering: false, analytics: false } }))
+
+    // The first package that has it: Orders are Premium, Analytics start on Pro.
+    expect(
+      await screen.findByRole('button', { name: 'Available on Premium. See packages' }),
+    ).toHaveTextContent('Premium')
+    expect(
+      screen.getByRole('button', { name: 'Available on Pro. See packages' }),
+    ).toHaveTextContent('Pro')
+    expect(screen.queryByText('Not on your package')).not.toBeInTheDocument()
+  })
+
+  it('opens the Package page from a feature the package lacks', async () => {
+    const onOpenPackage = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(page({ plan: { ...ALL, ordering: false }, onOpenPackage }))
+
+    await user.click(screen.getByRole('button', { name: /See packages$/ }))
+
+    expect(onOpenPackage).toHaveBeenCalledOnce()
   })
 
   it('hides the language pickers when the package has no second language', () => {

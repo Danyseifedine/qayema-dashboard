@@ -9,10 +9,7 @@ import { safeRedirect } from '@/lib/security/safe-redirect'
  * Only a 401 triggers it. A 403 means signed in but not allowed, which the
  * calling screen should explain rather than silently navigating away.
  */
-export function installAuthRedirectInterceptor(
-  client: AxiosInstance,
-  options: { onUnauthenticated?: () => void } = {},
-): void {
+export function installAuthRedirectInterceptor(client: AxiosInstance): void {
   let redirecting = false
 
   client.interceptors.response.use(
@@ -20,7 +17,6 @@ export function installAuthRedirectInterceptor(
     (error: unknown) => {
       if (axios.isAxiosError(error) && error.response?.status === 401 && !redirecting) {
         redirecting = true
-        options.onUnauthenticated?.()
         safeRedirect(env.VITE_LOGIN_URL)
       }
 

@@ -3,9 +3,9 @@ import type { ReactNode } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type EmptyStateProps = {
-  icon?: LucideIcon
+  icon: LucideIcon
   title: ReactNode
-  description?: ReactNode
+  description: ReactNode
   /** Usually the button that fills the emptiness. */
   action?: ReactNode
   /**
@@ -14,7 +14,6 @@ export type EmptyStateProps = {
    * parent has to be a flex column with a height for this to do anything.
    */
   fill?: boolean
-  className?: string
 }
 
 /** Shown when a list has nothing in it yet. */
@@ -24,7 +23,6 @@ export function EmptyState({
   description,
   action,
   fill = false,
-  className,
 }: EmptyStateProps) {
   return (
     <div
@@ -32,21 +30,16 @@ export function EmptyState({
         'flex flex-col items-center gap-3 rounded-[14px] border-[1.5px] border-dashed border-[var(--line-strong)]',
         'bg-[var(--field)] px-6 py-12 text-center',
         fill && 'flex-1 justify-center',
-        className,
       )}
     >
-      {Icon ? (
-        <span className="grid size-11 place-items-center rounded-xl bg-[var(--hover-wash)] text-[var(--muted)]">
-          <Icon aria-hidden className="size-[18px]" />
-        </span>
-      ) : null}
+      <span className="grid size-11 place-items-center rounded-xl bg-[var(--hover-wash)] text-[var(--muted)]">
+        <Icon aria-hidden className="size-[18px]" />
+      </span>
       <div className="flex flex-col gap-1">
         <p className="text-[15px] font-medium tracking-[-0.012em]">{title}</p>
-        {description ? (
-          <p className="mx-auto max-w-sm text-[13px] leading-relaxed text-[var(--muted)]">
-            {description}
-          </p>
-        ) : null}
+        <p className="mx-auto max-w-sm text-[13px] leading-relaxed text-[var(--muted)]">
+          {description}
+        </p>
       </div>
       {action ? <div className="mt-1">{action}</div> : null}
     </div>

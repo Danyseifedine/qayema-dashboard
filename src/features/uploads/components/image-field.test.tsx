@@ -36,7 +36,6 @@ function png(name = 'dish.png', type = 'image/png'): File {
 function uploaded(savedPercent = 64) {
   return {
     key: KEY,
-    original_size: '400 KB',
     optimized_size: '144 KB',
     saved_percent: savedPercent,
   }
@@ -55,7 +54,14 @@ function Harness({
 
   return (
     <form onSubmit={form.handleSubmit(() => {})}>
-      <ImageField control={form.control} name="image" context="dish" {...props} />
+      <ImageField
+        control={form.control}
+        name="image"
+        context="dish"
+        label="Photo"
+        hint="Cropped to fit."
+        {...props}
+      />
       <output data-testid="value">{JSON.stringify(value)}</output>
       <button type="submit">Submit</button>
     </form>
@@ -106,7 +112,6 @@ describe('ImageField', () => {
     expect(screen.getByText('Cropped to fit.')).toBeInTheDocument()
     expect(screen.getByText('JPEG, PNG or WebP · up to 20 MB')).toBeInTheDocument()
     expect(dropzone()).toHaveAttribute('tabindex', '0')
-    expect(dropzone()).not.toHaveAttribute('aria-disabled')
     expect(fileInput()).toHaveAttribute('accept', 'image/jpeg,image/png,image/webp')
     expect(held()).toBeNull()
   })
@@ -292,27 +297,6 @@ describe('ImageField', () => {
     expect(mock.history.post).toHaveLength(1)
   })
 
-  it('does nothing at all when disabled', async () => {
-    render(<Harness disabled />)
-    const click = vi.spyOn(fileInput(), 'click').mockImplementation(() => {})
-
-    expect(dropzone()).toHaveAttribute('tabindex', '-1')
-    expect(dropzone()).toHaveAttribute('aria-disabled', 'true')
-    expect(fileInput()).toBeDisabled()
-
-    fireEvent.click(dropzone())
-    fireEvent.keyDown(dropzone(), { key: ' ' })
-    expect(click).not.toHaveBeenCalled()
-
-    fireEvent.dragOver(dropzone())
-    expect(dropzone()).not.toHaveClass('border-gold')
-    fireEvent.drop(dropzone(), { dataTransfer: { files: [png()] } })
-
-    // Give a stray upload the chance to start; none should.
-    await new Promise((done) => setTimeout(done, 0))
-    expect(mock.history.post).toHaveLength(0)
-  })
-
   it('shows the saved image with Replace and Remove', async () => {
     const user = userEvent.setup()
     render(<Harness currentUrl={SAVED} />)
@@ -373,13 +357,6 @@ describe('ImageField', () => {
 
     expect(screen.getByRole('button', { name: 'Replace' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument()
-  })
-
-  it('locks Replace and Remove while disabled', () => {
-    render(<Harness currentUrl={SAVED} disabled />)
-
-    expect(screen.getByRole('button', { name: 'Replace' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Remove' })).toBeDisabled()
   })
 
   it('shows Replace as busy while a replacement uploads', async () => {

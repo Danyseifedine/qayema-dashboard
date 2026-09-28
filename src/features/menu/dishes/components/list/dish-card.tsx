@@ -22,7 +22,6 @@ export type DishCardProps = {
   onEdit: (dish: Dish) => void
   onDelete: (dish: Dish) => void
   onToggleAvailability: (dish: Dish, isAvailable: boolean) => void
-  className?: string
 }
 
 /**
@@ -42,7 +41,6 @@ export const DishCard = memo(function DishCard({
   onEdit,
   onDelete,
   onToggleAvailability,
-  className,
 }: DishCardProps) {
   const { t } = useTranslation('menu')
   const name = translated(dish.name, locale)
@@ -54,7 +52,6 @@ export const DishCard = memo(function DishCard({
       className={cn(
         'flex h-full flex-col overflow-hidden rounded-[14px] border-[0.5px] border-[var(--line)]',
         'bg-[var(--surface)] transition-colors hover:border-[var(--line-strong)]',
-        className,
       )}
     >
       {/* Only the photo dims for a sold-out dish: its name, price and switch

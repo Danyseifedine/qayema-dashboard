@@ -3,7 +3,7 @@ import { LANGUAGES, languageMeta } from '@/lib/i18n'
 /**
  * The dashboard's own interface languages: one per folder in `src/locales/`
  * (see `lib/i18n`). The languages a *menu* is written in are a separate list,
- * per restaurant — see `menu-languages.ts`.
+ * per restaurant: see `menu-languages.ts`.
  */
 export const LOCALES = LANGUAGES
 

@@ -12,7 +12,7 @@ const menuLanguagesResponseSchema = z.object({
 export type MenuLanguages = z.infer<typeof menuLanguagesResponseSchema>['data']
 
 /**
- * PUT /api/menu-languages — the second language (null for none) and the one
+ * PUT /api/menu-languages: the second language (null for none) and the one
  * the menu opens in. Text in a language dropped here stays saved, hidden.
  */
 export async function saveMenuLanguages(payload: {

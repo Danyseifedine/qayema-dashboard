@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 /**
  * A fresh e2e database and media before every run. `e2e:reset` refuses to
- * run anywhere but APP_ENV=e2e against database/e2e.sqlite, so this can never
+ * run anywhere but APP_ENV=e2e against its own SQLite file, so this can never
  * reach the owner's MySQL.
  *
  * E2E_SKIP_RESET=1 keeps the current data, for running one spec while

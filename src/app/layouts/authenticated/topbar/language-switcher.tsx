@@ -5,14 +5,13 @@ import { LOCALES, localeLabel, localeShort, type Locale } from '@/shared/constan
 export type LanguageSwitcherProps = {
   value: Locale
   onChange: (locale: Locale) => void
-  className?: string
 }
 
 /**
  * EN / ع switch, matching the portal navbar's `.seg.lang`. Arabic shows its
  * own glyph rather than a transliteration.
  */
-export function LanguageSwitcher({ value, onChange, className }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ value, onChange }: LanguageSwitcherProps) {
   const { t } = useTranslation()
 
   return (
@@ -21,7 +20,6 @@ export function LanguageSwitcher({ value, onChange, className }: LanguageSwitche
       size="sm"
       value={value}
       onChange={onChange}
-      className={className}
       options={LOCALES.map((locale) => ({
         value: locale,
         label: localeShort(locale),

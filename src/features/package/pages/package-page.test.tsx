@@ -4,10 +4,10 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { renderWithProviders } from '@/test/render-with-providers'
 import type { AuthUser } from '@/features/auth'
-import { makePackage, PACKAGE_CATALOGUE } from '@/test/mocks/factories/packages'
-import { EMPTY_PLAN, makeSessionUser } from '@/test/mocks/factories/session'
+import { makePackage, PACKAGE_CATALOGUE } from '@/test/factories/packages'
+import { EMPTY_PLAN, makeSessionUser } from '@/test/factories/session'
 import { PackagePage } from '@/features/package/pages/package-page'
 
 let mock: MockAdapter
@@ -34,7 +34,6 @@ function onPackage(slug: string, name: string, dates: Partial<Restaurant['packag
       slug,
       name: { en: name, ar: null },
       is_contact_only: false,
-      starts_at: null,
       ends_at: null,
       days_left: null,
       ...dates,
@@ -44,9 +43,7 @@ function onPackage(slug: string, name: string, dates: Partial<Restaurant['packag
 
 function stub(current = 'free', restaurant: Partial<Restaurant> = {}) {
   session(restaurant)
-  mock
-    .onGet('/api/packages')
-    .reply(200, { data: PACKAGE_CATALOGUE, meta: { current, ends_at: null } })
+  mock.onGet('/api/packages').reply(200, { data: PACKAGE_CATALOGUE, meta: { current } })
 }
 
 describe('PackagePage', () => {
@@ -213,8 +210,7 @@ describe('PackagePage', () => {
     mock.onGet('/api/packages').reply(
       () =>
         new Promise((resolve) => {
-          release = () =>
-            resolve([200, { data: PACKAGE_CATALOGUE, meta: { current: 'free', ends_at: null } }])
+          release = () => resolve([200, { data: PACKAGE_CATALOGUE, meta: { current: 'free' } }])
         }),
     )
     const user = userEvent.setup()
@@ -234,7 +230,6 @@ describe('PackagePage', () => {
         slug: 'premium',
         name: { en: 'Premium', ar: null },
         starts_at: '2026-10-05T10:00:00+00:00',
-        ends_at: null,
       },
     })
     renderWithProviders(<PackagePage locale="en" />)
@@ -271,7 +266,9 @@ describe('PackagePage', () => {
     renderWithProviders(<PackagePage locale="en" />)
 
     const pro = (await screen.findByRole('heading', { name: 'Pro' })).closest('article')!
-    expect(within(pro).getByText('Most popular')).toBeInTheDocument()
+    const premium = screen.getByRole('heading', { name: 'Premium' }).closest('article')!
+    expect(within(premium).getByText('Most popular')).toBeInTheDocument()
+    expect(within(pro).queryByText('Most popular')).not.toBeInTheDocument()
     expect(within(pro).getByText('Everything in Free, plus:')).toBeInTheDocument()
     expect(within(pro).getByText('150 dishes')).toBeInTheDocument()
     expect(within(pro).getByText('Your colours and fonts')).toBeInTheDocument()
@@ -339,7 +336,7 @@ describe('PackagePage', () => {
           features: { dish_limit: 150 },
         }),
       ],
-      meta: { current: 'free', ends_at: null },
+      meta: { current: 'free' },
     })
     const user = userEvent.setup()
     renderWithProviders(<PackagePage locale="en" />)
@@ -359,7 +356,6 @@ describe('PackagePage', () => {
         slug: null,
         name: { en: null, ar: null },
         is_contact_only: false,
-        starts_at: null,
         ends_at: '2026-10-01T10:00:00+00:00',
         days_left: 2,
       },
@@ -424,7 +420,6 @@ describe('PackagePage', () => {
         slug: 'premium',
         name: { en: 'Premium', ar: null },
         starts_at: null,
-        ends_at: null,
       },
     })
     renderWithProviders(<PackagePage locale="en" />)

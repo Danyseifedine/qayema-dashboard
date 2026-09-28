@@ -1,4 +1,4 @@
-# Qayema Dashboard — Working Rules
+# Qayema Dashboard: Working Rules
 
 ## Non-negotiable rules
 
@@ -8,17 +8,21 @@
    ready to commit.
 2. **Never leave a component unused.** Every component, hook, store, schema or
    util you create must be imported and used in the same task. If a task ends
-   and something is unused, delete it or wire it in — never leave it.
+   and something is unused, delete it or wire it in; never leave it.
 3. **Always use the component.** Before writing markup, look in
    `src/shared/components/` and the feature's `components/`. If a component
    exists for the job, use it. Never re-implement a button, dialog, field,
    table, empty state or skeleton with raw JSX. If the existing component does
-   not fit, extend it — do not fork it.
+   not fit, extend it; do not fork it.
 4. **Always tell the truth.** Report what actually happened: if a build failed,
-   a test was skipped, a step was not done, or you are guessing — say it
+   a test was skipped, a step was not done, or you are guessing, say it
    plainly in the first sentence. No softening, no reassurance, no claiming
    something works without having run it. The user does not need feelings
    managed; they need accurate status.
+5. **Never use em dashes.** Not in code, comments, UI copy, translations
+   (English or Arabic), tests, docs or messages. Write a comma, colon,
+   semicolon, parentheses or a new sentence instead (in Arabic, the Arabic comma ، or a colon);
+   never an en dash or `--` in its place. An empty-value placeholder is `-`.
 
 ## Stack
 
@@ -68,13 +72,13 @@ No third-party error telemetry.
   (`common`, `overview`, `analytics`, `menu`, `design`, `appearance`, `orders`, `qr`,
   `social-links`, `restaurant`, `features`, `package`, `account`).
   **To add a language, copy `src/locales/en/` to `src/locales/<code>/` and
-  translate it** — it is found at build time and appears in the switcher;
+  translate it**: it is found at build time and appears in the switcher;
   nothing else changes. `translations.test.ts` fails on any missing line or
   plural form (Arabic needs zero/one/two/few/many/other). A new _area_ file is
   also registered once in `src/lib/i18n/resources.ts`, which types the keys.
 - In components `useTranslation('<area>')`; outside React (toasts in hooks, zod
   messages) `import { t } from '@/lib/i18n'` and call it when the text is
-  needed — never at module load, which freezes English. Zod: `{ error: () =>
+  needed, never at module load, which freezes English. Zod: `{ error: () =>
 t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   use `<Trans>`. Tests run in English (set in the vitest setup).
 - The dashboard sends `Accept-Language`; the API answers in it when it has that
@@ -101,7 +105,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `../qayema/app/Http/Resources/*`. Errors are `{message, code}`; a rate limit
   is **429** carrying `retry_after`.
 - Limits come from the restaurant's **package**, and a `limit` of `null` means
-  unlimited — never render it as a number. Nothing is bought in the SPA:
+  unlimited; never render it as a number. Nothing is bought in the SPA:
   `POST /api/packages/request` sends a message and an admin assigns the
   package.
 - Section gating is data-driven: `requiresPlan` on a nav item is matched
@@ -112,18 +116,18 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   package that has it, "See packages"); one waiting for a **design** is
   disabled. Anything locked inside a page uses `LockedState`
   (`shared/components/feedback`) and names its package with
-  `usePackageFor(flag, locale)` from the package barrel — never a hard-coded
+  `usePackageFor(flag, locale)` from the package barrel, never a hard-coded
   "Pro".
 - **Package page** (`features/package`): the current package with its dates
-  from the session (`package.{starts_at, ends_at, days_left}`, `lapsed`,
-  `upcoming`) — "Until …, N days left", a warning with "Ask to extend" in the
-  last 7 days (the topbar pill shows a dot then too), "Your Pro ended on …"
-  with "Ask to renew", "Premium starts on …" —, the limits used, and what the
-  package includes. Then one card per package ("Everything in Free, plus:",
+  from the session (`package.{ends_at, days_left}`, `lapsed`,
+  `upcoming`), shown as "Until …, N days left", a warning with "Ask to
+  extend" in the last 7 days (the topbar pill shows a dot then too), "Your Pro
+  ended on …" with "Ask to renew", or "Premium starts on …"; the limits used;
+  and what the package includes. Then one card per package ("Everything in Free, plus:",
   built by `highlightsOf()`, only when it really has everything the one before
   has) and the comparison table. Cards and table both read
   `utils/package-rows.ts`, the one list of features, groups and order. Tests
-  use `PACKAGE_CATALOGUE` / `makePackage()` (`test/mocks/factories/packages`)
+  use `PACKAGE_CATALOGUE` / `makePackage()` (`test/factories/packages`)
   and `FULL_PLAN` / `EMPTY_PLAN` (`…/session`).
 - **Features page** (`features/restaurant/pages/features-page.tsx`): one switch
   each for Orders, QR Studio, Analytics and Multiple languages, stored in
@@ -142,7 +146,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `meta.shown` differs from `meta.current`, the chosen design needs a package
   the restaurant lost, and a notice says which design the menu shows meanwhile.
 - **Appearance** (`features/appearance`, `GET/PUT /api/appearance`): the
-  design's settings are whatever the design in use declares — never name one
+  design's settings are whatever the design in use declares; never name one
   in code. `DesignSettingsCard` draws each by its type (colour → `ColorField`
   with a reset, boolean → `SwitchField`, select → `ChoiceField`, text →
   `TextField`), labelled from the schema, with a zod schema built from the
@@ -168,7 +172,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   with `toMenuTextForm()` and require English with `requireEnglish()`.
   `TranslatableTextField` takes `languages` and shows no tabs for an
   English-only menu. Send every active language (blank clears it); never send
-  a hidden one — the server keeps it for when the owner switches back.
+  a hidden one (the server keeps it for when the owner switches back).
 - Card text on the QR form is `''` in the form and `null` on the wire;
   `toFormValues` / `toDesign` convert, so blank text never saves as `""`.
 - **Overview** (`features/overview`) is the menu at a glance: dish, category
@@ -176,7 +180,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   checklist built from the restaurant + dishes by `menuChecklist()` (a pure
   function, unit tested). Each item's action is a nav key.
 - **Analytics** (`features/analytics`): the page needs `plan.analytics` (the
-  nav locks it otherwise, with `AnalyticsTeaser` — this week's views from
+  nav locks it otherwise, with `AnalyticsTeaser`: this week's views from
   `GET /api/analytics/teaser`); `GET /api/analytics/advanced` only when
   `restaurant.plan.advanced_analytics` is on (the hook is disabled otherwise,
   never fired and caught). Charts are recharts with `responsive`; colours are
@@ -195,4 +199,7 @@ A change is done when `typecheck`, `lint`, `format:check`, `test:coverage`,
 `build` and `e2e` are all green. E2E rules: each test builds its own owner
 through the `owner()` fixture and never changes shared data; no retries, no
 fixed sleeps; tag the main flow of an area `@matrix` so it also runs on a
-phone, in Arabic RTL and in dark mode.
+phone, in Arabic RTL and in dark mode. Specs go in `e2e/specs/<surface>/`
+(`dashboard`, `public`, `admin`, `quality`); a helper two specs use goes in
+`e2e/support/helpers.ts`. Generated output only ever lands in
+`.test-output/`.

@@ -1,5 +1,5 @@
 /* ============================================================
-   Qayema Dashboard — design tokens
+   Qayema Dashboard: design tokens
    Mirrors the portal token set in
    ../qayema/public/portal/css/app.css so the dashboard and the
    public site are visually one product.
@@ -9,24 +9,15 @@
   /* ---- Gold, the brand accent ---- */
   --color-gold: #f8d38d;
   --color-gold-deep: #e9bd66;
-  --color-gold-soft: #fce7bc;
 
   /* ---- Neutrals (light) ---- */
   --color-ink: #141109;
   --color-paper: #fbfaf6;
-  --color-paper-2: #f6f4ee;
-  --color-surface: #ffffff;
   --color-sand: #e8dccb;
-  --color-sand-2: #d9cab3;
 
-  /* ---- Status base hues ----
-     These are the light-theme values the semantic --status-* tokens below
-     are built from. Use the semantic tokens in components; these stay for
-     the filled danger button, which is the same in both themes. ---- */
+  /* ---- The filled danger button, the same in both themes. Everything else
+     uses the semantic --status-* tokens below. ---- */
   --color-danger: #b45040;
-  --color-warn: #b88829;
-  --color-success: #5c7a4f;
-  --color-info: #4a6b86;
 
   /* ---- Type ---- */
   --font-display: 'Instrument Serif', 'El Messiri', Georgia, 'Times New Roman', serif;
@@ -40,7 +31,6 @@
   /* ---- Radii (portal uses 12px on inputs, 10px on small controls) ---- */
   --radius-field: 12px;
   --radius-control: 10px;
-  --radius-chip: 999px;
 }
 
 /* ------------------------------------------------------------
@@ -52,7 +42,6 @@
 html[data-theme='light'] {
   --bg: #fbfaf6;
   --surface: #ffffff;
-  --elevated: #f6f4ee;
   --field: #fbfaf6;
   --text: #141109;
   /* Both are text colours, so both clear WCAG AA's 4.5:1 on every surface
@@ -69,7 +58,6 @@ html[data-theme='light'] {
   --ring-accent: rgba(248, 211, 141, 0.35);
   --ring-danger: rgba(180, 80, 64, 0.1);
   --ring-success: rgba(92, 122, 79, 0.12);
-  --shadow-card: 0 40px 90px -50px rgba(20, 17, 9, 0.45);
 
   /* ---- Accent, theme-aware ----
      `--accent-text` is gold dark enough to read on a pale surface, and on
@@ -112,7 +100,6 @@ html[data-theme='light'] {
 html[data-theme='dark'] {
   --bg: #000000;
   --surface: #0a0a0a;
-  --elevated: #111111;
   --field: #111111;
   --text: #f5f1e8;
   --muted: rgba(245, 241, 232, 0.6);
@@ -127,7 +114,6 @@ html[data-theme='dark'] {
   --ring-accent: rgba(248, 211, 141, 0.28);
   --ring-danger: rgba(180, 80, 64, 0.22);
   --ring-success: rgba(163, 196, 145, 0.22);
-  --shadow-card: 0 50px 100px -45px rgba(0, 0, 0, 0.85);
 
   /* On black the bright gold is the loudest thing on screen, so fills step
      down to a muted gold. The primary button keeps --color-gold. */
@@ -159,18 +145,9 @@ html[data-theme='dark'] {
   --lift-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 2px 8px -2px rgba(0, 0, 0, 0.5);
 }
 
-/* Expose the theme surfaces to Tailwind utilities (bg-surface, text-muted…). */
+/* Expose the theme surfaces to Tailwind utilities (bg-field, text-accent…). */
 @theme inline {
-  --color-bg: var(--bg);
-  --color-surface-themed: var(--surface);
-  --color-elevated: var(--elevated);
   --color-field: var(--field);
-  --color-text: var(--text);
-  --color-muted: var(--muted);
-  --color-faint: var(--faint);
-  --color-line: var(--line);
-  --color-line-strong: var(--line-strong);
-  --color-gold-on: var(--gold-on);
 
   /* Accent: text-accent, bg-accent-fill, bg-accent-wash, border-accent-border */
   --color-accent: var(--accent-text);

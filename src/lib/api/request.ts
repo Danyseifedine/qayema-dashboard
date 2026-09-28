@@ -24,7 +24,6 @@ export async function request<T>(schema: ZodType<T>, config: AxiosRequestConfig)
 
   if (!result.success) {
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       console.error('[api] response did not match its schema', {
         url: config.url,
         issues: result.error.issues,

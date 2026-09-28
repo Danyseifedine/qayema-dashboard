@@ -14,7 +14,6 @@ export type OrderCardProps = {
   /** These take the order back, so the page can pass stable callbacks. */
   onMarkDone: (order: Order) => void
   onCancel: (order: Order) => void
-  className?: string
 }
 
 const TONE: Record<Order['status'], string> = {
@@ -32,7 +31,6 @@ export const OrderCard = memo(function OrderCard({
   busy = false,
   onMarkDone,
   onCancel,
-  className,
 }: OrderCardProps) {
   const { t } = useTranslation('orders')
   const locale = usePreferencesStore((state) => state.locale)
@@ -43,7 +41,6 @@ export const OrderCard = memo(function OrderCard({
         'flex flex-col gap-3 rounded-[14px] border-[0.5px] border-[var(--line)]',
         'bg-[var(--surface)] p-4 transition-colors hover:border-[var(--line-strong)]',
         order.status === 'cancelled' && 'opacity-70',
-        className,
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">

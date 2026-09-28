@@ -22,7 +22,7 @@ export type SortableListProps<T extends { id: number }> = {
   /** Called with the new order once a drag settles. */
   onReorder: (ordered: T[]) => void
   /** Grid for dish cards, list for category rows. */
-  layout?: 'grid' | 'list'
+  layout: 'grid' | 'list'
   children: ReactNode
 }
 
@@ -36,7 +36,7 @@ export type SortableListProps<T extends { id: number }> = {
 export function SortableList<T extends { id: number }>({
   items,
   onReorder,
-  layout = 'list',
+  layout,
   children,
 }: SortableListProps<T>) {
   const sensors = useSensors(

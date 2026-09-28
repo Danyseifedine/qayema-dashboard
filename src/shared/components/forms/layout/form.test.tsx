@@ -24,7 +24,7 @@ describe('Form', () => {
 describe('FormSection', () => {
   it('heads a group of fields', () => {
     render(
-      <FormSection title="Contact" description="How guests reach you." className="mt-2">
+      <FormSection title="Contact" description="How guests reach you.">
         <p>field</p>
       </FormSection>,
     )
@@ -32,7 +32,6 @@ describe('FormSection', () => {
     expect(screen.getByRole('heading', { name: 'Contact' })).toBeInTheDocument()
     expect(screen.getByText('How guests reach you.')).toBeInTheDocument()
     expect(screen.getByText('field')).toBeInTheDocument()
-    expect(screen.getByRole('heading').closest('section')).toHaveClass('mt-2')
   })
 
   it('has no description line unless given one', () => {
@@ -49,13 +48,13 @@ describe('FormSection', () => {
 describe('FieldGroup', () => {
   it('lays two fields out side by side', () => {
     render(
-      <FieldGroup className="mt-1">
+      <FieldGroup>
         <span>one</span>
         <span>two</span>
       </FieldGroup>,
     )
 
-    expect(screen.getByText('one').parentElement).toHaveClass('sm:grid-cols-2', 'mt-1')
+    expect(screen.getByText('one').parentElement).toHaveClass('sm:grid-cols-2')
   })
 })
 
@@ -70,18 +69,15 @@ describe('FormActions', () => {
     expect(screen.getByText('save').parentElement).toHaveClass('justify-end')
   })
 
-  it.each([
-    ['start', 'justify-start'],
-    ['between', 'justify-between'],
-  ] as const)('aligns to %s', (align, className) => {
+  it('spreads its row out when asked', () => {
     render(
-      <FormActions align={align} className="pt-6">
+      <FormActions align="between" className="pt-6">
         <span>save</span>
       </FormActions>,
     )
 
     const row = screen.getByText('save').parentElement
-    expect(row).toHaveClass(className, 'pt-6')
+    expect(row).toHaveClass('justify-between', 'pt-6')
     expect(row).not.toHaveClass('justify-end')
   })
 })

@@ -13,7 +13,7 @@ import {
 export type OverviewPageProps = {
   limits: AuthRestaurant['limits']
   /** Sections the owner switched off; their checklist items are left out. */
-  switchedOff?: readonly string[]
+  switchedOff: readonly string[]
   /** Opens the dashboard section a checklist item points to. */
   onOpen: (target: ChecklistTarget) => void
 }
@@ -22,10 +22,7 @@ export type OverviewPageProps = {
  * The menu at a glance: what is on it against what the package allows, and
  * what is still missing.
  */
-/** Stable empty default, so the prop keeps its identity between renders. */
-const NONE: readonly string[] = []
-
-export function OverviewPage({ limits, switchedOff = NONE, onOpen }: OverviewPageProps) {
+export function OverviewPage({ limits, switchedOff, onOpen }: OverviewPageProps) {
   const { t } = useTranslation('overview')
   const settings = useRestaurant()
   const dishes = useDishes()

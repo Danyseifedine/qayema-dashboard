@@ -58,7 +58,10 @@ export function CompareTable({ packages, current, locale }: CompareTableProps) {
       aria-label={t('page.compareTitle')}
       tabIndex={0}
       className={cn(
-        'overflow-x-auto rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)]',
+        // Paint containment keeps the table's min-width inside this box: without
+        // it a phone's layout viewport grew to fit the table, so the whole page
+        // scrolled sideways (and in Arabic opened shifted).
+        'overflow-x-auto contain-paint rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)]',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
       )}
     >

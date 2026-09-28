@@ -10,9 +10,7 @@ export type UrlFieldProps<T extends FieldValues> = {
   hint?: ReactNode
   required?: boolean
   optionalText?: ReactNode
-  disabled?: boolean
   placeholder?: string
-  className?: string
 }
 
 /**
@@ -26,9 +24,7 @@ export function UrlField<T extends FieldValues>({
   hint,
   required,
   optionalText,
-  disabled,
   placeholder = 'https://',
-  className,
 }: UrlFieldProps<T>) {
   return (
     <TextField
@@ -38,9 +34,7 @@ export function UrlField<T extends FieldValues>({
       hint={hint}
       required={required}
       optionalText={optionalText}
-      disabled={disabled}
       placeholder={placeholder}
-      className={className}
       type="url"
       inputMode="url"
       autoComplete="url"

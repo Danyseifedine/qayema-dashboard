@@ -21,24 +21,14 @@ describe('installAuthRedirectInterceptor', () => {
   })
 
   it('leaves for the login page on the first 401 only', async () => {
-    const onUnauthenticated = vi.fn()
-    installAuthRedirectInterceptor(client, { onUnauthenticated })
+    installAuthRedirectInterceptor(client)
     mock.onGet('/api/user').reply(401, { message: 'Unauthenticated.' })
 
     await expect(client.get('/api/user')).rejects.toMatchObject({ response: { status: 401 } })
     await expect(client.get('/api/user')).rejects.toMatchObject({ response: { status: 401 } })
 
-    expect(onUnauthenticated).toHaveBeenCalledOnce()
     expect(safeRedirect).toHaveBeenCalledOnce()
     expect(safeRedirect).toHaveBeenCalledWith('https://qayema.test/get-started')
-  })
-
-  it('works without a callback', async () => {
-    installAuthRedirectInterceptor(client)
-    mock.onGet('/api/user').reply(401)
-
-    await expect(client.get('/api/user')).rejects.toBeDefined()
-    expect(safeRedirect).toHaveBeenCalledOnce()
   })
 
   it('does not navigate on a 403, another failure, or a success', async () => {

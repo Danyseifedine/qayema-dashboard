@@ -26,7 +26,7 @@ import {
   type QrFormValues,
 } from '@/features/qr/schemas/qr.schema'
 
-/** Everything that changes how the code looks — what "Reset to simple" puts back. */
+/** Everything that changes how the code looks: what "Reset to simple" puts back. */
 const LOOK_FIELDS = [
   'dot_style',
   'dot_color',
@@ -224,7 +224,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
               <CardControls control={form.control} brandColor={qr.brand_color} />
             </FormSection>
 
-            <FormActions className="justify-between">
+            <FormActions align="between">
               <Button
                 variant="ghost"
                 leadingIcon={<RotateCcw aria-hidden className="size-4" />}

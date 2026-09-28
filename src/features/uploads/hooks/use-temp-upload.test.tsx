@@ -16,7 +16,6 @@ vi.mock('@/features/uploads/api/temp-upload.api', async (importOriginal) => {
 
 const RESULT = {
   key: '11111111-2222-4333-8444-555555555555',
-  original_size: '1.4 MB',
   optimized_size: '42.3 KB',
   saved_percent: 97,
 }
@@ -159,7 +158,6 @@ describe('useTempUpload', () => {
       uploading: false,
       progress: 100,
       error: null,
-      result: RESULT,
     })
 
     // A late progress event after the upload settled changes nothing.
@@ -226,7 +224,7 @@ describe('useTempUpload', () => {
     })
 
     expect(returned).toBeNull()
-    expect(result.current).toMatchObject({ uploading: false, error: 'Server error', result: null })
+    expect(result.current).toMatchObject({ uploading: false, error: 'Server error' })
   })
 
   it('gives a generic apology for an error that is not from the API', async () => {
@@ -276,7 +274,7 @@ describe('useTempUpload', () => {
 
     await expect(first).resolves.toBeNull()
     expect(second).toEqual(RESULT)
-    expect(result.current).toMatchObject({ uploading: false, error: null, result: RESULT })
+    expect(result.current).toMatchObject({ uploading: false, error: null })
   })
 
   it('reset abandons an upload in flight and returns to idle', async () => {
@@ -304,7 +302,6 @@ describe('useTempUpload', () => {
       uploading: false,
       progress: null,
       error: null,
-      result: null,
     })
   })
 })

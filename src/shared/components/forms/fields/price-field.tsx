@@ -10,10 +10,6 @@ export type PriceFieldProps<T extends FieldValues> = {
   currency: string
   label?: ReactNode
   hint?: ReactNode
-  required?: boolean
-  disabled?: boolean
-  placeholder?: string
-  className?: string
 }
 
 /**
@@ -27,22 +23,12 @@ export function PriceField<T extends FieldValues>({
   currency,
   label,
   hint,
-  required,
-  disabled,
-  placeholder = '0.00',
-  className,
 }: PriceFieldProps<T>) {
   const { field, fieldState } = useController({ control, name })
   const value = field.value as number | string | null | undefined
 
   return (
-    <Field
-      label={label}
-      hint={hint}
-      required={required}
-      error={fieldState.error?.message}
-      className={className}
-    >
+    <Field label={label} hint={hint} error={fieldState.error?.message}>
       {({ id, describedBy, invalid }) => (
         <Input
           id={id}
@@ -59,8 +45,7 @@ export function PriceField<T extends FieldValues>({
           min={0}
           step="0.01"
           dir="ltr"
-          placeholder={placeholder}
-          disabled={disabled}
+          placeholder="0.00"
           prefix={currency}
           className="text-start tabular-nums"
           aria-describedby={describedBy}

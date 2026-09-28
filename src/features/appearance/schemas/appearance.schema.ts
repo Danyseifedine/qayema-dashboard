@@ -5,14 +5,14 @@ import { translatableTextSchema } from '@/shared/utils/string/menu-text'
 /**
  * Mirrors `AppearanceController::payload()` in ../qayema.
  *
- * `settings` is whatever the design in use declares — a design with five
- * colours and an on/off switch sends six — so nothing here names a setting.
+ * `settings` is whatever the design in use declares (a design with five
+ * colours and an on/off switch sends six), so nothing here names a setting.
  * `fonts` has one entry per writing system the menu uses: English and
  * Spanish share `latin`.
  */
-export const settingTypeSchema = z.enum(['color', 'boolean', 'select', 'text'])
+const settingTypeSchema = z.enum(['color', 'boolean', 'select', 'text'])
 
-export const designSettingSchema = z.object({
+const designSettingSchema = z.object({
   key: z.string(),
   type: settingTypeSchema,
   /** What the owner reads; null in a language the design has no label for. */
@@ -26,7 +26,7 @@ export const designSettingSchema = z.object({
   options: z.array(z.string()),
 })
 
-export const fontScriptSchema = z.object({
+const fontScriptSchema = z.object({
   script: z.string(),
   /** The menu's languages written in this script, English first. */
   languages: z.array(z.string()).min(1),
@@ -37,8 +37,8 @@ export const fontScriptSchema = z.object({
   options: z.array(z.object({ family: z.string(), category: z.string() })),
 })
 
-export const appearanceSchema = z.object({
-  design: z.object({ id: z.number().int(), name: translatableTextSchema }),
+const appearanceSchema = z.object({
+  design: z.object({ name: translatableTextSchema }),
   settings: z.array(designSettingSchema),
   fonts: z.array(fontScriptSchema),
 })
@@ -78,7 +78,6 @@ export type AppearanceChanges = {
   fonts?: Record<string, string | null>
 }
 
-export type SettingType = z.infer<typeof settingTypeSchema>
 export type DesignSetting = z.infer<typeof designSettingSchema>
 export type FontScript = z.infer<typeof fontScriptSchema>
 export type Appearance = z.infer<typeof appearanceSchema>

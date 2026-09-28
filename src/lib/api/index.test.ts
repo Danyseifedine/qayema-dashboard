@@ -21,33 +21,17 @@ describe('configureApi', () => {
       installLocaleInterceptor: installLocale,
     }))
 
-    const { configureApi, api, request, toApiError } = await import('@/lib/api')
-    const onUnauthenticated = vi.fn()
+    const { configureApi, request } = await import('@/lib/api')
+    const { api } = await import('@/lib/api/client')
 
-    configureApi({ onUnauthenticated })
+    configureApi()
     configureApi()
 
     expect(installLocale).toHaveBeenCalledOnce()
     expect(installLocale).toHaveBeenCalledWith(api)
     expect(installCsrf).toHaveBeenCalledOnce()
     expect(installAuth).toHaveBeenCalledOnce()
-    expect(installAuth).toHaveBeenCalledWith(api, { onUnauthenticated })
+    expect(installAuth).toHaveBeenCalledWith(api)
     expect(typeof request).toBe('function')
-    expect(typeof toApiError).toBe('function')
-  })
-
-  it('defaults to no callback', async () => {
-    vi.resetModules()
-    const installAuth = vi.fn()
-    vi.doMock('@/lib/api/interceptors/auth-redirect', () => ({
-      installAuthRedirectInterceptor: installAuth,
-    }))
-    vi.doMock('@/lib/api/interceptors/csrf', () => ({ installCsrfInterceptor: vi.fn() }))
-    vi.doMock('@/lib/api/interceptors/locale', () => ({ installLocaleInterceptor: vi.fn() }))
-
-    const { configureApi, api } = await import('@/lib/api')
-    configureApi()
-
-    expect(installAuth).toHaveBeenCalledWith(api, {})
   })
 })

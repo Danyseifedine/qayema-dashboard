@@ -8,7 +8,7 @@ import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/c
 import { safeRedirect } from '@/lib/security/safe-redirect'
 import { useLogout } from '@/features/auth/hooks/use-logout'
 import { sessionKeys } from '@/features/auth/hooks/session-keys'
-import { makeSessionUser } from '@/test/mocks/factories/session'
+import { makeSessionUser } from '@/test/factories/session'
 
 vi.mock('@/lib/security/safe-redirect', () => ({ safeRedirect: vi.fn(() => true) }))
 

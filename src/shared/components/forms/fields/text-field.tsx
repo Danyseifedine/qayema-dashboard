@@ -10,7 +10,7 @@ export type TextFieldProps<T extends FieldValues> = {
   name: FieldPath<T>
   label?: ReactNode
   /**
-   * The accessible name when there is no visible label — a field inside a row
+   * The accessible name when there is no visible label: a field inside a row
    * that is already headed, such as one day of the opening hours.
    */
   'aria-label'?: string
@@ -21,7 +21,6 @@ export type TextFieldProps<T extends FieldValues> = {
   disabled?: boolean
   autoComplete?: string
   leadingIcon?: ReactNode
-  prefix?: ReactNode
   /** Shows a live `n / max` counter in the trailing slot. */
   maxLength?: number
   /** Renders a reveal toggle and starts masked. */
@@ -46,7 +45,6 @@ export function TextField<T extends FieldValues>({
   disabled,
   autoComplete,
   leadingIcon,
-  prefix,
   maxLength,
   password = false,
   forceLtr = false,
@@ -104,7 +102,6 @@ export function TextField<T extends FieldValues>({
           aria-invalid={invalid || undefined}
           tone={invalid ? 'error' : 'default'}
           leadingIcon={leadingIcon}
-          prefix={prefix}
           trailing={reveal ?? counter}
         />
       )}

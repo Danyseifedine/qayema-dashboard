@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { highlightsOf } from '@/features/package/utils/package-rows'
 import type { Package } from '@/features/package/schemas/package.schema'
-import { EMPTY_PLAN } from '@/test/mocks/factories/session'
+import { EMPTY_PLAN } from '@/test/factories/session'
 
 function pkg(slug: string, features: Partial<Package['features']>): Package {
   return {
@@ -14,7 +14,6 @@ function pkg(slug: string, features: Partial<Package['features']>): Package {
     is_contact_only: false,
     is_default: false,
     is_featured: false,
-    sort_order: 0,
     features: {
       dish_limit: 40,
       category_limit: 8,

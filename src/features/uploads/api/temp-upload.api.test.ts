@@ -29,7 +29,6 @@ describe('uploadTempImage', () => {
     mock.onGet('/api/csrf-token').reply(200, { token: 'csrf-abc' })
     mock.onPost('/api/uploads/temp').reply(200, {
       key: '11111111-2222-4333-8444-555555555555',
-      original_size: '1.4 MB',
       optimized_size: '42.3 KB',
       saved_percent: 97,
     })
@@ -101,7 +100,6 @@ describe('uploadTempImage', () => {
         200,
         {
           key: '11111111-2222-4333-8444-555555555555',
-          original_size: '1.4 MB',
           optimized_size: '42.3 KB',
           saved_percent: 97,
         },
@@ -118,7 +116,6 @@ describe('uploadTempImage', () => {
     mock.onGet('/api/csrf-token').reply(200, { token: 'csrf-abc' })
     mock.onPost('/api/uploads/temp').reply(200, {
       key: '11111111-2222-4333-8444-555555555555',
-      original_size: '1.4 MB',
       optimized_size: '42.3 KB',
       saved_percent: 97,
     })

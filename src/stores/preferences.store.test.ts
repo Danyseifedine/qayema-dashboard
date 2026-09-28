@@ -62,19 +62,16 @@ describe('usePreferencesStore', () => {
     expect((await loadStore()).getState().theme).toBe('light')
   })
 
-  it('sets, toggles and remembers the theme on <html>', async () => {
+  it('sets and remembers the theme on <html>', async () => {
     const store = await loadStore()
 
     store.getState().setTheme('dark')
     expect(html.dataset.theme).toBe('dark')
     expect(localStorage.getItem(THEME_KEY)).toBe('dark')
 
-    store.getState().toggleTheme()
+    store.getState().setTheme('light')
     expect(store.getState().theme).toBe('light')
     expect(html.dataset.theme).toBe('light')
-
-    store.getState().toggleTheme()
-    expect(store.getState().theme).toBe('dark')
   })
 
   it('starts in English, left to right, with nothing stored', async () => {

@@ -11,29 +11,18 @@ function Harness({
   initial = '#C8A24A',
   label = 'Accent',
   error,
-  hint,
   action,
-  disabled,
 }: {
   initial?: string
-  label?: ReactNode
+  label?: string
   error?: string
-  hint?: ReactNode
   action?: ReactNode
-  disabled?: boolean
 }) {
   const form = useForm<Values>({ defaultValues: { accent: initial } })
   const accent = useWatch({ control: form.control, name: 'accent' })
   return (
     <>
-      <ColorField
-        control={form.control}
-        name="accent"
-        label={label}
-        hint={hint}
-        action={action}
-        disabled={disabled}
-      />
+      <ColorField control={form.control} name="accent" label={label} action={action} />
       <output data-testid="value">{accent}</output>
       {error ? (
         <button type="button" onClick={() => form.setError('accent', { message: error })}>
@@ -113,16 +102,9 @@ describe('ColorField', () => {
     expect(text()).toHaveValue('#112233')
   })
 
-  it('names the picker generically when the label is not plain text', () => {
-    render(<Harness label={<strong>Accent</strong>} />)
+  it('shows its action', () => {
+    render(<Harness action={<button type="button">Reset</button>} />)
 
-    expect(screen.getByLabelText('Colour picker')).toBeInTheDocument()
-  })
-
-  it('shows its hint and action', () => {
-    render(<Harness hint="Used for buttons." action={<button type="button">Reset</button>} />)
-
-    expect(text()).toHaveAccessibleDescription('Used for buttons.')
     expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument()
   })
 
@@ -135,12 +117,5 @@ describe('ColorField', () => {
     expect(await screen.findByText('Pick a colour.')).toBeInTheDocument()
     expect(text()).toHaveAttribute('aria-invalid', 'true')
     expect(text()).toHaveAccessibleDescription('Pick a colour.')
-  })
-
-  it('disables both controls', () => {
-    render(<Harness disabled />)
-
-    expect(text()).toBeDisabled()
-    expect(screen.getByLabelText('Accent, picker')).toBeDisabled()
   })
 })

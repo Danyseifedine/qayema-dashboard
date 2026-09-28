@@ -6,43 +6,28 @@ import { Field } from '@/shared/components/forms/layout/field'
 export type TextareaFieldProps<T extends FieldValues> = {
   control: Control<T>
   name: FieldPath<T>
-  label?: ReactNode
+  label: ReactNode
   placeholder?: string
-  hint?: ReactNode
-  required?: boolean
   optionalText?: ReactNode
-  disabled?: boolean
   rows?: number
-  maxLength?: number
-  className?: string
+  maxLength: number
 }
 
-/** Multi-line text with an optional character counter under the control. */
+/** Multi-line text with a character counter under the control. */
 export function TextareaField<T extends FieldValues>({
   control,
   name,
   label,
   placeholder,
-  hint,
-  required,
   optionalText,
-  disabled,
   rows = 4,
   maxLength,
-  className,
 }: TextareaFieldProps<T>) {
   const { field, fieldState } = useController({ control, name })
   const value = (field.value as string | null | undefined) ?? ''
 
   return (
-    <Field
-      label={label}
-      hint={hint}
-      required={required}
-      optionalText={optionalText}
-      error={fieldState.error?.message}
-      className={className}
-    >
+    <Field label={label} optionalText={optionalText} error={fieldState.error?.message}>
       {({ id, describedBy, invalid }) => (
         <div className="flex flex-col gap-1.5">
           <Textarea
@@ -54,19 +39,16 @@ export function TextareaField<T extends FieldValues>({
             onBlur={field.onBlur}
             rows={rows}
             placeholder={placeholder}
-            disabled={disabled}
             maxLength={maxLength}
             aria-describedby={describedBy}
             aria-invalid={invalid || undefined}
             tone={invalid ? 'error' : 'default'}
           />
-          {maxLength ? (
-            <HelperText className="text-end tabular-nums">
-              <span dir="ltr">
-                {value.length} / {maxLength}
-              </span>
-            </HelperText>
-          ) : null}
+          <HelperText className="text-end tabular-nums">
+            <span dir="ltr">
+              {value.length} / {maxLength}
+            </span>
+          </HelperText>
         </div>
       )}
     </Field>

@@ -9,15 +9,13 @@ let installed = false
  * Wires the interceptors onto the shared client. Called once at boot; guarded
  * so a hot reload cannot stack duplicate handlers.
  */
-export function configureApi(options: { onUnauthenticated?: () => void } = {}): void {
+export function configureApi(): void {
   if (installed) return
   installed = true
 
   installLocaleInterceptor(api)
   installCsrfInterceptor(api)
-  installAuthRedirectInterceptor(api, options)
+  installAuthRedirectInterceptor(api)
 }
 
-export { api } from '@/lib/api/client'
-export { toApiError } from '@/lib/api/errors'
 export { request } from '@/lib/api/request'

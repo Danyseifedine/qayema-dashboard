@@ -30,18 +30,16 @@ function drop(active: number, over: number | null) {
 function List({
   onReorder,
   layout,
-  disabled = false,
 }: {
   onReorder: (ordered: { id: number }[]) => void
-  layout?: 'grid' | 'list'
-  disabled?: boolean
+  layout: 'grid' | 'list'
 }) {
   return (
     <SortableList items={items} onReorder={onReorder} layout={layout}>
       {items.map((item) => (
-        <SortableCard key={item.id} id={item.id} disabled={disabled} className="card">
-          {({ handle, dragging }) => (
-            <div data-dragging={dragging}>
+        <SortableCard key={item.id} id={item.id}>
+          {({ handle }) => (
+            <div>
               {handle}
               <span>Item {item.id}</span>
             </div>
@@ -63,7 +61,7 @@ describe('SortableList', () => {
 
   it('reports the new order once a card lands on another', () => {
     const onReorder = vi.fn()
-    render(<List onReorder={onReorder} />)
+    render(<List onReorder={onReorder} layout="list" />)
 
     drop(1, 3)
 
@@ -82,7 +80,7 @@ describe('SortableList', () => {
 
   it('reports nothing when either card is no longer in the list', () => {
     const onReorder = vi.fn()
-    render(<List onReorder={onReorder} />)
+    render(<List onReorder={onReorder} layout="list" />)
 
     drop(99, 1)
     drop(1, 99)
@@ -92,22 +90,12 @@ describe('SortableList', () => {
 })
 
 describe('SortableCard', () => {
-  it('hands each card a keyboard-reachable grip that is not yet dragging', () => {
-    render(<List onReorder={vi.fn()} />)
+  it('hands each card a keyboard-reachable grip', () => {
+    render(<List onReorder={vi.fn()} layout="list" />)
 
     const handles = screen.getAllByRole('button', { name: 'Reorder' })
     expect(handles).toHaveLength(3)
     expect(handles[0]).toHaveAttribute('aria-roledescription', 'sortable')
     expect(handles[0]).toBeEnabled()
-    expect(screen.getByText('Item 1').parentElement).toHaveAttribute('data-dragging', 'false')
-    expect(screen.getByText('Item 1').closest('.card')).toBeInTheDocument()
-  })
-
-  it('disables the grip of a card that may not move', () => {
-    render(<List onReorder={vi.fn()} disabled />)
-
-    for (const handle of screen.getAllByRole('button', { name: 'Reorder' })) {
-      expect(handle).toBeDisabled()
-    }
   })
 })

@@ -7,11 +7,11 @@ import { MIN_CONTRAST, contrast } from '@/shared/utils/color/contrast'
  *
  * Mirrors App\Services\Global\QrStyle::options() in ../qayema, which the
  * printable card is drawn from, so the preview here is the card on the table.
- * Both are tested against the same cases — change one, change both.
+ * Both are tested against the same cases: change one, change both.
  */
 
 /** How much of the code the logo covers, by the owner's size choice. */
-export const LOGO_SHARE: Record<LogoSize, number> = { small: 0.25, medium: 0.35, large: 0.45 }
+const LOGO_SHARE: Record<LogoSize, number> = { small: 0.25, medium: 0.35, large: 0.45 }
 
 export function qrOptions(design: QrDesign, data: string, logo: string | null): Options {
   const withLogo = design.logo && logo !== null
@@ -64,7 +64,7 @@ function fill(design: QrDesign): Pick<NonNullable<Options['dotsOptions']>, 'colo
  * Every part is held to MIN_CONTRAST (4.5:1), not the 3:1 first planned:
  * decoding real renders showed red corner centres (#EA4335, about 3.9:1 on
  * white) stopped a reader finding the code, while blue dots at 4.6:1 read
- * fine. So every part is checked, not just the dots — the corner centres are
+ * fine. So every part is checked, not just the dots: the corner centres are
  * what a reader locks on to first.
  */
 

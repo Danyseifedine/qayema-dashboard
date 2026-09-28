@@ -67,7 +67,7 @@ function DayRow({ control, day }: { control: Control<RestaurantFormValues>; day:
           className="flex-1 pt-0"
         />
         <span aria-hidden className="text-[13px] text-[var(--muted)]">
-          —
+          -
         </span>
         <TextField
           control={control}

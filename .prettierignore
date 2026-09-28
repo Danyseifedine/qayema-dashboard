@@ -1,9 +1,7 @@
 node_modules
 dist
-coverage
 package-lock.json
 *.gen.ts
 src/shared/components/ui
-e2e/.report
-e2e/.results
-e2e/__snapshots__
+.test-output
+e2e/snapshots

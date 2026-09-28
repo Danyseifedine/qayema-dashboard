@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 
-export type AlertVariant = 'error' | 'warning' | 'success' | 'info'
+type AlertVariant = 'error' | 'warning' | 'success' | 'info'
 
 const ICONS: Record<AlertVariant, typeof Info> = {
   error: XCircle,
@@ -23,12 +23,11 @@ const STYLES: Record<AlertVariant, string> = {
 }
 
 export type AlertProps = {
-  variant?: AlertVariant
+  variant: AlertVariant
   title?: ReactNode
-  children?: ReactNode
+  children: ReactNode
   /** Renders a dismiss button on the trailing side. */
   onDismiss?: () => void
-  dismissLabel?: string
   className?: string
 }
 
@@ -37,11 +36,10 @@ export type AlertProps = {
  * (and 429 responses) surface here rather than under a control.
  */
 export function Alert({
-  variant = 'info',
+  variant,
   title,
   children,
   onDismiss,
-  dismissLabel,
   className,
 }: AlertProps) {
   const { t } = useTranslation()
@@ -60,12 +58,12 @@ export function Alert({
       <Icon aria-hidden className="mt-px size-4 shrink-0" />
       <div className="min-w-0 flex-1">
         {title ? <p className="font-medium">{title}</p> : null}
-        {children ? <div className={cn(title && 'mt-1 opacity-90')}>{children}</div> : null}
+        <div className={cn(title && 'mt-1 opacity-90')}>{children}</div>
       </div>
       {onDismiss ? (
         <button
           type="button"
-          aria-label={dismissLabel ?? t('alert.dismiss')}
+          aria-label={t('alert.dismiss')}
           onClick={onDismiss}
           className="-m-1 shrink-0 rounded-md p-1 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
         >

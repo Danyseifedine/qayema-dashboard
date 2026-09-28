@@ -4,8 +4,8 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeDish } from '@/test/mocks/factories/menu'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { makeDish } from '@/test/factories/menu'
+import { renderWithProviders } from '@/test/render-with-providers'
 import { OverviewPage } from '@/features/overview/pages/overview-page'
 
 let mock: MockAdapter
@@ -63,7 +63,7 @@ describe('OverviewPage', () => {
 
   it('counts what is on the menu against the package', () => {
     stub()
-    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     expect(tile('Dishes')).toHaveTextContent('12 / 40')
     expect(tile('Categories')).toHaveTextContent('4 / 10')
@@ -75,7 +75,11 @@ describe('OverviewPage', () => {
   it('never shows an unlimited allowance as a number', () => {
     stub()
     renderWithProviders(
-      <OverviewPage limits={{ ...LIMITS, dishes: { used: 300, limit: null } }} onOpen={vi.fn()} />,
+      <OverviewPage
+        limits={{ ...LIMITS, dishes: { used: 300, limit: null } }}
+        switchedOff={[]}
+        onOpen={vi.fn()}
+      />,
     )
 
     expect(tile('Dishes')).toHaveTextContent('No limit on your package')
@@ -84,7 +88,7 @@ describe('OverviewPage', () => {
 
   it('shows how much of the menu is finished', async () => {
     stub()
-    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     // Done: logo, description, hours, phone, categories, dishes, social.
     // To do: cover, location, the one dish's photo.
@@ -99,7 +103,7 @@ describe('OverviewPage', () => {
     stub({}, [makeDish({ image_url: null }), makeDish({ image_url: null })])
     const onOpen = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={onOpen} />)
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
 
     await user.click(await screen.findByRole('button', { name: 'Add: A cover photo' }))
     expect(onOpen).toHaveBeenLastCalledWith('restaurant')
@@ -110,7 +114,7 @@ describe('OverviewPage', () => {
 
   it('lists what is left before what is done', async () => {
     stub()
-    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     const rows = within(await screen.findByRole('list', { name: 'To do' })).getAllByRole('listitem')
     expect(rows.slice(0, 3).map((row) => row.textContent)).toEqual([
@@ -122,7 +126,7 @@ describe('OverviewPage', () => {
 
   it('offers no button for what is already done', async () => {
     stub()
-    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     const logo = (await screen.findByText('Your logo')).closest('li')!
     expect(within(logo).queryByRole('button')).not.toBeInTheDocument()
@@ -137,7 +141,7 @@ describe('OverviewPage', () => {
       },
       [makeDish({ image_url: 'https://cdn.test/a.webp' })],
     )
-    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     expect(await screen.findByText('10 of 10 done')).toBeInTheDocument()
     expect(screen.getByText('Everything guests look for is on your menu.')).toBeInTheDocument()
@@ -148,7 +152,7 @@ describe('OverviewPage', () => {
     mock
       .onGet('/api/dishes')
       .reply(200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } })
-    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     expect(await screen.findByRole('button', { name: /try again/i })).toBeInTheDocument()
     // The counts come from the session, so they stay up.
@@ -159,7 +163,7 @@ describe('OverviewPage', () => {
     mock.onGet('/api/restaurant').replyOnce(500, { message: 'Server error', code: 'server_error' })
     stub()
     const user = userEvent.setup()
-    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     await user.click(await screen.findByRole('button', { name: /try again/i }))
 
@@ -173,7 +177,7 @@ describe('OverviewPage', () => {
     mock.onGet('/api/dishes').replyOnce(500, { message: 'Dishes are down', code: 'server_error' })
     stub()
     const user = userEvent.setup()
-    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     expect(await screen.findByText('Dishes are down')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /try again/i }))

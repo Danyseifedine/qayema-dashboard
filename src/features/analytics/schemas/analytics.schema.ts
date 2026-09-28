@@ -14,9 +14,7 @@ export const BASIC_RANGES: readonly StatsRange[] = ['7d', '30d']
 
 const count = z.number().int().nonnegative()
 
-export const statsSummarySchema = z.object({
-  range: z.enum(STATS_RANGES),
-  timezone: z.string(),
+const statsSummarySchema = z.object({
   totals: z.object({
     views: count,
     unique_visitors: count,
@@ -26,7 +24,6 @@ export const statsSummarySchema = z.object({
     orders: count.nullable(),
   }),
   series: z.array(z.object({ date: z.string(), views: count, qr_scans: count })),
-  last_visit_at: z.string().nullable(),
 })
 
 export type StatsSummary = z.infer<typeof statsSummarySchema>
@@ -37,7 +34,7 @@ const termsSchema = z.array(z.object({ term: z.string(), count }))
 
 export type Breakdown = z.infer<typeof breakdownSchema>
 
-export const GUEST_ACTIONS = [
+const GUEST_ACTIONS = [
   'dish_add',
   'category_open',
   'search',
@@ -50,8 +47,7 @@ export const GUEST_ACTIONS = [
 ] as const
 export type GuestAction = (typeof GUEST_ACTIONS)[number]
 
-export const advancedStatsSchema = z.object({
-  range: z.enum(STATS_RANGES),
+const advancedStatsSchema = z.object({
   /** The same totals for the period before; null for "All time". */
   previous: z
     .object({
@@ -61,7 +57,7 @@ export const advancedStatsSchema = z.object({
       orders: count.nullable(),
     })
     .nullable(),
-  /** Views by hour of day, 0–23, in the restaurant's timezone. */
+  /** Views by hour of day, 0 to 23, in the restaurant's timezone. */
   hours: z.array(count).length(24),
   /** Views by weekday, Monday first. */
   weekdays: z.array(count).length(7),
@@ -78,8 +74,7 @@ export const advancedStatsSchema = z.object({
 export type AdvancedStats = z.infer<typeof advancedStatsSchema>
 
 /** The one number every package sees: menu views over the last 7 days. */
-export const statsTeaserSchema = z.object({
-  range: z.literal('7d'),
+const statsTeaserSchema = z.object({
   views: z.number().int(),
 })
 export type StatsTeaser = z.infer<typeof statsTeaserSchema>

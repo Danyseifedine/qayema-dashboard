@@ -4,7 +4,6 @@ export type LimitBadgeProps = {
   used: number
   /** Null means unlimited on this plan. */
   limit: number | null
-  className?: string
 }
 
 /**
@@ -12,11 +11,9 @@ export type LimitBadgeProps = {
  * Turns gold as the ceiling approaches and red once it is reached, so running
  * out is visible before a save is rejected.
  */
-export function LimitBadge({ used, limit, className }: LimitBadgeProps) {
+export function LimitBadge({ used, limit }: LimitBadgeProps) {
   if (limit === null) {
-    return (
-      <span className={cn('text-[12px] tabular-nums text-[var(--muted)]', className)}>{used}</span>
-    )
+    return <span className="text-[12px] tabular-nums text-[var(--muted)]">{used}</span>
   }
 
   // A count reads left to right in both languages; without this an Arabic
@@ -32,7 +29,6 @@ export function LimitBadge({ used, limit, className }: LimitBadgeProps) {
         full && 'bg-status-danger-wash text-status-danger',
         near && 'bg-accent-wash text-accent',
         !full && !near && 'bg-[var(--hover-wash)] text-[var(--muted)]',
-        className,
       )}
     >
       {used} / {limit}

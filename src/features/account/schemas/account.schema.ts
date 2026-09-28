@@ -58,10 +58,5 @@ export function passwordFormSchema(hasPassword: boolean) {
     })
 }
 
-export const passwordResponseSchema = z.object({
-  message: z.string(),
-  has_password: z.boolean(),
-})
-
 export type ProfileFormValues = z.infer<typeof profileFormSchema>
 export type PasswordFormValues = z.infer<ReturnType<typeof passwordFormSchema>>

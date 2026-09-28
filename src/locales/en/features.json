@@ -5,6 +5,8 @@
   "toggle": "{{feature}} on",
   "saveFailed": "Could not update your features",
   "notOnPackage": "Not on your package",
+  "availableOn": "Available on {{package}}",
+  "packageChip": "{{note}}. See packages",
   "orders": {
     "label": "Orders",
     "description": "Guests add dishes to a cart and send you the order on WhatsApp.",

@@ -4,12 +4,12 @@ import { LimitBadge } from '@/shared/components/data-display/badges/limit-badge'
 
 describe('LimitBadge', () => {
   it('shows only the count when the package is unlimited', () => {
-    render(<LimitBadge used={42} limit={null} className="ms-1" />)
+    render(<LimitBadge used={42} limit={null} />)
 
     const badge = screen.getByText('42')
     expect(badge).toHaveTextContent(/^42$/)
     expect(badge).not.toHaveAttribute('dir')
-    expect(badge).toHaveClass('text-[var(--muted)]', 'ms-1')
+    expect(badge).toHaveClass('text-[var(--muted)]')
     expect(screen.queryByText(/\//)).not.toBeInTheDocument()
   })
 

@@ -27,9 +27,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Playwright output (baselines in e2e/__snapshots__ are committed)
-e2e/.report
-e2e/.results
-
-# Vitest coverage report (npm run test:coverage)
-coverage
+# Everything a test run writes: the coverage report, the Playwright report
+# and failure traces. The visual baselines in e2e/snapshots are committed.
+.test-output

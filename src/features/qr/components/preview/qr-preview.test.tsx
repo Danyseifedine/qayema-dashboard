@@ -33,20 +33,20 @@ describe('QrPreview', () => {
 
   it('draws once, then updates the same drawing', () => {
     const { rerender } = render(
-      <QrPreview options={{ data: 'a', backgroundOptions: { color: '#101010' } }} size={100} />,
+      <QrPreview options={{ data: 'a', backgroundOptions: { color: '#101010' } }} />,
     )
 
     expect(drawn.created).toEqual([
-      { data: 'a', backgroundOptions: { color: '#101010' }, width: 100, height: 100, type: 'svg' },
+      { data: 'a', backgroundOptions: { color: '#101010' }, width: 232, height: 232, type: 'svg' },
     ])
     expect(drawn.appended).toBe(1)
     expect(screen.getByRole('img', { name: "Your menu's QR code" }).parentElement).toHaveStyle({
       background: '#101010',
     })
 
-    rerender(<QrPreview options={{ data: 'b' }} size={100} />)
+    rerender(<QrPreview options={{ data: 'b' }} />)
     expect(drawn.created).toHaveLength(1)
-    expect(drawn.updated).toEqual([{ data: 'b', width: 100, height: 100, type: 'svg' }])
+    expect(drawn.updated).toEqual([{ data: 'b', width: 232, height: 232, type: 'svg' }])
   })
 
   it('frames the code in white when no background is given', () => {

@@ -212,7 +212,6 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
 
       <ConfirmDialog
         open={pendingDelete !== null}
-        destructive
         loading={remove.isPending}
         title={t('dishesPage.deleteTitle')}
         description={t('dishesPage.deleteDescription')}

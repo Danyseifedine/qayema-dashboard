@@ -12,7 +12,6 @@ export type StatTileProps = {
    * when there is nothing to compare with; left out, no line is shown.
    */
   change?: number | null
-  className?: string
 }
 
 /**
@@ -20,14 +19,9 @@ export type StatTileProps = {
  * `<div>` holding a `<dt>`/`<dd>` pair, so a group of tiles belongs inside a
  * `<dl>`.
  */
-export function StatTile({ label, value, hint, change, className }: StatTileProps) {
+export function StatTile({ label, value, hint, change }: StatTileProps) {
   return (
-    <div
-      className={cn(
-        'rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] px-3.5 py-3',
-        className,
-      )}
-    >
+    <div className="rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] px-3.5 py-3">
       <dt className="text-[12px] text-[var(--muted)]">{label}</dt>
       <dd className="mt-0.5 text-[20px] font-semibold tabular-nums tracking-[-0.02em]">{value}</dd>
       {change !== undefined ? (

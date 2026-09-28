@@ -34,12 +34,12 @@ The Laravel app (`../qayema`, `composer serve`) must be running, and its
 ## End-to-end tests
 
 `e2e/` drives the real Laravel app, this dashboard, the public menu and the
-admin together. `npm run e2e` starts both servers itself on their own ports —
+admin together. `npm run e2e` starts both servers itself on their own ports:
 the backend with `APP_ENV=e2e` on **8001** (its own SQLite database, never your
-MySQL) and Vite on **5174** — and rebuilds the e2e database first
+MySQL) and Vite on **5174**. It rebuilds the e2e database first
 (`composer e2e:reset`). Your everyday servers on 8000 and 5173 are untouched.
 
-- `e2e/fixtures/test.ts` — `owner(input)` builds an owner on the backend
+- `e2e/support/fixtures.ts`: `owner(input)` builds an owner on the backend
   (`POST /__e2e/scenario`: package and dates, design, languages, menu content,
   orders, visits…) and signs the browser in; `scenario`, `signIn`,
   `setPackage`, `expectAccessible` (axe). Any uncaught browser error fails the
@@ -48,5 +48,8 @@ MySQL) and Vite on **5174** — and rebuilds the e2e database first
   No retries: a flaky test is a bug.
 - Projects: `desktop` runs everything; `phone`, `arabic-rtl` and `dark` re-run
   the flows tagged `@matrix`; `visual` and `visual-phone` compare the
-  screenshots in `e2e/__snapshots__`.
-- Reports land in `e2e/.report` (HTML) and `e2e/.results` (traces, videos).
+  screenshots in `e2e/snapshots`.
+- Specs: `e2e/specs/{dashboard,public,admin,quality}`; shared helpers in
+  `e2e/support/helpers.ts`; the config is `e2e/playwright.config.ts`.
+- Reports land in `.test-output/` (git-ignored): `e2e-report` (HTML),
+  `e2e-results` (traces, videos), and `coverage` from `npm run test:coverage`.

@@ -67,11 +67,10 @@ type PreferencesState = {
   theme: Theme
   locale: Locale
   setTheme: (theme: Theme) => void
-  toggleTheme: () => void
   setLocale: (locale: Locale) => void
 }
 
-export const usePreferencesStore = create<PreferencesState>((set, get) => ({
+export const usePreferencesStore = create<PreferencesState>((set) => ({
   theme: initialTheme(),
   locale: readStoredLocale() ?? 'en',
   setTheme: (theme) => {
@@ -79,7 +78,6 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     persistTheme(theme)
     set({ theme })
   },
-  toggleTheme: () => get().setTheme(get().theme === 'dark' ? 'light' : 'dark'),
   setLocale: (locale) => {
     applyLocale(locale)
     persistLocale(locale)

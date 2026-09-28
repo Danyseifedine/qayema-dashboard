@@ -5,7 +5,7 @@ import {
   categoryListSchema,
   categoryResponseSchema,
 } from '@/features/menu/categories/schemas/category.schema'
-import { makeCategory, resetFactories } from '@/test/mocks/factories/menu'
+import { makeCategory, resetFactories } from '@/test/factories/menu'
 
 describe('category schemas', () => {
   it('reads the index with its usage block, where a null limit is unlimited', () => {

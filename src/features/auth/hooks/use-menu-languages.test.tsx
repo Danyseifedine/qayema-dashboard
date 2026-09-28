@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { useMenuLanguages } from '@/features/auth/hooks/use-menu-languages'
-import { makeSessionUser } from '@/test/mocks/factories/session'
+import { makeSessionUser } from '@/test/factories/session'
 
 let mock: MockAdapter
 

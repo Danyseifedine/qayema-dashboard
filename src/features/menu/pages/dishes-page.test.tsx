@@ -4,8 +4,8 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeCategory, makeDish, resetFactories } from '@/test/mocks/factories/menu'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { makeCategory, makeDish, resetFactories } from '@/test/factories/menu'
+import { renderWithProviders } from '@/test/render-with-providers'
 import { DishesPage } from '@/features/menu/pages/dishes-page'
 
 let mock: MockAdapter
@@ -189,9 +189,7 @@ describe('DishesPage', () => {
     // counting against the limit, so hiding them strands the owner.
     mock.onGet('/api/categories').reply(200, { data: [], meta: { used: 0, limit: 10 } })
     mock.onGet('/api/dishes').reply(200, {
-      data: [
-        makeDish({ id: 20, name: { en: 'Orphan', ar: null }, category_id: null, category: null }),
-      ],
+      data: [makeDish({ id: 20, name: { en: 'Orphan', ar: null }, category_id: null })],
       meta: { used: 1, limit: 40, currency: 'USD' },
     })
 
@@ -452,10 +450,7 @@ describe('DishesPage', () => {
   it('filters to the dishes that lost their category', async () => {
     mock.onGet('/api/categories').reply(200, { data: categories, meta: { used: 2, limit: 10 } })
     mock.onGet('/api/dishes').reply(200, {
-      data: [
-        ...dishes,
-        makeDish({ id: 20, name: { en: 'Orphan', ar: null }, category_id: null, category: null }),
-      ],
+      data: [...dishes, makeDish({ id: 20, name: { en: 'Orphan', ar: null }, category_id: null })],
       meta: { used: 4, limit: 40, currency: 'USD' },
     })
 
@@ -506,7 +501,7 @@ describe('DishesPage', () => {
   it('sends the owner to categories from the orphans warning', async () => {
     mock.onGet('/api/categories').reply(200, { data: [], meta: { used: 0, limit: 10 } })
     mock.onGet('/api/dishes').reply(200, {
-      data: [makeDish({ id: 20, category_id: null, category: null })],
+      data: [makeDish({ id: 20, category_id: null })],
       meta: { used: 1, limit: 40, currency: 'USD' },
     })
     const onOpenCategories = vi.fn()

@@ -6,7 +6,7 @@ import { cn } from '@/shared/utils/dom/cn'
 export type ChoiceOption<V extends string> = {
   value: V
   label: string
-  /** A small picture of the option — the point of this field over a select. */
+  /** A small picture of the option, the point of this field over a select. */
   preview?: ReactNode
 }
 
@@ -16,7 +16,6 @@ export type ChoiceFieldProps<T extends FieldValues, V extends string> = {
   label: ReactNode
   options: readonly ChoiceOption<V>[]
   hint?: ReactNode
-  disabled?: boolean
   className?: string
 }
 
@@ -24,7 +23,7 @@ export type ChoiceFieldProps<T extends FieldValues, V extends string> = {
  * One of a few options, shown as cards with a picture each.
  *
  * Real radio inputs underneath, so arrow keys move between options and a
- * screen reader hears a radio group — the cards are only the look. A group of
+ * screen reader hears a radio group; the cards are only the look. A group of
  * options has a legend rather than one label, which is why this is not built
  * on Field; it borrows Field's label style instead.
  */
@@ -34,7 +33,6 @@ export function ChoiceField<T extends FieldValues, V extends string>({
   label,
   options,
   hint,
-  disabled,
   className,
 }: ChoiceFieldProps<T, V>) {
   const { field, fieldState } = useController({ control, name })
@@ -44,7 +42,6 @@ export function ChoiceField<T extends FieldValues, V extends string>({
   return (
     <fieldset
       className={cn('flex flex-col gap-2 pt-2', className)}
-      disabled={disabled}
       aria-describedby={error || hint ? hintId : undefined}
     >
       <legend className="label-caps mb-2 text-[var(--muted)]">{label}</legend>
@@ -62,7 +59,6 @@ export function ChoiceField<T extends FieldValues, V extends string>({
                 checked
                   ? 'border-[var(--gold-on)] bg-[var(--hover-wash)]'
                   : 'border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--bg)]',
-                disabled && 'cursor-not-allowed opacity-50',
               )}
             >
               <input

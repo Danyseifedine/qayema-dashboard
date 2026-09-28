@@ -7,5 +7,4 @@ import { QUERY_ROOTS } from '@/lib/query/keys'
 export const categoryKeys = {
   all: [QUERY_ROOTS.categories] as const,
   list: () => [QUERY_ROOTS.categories, 'list'] as const,
-  detail: (id: number) => [QUERY_ROOTS.categories, 'detail', id] as const,
 }

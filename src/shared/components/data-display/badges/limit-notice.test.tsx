@@ -4,26 +4,20 @@ import { LimitNotice } from '@/shared/components/data-display/badges/limit-notic
 
 describe('LimitNotice', () => {
   it('heads the section with its usage', () => {
-    const { container } = render(<LimitNotice label="Dishes" used={7} limit={20} />)
+    render(
+      <LimitNotice label="Dishes" used={7} limit={20} description="Everything on your menu." />,
+    )
 
     expect(screen.getByRole('heading', { name: 'Dishes' })).toBeInTheDocument()
     expect(screen.getByText('7 / 20')).toBeInTheDocument()
-    expect(container.querySelector('p')).toBeNull()
   })
 
   it('shows an unlimited count and a subtitle', () => {
     render(
-      <LimitNotice
-        label="Dishes"
-        used={7}
-        limit={null}
-        description="Everything on your menu."
-        className="mb-2"
-      />,
+      <LimitNotice label="Dishes" used={7} limit={null} description="Everything on your menu." />,
     )
 
     expect(screen.getByText('7')).toBeInTheDocument()
     expect(screen.getByText('Everything on your menu.')).toBeInTheDocument()
-    expect(screen.getByRole('heading').parentElement?.parentElement).toHaveClass('mb-2')
   })
 })

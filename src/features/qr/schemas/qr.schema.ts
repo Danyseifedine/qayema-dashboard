@@ -8,7 +8,7 @@ import { t } from '@/lib/i18n'
  * App\Services\Global\QrStyle.
  */
 
-export const DOT_STYLES = [
+const DOT_STYLES = [
   'square',
   'dots',
   'rounded',
@@ -16,11 +16,11 @@ export const DOT_STYLES = [
   'classy',
   'classy-rounded',
 ] as const
-export const CORNER_STYLES = ['square', 'extra-rounded', 'dot'] as const
-export const EYE_STYLES = ['square', 'dot'] as const
-export const GRADIENT_TYPES = ['linear', 'radial'] as const
-export const LOGO_SIZES = ['small', 'medium', 'large'] as const
-export const CARD_THEMES = ['light', 'dark', 'brand'] as const
+const CORNER_STYLES = ['square', 'extra-rounded', 'dot'] as const
+const EYE_STYLES = ['square', 'dot'] as const
+const GRADIENT_TYPES = ['linear', 'radial'] as const
+const LOGO_SIZES = ['small', 'medium', 'large'] as const
+const CARD_THEMES = ['light', 'dark', 'brand'] as const
 
 export type DotStyle = (typeof DOT_STYLES)[number]
 export type CornerStyle = (typeof CORNER_STYLES)[number]
@@ -54,7 +54,7 @@ export const qrDesignSchema = z.object({
 
 export type QrDesign = z.infer<typeof qrDesignSchema>
 
-export const qrStatsSchema = z.object({
+const qrStatsSchema = z.object({
   today: z.number().int(),
   week: z.number().int(),
   month: z.number().int(),
@@ -63,7 +63,7 @@ export const qrStatsSchema = z.object({
 
 export type QrStats = z.infer<typeof qrStatsSchema>
 
-export const qrSchema = z.object({
+const qrSchema = z.object({
   unlocked: z.boolean(),
   /** Locked by the owner's own switch on the Features page, not the package. */
   switched_off: z.boolean(),
@@ -74,10 +74,10 @@ export const qrSchema = z.object({
   card_url: z.string().nullable(),
   /** Inlined so it can be drawn into a PNG without the CDN sending CORS. */
   logo_data_url: z.string().nullable(),
-  /** The menu's main colour — what a "brand" card is painted with. */
+  /** The menu's main colour: what a "brand" card is painted with. */
   brand_color: z.string(),
   settings: qrDesignSchema,
-  /** The simple QR — what "Reset to simple" returns to. */
+  /** The simple QR: what "Reset to simple" returns to. */
   defaults: qrDesignSchema,
   stats: qrStatsSchema.nullable(),
 })

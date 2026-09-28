@@ -1,11 +1,21 @@
-import { ChartNoAxesColumn, Languages, type LucideIcon, QrCode, ReceiptText } from 'lucide-react'
+import {
+  ChartNoAxesColumn,
+  Languages,
+  Lock,
+  type LucideIcon,
+  QrCode,
+  ReceiptText,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { Plan } from '@/features/auth'
+import { usePackageFor, type PackageFlag } from '@/features/package'
 import { Field, FormSection } from '@/shared/components/forms'
 import { Combobox, Segmented, Switch } from '@/shared/components/ui'
 import { MAIN_LANGUAGE, MENU_LANGUAGES, languageName } from '@/shared/constants/menu-languages'
 import { useSaveMenuLanguages } from '@/features/restaurant/hooks/use-menu-languages-save'
 import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
+import { usePreferencesStore } from '@/stores/preferences.store'
+import { cn } from '@/shared/utils/dom/cn'
 
 type FeatureKey = 'orders' | 'qr' | 'analytics' | 'languages'
 
@@ -18,9 +28,11 @@ export type FeaturesPageProps = {
   secondLocale: string | null
   /** What the menu opens in. */
   defaultLocale: string
+  /** Opens the Package page, from a feature the package does not include. */
+  onOpenPackage: () => void
 }
 
-const ROWS: { key: FeatureKey; icon: LucideIcon; plan?: keyof Plan }[] = [
+const ROWS: { key: FeatureKey; icon: LucideIcon; plan: PackageFlag }[] = [
   { key: 'orders', icon: ReceiptText, plan: 'ordering' },
   { key: 'qr', icon: QrCode, plan: 'qr_studio' },
   { key: 'analytics', icon: ChartNoAxesColumn, plan: 'analytics' },
@@ -33,7 +45,13 @@ const ROWS: { key: FeatureKey; icon: LucideIcon; plan?: keyof Plan }[] = [
  * in ../qayema for what each one does. "Multiple languages" carries its own
  * settings: which second language, and which one the menu opens in.
  */
-export function FeaturesPage({ off, plan, secondLocale, defaultLocale }: FeaturesPageProps) {
+export function FeaturesPage({
+  off,
+  plan,
+  secondLocale,
+  defaultLocale,
+  onOpenPackage,
+}: FeaturesPageProps) {
   const { t } = useTranslation('features')
   const save = useSaveSwitchedOff()
 
@@ -52,7 +70,10 @@ export function FeaturesPage({ off, plan, secondLocale, defaultLocale }: Feature
         <ul className="flex flex-col divide-y-[0.5px] divide-[var(--line-2)]">
           {ROWS.map((row) => {
             const { key, icon: Icon } = row
-            const on = !off.includes(key)
+            // Without the package a feature is off whatever the owner chose;
+            // their choice is kept and applies again once the package has it.
+            const included = plan[row.plan]
+            const on = included && !off.includes(key)
             const label = t(`${key}.label`)
             const offNote = key === 'analytics' ? null : t(`${key}.offNote`)
 
@@ -64,28 +85,27 @@ export function FeaturesPage({ off, plan, secondLocale, defaultLocale }: Feature
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] font-medium">
                     {label}
-                    {row.plan && !plan[row.plan] ? (
-                      <span className="ms-2 text-[12px] font-normal text-[var(--faint)]">
-                        {t('notOnPackage')}
-                      </span>
-                    ) : null}
+                    {included ? null : (
+                      <PackageChip flag={row.plan} onOpenPackage={onOpenPackage} />
+                    )}
                   </p>
                   <p className="text-[12.5px] leading-snug text-[var(--muted)]">
                     {t(`${key}.description`)}
                   </p>
-                  {!on && offNote ? (
+                  {included && !on && offNote ? (
                     <p className="mt-1 text-[12.5px] leading-snug text-[var(--status-warn)]">
                       {offNote}
                     </p>
                   ) : null}
                   {/* The pickers need the package: the server refuses a second
                       language without it. */}
-                  {key === 'languages' && on && plan.multiple_languages ? (
+                  {key === 'languages' && on ? (
                     <LanguageChoice secondLocale={secondLocale} defaultLocale={defaultLocale} />
                   ) : null}
                 </div>
                 <Switch
                   checked={on}
+                  disabled={!included}
                   onChange={(next) => toggle(key, next)}
                   aria-label={t('toggle', { feature: label })}
                   className="mt-1.5"
@@ -96,6 +116,35 @@ export function FeaturesPage({ off, plan, secondLocale, defaultLocale }: Feature
         </ul>
       </FormSection>
     </div>
+  )
+}
+
+/**
+ * Where a feature the package lacks can be had, as the sidebar's lock chip:
+ * the first package that includes it ("Premium"), which opens the Package
+ * page. Until the packages load it says the owner's package lacks it.
+ */
+function PackageChip({ flag, onOpenPackage }: { flag: PackageFlag; onOpenPackage: () => void }) {
+  const { t } = useTranslation('features')
+  const locale = usePreferencesStore((state) => state.locale)
+  const name = usePackageFor(flag, locale)
+  const label = name ? t('availableOn', { package: name }) : t('notOnPackage')
+
+  return (
+    <button
+      type="button"
+      onClick={onOpenPackage}
+      aria-label={t('packageChip', { note: label })}
+      title={t('packageChip', { note: label })}
+      className={cn(
+        'ms-2 inline-flex items-center gap-1 rounded-full bg-accent-wash px-2 py-0.5 align-[1px]',
+        'text-[11px] font-medium whitespace-nowrap text-accent transition-colors hover:bg-accent-wash-hover',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+      )}
+    >
+      <Lock aria-hidden className="size-3" />
+      {name ?? t('notOnPackage')}
+    </button>
   )
 }
 

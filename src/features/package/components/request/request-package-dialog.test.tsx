@@ -4,8 +4,8 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makePackage } from '@/test/mocks/factories/packages'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { makePackage } from '@/test/factories/packages'
+import { renderWithProviders } from '@/test/render-with-providers'
 import { RequestPackageDialog } from '@/features/package/components/request/request-package-dialog'
 
 let mock: MockAdapter

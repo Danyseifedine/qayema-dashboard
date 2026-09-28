@@ -11,8 +11,8 @@ export type BrandingSectionProps = {
 }
 
 /**
- * The two pictures the menu is built around. The logo cannot be cleared —
- * every menu has to show something — so only the cover offers a remove.
+ * The two pictures the menu is built around. The logo cannot be cleared
+ * (every menu has to show something), so only the cover offers a remove.
  */
 export function BrandingSection({
   control,

@@ -4,7 +4,7 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { renderWithProviders } from '@/test/render-with-providers'
 import { AppearancePage } from '@/features/appearance/pages/appearance-page'
 
 let mock: MockAdapter
@@ -76,7 +76,7 @@ const CLASSIC_SETTINGS = [
 function payload(overrides: Record<string, unknown> = {}) {
   return {
     data: {
-      design: { id: 1, name: { en: 'Classic', ar: 'كلاسيك' } },
+      design: { name: { en: 'Classic', ar: 'كلاسيك' } },
       settings: CLASSIC_SETTINGS,
       fonts: [LATIN],
       ...overrides,
@@ -122,7 +122,7 @@ describe('AppearancePage', () => {
 
     it('shows whatever a different design declares, with the key when it has no label', async () => {
       stub({
-        design: { id: 2, name: { en: 'Midnight', ar: null } },
+        design: { name: { en: 'Midnight', ar: null } },
         settings: [
           {
             key: 'neon_glow',

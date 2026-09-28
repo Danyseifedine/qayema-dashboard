@@ -1,14 +1,9 @@
-import { cn } from '@/shared/utils/dom/cn'
-
 /** Placeholder card, matched to the dish card's proportions. */
-export function CardSkeleton({ className }: { className?: string }) {
+function CardSkeleton() {
   return (
     <div
       aria-hidden
-      className={cn(
-        'overflow-hidden rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)]',
-        className,
-      )}
+      className="overflow-hidden rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)]"
     >
       <div className="aspect-[4/3] animate-pulse bg-[var(--hover-wash)]" />
       <div className="flex flex-col gap-2 p-3.5">

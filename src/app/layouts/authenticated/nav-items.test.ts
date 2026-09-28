@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { NAV_ITEMS, navLock } from '@/app/layouts/authenticated/nav-items'
-import { EMPTY_PLAN, FULL_PLAN } from '@/test/mocks/factories/session'
+import { EMPTY_PLAN, FULL_PLAN } from '@/test/factories/session'
 
 const NO_TEMPLATE = { hasTemplate: false, plan: FULL_PLAN }
 const READY = { hasTemplate: true, plan: FULL_PLAN }

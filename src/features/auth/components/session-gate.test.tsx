@@ -6,8 +6,8 @@ import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { safeRedirect } from '@/lib/security/safe-redirect'
 import { SessionGate } from '@/features/auth/components/session-gate'
-import { makeSessionUser } from '@/test/mocks/factories/session'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { makeSessionUser } from '@/test/factories/session'
+import { renderWithProviders } from '@/test/render-with-providers'
 
 vi.mock('@/lib/security/safe-redirect', () => ({ safeRedirect: vi.fn(() => true) }))
 

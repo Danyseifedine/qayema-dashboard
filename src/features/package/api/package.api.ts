@@ -1,10 +1,6 @@
+import { z } from 'zod'
 import { request } from '@/lib/api'
-import {
-  packageListSchema,
-  packageRequestResultSchema,
-  type PackageList,
-  type PackageRequestResult,
-} from '@/features/package/schemas/package.schema'
+import { packageListSchema, type PackageList } from '@/features/package/schemas/package.schema'
 
 export function fetchPackages(signal?: AbortSignal): Promise<PackageList> {
   return request(packageListSchema, { method: 'GET', url: '/api/packages', signal })
@@ -21,10 +17,6 @@ export type PackageRequestPayload = {
  * request reaches the admin inbox and a human assigns it. The daily quota is
  * shared with the public contact form, so a 429 is a normal outcome.
  */
-export function requestPackage(payload: PackageRequestPayload): Promise<PackageRequestResult> {
-  return request(packageRequestResultSchema, {
-    method: 'POST',
-    url: '/api/packages/request',
-    data: payload,
-  })
+export async function requestPackage(payload: PackageRequestPayload): Promise<void> {
+  await request(z.unknown(), { method: 'POST', url: '/api/packages/request', data: payload })
 }

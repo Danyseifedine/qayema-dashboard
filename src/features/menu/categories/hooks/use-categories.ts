@@ -83,7 +83,7 @@ export function useReorderCategories() {
       if (previous) {
         queryClient.setQueryData<CategoryList>(categoryKeys.list(), {
           ...previous,
-          data: ordered.map((category, index) => ({ ...category, display_order: index + 1 })),
+          data: ordered,
         })
       }
 

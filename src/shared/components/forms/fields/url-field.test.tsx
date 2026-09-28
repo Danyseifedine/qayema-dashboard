@@ -6,7 +6,7 @@ import { UrlField } from '@/shared/components/forms/fields/url-field'
 
 type Values = { website: string }
 
-function Harness({ placeholder, disabled }: { placeholder?: string; disabled?: boolean }) {
+function Harness({ placeholder }: { placeholder?: string }) {
   const form = useForm<Values>({ defaultValues: { website: '' } })
   const website = useWatch({ control: form.control, name: 'website' })
   return (
@@ -18,7 +18,6 @@ function Harness({ placeholder, disabled }: { placeholder?: string; disabled?: b
         hint="Your own site."
         optionalText="Optional"
         placeholder={placeholder}
-        disabled={disabled}
       />
       <output data-testid="value">{website}</output>
     </>
@@ -49,10 +48,9 @@ describe('UrlField', () => {
     expect(screen.getByTestId('value')).toHaveTextContent('https://qayema.app')
   })
 
-  it('takes its own placeholder and a disabled state', () => {
-    render(<Harness placeholder="https://instagram.com/" disabled />)
+  it('takes its own placeholder', () => {
+    render(<Harness placeholder="https://instagram.com/" />)
 
     expect(box()).toHaveAttribute('placeholder', 'https://instagram.com/')
-    expect(box()).toBeDisabled()
   })
 })

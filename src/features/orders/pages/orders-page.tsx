@@ -78,7 +78,6 @@ export function OrdersPage() {
 
       <ConfirmDialog
         open={pendingCancel !== null}
-        destructive
         loading={setStatus.isPending}
         title={t('cancelDialog.title')}
         description={t('cancelDialog.description')}

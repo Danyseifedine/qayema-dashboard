@@ -5,7 +5,7 @@ import { LocaleTabs } from '@/shared/components/forms/translatable/locale-tabs'
 
 describe('LocaleTabs', () => {
   it('shows one tab per menu language, by code', () => {
-    render(<LocaleTabs languages={['en', 'fr']} value="en" onChange={vi.fn()} />)
+    render(<LocaleTabs languages={['en', 'fr']} value="en" onChange={vi.fn()} incomplete={[]} />)
 
     expect(screen.getByRole('tablist', { name: 'Content language' })).toBeInTheDocument()
     const [en, fr] = screen.getAllByRole('tab')
@@ -28,13 +28,10 @@ describe('LocaleTabs', () => {
   it('reports the language that was picked', async () => {
     const onChange = vi.fn()
     const user = userEvent.setup()
-    render(
-      <LocaleTabs languages={['en', 'ar']} value="en" onChange={onChange} className="ms-auto" />,
-    )
+    render(<LocaleTabs languages={['en', 'ar']} value="en" onChange={onChange} incomplete={[]} />)
 
     await user.click(screen.getByRole('tab', { name: 'AR' }))
 
     expect(onChange).toHaveBeenCalledWith('ar')
-    expect(screen.getByRole('tablist')).toHaveClass('ms-auto')
   })
 })

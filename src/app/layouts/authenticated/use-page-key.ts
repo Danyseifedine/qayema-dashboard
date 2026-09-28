@@ -10,7 +10,7 @@ export function pageKeyFromPath(pathname: string): string | null {
   return NAV_ITEMS.some((item) => item.key === key) ? key : null
 }
 
-export function pathOf(key: string): string {
+function pathOf(key: string): string {
   return `${BASE}${key}`
 }
 

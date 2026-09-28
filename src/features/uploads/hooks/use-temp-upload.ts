@@ -10,11 +10,9 @@ export type UploadState = {
   /** 0-100 while the bytes are in flight, null when the size is unknown. */
   progress: number | null
   error: string | null
-  /** The last successful upload, for the preview's size summary. */
-  result: TempUpload | null
 }
 
-const IDLE: UploadState = { uploading: false, progress: null, error: null, result: null }
+const IDLE: UploadState = { uploading: false, progress: null, error: null }
 
 /**
  * Uploads one image to the temp area.
@@ -38,7 +36,7 @@ export function useTempUpload(context: UploadContext) {
     async (file: File): Promise<TempUpload | null> => {
       const rejection = await checkImageFile(file)
       if (rejection) {
-        // The guard's own wording is English; its code picks the translation.
+        // The guard's code picks the translation.
         setState({
           ...IDLE,
           error: t(`upload.rejected.${rejection.code}`, { max: MAX_IMAGE_EDGE }),
@@ -51,7 +49,7 @@ export function useTempUpload(context: UploadContext) {
       const controller = new AbortController()
       controllerRef.current = controller
 
-      setState({ uploading: true, progress: 0, error: null, result: null })
+      setState({ uploading: true, progress: 0, error: null })
 
       try {
         const result = await uploadTempImage(file, {
@@ -61,7 +59,7 @@ export function useTempUpload(context: UploadContext) {
             setState((current) => (current.uploading ? { ...current, progress } : current)),
         })
 
-        setState({ uploading: false, progress: 100, error: null, result })
+        setState({ uploading: false, progress: 100, error: null })
         return result
       } catch (error) {
         // An aborted request was replaced on purpose; it is not a failure.

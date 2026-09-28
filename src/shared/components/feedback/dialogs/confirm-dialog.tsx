@@ -6,18 +6,16 @@ import { cn } from '@/shared/utils/dom/cn'
 export type ConfirmDialogProps = {
   open: boolean
   title: ReactNode
-  description?: ReactNode
-  confirmLabel?: string
-  cancelLabel?: string
-  /** Paints the confirm button as destructive. */
-  destructive?: boolean
-  loading?: boolean
+  description: ReactNode
+  confirmLabel: string
+  loading: boolean
   onConfirm: () => void
   onCancel: () => void
 }
 
 /**
- * A modal that asks before something irreversible.
+ * A modal that asks before something irreversible. The confirm button is
+ * painted as destructive: every question it asks is about losing something.
  *
  * Built on the native `<dialog>`, so the browser supplies the top layer, the
  * focus trap and Escape handling rather than us reimplementing them.
@@ -27,9 +25,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
-  cancelLabel,
-  destructive = false,
-  loading = false,
+  loading,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -64,21 +60,14 @@ export function ConfirmDialog({
     >
       <div className="flex flex-col gap-2 p-5">
         <h2 className="font-display text-[19px] leading-tight">{title}</h2>
-        {description ? (
-          <p className="text-[13.5px] leading-relaxed text-[var(--muted)]">{description}</p>
-        ) : null}
+        <p className="text-[13.5px] leading-relaxed text-[var(--muted)]">{description}</p>
       </div>
       <div className="flex justify-end gap-2.5 border-t-[0.5px] border-[var(--line)] p-3.5">
         <Button variant="ghost" onClick={onCancel} disabled={loading}>
-          {cancelLabel ?? t('confirmDialog.cancel')}
+          {t('confirmDialog.cancel')}
         </Button>
-        <Button
-          variant={destructive ? 'danger' : 'primary'}
-          onClick={onConfirm}
-          loading={loading}
-          autoFocus
-        >
-          {confirmLabel ?? t('confirmDialog.confirm')}
+        <Button variant="danger" onClick={onConfirm} loading={loading} autoFocus>
+          {confirmLabel}
         </Button>
       </div>
     </dialog>

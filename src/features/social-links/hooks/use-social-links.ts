@@ -16,8 +16,8 @@ import type {
 import { socialLinkKeys } from '@/features/social-links/hooks/social-link-keys'
 
 /**
- * Every social link for the restaurant. There are at most four — one per
- * platform — so this is never paginated or filtered.
+ * Every social link for the restaurant. There are at most four (one per
+ * platform), so this is never paginated or filtered.
  */
 export function useSocialLinks(): UseQueryResult<SocialLinkList, ApiError> {
   return useQuery<SocialLinkList, ApiError>({

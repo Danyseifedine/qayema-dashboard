@@ -74,10 +74,8 @@ describe('Segmented', () => {
         onChange={vi.fn()}
         options={OPTIONS}
         size="sm"
-        className="ms-auto"
       />,
     )
     expect(screen.getAllByRole('tab')[0]).toHaveClass('px-3')
-    expect(screen.getByRole('tablist')).toHaveClass('ms-auto')
   })
 })

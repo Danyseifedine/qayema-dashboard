@@ -10,7 +10,6 @@ import {
 } from 'react-hook-form'
 import { HelperText, Input, Label, Textarea } from '@/shared/components/ui'
 import { MAIN_LANGUAGE, languageDir, languageName } from '@/shared/constants/menu-languages'
-import { cn } from '@/shared/utils/dom/cn'
 import { LocaleTabs } from '@/shared/components/forms/translatable/locale-tabs'
 
 export type TranslatableFieldProps<T extends FieldValues> = {
@@ -19,18 +18,16 @@ export type TranslatableFieldProps<T extends FieldValues> = {
   name: FieldPath<T>
   /** The menu's languages, English first. One language shows no tabs. */
   languages: readonly string[]
-  label?: ReactNode
+  label: ReactNode
   hint?: ReactNode
   /** Marks English as required: the one language every name must have. */
   required?: boolean
   optionalText?: ReactNode
-  disabled?: boolean
   placeholder?: Partial<Record<string, string>>
-  maxLength?: number
+  maxLength: number
   /** Renders a textarea instead of a single-line input. */
   multiline?: boolean
   rows?: number
-  className?: string
 }
 
 /**
@@ -49,12 +46,10 @@ export function TranslatableTextField<T extends FieldValues>({
   hint,
   required,
   optionalText,
-  disabled,
   placeholder,
   maxLength,
   multiline = false,
   rows = 4,
-  className,
 }: TranslatableFieldProps<T>) {
   const [chosen, setChosen] = useState<string>(MAIN_LANGUAGE)
   // The menu's languages can change under an open form (Settings); fall back
@@ -91,7 +86,6 @@ export function TranslatableTextField<T extends FieldValues>({
     dir: languageDir(active),
     lang: active,
     placeholder: placeholder?.[active],
-    disabled,
     maxLength,
     'aria-describedby': describedBy,
     'aria-invalid': Boolean(error) || undefined,
@@ -99,15 +93,11 @@ export function TranslatableTextField<T extends FieldValues>({
   }
 
   return (
-    <div className={cn('flex flex-col gap-2 pt-2', className)}>
+    <div className="flex flex-col gap-2 pt-2">
       <div className="flex items-center justify-between gap-3">
-        {label ? (
-          <Label htmlFor={controlId} required={required} optionalText={optionalText}>
-            {label}
-          </Label>
-        ) : (
-          <span />
-        )}
+        <Label htmlFor={controlId} required={required} optionalText={optionalText}>
+          {label}
+        </Label>
         {languages.length > 1 ? (
           <LocaleTabs
             languages={languages}
@@ -139,13 +129,11 @@ export function TranslatableTextField<T extends FieldValues>({
             </HelperText>
           ) : null}
         </div>
-        {maxLength ? (
-          <HelperText className="shrink-0 tabular-nums">
-            <span dir="ltr">
-              {value.length} / {maxLength}
-            </span>
-          </HelperText>
-        ) : null}
+        <HelperText className="shrink-0 tabular-nums">
+          <span dir="ltr">
+            {value.length} / {maxLength}
+          </span>
+        </HelperText>
       </div>
     </div>
   )

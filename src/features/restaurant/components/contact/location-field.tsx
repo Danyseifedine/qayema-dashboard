@@ -90,7 +90,7 @@ export function LocationField<T extends FieldValues>({
                is what lets the frame send one: without it the frame runs in an
                opaque origin, the tile requests arrive anonymous, and the tiles
                come back 403. It is safe here only because the frame is a third
-               party — it restores openstreetmap.org's own origin, not ours, so
+               party: it restores openstreetmap.org's own origin, not ours, so
                it still cannot reach into this page. The rule below guards the
                same-origin case, which this is not; the sandbox is still
                stricter than none, since forms, popups and top-level

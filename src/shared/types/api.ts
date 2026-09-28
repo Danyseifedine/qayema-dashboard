@@ -1,5 +1,5 @@
 /**
- * Shapes the Laravel API speaks. See ../qayema/bootstrap/app.php — every
+ * Shapes the Laravel API speaks. See ../qayema/bootstrap/app.php: every
  * `api/*` error is `{message, code}`, and validation failures add `errors`.
  */
 
@@ -46,17 +46,17 @@ export class ApiError extends Error {
     return this.number('retry_after')
   }
 
-  /** 422 — the server rejected the submitted fields. */
+  /** 422: the server rejected the submitted fields. */
   get isValidation(): boolean {
     return this.status === 422 && this.errors !== null
   }
 
-  /** 401 — the session is gone; the caller should bounce to login. */
+  /** 401: the session is gone; the caller should bounce to login. */
   get isUnauthenticated(): boolean {
     return this.status === 401
   }
 
-  /** 429 — a rate limiter rejected the call. */
+  /** 429: a rate limiter rejected the call. */
   get isRateLimited(): boolean {
     return this.status === 429
   }

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeCategory, resetFactories } from '@/test/mocks/factories/menu'
+import { makeCategory, resetFactories } from '@/test/factories/menu'
 import { categoryKeys } from '@/features/menu/categories/hooks/category-keys'
 import {
   useReorderCategories,

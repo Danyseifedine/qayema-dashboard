@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { translatableTextSchema } from '@/shared/utils/string/menu-text'
 
 /** Mirrors ../qayema/app/Http/Resources/TemplateResource.php. */
-export const designSchema = z.object({
+const designSchema = z.object({
   id: z.number().int(),
   slug: z.string(),
   name: translatableTextSchema,

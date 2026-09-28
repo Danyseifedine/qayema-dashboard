@@ -3,7 +3,7 @@ import { cn } from '@/shared/utils/dom/cn'
 /**
  * The bare control inside a `FieldShell`. The shell owns the border, the
  * background and the focus ring, so the control itself must render none of
- * them — hence the explicit `focus:ring-0`.
+ * them, hence the explicit `focus:ring-0`.
  */
 export const controlClass = cn(
   'w-full flex-1 appearance-none border-0 bg-transparent outline-none',

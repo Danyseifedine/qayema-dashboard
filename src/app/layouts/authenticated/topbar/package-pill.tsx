@@ -8,14 +8,13 @@ export type PackagePillProps = {
   /** The package ends within a week: a dot asks the owner to look. */
   endingSoon?: boolean
   onClick?: () => void
-  className?: string
 }
 
 /**
  * Which package the restaurant is on, always visible because every limit in
  * the dashboard comes from it. Clicking it opens the package page.
  */
-export function PackagePill({ label, endingSoon = false, onClick, className }: PackagePillProps) {
+export function PackagePill({ label, endingSoon = false, onClick }: PackagePillProps) {
   const { t } = useTranslation()
 
   return (
@@ -32,7 +31,6 @@ export function PackagePill({ label, endingSoon = false, onClick, className }: P
         'border-accent-border bg-accent-wash text-[12.5px] font-medium text-accent',
         'transition-colors duration-200 hover:bg-accent-wash-hover',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
-        className,
       )}
     >
       <Crown aria-hidden className="size-3.5" />

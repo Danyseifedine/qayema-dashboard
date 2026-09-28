@@ -129,7 +129,6 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
 
       <ConfirmDialog
         open={pendingDelete !== null}
-        destructive
         loading={remove.isPending}
         title={t('categoriesPage.deleteTitle')}
         description={t('categoriesPage.deleteDescription')}

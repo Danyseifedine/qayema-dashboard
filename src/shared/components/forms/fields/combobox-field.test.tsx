@@ -123,10 +123,8 @@ describe('ComboboxField', () => {
             numeric={numeric}
             hint="Choose one."
             required
-            optionalText="Optional"
             placeholder="Choose"
             emptyText="Nothing here"
-            className="mt-3"
           />
           <output data-testid="value">{pick === undefined ? 'unset' : JSON.stringify(pick)}</output>
         </>

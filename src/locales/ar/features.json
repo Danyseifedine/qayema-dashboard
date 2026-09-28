@@ -5,6 +5,8 @@
   "toggle": "تشغيل {{feature}}",
   "saveFailed": "تعذّر تحديث الميزات",
   "notOnPackage": "غير متوفرة في باقتك",
+  "availableOn": "متوفرة في باقة {{package}}",
+  "packageChip": "{{note}}. عرض الباقات",
   "orders": {
     "label": "الطلبات",
     "description": "يضيف الزبائن الأطباق إلى السلة ويرسلون لك الطلب عبر واتساب.",

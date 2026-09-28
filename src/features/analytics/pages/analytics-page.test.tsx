@@ -4,7 +4,7 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { renderWithProviders } from '@/test/render-with-providers'
 import { AnalyticsPage } from '@/features/analytics/pages/analytics-page'
 
 let mock: MockAdapter
@@ -18,14 +18,11 @@ function tile(label: string): HTMLElement {
 
 function summary(overrides: Record<string, unknown> = {}) {
   return {
-    range: '30d',
-    timezone: 'Asia/Beirut',
     totals: { views: 120, unique_visitors: 80, qr_scans: 90, views_today: 7, orders: 12 },
     series: [
       { date: '2026-09-25', views: 50, qr_scans: 40 },
       { date: '2026-09-26', views: 70, qr_scans: 50 },
     ],
-    last_visit_at: '2026-09-26T10:00:00Z',
     ...overrides,
   }
 }
@@ -47,7 +44,6 @@ function advanced(overrides: Record<string, unknown> = {}) {
   hours[20] = 30
   hours[13] = 10
   return {
-    range: '30d',
     previous: { views: 100, unique_visitors: 80, qr_scans: 100, orders: 0 },
     hours,
     weekdays: [1, 2, 3, 4, 20, 5, 6],

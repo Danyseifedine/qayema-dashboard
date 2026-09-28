@@ -8,7 +8,7 @@ import { t } from '@/lib/i18n'
  */
 export const SOCIAL_PLATFORMS = ['instagram', 'x', 'facebook', 'tiktok'] as const
 
-export const platformSchema = z.enum(SOCIAL_PLATFORMS)
+const platformSchema = z.enum(SOCIAL_PLATFORMS)
 
 /** What each platform is called in the dashboard. */
 export const PLATFORM_LABELS: Record<(typeof SOCIAL_PLATFORMS)[number], string> = {
@@ -19,7 +19,7 @@ export const PLATFORM_LABELS: Record<(typeof SOCIAL_PLATFORMS)[number], string> 
 }
 
 /** Mirrors ../qayema/app/Http/Resources/SocialLinkResource.php. */
-export const socialLinkSchema = z.object({
+const socialLinkSchema = z.object({
   id: z.number().int(),
   platform: platformSchema,
   url: z.url(),

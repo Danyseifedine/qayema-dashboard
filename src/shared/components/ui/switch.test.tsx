@@ -46,7 +46,7 @@ describe('Switch', () => {
     expect(onChange).not.toHaveBeenCalled()
   })
 
-  it('passes its id, name and aria wiring through', () => {
+  it('passes its aria wiring through', () => {
     render(
       <>
         <span id="lbl">Available</span>
@@ -54,8 +54,6 @@ describe('Switch', () => {
         <Switch
           checked
           onChange={vi.fn()}
-          id="available"
-          name="available"
           aria-labelledby="lbl"
           aria-describedby="desc"
           className="ms-2"
@@ -64,8 +62,6 @@ describe('Switch', () => {
     )
 
     const control = screen.getByRole('switch', { name: 'Available' })
-    expect(control).toHaveAttribute('id', 'available')
-    expect(control).toHaveAttribute('name', 'available')
     expect(control).toHaveAccessibleDescription('Guests can order it.')
     expect(control).toHaveClass('ms-2')
   })

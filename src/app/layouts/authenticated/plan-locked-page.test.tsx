@@ -6,8 +6,8 @@ import { api } from '@/lib/api/client'
 import { NAV_ITEMS, type NavItem } from '@/app/layouts/authenticated/nav-items'
 import { PlanLockedPage } from '@/app/layouts/authenticated/plan-locked-page'
 import { AnalyticsTeaser } from '@/features/analytics'
-import { PACKAGE_CATALOGUE } from '@/test/mocks/factories/packages'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { PACKAGE_CATALOGUE } from '@/test/factories/packages'
+import { renderWithProviders } from '@/test/render-with-providers'
 
 let mock: MockAdapter
 
@@ -49,7 +49,7 @@ describe('PlanLockedPage', () => {
   })
 
   it("shows analytics' one number: this week's views", async () => {
-    mock.onGet('/api/analytics/teaser').reply(200, { data: { range: '7d', views: 212 } })
+    mock.onGet('/api/analytics/teaser').reply(200, { data: { views: 212 } })
     renderWithProviders(
       <PlanLockedPage item={item('analytics')} locale="en" onOpenPackage={vi.fn()}>
         <AnalyticsTeaser locale="en" />

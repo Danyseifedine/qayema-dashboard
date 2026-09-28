@@ -130,7 +130,7 @@ describe('weakParts', () => {
   })
 
   it('flags red corner centres, which a reader failed on in testing', () => {
-    // About 3.9:1 on white — it clears the 3:1 we first planned, and still
+    // About 3.9:1 on white: it clears the 3:1 we first planned, and still
     // stopped the code decoding. This is why the bar is 4.5:1.
     expect(contrast('#EA4335', '#FFFFFF')).toBeGreaterThan(3)
     expect(weakParts(simple({ eye_color: '#EA4335' }))).toEqual(['corner centres'])

@@ -9,17 +9,15 @@ import { menuTextField, menuTextSchema, requireEnglish } from '@/shared/utils/st
  * `price` comes back as a decimal STRING ("24.50") or null, because the column
  * is decimal(10,2) and the resource casts it. Requests send a number.
  */
-export const dishSchema = z.object({
+const dishSchema = z.object({
   id: z.number().int(),
   /** One entry per menu language. */
   name: menuTextSchema,
   ingredients: menuTextSchema,
   price: z.string().nullable(),
   is_available: z.boolean(),
-  display_order: z.number().int(),
   // Null once its category has been deleted; the dish survives, orphaned.
   category_id: z.number().int().nullable(),
-  category: z.object({ id: z.number().int(), name: menuTextSchema }).nullable().optional(),
   image_url: z.url().nullable(),
 })
 

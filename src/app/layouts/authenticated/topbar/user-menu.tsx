@@ -16,7 +16,6 @@ export type UserMenuProps = {
   onLocaleChange: (locale: Locale) => void
   onOpenAccount: () => void
   onLogout: () => void
-  className?: string
 }
 
 /**
@@ -33,7 +32,6 @@ export function UserMenu({
   onLocaleChange,
   onOpenAccount,
   onLogout,
-  className,
 }: UserMenuProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -66,7 +64,7 @@ export function UserMenu({
   const initial = name.trim().charAt(0).toUpperCase() || '?'
 
   return (
-    <div ref={containerRef} className={cn('relative shrink-0', className)}>
+    <div ref={containerRef} className="relative shrink-0">
       <button
         ref={triggerRef}
         type="button"

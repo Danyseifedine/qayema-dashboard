@@ -4,7 +4,7 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { renderWithProviders } from '@/test/render-with-providers'
 import { OrdersPage } from '@/features/orders/pages/orders-page'
 
 let mock: MockAdapter
@@ -19,8 +19,8 @@ function order(overrides: Record<string, unknown> = {}) {
     note: null,
     placed_at: '2026-09-24T11:30:00+00:00',
     items: [
-      { id: 1, name: 'House Bowl', unit_price: '14.00', quantity: 2, line_total: '28.00' },
-      { id: 2, name: 'Daily Tart', unit_price: '11.00', quantity: 1, line_total: '11.00' },
+      { id: 1, name: 'House Bowl', quantity: 2, line_total: '28.00' },
+      { id: 2, name: 'Daily Tart', quantity: 1, line_total: '11.00' },
     ],
     ...overrides,
   }

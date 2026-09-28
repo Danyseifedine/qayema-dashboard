@@ -5,7 +5,7 @@ import {
   dishListSchema,
   dishResponseSchema,
 } from '@/features/menu/dishes/schemas/dish.schema'
-import { makeDish, resetFactories } from '@/test/mocks/factories/menu'
+import { makeDish, resetFactories } from '@/test/factories/menu'
 
 const base = {
   name: { en: 'Hummus', ar: '' },
@@ -129,7 +129,7 @@ describe('dish response schemas', () => {
   })
 
   it('keeps an orphaned dish whose category was deleted', () => {
-    const dish = makeDish({ category_id: null, category: null })
+    const dish = makeDish({ category_id: null })
 
     expect(dishResponseSchema.parse({ data: dish }).data.category_id).toBeNull()
   })

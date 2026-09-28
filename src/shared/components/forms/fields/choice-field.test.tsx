@@ -13,7 +13,7 @@ const OPTIONS: ChoiceOption<Shape>[] = [
   { value: 'pill', label: 'Pill' },
 ]
 
-function Harness({ hint, disabled }: { hint?: string; disabled?: boolean }) {
+function Harness({ hint }: { hint?: string }) {
   const form = useForm<Values>({ defaultValues: { shape: 'round' } })
   const shape = useWatch({ control: form.control, name: 'shape' })
   return (
@@ -24,8 +24,6 @@ function Harness({ hint, disabled }: { hint?: string; disabled?: boolean }) {
         label="Button shape"
         options={OPTIONS}
         hint={hint}
-        disabled={disabled}
-        className="mt-1"
       />
       <output data-testid="value">{shape}</output>
       <button type="button" onClick={() => form.setError('shape', { message: 'Pick one.' })}>
@@ -84,16 +82,5 @@ describe('ChoiceField', () => {
     expect(await screen.findByText('Pick one.')).toBeInTheDocument()
     expect(screen.queryByText('Applies to every button.')).not.toBeInTheDocument()
     expect(screen.getByRole('group')).toHaveAccessibleDescription('Pick one.')
-  })
-
-  it('cannot be changed when disabled', async () => {
-    const user = userEvent.setup()
-    render(<Harness disabled />)
-
-    await user.click(screen.getByText('Pill'))
-
-    expect(screen.getByTestId('value')).toHaveTextContent('round')
-    expect(screen.getByRole('radio', { name: 'Pill' })).toBeDisabled()
-    expect(screen.getByText('Pill').closest('label')).toHaveClass('cursor-not-allowed')
   })
 })

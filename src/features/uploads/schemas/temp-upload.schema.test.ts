@@ -25,7 +25,6 @@ describe('temp upload schemas', () => {
   it('parses the flat upload response and refuses a key that is not a UUID', () => {
     const body = {
       key: picked.key,
-      original_size: '1.4 MB',
       optimized_size: '42.3 KB',
       saved_percent: 97,
     }

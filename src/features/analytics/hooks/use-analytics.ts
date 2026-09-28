@@ -26,7 +26,7 @@ export function useStatsSummary(range: StatsRange): UseQueryResult<StatsSummary,
   })
 }
 
-/** The advanced breakdowns — only asked for when the package includes them. */
+/** The advanced breakdowns, only asked for when the package includes them. */
 export function useAdvancedStats(
   range: StatsRange,
   enabled: boolean,

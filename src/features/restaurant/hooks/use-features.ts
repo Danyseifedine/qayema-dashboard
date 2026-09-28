@@ -16,7 +16,7 @@ function withOff(user: AuthUser | undefined, off: string[]): AuthUser | undefine
 /**
  * Switches optional features off and on. Optimistic: the sidebar changes on
  * the tap, from the session cache, and snaps back with an error toast if the
- * save fails — so, per convention, there is no success toast.
+ * save fails, so, per convention, there is no success toast.
  */
 export function useSaveSwitchedOff() {
   const queryClient = useQueryClient()

@@ -30,6 +30,7 @@ function Harness({
         control={form.control}
         name="name"
         label="Name"
+        maxLength={255}
         languages={languages}
         {...props}
       />
@@ -193,13 +194,6 @@ describe('TranslatableTextField', () => {
     render(<Harness multiline />)
 
     expect(control()).toHaveAttribute('rows', '4')
-  })
-
-  it('works without a label', () => {
-    render(<Harness label={undefined} disabled className="mt-4" />)
-
-    expect(document.querySelector('label')).toBeNull()
-    expect(control()).toBeDisabled()
   })
 
   it('falls back to the first language when the chosen tab goes away', async () => {

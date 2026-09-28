@@ -4,7 +4,7 @@
     "description": "Guests scan this to open your menu. Download it as it is, or make it your own.",
     "png": "PNG",
     "svg": "SVG",
-    "formatHint": "PNG for sharing and most printers. SVG stays sharp at any size — use it for a large print.",
+    "formatHint": "PNG for sharing and most printers. SVG stays sharp at any size, so use it for a large print.",
     "copyLink": "Copy link",
     "linkCopied": "Link copied",
     "copyFailed": "Could not copy the link",
@@ -94,7 +94,7 @@
   },
   "toast": {
     "saved": "QR code saved",
-    "savedDescription": "Your printed codes keep working — only the look changed.",
+    "savedDescription": "Your printed codes keep working. Only the look changed.",
     "saveFailed": "Could not save your QR code"
   },
   "schema": {

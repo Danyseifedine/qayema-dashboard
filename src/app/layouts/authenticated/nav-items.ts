@@ -18,14 +18,14 @@ import type { Plan } from '@/features/auth'
 import type common from '@/locales/en/common.json'
 
 /** The plan flags a section can be gated on, as `/api/user` reports them. */
-export type PlanFlag = keyof Plan
+type PlanFlag = keyof Plan
 
 /**
  * A section's name, as a key into `common.json`. The table below is built at
  * module load, so it holds keys and the sidebar translates them at render;
  * translating here would freeze the names in whatever language loaded first.
  */
-export type NavLabelKey = `nav.${keyof typeof common.nav}`
+type NavLabelKey = `nav.${keyof typeof common.nav}`
 
 export type NavItem = {
   /** Stable id: the page `App.tsx` shows, and the feature folder's name. */
@@ -121,13 +121,13 @@ export const NAV_GROUPS: NavGroup[] = [
  * The owner's own account is a page too, but it is about the person, not the
  * restaurant, so it opens from the avatar menu rather than the sidebar.
  */
-export const ACCOUNT_ITEM: NavItem = { key: 'account', labelKey: 'nav.account', icon: UserRound }
+const ACCOUNT_ITEM: NavItem = { key: 'account', labelKey: 'nav.account', icon: UserRound }
 
 /** Every page, flattened, for lookups by key. */
 export const NAV_ITEMS: NavItem[] = [...NAV_GROUPS.flatMap((group) => group.items), ACCOUNT_ITEM]
 
 /** The sections an owner can switch off, in sidebar order. */
-export const HIDEABLE_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.hideable)
+const HIDEABLE_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.hideable)
 
 /** Whether the owner switched this section off. Only hideable sections can be. */
 export function isNavItemHidden(key: string, off: readonly string[]): boolean {
@@ -142,8 +142,8 @@ export type NavAccess = {
 /**
  * Why a section is closed to this owner, or null when it is open.
  *
- * `template`: nothing to work on until a design is chosen — the row is
- * disabled. `plan`: the package does not include it — the row stays open and
+ * `template`: nothing to work on until a design is chosen, so the row is
+ * disabled. `plan`: the package does not include it, so the row stays open and
  * the page shows what it would give and which package has it.
  *
  * The sidebar and the page body both read this, so a locked row can never sit

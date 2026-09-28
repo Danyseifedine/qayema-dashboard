@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 
 /**
  * Shared look for the analytics charts. Colours are the theme's tokens, so a
- * chart follows light and dark like everything else — SVG presentation
+ * chart follows light and dark like everything else: SVG presentation
  * attributes resolve `var()` the same way CSS does.
  */
 export const CHART_COLORS = {

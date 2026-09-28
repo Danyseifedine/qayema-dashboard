@@ -143,6 +143,7 @@ function Dashboard({ user }: { user: AuthUser }) {
           plan={plan}
           secondLocale={restaurant.second_locale}
           defaultLocale={restaurant.default_locale}
+          onOpenPackage={() => setActiveKey('package')}
         />
       ) : activeKey === 'account' ? (
         <AccountPage onOpenRestaurant={() => setActiveKey('restaurant')} />

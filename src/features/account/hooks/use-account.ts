@@ -35,7 +35,7 @@ export function useSaveProfile() {
 export function useSavePassword(hasPassword: boolean) {
   const queryClient = useQueryClient()
 
-  return useMutation<{ has_password: boolean }, ApiError, PasswordPayload>({
+  return useMutation<void, ApiError, PasswordPayload>({
     mutationFn: updatePassword,
     onSuccess: () => {
       toast.success(

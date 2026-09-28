@@ -19,7 +19,6 @@ export type CategoryCardProps = {
    */
   onEdit: (category: Category) => void
   onDelete: (category: Category) => void
-  className?: string
 }
 
 /**
@@ -32,7 +31,6 @@ export const CategoryCard = memo(function CategoryCard({
   handle,
   onEdit,
   onDelete,
-  className,
 }: CategoryCardProps) {
   const { t } = useTranslation('menu')
   const name = translated(category.name, locale)
@@ -44,7 +42,6 @@ export const CategoryCard = memo(function CategoryCard({
       className={cn(
         'flex items-center gap-1 rounded-[14px] border-[0.5px] border-[var(--line)]',
         'bg-[var(--surface)] ps-1 pe-2 transition-colors hover:border-[var(--line-strong)]',
-        className,
       )}
     >
       {handle}

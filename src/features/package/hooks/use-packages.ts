@@ -7,11 +7,7 @@ import {
   requestPackage,
   type PackageRequestPayload,
 } from '@/features/package/api/package.api'
-import type {
-  PackageFlag,
-  PackageList,
-  PackageRequestResult,
-} from '@/features/package/schemas/package.schema'
+import type { PackageFlag, PackageList } from '@/features/package/schemas/package.schema'
 import type { Locale } from '@/shared/constants/locales'
 import { translated } from '@/shared/utils/string/translated'
 import { packageKeys } from '@/features/package/hooks/package-keys'
@@ -27,11 +23,11 @@ export function usePackages(): UseQueryResult<PackageList, ApiError> {
  * Asks to move to a package.
  *
  * Nothing changes on the restaurant, so neither the session nor the package
- * list is invalidated — there is nothing new to read until a human acts on the
+ * list is invalidated; there is nothing new to read until a human acts on the
  * request.
  */
 export function useRequestPackage() {
-  return useMutation<PackageRequestResult, ApiError, PackageRequestPayload>({
+  return useMutation<void, ApiError, PackageRequestPayload>({
     mutationFn: requestPackage,
     onSuccess: () => {
       toast.success(t('package:toast.sent'), t('package:toast.sentDescription'))
@@ -41,8 +37,8 @@ export function useRequestPackage() {
 }
 
 /**
- * The first package, in the catalogue's order, that includes a feature — the
- * one a locked feature points the owner to — by name in the reader's language.
+ * The first package, in the catalogue's order, that includes a feature (the
+ * one a locked feature points the owner to), by name in the reader's language.
  * Null while the catalogue loads, or when no package has it.
  */
 export function usePackageFor(flag: PackageFlag, locale: Locale): string | null {

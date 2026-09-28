@@ -6,8 +6,8 @@ import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeCategory, makeDish, resetFactories } from '@/test/mocks/factories/menu'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { makeCategory, makeDish, resetFactories } from '@/test/factories/menu'
+import { renderWithProviders } from '@/test/render-with-providers'
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
 import { DishDialog } from '@/features/menu/dishes/components/dialogs/dish-dialog'
 
@@ -241,10 +241,7 @@ describe('DishDialog', () => {
     const sent = mock.history.post.find((r) => r.url === '/api/uploads/temp')!
     expect((sent.data as FormData).get('context')).toBe('dish')
 
-    upload.resolve([
-      200,
-      { key: UPLOAD_KEY, original_size: '2.1 MB', optimized_size: '98.4 KB', saved_percent: 95 },
-    ])
+    upload.resolve([200, { key: UPLOAD_KEY, optimized_size: '98.4 KB', saved_percent: 95 }])
 
     expect(await within(dialog).findByText('shank.jpg')).toBeInTheDocument()
     expect(within(dialog).getByText('98.4 KB')).toBeInTheDocument()
@@ -267,7 +264,6 @@ describe('DishDialog', () => {
   it('removing a fresh upload sends no image at all', async () => {
     mock.onPost('/api/uploads/temp').reply(200, {
       key: UPLOAD_KEY,
-      original_size: '2.1 MB',
       optimized_size: '98.4 KB',
       saved_percent: 0,
     })

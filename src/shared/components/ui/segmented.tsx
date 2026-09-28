@@ -20,7 +20,6 @@ export type SegmentedProps<T extends string> = {
   options: SegmentedOption<T>[]
   'aria-label': string
   size?: 'sm' | 'md'
-  className?: string
 }
 
 /**
@@ -33,16 +32,12 @@ export function Segmented<T extends string>({
   onChange,
   options,
   size = 'md',
-  className,
   ...aria
 }: SegmentedProps<T>) {
   return (
     <div
       role="tablist"
-      className={cn(
-        'inline-flex rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-1',
-        className,
-      )}
+      className="inline-flex rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-1"
       {...aria}
     >
       {options.map((option) => {

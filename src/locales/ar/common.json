@@ -105,7 +105,6 @@
     "noMatches": "لا نتائج مطابقة"
   },
   "confirmDialog": {
-    "confirm": "تأكيد",
     "cancel": "إلغاء"
   },
   "errorState": {
@@ -118,8 +117,7 @@
     "vsBefore": "مقارنة بالسابق"
   },
   "colorField": {
-    "picker": "{{label}}، منتقي الألوان",
-    "pickerFallback": "منتقي الألوان"
+    "picker": "{{label}}، منتقي الألوان"
   },
   "phoneField": {
     "country": "الدولة"

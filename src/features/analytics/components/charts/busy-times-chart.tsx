@@ -10,7 +10,7 @@ import { formatHour, weekdayNames } from '@/shared/utils/format/date'
 import { formatNumber } from '@/shared/utils/format/number'
 
 export type BusyTimesChartProps = {
-  /** Views by hour, 0–23, in the restaurant's timezone. */
+  /** Views by hour, 0 to 23, in the restaurant's timezone. */
   hours: number[]
   /** Views by weekday, Monday first. */
   weekdays: number[]

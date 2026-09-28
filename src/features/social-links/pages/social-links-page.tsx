@@ -109,7 +109,6 @@ export function SocialLinksPage() {
 
       <ConfirmDialog
         open={pendingDelete !== null}
-        destructive
         loading={remove.isPending}
         title={t('page.removeTitle')}
         description={t('page.removeDescription')}

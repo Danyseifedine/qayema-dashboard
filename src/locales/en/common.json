@@ -105,7 +105,6 @@
     "noMatches": "No matches"
   },
   "confirmDialog": {
-    "confirm": "Confirm",
     "cancel": "Cancel"
   },
   "errorState": {
@@ -118,8 +117,7 @@
     "vsBefore": "vs before"
   },
   "colorField": {
-    "picker": "{{label}}, picker",
-    "pickerFallback": "Colour picker"
+    "picker": "{{label}}, picker"
   },
   "phoneField": {
     "country": "Country"

@@ -5,8 +5,8 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { EMPTY_PLAN, makeSessionUser } from '@/test/mocks/factories/session'
-import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { EMPTY_PLAN, makeSessionUser } from '@/test/factories/session'
+import { renderWithProviders } from '@/test/render-with-providers'
 import { restaurantKeys } from '@/features/restaurant/hooks/restaurant-keys'
 import { RestaurantPage } from '@/features/restaurant/pages/restaurant-page'
 
@@ -16,7 +16,7 @@ const LOGO_KEY = '11111111-2222-4333-8444-555555555555'
 const COVER_KEY = '66666666-7777-4888-9999-000000000000'
 
 function uploaded(key: string) {
-  return { key, original_size: '400 KB', optimized_size: '40 KB', saved_percent: 90 }
+  return { key, optimized_size: '40 KB', saved_percent: 90 }
 }
 
 function png(name: string): File {

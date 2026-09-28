@@ -97,7 +97,6 @@ describe('TextField', () => {
         optionalText="Optional"
         disabled
         autoComplete="off"
-        prefix="@"
         leadingIcon={<svg data-testid="icon" />}
       />,
     )
@@ -107,7 +106,6 @@ describe('TextField', () => {
     expect(input).toHaveAttribute('autoComplete', 'off')
     expect(input).toHaveAccessibleDescription('Shown on the menu.')
     expect(input).toBeDisabled()
-    expect(screen.getByText('@')).toBeInTheDocument()
     expect(screen.getByText('Optional')).toBeInTheDocument()
     expect(screen.getByText('*')).toBeInTheDocument()
     expect(screen.getByTestId('icon')).toBeInTheDocument()

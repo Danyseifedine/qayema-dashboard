@@ -4,11 +4,6 @@
    so this file only covers what logical properties cannot express.
    ------------------------------------------------------------ */
 
-/* Arabic reads right-to-left; flip only genuinely directional art. */
-[dir='rtl'] .flip-on-rtl {
-  transform: scaleX(-1);
-}
-
 /* Numbers, prices, URLs and phone numbers stay left-to-right even
    inside an Arabic sentence, otherwise punctuation jumps around. */
 [dir='rtl'] .force-ltr {

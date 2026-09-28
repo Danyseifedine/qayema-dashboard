@@ -11,7 +11,7 @@ import { orderKeys } from '@/features/orders/hooks/order-keys'
  *
  * Refetched on a timer while the page is open: an order arrives from a guest's
  * phone, and nothing in this product pushes. WhatsApp is what actually gets the
- * owner's attention — this is so the page is not stale when they look at it.
+ * owner's attention; this is so the page is not stale when they look at it.
  */
 export function useOrders(status: OrderStatus | null): UseQueryResult<OrderList, ApiError> {
   return useQuery<OrderList, ApiError>({

@@ -12,8 +12,7 @@ export default defineConfig({
       VITE_API_URL: 'https://qayema.test',
       VITE_LOGIN_URL: 'https://qayema.test/get-started',
     },
-    globals: true,
-    setupFiles: ['./src/test/setup/vitest.setup.ts'],
+    setupFiles: ['./src/test/setup.ts'],
     css: false,
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {
@@ -31,6 +30,7 @@ export default defineConfig({
         'src/shared/components/*/index.ts',
       ],
       reporter: ['text-summary', 'html'],
+      reportsDirectory: '.test-output/coverage',
       // The achieved numbers, rounded down: a change that drops coverage
       // fails `npm run test:coverage`.
       thresholds: {

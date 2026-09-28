@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Restaurant } from '@/features/restaurant'
-import { makeDish } from '@/test/mocks/factories/menu'
+import { makeDish } from '@/test/factories/menu'
 import { menuChecklist } from '@/features/overview/components/checklist/menu-checklist-items'
 
 const CLOSED = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null }

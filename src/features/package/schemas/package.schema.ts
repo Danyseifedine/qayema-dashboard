@@ -3,7 +3,7 @@ import { t } from '@/lib/i18n'
 import { translatableTextSchema } from '@/shared/utils/string/menu-text'
 
 /** Mirrors ../qayema/app/Http/Resources/PackageResource.php. */
-export const packageSchema = z.object({
+const packageSchema = z.object({
   id: z.number().int(),
   slug: z.string(),
   name: translatableTextSchema,
@@ -15,7 +15,6 @@ export const packageSchema = z.object({
   is_contact_only: z.boolean(),
   /** The package every restaurant starts on, and falls back to. */
   is_default: z.boolean(),
-  sort_order: z.number().int(),
   /** Marked "Most popular". */
   is_featured: z.boolean(),
   features: z.object({
@@ -38,14 +37,6 @@ export const packageListSchema = z.object({
   meta: z.object({
     /** The slug in force, null for an owner with no restaurant yet. */
     current: z.string().nullable(),
-    ends_at: z.string().nullable(),
-  }),
-})
-
-export const packageRequestResultSchema = z.object({
-  data: z.object({
-    id: z.number().int(),
-    package: z.string(),
   }),
 })
 
@@ -58,12 +49,11 @@ export const requestPackageFormSchema = z.object({
 })
 
 export type Package = z.infer<typeof packageSchema>
-export type PackageFeatures = Package['features']
+type PackageFeatures = Package['features']
 /** The on/off features, the same keys as the session's `plan`. */
 export type PackageFlag = {
   [K in keyof PackageFeatures]: PackageFeatures[K] extends boolean ? K : never
 }[keyof PackageFeatures]
 export type PackageLimit = Exclude<keyof PackageFeatures, PackageFlag>
 export type PackageList = z.infer<typeof packageListSchema>
-export type PackageRequestResult = z.infer<typeof packageRequestResultSchema>
 export type RequestPackageFormValues = z.infer<typeof requestPackageFormSchema>

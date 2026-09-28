@@ -21,10 +21,9 @@ describe('StatTile', () => {
   })
 
   it('shows a hint under the number', () => {
-    renderTile({ hint: '4 today', className: 'col-span-2' })
+    renderTile({ hint: '4 today' })
 
     expect(screen.getByText('4 today')).toBeInTheDocument()
-    expect(screen.getByRole('term').parentElement).toHaveClass('col-span-2')
   })
 
   it('says there is nothing to compare with when the change is null', () => {

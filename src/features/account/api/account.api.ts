@@ -1,6 +1,6 @@
+import { z } from 'zod'
 import { request } from '@/lib/api'
 import { userResponseSchema, type AuthUser } from '@/features/auth'
-import { passwordResponseSchema } from '@/features/account/schemas/account.schema'
 
 /** The email is not here on purpose: accounts come from Google, so it is the identity. */
 export async function updateProfile(name: string): Promise<AuthUser> {
@@ -19,10 +19,6 @@ export type PasswordPayload = {
   password_confirmation: string
 }
 
-export async function updatePassword(payload: PasswordPayload): Promise<{ has_password: boolean }> {
-  return request(passwordResponseSchema, {
-    method: 'PUT',
-    url: '/api/password',
-    data: payload,
-  })
+export async function updatePassword(payload: PasswordPayload): Promise<void> {
+  await request(z.unknown(), { method: 'PUT', url: '/api/password', data: payload })
 }

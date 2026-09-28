@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { sessionKeys } from '@/features/auth'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeSessionUser } from '@/test/mocks/factories/session'
+import { makeSessionUser } from '@/test/factories/session'
 import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
 import { useSaveMenuLanguages } from '@/features/restaurant/hooks/use-menu-languages-save'
 

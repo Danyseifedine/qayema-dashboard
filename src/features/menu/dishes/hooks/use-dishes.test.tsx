@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeDish, resetFactories } from '@/test/mocks/factories/menu'
+import { makeDish, resetFactories } from '@/test/factories/menu'
 import { dishKeys } from '@/features/menu/dishes/hooks/dish-keys'
 import { useDishAvailability, useReorderDishes } from '@/features/menu/dishes/hooks/use-dishes'
 
@@ -53,11 +53,11 @@ describe('dish mutations with nothing cached', () => {
       await result.current.mutateAsync(ordered)
     })
     expect(JSON.parse(mock.history.post[0]!.data as string)).toEqual({ ids: [2, 1] })
-    expect(queryClient.getQueryData(dishKeys.lists())).toBeUndefined()
+    expect(queryClient.getQueryData(dishKeys.list())).toBeUndefined()
 
     act(() => result.current.mutate(ordered))
     await waitFor(() => expect(result.current.isError).toBe(true))
-    expect(queryClient.getQueryData(dishKeys.lists())).toBeUndefined()
+    expect(queryClient.getQueryData(dishKeys.list())).toBeUndefined()
   })
 
   it('availability leaves an empty cache empty on success and on failure', async () => {
@@ -73,10 +73,10 @@ describe('dish mutations with nothing cached', () => {
     await act(async () => {
       await result.current.mutateAsync({ id: 5, isAvailable: false })
     })
-    expect(queryClient.getQueryData(dishKeys.lists())).toBeUndefined()
+    expect(queryClient.getQueryData(dishKeys.list())).toBeUndefined()
 
     act(() => result.current.mutate({ id: 5, isAvailable: true }))
     await waitFor(() => expect(result.current.isError).toBe(true))
-    expect(queryClient.getQueryData(dishKeys.lists())).toBeUndefined()
+    expect(queryClient.getQueryData(dishKeys.list())).toBeUndefined()
   })
 })

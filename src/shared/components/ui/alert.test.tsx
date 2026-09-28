@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { Alert } from '@/shared/components/ui/alert'
 
 describe('Alert', () => {
-  it('is an informational status by default', () => {
-    render(<Alert>Heads up</Alert>)
+  it('shows information as a status', () => {
+    render(<Alert variant="info">Heads up</Alert>)
 
     const alert = screen.getByRole('status')
     expect(alert).toHaveTextContent('Heads up')
@@ -28,26 +28,24 @@ describe('Alert', () => {
   })
 
   it('shows a title above the body', () => {
-    render(<Alert title="Saved">Your menu is live.</Alert>)
+    render(
+      <Alert variant="info" title="Saved">
+        Your menu is live.
+      </Alert>,
+    )
 
     expect(screen.getByText('Saved')).toBeInTheDocument()
     expect(screen.getByText('Your menu is live.')).toHaveClass('mt-1')
   })
 
-  it('shows a title alone', () => {
-    render(<Alert title="Only a title" />)
-
-    expect(screen.getByRole('status')).toHaveTextContent('Only a title')
-  })
-
   it('gives the body no top margin without a title', () => {
-    render(<Alert>Just a body</Alert>)
+    render(<Alert variant="info">Just a body</Alert>)
 
     expect(screen.getByText('Just a body')).not.toHaveClass('mt-1')
   })
 
   it('has no dismiss button unless asked', () => {
-    render(<Alert>Note</Alert>)
+    render(<Alert variant="info">Note</Alert>)
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
@@ -55,25 +53,23 @@ describe('Alert', () => {
   it('dismisses with the default label', async () => {
     const onDismiss = vi.fn()
     const user = userEvent.setup()
-    render(<Alert onDismiss={onDismiss}>Note</Alert>)
+    render(
+      <Alert variant="info" onDismiss={onDismiss}>
+        Note
+      </Alert>,
+    )
 
     await user.click(screen.getByRole('button', { name: 'Dismiss' }))
 
     expect(onDismiss).toHaveBeenCalledTimes(1)
   })
 
-  it('uses a custom dismiss label', () => {
+  it('takes a class from the caller', () => {
     render(
-      <Alert onDismiss={vi.fn()} dismissLabel="Close warning">
+      <Alert variant="info" className="mt-9">
         Note
       </Alert>,
     )
-
-    expect(screen.getByRole('button', { name: 'Close warning' })).toBeInTheDocument()
-  })
-
-  it('takes a class from the caller', () => {
-    render(<Alert className="mt-9">Note</Alert>)
 
     expect(screen.getByRole('status')).toHaveClass('mt-9')
   })

@@ -7,7 +7,7 @@ export type DragHandleProps = ComponentProps<'button'> & {
   /**
    * Sits on a photo rather than on a surface, so it brings its own background:
    * a faint grip over an arbitrary image is invisible. The chip follows the
-   * theme — pale in light mode, near-black in dark — because a bright chip on
+   * theme (pale in light mode, near-black in dark) because a bright chip on
    * a dark screen is louder than anything else on the card.
    */
   overlay?: boolean

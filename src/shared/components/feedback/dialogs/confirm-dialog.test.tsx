@@ -12,6 +12,9 @@ function renderDialog(props: Partial<ConfirmDialogProps> = {}) {
   const all: ConfirmDialogProps = {
     open: true,
     title: 'Delete this dish?',
+    description: 'Guests will no longer see it.',
+    confirmLabel: 'Delete',
+    loading: false,
     onConfirm,
     onCancel,
     ...props,
@@ -29,14 +32,14 @@ function pressEscape(dialog: HTMLDialogElement) {
 }
 
 describe('ConfirmDialog', () => {
-  it('opens as a modal with the title, description and default labels', () => {
-    const { dialog } = renderDialog({ description: 'Guests will no longer see it.' })
+  it('opens as a modal with the title, description and a destructive confirm', () => {
+    const { dialog } = renderDialog()
 
     expect(dialog.open).toBe(true)
     expect(screen.getByRole('heading', { name: 'Delete this dish?' })).toBeInTheDocument()
     expect(screen.getByText('Guests will no longer see it.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Confirm' })).toHaveClass('bg-gold')
+    expect(screen.getByRole('button', { name: 'Delete' })).toHaveClass('bg-danger')
   })
 
   it('stays closed while not open, and closes when told to', () => {
@@ -53,27 +56,14 @@ describe('ConfirmDialog', () => {
     expect(dialog.open).toBe(false)
   })
 
-  it('has no description line unless given one', () => {
-    const { dialog } = renderDialog()
-
-    expect(dialog.querySelector('p')).toBeNull()
-  })
-
   it('confirms and cancels through its buttons', async () => {
     const user = userEvent.setup()
-    const { onConfirm, onCancel } = renderDialog({
-      confirmLabel: 'Delete',
-      cancelLabel: 'Keep it',
-      destructive: true,
-    })
+    const { onConfirm, onCancel } = renderDialog()
 
-    const confirm = screen.getByRole('button', { name: 'Delete' })
-    expect(confirm).toHaveClass('bg-danger')
-
-    await user.click(confirm)
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
     expect(onConfirm).toHaveBeenCalledTimes(1)
 
-    await user.click(screen.getByRole('button', { name: 'Keep it' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 
@@ -100,7 +90,7 @@ describe('ConfirmDialog', () => {
     const user = userEvent.setup()
     const { dialog, onCancel, onConfirm } = renderDialog({ loading: true })
 
-    const confirm = screen.getByRole('button', { name: 'Confirm' })
+    const confirm = screen.getByRole('button', { name: 'Delete' })
     expect(confirm).toHaveAttribute('aria-busy', 'true')
     expect(confirm).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()

@@ -22,11 +22,10 @@ import { cn } from '@/shared/utils/dom/cn'
 export type ImageFieldProps<T extends FieldValues> = {
   control: Control<T>
   name: FieldPath<T>
-  label?: ReactNode
-  hint?: ReactNode
+  label: ReactNode
+  hint: ReactNode
   required?: boolean
   optionalText?: ReactNode
-  disabled?: boolean
   /** Existing image to show before anything is picked. */
   currentUrl?: string | null
   /** Square for a logo, wide for a cover. */
@@ -41,8 +40,13 @@ export type ImageFieldProps<T extends FieldValues> = {
    * offering a remove that the server refuses is a dead end.
    */
   removable?: boolean
-  className?: string
 }
+
+/**
+ * Both states are this tall, so a filled field and an empty one sitting beside
+ * each other are the same size rather than one box overhanging the other.
+ */
+const BOX_HEIGHT = 'min-h-[168px]'
 
 /**
  * Dropzone with preview, following `.ui-uploader` and `.ui-preview` in the
@@ -52,11 +56,6 @@ export type ImageFieldProps<T extends FieldValues> = {
  * browser, then uploaded to the temp endpoint. Only the returned key is stored
  * in the form, so the original never reaches the model.
  */
-/**
- * Both states are this tall, so a filled field and an empty one sitting beside
- * each other are the same size rather than one box overhanging the other.
- */
-const BOX_HEIGHT = 'min-h-[168px]'
 
 export function ImageField<T extends FieldValues>({
   control,
@@ -65,12 +64,10 @@ export function ImageField<T extends FieldValues>({
   hint,
   required,
   optionalText,
-  disabled,
   currentUrl,
   aspect = 'wide',
   context,
   removable = true,
-  className,
 }: ImageFieldProps<T>) {
   const { t } = useTranslation()
   const { field, fieldState } = useController({ control, name })
@@ -114,7 +111,7 @@ export function ImageField<T extends FieldValues>({
   const onDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
     setDragging(false)
-    if (disabled || uploading) return
+    if (uploading) return
     void accept(event.dataTransfer.files[0])
   }
 
@@ -129,22 +126,19 @@ export function ImageField<T extends FieldValues>({
   const openPicker = () => inputRef.current?.click()
 
   return (
-    <div className={cn('flex flex-col gap-2 pt-2', className)}>
-      {label ? (
-        <Label id={labelId} required={required} optionalText={optionalText}>
-          {label}
-        </Label>
-      ) : null}
+    <div className="flex flex-col gap-2 pt-2">
+      <Label id={labelId} required={required} optionalText={optionalText}>
+        {label}
+      </Label>
 
       <input
         ref={inputRef}
         type="file"
         // Named by the field's label, which is not a <label for>: clicking
         // the title should not open the picker.
-        aria-labelledby={label ? labelId : undefined}
+        aria-labelledby={labelId}
         accept={ACCEPTED_IMAGE_ACCEPT}
         className="sr-only"
-        disabled={disabled}
         onChange={(event) => void accept(event.target.files?.[0])}
       />
 
@@ -192,7 +186,7 @@ export function ImageField<T extends FieldValues>({
               size="sm"
               block
               onClick={openPicker}
-              disabled={disabled || uploading}
+              disabled={uploading}
               loading={uploading}
             >
               {t('imageField.replace')}
@@ -204,7 +198,7 @@ export function ImageField<T extends FieldValues>({
                 size="sm"
                 block
                 onClick={clear}
-                disabled={disabled || uploading}
+                disabled={uploading}
                 leadingIcon={<Trash2 className="size-3.5" />}
                 className="text-status-danger hover:bg-status-danger-wash"
               >
@@ -216,18 +210,17 @@ export function ImageField<T extends FieldValues>({
       ) : (
         <div
           role="button"
-          tabIndex={disabled ? -1 : 0}
-          aria-disabled={disabled || undefined}
-          onClick={() => !disabled && !uploading && openPicker()}
+          tabIndex={0}
+          onClick={() => !uploading && openPicker()}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
-              if (!disabled && !uploading) openPicker()
+              if (!uploading) openPicker()
             }
           }}
           onDragOver={(event) => {
             event.preventDefault()
-            if (!disabled) setDragging(true)
+            setDragging(true)
           }}
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
@@ -241,7 +234,7 @@ export function ImageField<T extends FieldValues>({
             dragging
               ? 'border-gold bg-[var(--surface)] shadow-[0_0_0_4px_var(--ring-accent)]'
               : 'border-[var(--line-strong)] hover:border-gold hover:bg-[var(--surface)]',
-            (disabled || uploading) && 'pointer-events-none opacity-60',
+            uploading && 'pointer-events-none opacity-60',
           )}
         >
           {uploading ? (
@@ -288,11 +281,7 @@ export function ImageField<T extends FieldValues>({
         </div>
       )}
 
-      {error ? (
-        <HelperText tone="error">{error}</HelperText>
-      ) : hint ? (
-        <HelperText>{hint}</HelperText>
-      ) : null}
+      {error ? <HelperText tone="error">{error}</HelperText> : <HelperText>{hint}</HelperText>}
     </div>
   )
 }

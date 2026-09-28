@@ -11,13 +11,9 @@ type Values = { phone: string | null; country_code?: string | null }
 function Harness({
   phone = '',
   country = 'LB',
-  placeholder,
-  disabled,
 }: {
   phone?: string | null
   country?: string | null
-  placeholder?: string
-  disabled?: boolean
 }) {
   const form = useForm<Values>({
     defaultValues: country === undefined ? { phone } : { phone, country_code: country },
@@ -32,9 +28,6 @@ function Harness({
         label="Phone"
         hint="Guests call this."
         required
-        optionalText="Optional"
-        placeholder={placeholder}
-        disabled={disabled}
       />
       <output data-testid="value">{JSON.stringify(values)}</output>
       <button type="button" onClick={() => form.setError('phone', { message: 'Bad number.' })}>
@@ -134,13 +127,5 @@ describe('PhoneField', () => {
 
     expect(await screen.findByText('Pick a country.')).toBeInTheDocument()
     expect(number()).toHaveAccessibleDescription('Pick a country.')
-  })
-
-  it('takes a placeholder and disables both controls', () => {
-    render(<Harness placeholder="3 123 456" disabled />)
-
-    expect(number()).toHaveAttribute('placeholder', '3 123 456')
-    expect(number()).toBeDisabled()
-    expect(country()).toBeDisabled()
   })
 })

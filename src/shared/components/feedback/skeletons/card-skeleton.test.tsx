@@ -1,26 +1,15 @@
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import {
-  CardGridSkeleton,
-  CardSkeleton,
-} from '@/shared/components/feedback/skeletons/card-skeleton'
-
-describe('CardSkeleton', () => {
-  it('is hidden from screen readers and takes a class', () => {
-    const { container } = render(<CardSkeleton className="w-40" />)
-
-    const card = container.firstElementChild
-    expect(card).toHaveAttribute('aria-hidden', 'true')
-    expect(card).toHaveClass('w-40')
-    expect(card?.querySelectorAll('.animate-pulse')).toHaveLength(3)
-  })
-})
+import { CardGridSkeleton } from '@/shared/components/feedback/skeletons/card-skeleton'
 
 describe('CardGridSkeleton', () => {
-  it('shows six cards by default', () => {
+  it('shows six cards by default, hidden from screen readers', () => {
     const { container } = render(<CardGridSkeleton />)
 
-    expect(container.firstElementChild?.children).toHaveLength(6)
+    const cards = container.firstElementChild?.children
+    expect(cards).toHaveLength(6)
+    expect(cards?.[0]).toHaveAttribute('aria-hidden', 'true')
+    expect(cards?.[0]?.querySelectorAll('.animate-pulse')).toHaveLength(3)
   })
 
   it('shows as many cards as asked', () => {

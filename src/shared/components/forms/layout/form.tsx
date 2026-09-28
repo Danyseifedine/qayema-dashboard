@@ -21,21 +21,13 @@ export function FormSection({
   title,
   description,
   children,
-  className,
 }: {
   title: ReactNode
   description?: ReactNode
   children: ReactNode
-  className?: string
 }) {
   return (
-    <section
-      className={cn(
-        'flex flex-col rounded-[14px] border-[0.5px] border-[var(--line)]',
-        'bg-[var(--surface)] p-4 sm:p-5',
-        className,
-      )}
-    >
+    <section className="flex flex-col rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
       <div className="flex flex-col gap-1 border-b-[0.5px] border-[var(--line-2)] pb-3.5">
         <h3 className="label-caps text-[var(--muted)]">{title}</h3>
         {description ? (
@@ -49,8 +41,8 @@ export function FormSection({
 }
 
 /** Two fields side by side, stacking on narrow screens. */
-export function FieldGroup({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('grid gap-x-5 gap-y-3 sm:grid-cols-2', className)}>{children}</div>
+export function FieldGroup({ children }: { children: ReactNode }) {
+  return <div className="grid gap-x-5 gap-y-3 sm:grid-cols-2">{children}</div>
 }
 
 /** Submit/cancel row pinned to the end of a form. */
@@ -60,7 +52,7 @@ export function FormActions({
   className,
 }: {
   children: ReactNode
-  align?: 'start' | 'end' | 'between'
+  align?: 'end' | 'between'
   className?: string
 }) {
   return (
@@ -68,7 +60,6 @@ export function FormActions({
       className={cn(
         'flex flex-wrap items-center gap-3 pt-2',
         align === 'end' && 'justify-end',
-        align === 'start' && 'justify-start',
         align === 'between' && 'justify-between',
         className,
       )}

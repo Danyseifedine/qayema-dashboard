@@ -8,7 +8,7 @@ import {
 } from '@/lib/i18n/index'
 
 /**
- * Every language must say everything English says — no more, no less — or an
+ * Every language must say everything English says (no more, no less) or an
  * owner sees an English sentence in the middle of an Arabic screen. Plurals
  * are checked against the forms that language actually has: Arabic needs
  * zero, one, two, few, many and other; English only one and other.
