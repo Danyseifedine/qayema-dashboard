@@ -16,7 +16,7 @@
     "categories": "Categories",
     "dishes": "Dishes",
     "design": "Design",
-    "colorsFonts": "Colors & fonts",
+    "appearance": "Appearance",
     "guests": "Guests",
     "orders": "Orders",
     "qr": "QR code",
@@ -135,7 +135,7 @@
     "uploadProgress": "Upload progress",
     "uploading": "Uploading…",
     "drop": "Drop an image or <browse>browse</browse>",
-    "formats": "JPEG, PNG or WebP · up to 10 MB"
+    "formats": "JPEG, PNG or WebP · up to 20 MB"
   },
   "menuText": {
     "tooLong": "Keep the {{what}} under {{max}} characters."
@@ -163,11 +163,12 @@
     "rateLimited": "Too many uploads in a row. Wait a moment before trying again.",
     "rateLimitedIn_one": "Too many uploads in a row. Try again in {{count}} second.",
     "rateLimitedIn_other": "Too many uploads in a row. Try again in {{count}} seconds.",
-    "tooLarge": "That image is too large. Images must be 10 MB or smaller.",
+    "tooLarge": "That image is too large. Images must be 20 MB or smaller.",
     "rejected": {
       "type": "Images must be JPEG, PNG, or WebP.",
-      "size": "Images must be 10 MB or smaller.",
+      "size": "Images must be 20 MB or smaller.",
       "dimensions": "Images must be at most {{max}} × {{max}} pixels."
-    }
+    },
+    "unreadable": "That upload could not be read. Please try again."
   }
 }

@@ -6,6 +6,11 @@ export type FieldProps = {
   label?: ReactNode
   /** Quiet note on the trailing side of the label, e.g. "optional". */
   optionalText?: ReactNode
+  /**
+   * A small control on the trailing side of the label row, e.g. "Reset".
+   * Kept outside the <label> so clicking it never focuses the field.
+   */
+  action?: ReactNode
   required?: boolean
   /** Shown under the control while there is no error. */
   hint?: ReactNode
@@ -27,6 +32,7 @@ export type FieldProps = {
 export function Field({
   label,
   optionalText,
+  action,
   required,
   hint,
   error,
@@ -42,9 +48,12 @@ export function Field({
   return (
     <div className={cn('flex flex-col gap-2 pt-2', className)}>
       {label ? (
-        <Label htmlFor={id} required={required} optionalText={optionalText}>
-          {label}
-        </Label>
+        <div className="flex min-h-5 items-center justify-between gap-2">
+          <Label htmlFor={id} required={required} optionalText={optionalText} className="flex-1">
+            {label}
+          </Label>
+          {action}
+        </div>
       ) : null}
 
       {children({ id, describedBy, invalid })}

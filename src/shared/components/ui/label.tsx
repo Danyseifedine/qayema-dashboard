@@ -20,7 +20,7 @@ export function Label({ required, optionalText, className, children, ...props }:
       <span>
         {children}
         {required ? (
-          <span aria-hidden className="ms-1 text-[15px] text-accent">
+          <span aria-hidden className="ms-1 text-[15px] leading-none text-accent">
             *
           </span>
         ) : null}

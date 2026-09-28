@@ -11,6 +11,8 @@ export type ColorFieldProps<T extends FieldValues> = {
   name: FieldPath<T>
   label: ReactNode
   hint?: ReactNode
+  /** A small control beside the label, e.g. a reset. */
+  action?: ReactNode
   disabled?: boolean
   className?: string
 }
@@ -27,6 +29,7 @@ export function ColorField<T extends FieldValues>({
   name,
   label,
   hint,
+  action,
   disabled,
   className,
 }: ColorFieldProps<T>) {
@@ -40,7 +43,13 @@ export function ColorField<T extends FieldValues>({
   const commit = (next: string) => field.onChange(next.toUpperCase())
 
   return (
-    <Field label={label} hint={hint} error={fieldState.error?.message} className={className}>
+    <Field
+      label={label}
+      hint={hint}
+      action={action}
+      error={fieldState.error?.message}
+      className={className}
+    >
       {({ id, describedBy, invalid }) => (
         <div className="flex items-center gap-2">
           <input
@@ -78,6 +87,7 @@ export function ColorField<T extends FieldValues>({
             aria-describedby={describedBy}
             aria-invalid={invalid || undefined}
             tone={invalid ? 'error' : 'default'}
+            shellClassName="min-w-0 flex-1"
             className="font-mono uppercase"
           />
         </div>

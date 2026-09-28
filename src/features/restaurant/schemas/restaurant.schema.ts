@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { imageFieldSchema } from '@/features/uploads'
 import { t } from '@/lib/i18n'
 import { CURRENCIES } from '@/shared/constants/currencies'
 import { COUNTRIES } from '@/shared/constants/countries'
@@ -25,19 +26,8 @@ const NO_CONTROL_CHARS = /^[^\u0000-\u001F\u007F]+$/
 /** `[0-9+() .-]{6,30}` with at least six digits. */
 const PHONE = /^(?=(?:\D*\d){6,})[0-9+() .-]{6,30}$/
 
-/** A temp-upload key is a UUID. */
-const UPLOAD_KEY = /^[a-f0-9-]{36}$/
-
 const CURRENCY_CODES = CURRENCIES.map((currency) => currency.code)
 const COUNTRY_CODES = COUNTRIES.map((country) => country.code)
-
-export const uploadedImageSchema = z.object({
-  key: z.string().regex(UPLOAD_KEY, { error: () => t('restaurant:validation.uploadUnreadable') }),
-  previewUrl: z.string(),
-  name: z.string(),
-  optimizedSize: z.string(),
-  savedPercent: z.number(),
-})
 
 /**
  * Mirrors ../qayema/app/Http/Resources/SettingsResource.php.
@@ -144,8 +134,8 @@ export const restaurantFormSchema = z
     }),
 
     /** Replaced through a temp upload; the logo can never be cleared. */
-    logo: uploadedImageSchema.nullable(),
-    cover_image: uploadedImageSchema.nullable(),
+    logo: imageFieldSchema,
+    cover_image: imageFieldSchema,
     /**
      * A day is either both times or neither. The form keeps an `closed` flag per
      * day so unticking it does not throw away what was typed.
@@ -161,9 +151,6 @@ export const restaurantFormSchema = z
     }),
 
     timezone: z.string().min(1, { error: () => t('restaurant:validation.chooseTimezone') }),
-
-    /** Set when the owner removes the cover without picking a new one. */
-    delete_cover_image: z.boolean(),
   })
   .superRefine((values, ctx) => {
     requireEnglish(values.name, 'name', t('restaurant:validation.nameRequiredInEnglish'), ctx)

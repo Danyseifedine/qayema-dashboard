@@ -3,22 +3,15 @@ import { useCallback, useRef, useState, type DragEvent, type ReactNode } from 'r
 import { Trans, useTranslation } from 'react-i18next'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { useTempUpload } from '@/features/uploads/hooks/use-temp-upload'
+import {
+  REMOVED_IMAGE,
+  type ImageFieldValue,
+  type UploadedImage,
+} from '@/features/uploads/schemas/temp-upload.schema'
 import type { UploadContext } from '@/features/uploads/schemas/temp-upload.schema'
 import { ACCEPTED_IMAGE_ACCEPT } from '@/lib/security/input-guards'
 import { Button, HelperText, Label } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
-
-export type ImageFieldValue = {
-  /** Key returned by POST /api/uploads/temp, sent on the next save. */
-  key: string
-  /** Local object URL; the server returns no preview for a temp upload. */
-  previewUrl: string
-  name: string
-  /** Size of the optimized file, as the server formatted it, e.g. "42.3 KB". */
-  optimizedSize: string
-  /** How much the optimizer saved, as a percentage. */
-  savedPercent: number
-} | null
 
 export type ImageFieldProps<T extends FieldValues> = {
   control: Control<T>
@@ -83,7 +76,10 @@ export function ImageField<T extends FieldValues>({
 
   // An upload problem outranks a schema error: it is the newer fact.
   const error = uploadError ?? fieldState.error?.message
-  const preview = value?.previewUrl ?? currentUrl ?? null
+  // Removing the saved image hides it until the form is saved (or undone);
+  // a new pick shows its own preview.
+  const picked = value !== null && value !== REMOVED_IMAGE ? value : null
+  const preview = value === REMOVED_IMAGE ? null : (picked?.previewUrl ?? currentUrl ?? null)
 
   const accept = useCallback(
     async (file: File | undefined) => {
@@ -98,7 +94,7 @@ export function ImageField<T extends FieldValues>({
         name: file.name,
         optimizedSize: result.optimized_size,
         savedPercent: result.saved_percent,
-      } satisfies NonNullable<ImageFieldValue>)
+      } satisfies UploadedImage)
     },
     [field, upload],
   )
@@ -111,8 +107,9 @@ export function ImageField<T extends FieldValues>({
   }
 
   const clear = () => {
-    if (value?.previewUrl) URL.revokeObjectURL(value.previewUrl)
-    field.onChange(null)
+    if (picked) URL.revokeObjectURL(picked.previewUrl)
+    // With a saved image behind the pick, removing means deleting it on save.
+    field.onChange(currentUrl ? REMOVED_IMAGE : null)
     reset()
     if (inputRef.current) inputRef.current.value = ''
   }
@@ -155,14 +152,14 @@ export function ImageField<T extends FieldValues>({
             />
             <div className="min-w-0">
               <p className="truncate text-[14px] font-medium tracking-[-0.012em]">
-                {value?.name ?? t('imageField.currentImage')}
+                {picked?.name ?? t('imageField.currentImage')}
               </p>
-              {value ? (
+              {picked ? (
                 <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--muted)]">
-                  <span>{value.optimizedSize}</span>
-                  {value.savedPercent > 0 ? (
+                  <span>{picked.optimizedSize}</span>
+                  {picked.savedPercent > 0 ? (
                     <span className="rounded-full bg-status-success-wash px-2 py-0.5 text-[11.5px] font-medium text-status-success">
-                      {t('imageField.smaller', { percent: value.savedPercent })}
+                      {t('imageField.smaller', { percent: picked.savedPercent })}
                     </span>
                   ) : null}
                 </p>

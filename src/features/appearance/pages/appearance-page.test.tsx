@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
-import { ColorsFontsPage } from '@/features/colors-fonts/pages/colors-fonts-page'
+import { AppearancePage } from '@/features/appearance/pages/appearance-page'
 
 let mock: MockAdapter
 
@@ -34,27 +34,42 @@ const ARABIC = {
   ],
 }
 
-const CLASSIC_COLORS = [
+const CLASSIC_SETTINGS = [
   {
     key: 'primary_color',
+    type: 'color',
     label: { en: 'Main colour', ar: 'اللون الرئيسي' },
     default: '#F8D38D',
     value: '#F8D38D',
     contrast_with: null,
+    options: [] as string[],
   },
   {
     key: 'background_color',
+    type: 'color',
     label: { en: 'Background', ar: 'الخلفية' },
     default: '#FFFFFF',
     value: '#FFFFFF',
     contrast_with: null,
+    options: [] as string[],
   },
   {
     key: 'text_color',
+    type: 'color',
     label: { en: 'Text', ar: 'النص' },
     default: '#111418',
     value: '#111418',
     contrast_with: 'background_color',
+    options: [] as string[],
+  },
+  {
+    key: 'show_name',
+    type: 'boolean',
+    label: { en: 'Name in the top bar', ar: 'الاسم في الشريط العلوي' },
+    default: true,
+    value: true,
+    contrast_with: null,
+    options: [] as string[],
   },
 ]
 
@@ -62,7 +77,7 @@ function payload(overrides: Record<string, unknown> = {}) {
   return {
     data: {
       design: { id: 1, name: { en: 'Classic', ar: 'كلاسيك' } },
-      colors: CLASSIC_COLORS,
+      settings: CLASSIC_SETTINGS,
       fonts: [LATIN],
       ...overrides,
     },
@@ -70,15 +85,15 @@ function payload(overrides: Record<string, unknown> = {}) {
 }
 
 function stub(overrides: Record<string, unknown> = {}) {
-  mock.onGet('/api/colors-fonts').reply(200, payload(overrides))
+  mock.onGet('/api/appearance').reply(200, payload(overrides))
 }
 
 function sentBody() {
-  const put = mock.history.put.find((call) => call.url === '/api/colors-fonts')
+  const put = mock.history.put.find((call) => call.url === '/api/appearance')
   return put ? (JSON.parse(put.data as string) as Record<string, unknown>) : undefined
 }
 
-describe('ColorsFontsPage', () => {
+describe('AppearancePage', () => {
   beforeEach(() => {
     mock = new MockAdapter(api)
     resetCsrfToken(api)
@@ -93,24 +108,26 @@ describe('ColorsFontsPage', () => {
     resetCsrfToken(api)
   })
 
-  describe('colors', () => {
+  describe('design settings', () => {
     it('shows one field per colour the design declares, labelled from the design', async () => {
       stub()
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      renderWithProviders(<AppearancePage locale="en" />)
 
       expect(await screen.findByRole('textbox', { name: 'Main colour' })).toBeInTheDocument()
       for (const label of ['Background', 'Text']) {
         expect(screen.getByRole('textbox', { name: label })).toBeInTheDocument()
       }
-      expect(screen.getByText(/The colours Classic lets you change/)).toBeInTheDocument()
+      expect(screen.getByText(/What Classic lets you change/)).toBeInTheDocument()
     })
 
     it('shows whatever a different design declares, with the key when it has no label', async () => {
       stub({
         design: { id: 2, name: { en: 'Midnight', ar: null } },
-        colors: [
+        settings: [
           {
             key: 'neon_glow',
+            type: 'color',
+            options: [],
             label: { en: null, ar: null },
             default: '#39FF14',
             value: '#39FF14',
@@ -118,43 +135,45 @@ describe('ColorsFontsPage', () => {
           },
         ],
       })
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      renderWithProviders(<AppearancePage locale="en" />)
 
       expect(await screen.findByRole('textbox', { name: 'Neon glow' })).toHaveValue('#39FF14')
       expect(screen.queryByRole('textbox', { name: 'Main colour' })).not.toBeInTheDocument()
     })
 
     it('says so when the design has a fixed look', async () => {
-      stub({ colors: [] })
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      stub({ settings: [] })
+      renderWithProviders(<AppearancePage locale="en" />)
 
       expect(
-        await screen.findByText('Classic has a fixed look: it has no colours to change.'),
+        await screen.findByText('Classic has a fixed look: there is nothing to change.'),
       ).toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: 'Save colors' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
     })
 
     it('sends only the colours that changed', async () => {
       stub()
-      mock.onPut('/api/colors-fonts').reply(200, payload())
+      mock.onPut('/api/appearance').reply(200, payload())
       const user = userEvent.setup()
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      renderWithProviders(<AppearancePage locale="en" />)
 
       const main = await screen.findByRole('textbox', { name: 'Main colour' })
-      expect(screen.getByRole('button', { name: 'Save colors' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
 
       await user.clear(main)
       await user.type(main, '#C0392B')
-      await user.click(screen.getByRole('button', { name: 'Save colors' }))
+      await user.click(screen.getByRole('button', { name: 'Save' }))
 
-      await waitFor(() => expect(sentBody()).toEqual({ colors: { primary_color: '#C0392B' } }))
+      await waitFor(() => expect(sentBody()).toEqual({ settings: { primary_color: '#C0392B' } }))
     })
 
     it('puts one colour back to the design default, which saves as null', async () => {
-      stub({ colors: [{ ...CLASSIC_COLORS[0], value: '#C0392B' }, ...CLASSIC_COLORS.slice(1)] })
-      mock.onPut('/api/colors-fonts').reply(200, payload())
+      stub({
+        settings: [{ ...CLASSIC_SETTINGS[0]!, value: '#C0392B' }, ...CLASSIC_SETTINGS.slice(1)],
+      })
+      mock.onPut('/api/appearance').reply(200, payload())
       const user = userEvent.setup()
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      renderWithProviders(<AppearancePage locale="en" />)
 
       await user.click(
         await screen.findByRole('button', { name: "Reset Main colour to the design's colour" }),
@@ -165,14 +184,59 @@ describe('ColorsFontsPage', () => {
         screen.queryByRole('button', { name: "Reset Background to the design's colour" }),
       ).not.toBeInTheDocument()
 
-      await user.click(screen.getByRole('button', { name: 'Save colors' }))
-      await waitFor(() => expect(sentBody()).toEqual({ colors: { primary_color: null } }))
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+      await waitFor(() => expect(sentBody()).toEqual({ settings: { primary_color: null } }))
+    })
+
+    it('switches the name in the top bar off, and back on saves as the default', async () => {
+      stub()
+      mock.onPut('/api/appearance').reply(200, payload())
+      const user = userEvent.setup()
+      renderWithProviders(<AppearancePage locale="en" />)
+
+      const name = await screen.findByRole('switch', { name: 'Name in the top bar' })
+      expect(name).toBeChecked()
+
+      await user.click(name)
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+      await waitFor(() => expect(sentBody()).toEqual({ settings: { show_name: false } }))
+    })
+
+    it('draws a choice and a text setting from the design too', async () => {
+      stub({
+        settings: [
+          {
+            key: 'density',
+            type: 'select',
+            label: { en: 'Density', ar: null },
+            default: 'cosy',
+            value: 'cosy',
+            contrast_with: null,
+            options: ['cosy', 'compact'],
+          },
+          {
+            key: 'welcome_line',
+            type: 'text',
+            label: { en: null, ar: null },
+            default: 'Welcome',
+            value: 'Welcome',
+            contrast_with: null,
+            options: [],
+          },
+        ],
+      })
+      renderWithProviders(<AppearancePage locale="en" />)
+
+      const density = await screen.findByRole('group', { name: 'Density' })
+      expect(within(density).getByRole('radio', { name: 'Cosy' })).toBeChecked()
+      expect(within(density).getByRole('radio', { name: 'Compact' })).not.toBeChecked()
+      expect(screen.getByRole('textbox', { name: 'Welcome line' })).toHaveValue('Welcome')
     })
 
     it('warns when a colour is hard to read on the one it sits on', async () => {
       stub()
       const user = userEvent.setup()
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      renderWithProviders(<AppearancePage locale="en" />)
 
       const text = await screen.findByRole('textbox', { name: 'Text' })
       expect(screen.queryByText(/Hard to read on Background/)).not.toBeInTheDocument()
@@ -187,7 +251,7 @@ describe('ColorsFontsPage', () => {
   describe('fonts', () => {
     it('has one picker when the languages share letters', async () => {
       stub({ fonts: [{ ...LATIN, languages: ['en', 'es'] }] })
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      renderWithProviders(<AppearancePage locale="en" />)
 
       expect(await screen.findByRole('group', { name: 'English · Spanish' })).toBeInTheDocument()
       expect(screen.getAllByRole('group')).toHaveLength(1)
@@ -195,7 +259,7 @@ describe('ColorsFontsPage', () => {
 
     it('has a picker per writing system, each font drawing its sample', async () => {
       stub({ fonts: [LATIN, ARABIC] })
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      renderWithProviders(<AppearancePage locale="en" />)
 
       const arabic = await screen.findByRole('group', { name: 'Arabic' })
       expect(screen.getByRole('group', { name: 'English' })).toBeInTheDocument()
@@ -207,10 +271,10 @@ describe('ColorsFontsPage', () => {
     it('saves a font the moment it is picked', async () => {
       stub({ fonts: [LATIN, ARABIC] })
       mock
-        .onPut('/api/colors-fonts')
+        .onPut('/api/appearance')
         .reply(200, payload({ fonts: [LATIN, { ...ARABIC, value: 'Cairo' }] }))
       const user = userEvent.setup()
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      renderWithProviders(<AppearancePage locale="en" />)
 
       const arabic = await screen.findByRole('group', { name: 'Arabic' })
       await user.click(within(arabic).getByRole('radio', { name: /Cairo/ }))
@@ -221,9 +285,9 @@ describe('ColorsFontsPage', () => {
 
     it('snaps back when a font fails to save', async () => {
       stub({ fonts: [LATIN] })
-      mock.onPut('/api/colors-fonts').reply(422, { message: 'Please choose a font from the list.' })
+      mock.onPut('/api/appearance').reply(422, { message: 'Please choose a font from the list.' })
       const user = userEvent.setup()
-      renderWithProviders(<ColorsFontsPage locale="en" />)
+      renderWithProviders(<AppearancePage locale="en" />)
 
       await user.click(await screen.findByRole('radio', { name: /Lora/ }))
 

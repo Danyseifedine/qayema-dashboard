@@ -129,4 +129,33 @@ describe('DishDialog', () => {
       expect(JSON.parse(post!.data as string).category_id).toBe(2)
     })
   })
+
+  it('removing a saved photo hides it and deletes it on save', async () => {
+    const dish = makeDish({ id: 7, category_id: 2, image_url: 'https://cdn.qayema.test/dish.webp' })
+    mock.onPatch('/api/dishes/7').reply(200, { data: { ...dish, image_url: null } })
+
+    const user = userEvent.setup()
+    renderWithProviders(<Harness dish={dish} />)
+
+    const dialog = screen.getByRole('dialog')
+    // The preview is decorative (alt=""), so it is found by its source.
+    const photo = () => dialog.querySelector('img[src="https://cdn.qayema.test/dish.webp"]')
+    expect(photo()).not.toBeNull()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Remove' }))
+
+    // The saved photo is gone from the field at once, the drop area is back.
+    expect(photo()).toBeNull()
+    expect(within(dialog).queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Save dish' }))
+
+    await waitFor(() => {
+      const patch = mock.history.patch.find((r) => r.url === '/api/dishes/7')
+      expect(patch).toBeDefined()
+      const body = JSON.parse(patch!.data as string)
+      expect(body.delete_image).toBe(true)
+      expect(body.image_key).toBeUndefined()
+    })
+  })
 })

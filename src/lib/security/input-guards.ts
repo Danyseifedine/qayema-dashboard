@@ -1,7 +1,7 @@
 /**
  * Client-side guards that mirror the server's rules.
  *
- * These exist so an owner learns about a bad file before a 10 MB upload
+ * These exist so an owner learns about a bad file before a 20 MB upload
  * crosses the network, never as the security boundary. The real check is
  * ../qayema/app/Http/Requests/TempUploadRequest.php, which re-validates type,
  * size and pixel dimensions on every request.
@@ -13,8 +13,11 @@ export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as
 /** The `accept` attribute for a file input, derived from the list above. */
 export const ACCEPTED_IMAGE_ACCEPT = ACCEPTED_IMAGE_TYPES.join(',')
 
-/** `max:10240` kilobytes. */
-export const MAX_IMAGE_BYTES = 10 * 1024 * 1024
+/**
+ * `UploadLimits::APP_MAX_BYTES` in ../qayema: 20 MB, a phone photo straight off
+ * the camera. The server turns every upload into a small WebP.
+ */
+export const MAX_IMAGE_BYTES = 20 * 1024 * 1024
 
 /** `dimensions:max_width=6000,max_height=6000`. */
 export const MAX_IMAGE_EDGE = 6000
@@ -33,7 +36,7 @@ export async function checkImageFile(file: File): Promise<FileRejection | null> 
   }
 
   if (file.size > MAX_IMAGE_BYTES) {
-    return { code: 'size', message: 'Images must be 10 MB or smaller.' }
+    return { code: 'size', message: 'Images must be 20 MB or smaller.' }
   }
 
   const size = await readImageSize(file)

@@ -22,12 +22,12 @@ of re-implementing it, always report status truthfully.
    table in §2 is the vocabulary; the backend's `CLAUDE.md` has the same table
    for its side.
 3. **One owner per kind of state.**
-   | Kind of state                                | Owner                   | Never put it in        |
-   | -------------------------------------------- | ----------------------- | ---------------------- |
-   | Server data (categories, stats, the session) | TanStack Query          | Zustand, React context |
-   | UI preferences (sidebar, theme, language)    | Zustand (`src/stores`)  | Query cache            |
-   | Form state                                   | React Hook Form + Zod   | Zustand                |
-   | Which page is open                           | `useState` in `App.tsx` | — (no router yet, §4)  |
+   | Kind of state                                | Owner                  | Never put it in        |
+   | -------------------------------------------- | ---------------------- | ---------------------- |
+   | Server data (categories, stats, the session) | TanStack Query         | Zustand, React context |
+   | UI preferences (sidebar, theme, language)    | Zustand (`src/stores`) | Query cache            |
+   | Form state                                   | React Hook Form + Zod  | Zustand                |
+   | Which page is open                           | The URL (`usePageKey`) | Zustand, `useState`    |
 4. **Validate at every boundary.** Env vars, API responses and form input all
    pass through Zod schemas. Nothing untyped leaks past `lib/` or `features/*/api`.
 5. **Dependency direction is one way.**
@@ -55,7 +55,7 @@ explained in §2 of the backend `CLAUDE.md`.
 | Analytics                 | `analytics`                                            | `/api/analytics[/advanced]`                     |
 | Categories, Dishes (MENU) | `menu` (sub-features `categories`, `dishes`)           | `/api/categories`, `/api/dishes`                |
 | Design (MENU)             | `design`                                               | `/api/templates` (a design is a `Template` row) |
-| Colors & fonts (MENU)     | `colors-fonts`                                         | `/api/colors-fonts`                             |
+| Appearance (MENU)         | `appearance`                                           | `/api/appearance`                               |
 | Orders (GUESTS)           | `orders`                                               | `/api/orders`                                   |
 | QR code (GUESTS)          | `qr`                                                   | `/api/qr`                                       |
 | Social links (GUESTS)     | `social-links`                                         | `/api/social-links`                             |
@@ -91,7 +91,7 @@ qayema-dashboard/
     │   └── security/                input-guards.ts, safe-redirect.ts
     ├── app/
     │   ├── providers/               app-providers, query-provider, toast-provider
-    │   └── layouts/authenticated/   authenticated-layout, nav-items (the sidebar table),
+    │   └── layouts/authenticated/   authenticated-layout, nav-items (the sidebar table), use-page-key (the URL),
     │       ├── sidebar/             sidebar, sidebar-group, sidebar-item
     │       └── topbar/              topbar, user-menu, package-pill, language-switcher
     ├── shared/                      Used by more than one feature; knows nothing about features
@@ -144,16 +144,24 @@ features/restaurant/
 
 ## 4. Navigation
 
-There is no router. `App.tsx` holds the open page's key in `useState`, the
-sidebar calls `onNavigate`, and a long conditional renders the page. The URL
-never changes, so there are no deep links or browser history — that is the
-main item on the roadmap (§10).
+There is no router library. Each nav key is a path (`/categories`,
+`/social-links`), and `usePageKey` in `app/layouts/authenticated/use-page-key.ts`
+reads and writes it with the History API: opening a page pushes its path, the
+back and forward buttons follow `popstate`, and a refresh or a shared link
+opens the same page. `/` or a path that is no page lands on Overview (Design
+before a design is chosen) and the URL is rewritten to say so. `App.tsx` calls
+the hook, the sidebar calls `onNavigate`, and a long conditional renders the
+page. A page handed over rather than chosen (a section switched off while
+open) replaces the history entry instead of pushing one.
+
+The host serving `dist/` must answer every path with `index.html` (the SPA
+fallback). Vite's dev and preview servers already do.
 
 `app/layouts/authenticated/nav-items.ts` is the single table behind the
 sidebar, the topbar title, the locks and the Features switches:
 
 - `requiresTemplate`: locked until a design is chosen (Categories, Dishes,
-  Colors & fonts, Orders, QR code, Restaurant). Design is always open: it is
+  Appearance, Orders, QR code, Restaurant). Design is always open: it is
   the way out.
 - `requiresPlan`: locked unless `restaurant.plan[flag]` is true (Orders needs
   `ordering`). Gating a new section is one line here, not a new branch.
@@ -191,7 +199,7 @@ Sanctum stateful auth. The SPA's responsibilities:
   discovers the files at build time, so **adding a language is copying
   `locales/en/` and translating it**; nothing else changes.
 - Namespaces are the feature folders: `common` (the shell and shared
-  components), `overview`, `analytics`, `menu`, `design`, `colors-fonts`, `orders`, `qr`,
+  components), `overview`, `analytics`, `menu`, `design`, `appearance`, `orders`, `qr`,
   `social-links`, `restaurant`, `features`, `package`, `account`. A new
   namespace is registered once in `lib/i18n/resources.ts`, which types the keys.
 - `lib/i18n/translations.test.ts` fails on any key missing from a language or
@@ -282,8 +290,8 @@ Do not add a dependency without the owner's approval.
 
 ## 10. Roadmap
 
-| Item                                     | Note                                                        |
-| ---------------------------------------- | ----------------------------------------------------------- |
-| A router (URLs, deep links, back button) | Replaces the `useState` in `App.tsx`; nav keys become paths |
-| End-to-end tests                         | Playwright against a seeded Laravel instance                |
-| More menu designs                        | Each is a backend `Template` row plus a Blade view          |
+| Item              | Note                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| A router library  | Only when a page needs its own sub-paths (e.g. `/dishes/12`); `usePageKey` covers one level |
+| End-to-end tests  | Playwright against a seeded Laravel instance                                                |
+| More menu designs | Each is a backend `Template` row plus a Blade view                                          |

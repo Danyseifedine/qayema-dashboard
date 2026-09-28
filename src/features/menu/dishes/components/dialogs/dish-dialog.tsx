@@ -11,7 +11,7 @@ import {
   SwitchField,
   TranslatableTextField,
 } from '@/shared/components/forms'
-import { ImageField } from '@/features/uploads'
+import { ImageField, imageChanges } from '@/features/uploads'
 import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
@@ -66,7 +66,6 @@ export function DishDialog({
       category_id: defaultCategoryId ?? categories[0]?.id ?? null,
       is_available: true,
       image: null,
-      delete_image: false,
     },
   })
 
@@ -97,7 +96,6 @@ export function DishDialog({
         current?.category_id ?? defaultCategoryId ?? categoriesRef.current[0]?.id ?? null,
       is_available: current?.is_available ?? true,
       image: null,
-      delete_image: false,
     })
   }, [open, dishId, defaultCategoryId, languages, form, clearFormError])
 
@@ -117,9 +115,9 @@ export function DishDialog({
         price: values.price,
         category_id: values.category_id,
         is_available: values.is_available,
-        // Only send a key when one was uploaded in this session.
-        ...(values.image ? { image_key: values.image.key } : {}),
-        ...(values.delete_image ? { delete_image: true } : {}),
+        // A key only for an image uploaded in this session; the flag only
+        // when the saved one was removed.
+        ...imageChanges(values.image, 'image_key', 'delete_image'),
       },
       { onSuccess: onClose, onError: (error) => applyApiError(error) },
     )

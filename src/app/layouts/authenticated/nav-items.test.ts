@@ -13,7 +13,7 @@ describe('isNavItemLocked', () => {
     expect(isNavItemLocked('dishes', NO_TEMPLATE)).toBe(true)
     expect(isNavItemLocked('qr', NO_TEMPLATE)).toBe(true)
     expect(isNavItemLocked('orders', NO_TEMPLATE)).toBe(true)
-    expect(isNavItemLocked('colors-fonts', NO_TEMPLATE)).toBe(true)
+    expect(isNavItemLocked('appearance', NO_TEMPLATE)).toBe(true)
   })
 
   it('always leaves Design open, since it is the way out of the locked state', () => {

@@ -32,7 +32,7 @@ describe('useTempUpload', () => {
 
   it('explains a 413 as a size problem rather than a generic failure', async () => {
     mock.onPost('/api/uploads/temp').reply(413, {
-      message: 'That upload is too large. Images must be 10 MB or smaller.',
+      message: 'That upload is too large. Images must be 20 MB or smaller.',
       code: 'payload_too_large',
     })
 
@@ -43,7 +43,7 @@ describe('useTempUpload', () => {
 
     await waitFor(() =>
       expect(result.current.error).toBe(
-        'That image is too large. Images must be 10 MB or smaller.',
+        'That image is too large. Images must be 20 MB or smaller.',
       ),
     )
   })
@@ -85,13 +85,13 @@ describe('useTempUpload', () => {
   it('rejects an oversized image without calling the API', async () => {
     const { result } = renderHook(() => useTempUpload('dish'))
     const huge = new File([new Uint8Array(4)], 'huge.png', { type: 'image/png' })
-    Object.defineProperty(huge, 'size', { value: 11 * 1024 * 1024 })
+    Object.defineProperty(huge, 'size', { value: 21 * 1024 * 1024 })
 
     await act(async () => {
       await result.current.upload(huge)
     })
 
-    expect(result.current.error).toBe('Images must be 10 MB or smaller.')
+    expect(result.current.error).toBe('Images must be 20 MB or smaller.')
     expect(mock.history.post).toHaveLength(0)
   })
 

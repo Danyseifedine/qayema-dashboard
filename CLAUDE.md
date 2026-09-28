@@ -27,8 +27,8 @@ React 19, Vite, TypeScript (strict), TanStack Query, Zustand, React Hook Form
 - Zod v4, Tailwind v4 with our own primitives in `shared/components/ui`,
   i18next (en/ar, RTL), axios, dnd-kit, recharts, qr-code-styling.
   Tests: Vitest + Testing Library + axios-mock-adapter. Lint: oxlint. Format:
-  Prettier. Hooks: Husky + lint-staged. No router yet: `App.tsx` holds the open
-  page in state.
+  Prettier. Hooks: Husky + lint-staged. No router library: the open page is its
+  nav key in the URL (`/categories`), via `usePageKey`.
 
 No third-party error telemetry.
 
@@ -62,7 +62,7 @@ No third-party error telemetry.
   overrides.
 - **Translations:** `src/locales/<code>/` holds `meta.json` (name, short
   label, `ltr`/`rtl`) and one JSON per namespace, named after the feature
-  (`common`, `overview`, `analytics`, `menu`, `design`, `colors-fonts`, `orders`, `qr`,
+  (`common`, `overview`, `analytics`, `menu`, `design`, `appearance`, `orders`, `qr`,
   `social-links`, `restaurant`, `features`, `package`, `account`).
   **To add a language, copy `src/locales/en/` to `src/locales/<code>/` and
   translate it** — it is found at build time and appears in the switcher;
@@ -116,13 +116,15 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   with `PUT /api/menu-languages`; the Restaurant page's text fields just
   follow `useMenuLanguages()` (from `features/auth`, it reads the session).
 - **Design page** (`features/design`): picking a design (backend `Template`
-  rows, `/api/templates`). Switching invalidates Colors & fonts and the QR
+  rows, `/api/templates`). Switching invalidates Appearance and the QR
   studio, since both follow the design.
-- **Colors & fonts** (`features/colors-fonts`, `GET/PUT /api/colors-fonts`):
-  the colours are whatever the design in use declares — never name a colour
-  in code; a new design with five colours shows five fields with labels from
-  its schema. Each design remembers its own. Save sends only changed colours,
-  and `null` when one is back on its default. A `contrast_with` pair warns
+- **Appearance** (`features/appearance`, `GET/PUT /api/appearance`): the
+  design's settings are whatever the design in use declares — never name one
+  in code. `DesignSettingsCard` draws each by its type (colour → `ColorField`
+  with a reset, boolean → `SwitchField`, select → `ChoiceField`, text →
+  `TextField`), labelled from the schema, with a zod schema built from the
+  rows. Each design remembers its own. Save sends only changed settings, and
+  `null` when one is back on its default. A `contrast_with` colour pair warns
   below 4.5:1 (`shared/utils/color/contrast.ts`). Fonts: one picker per
   writing system the menu uses (English + Spanish = one), options and a
   sample line from the API, saved on tap (optimistic). The Features page and

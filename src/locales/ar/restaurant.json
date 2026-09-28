@@ -63,14 +63,13 @@
   },
   "branding": {
     "title": "الهوية البصرية",
-    "description": "JPEG أو PNG أو WebP، بحد أقصى 10 ميغابايت لكل صورة.",
+    "description": "JPEG أو PNG أو WebP، بحد أقصى 20 ميغابايت لكل صورة.",
     "logoLabel": "الشعار",
     "logoHint": "كل قائمة تعرض شعارًا، لذا يمكن استبداله لكن لا يمكن حذفه.",
     "coverLabel": "صورة الغلاف",
     "coverHint": "تُقصّ إلى 1920 × 600 وتُحوَّل إلى WebP."
   },
   "validation": {
-    "uploadUnreadable": "تعذّرت قراءة الملف المرفوع. يُرجى المحاولة مجددًا.",
     "timeFormat": "استخدم وقتًا بصيغة 09:00.",
     "linkInvalid": "أدخل رابطًا صالحًا يبدأ بـ https://",
     "linkTooLong": "هذا الرابط طويل جدًا.",

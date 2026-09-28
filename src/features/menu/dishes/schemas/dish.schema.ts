@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { imageFieldSchema } from '@/features/uploads'
 import { t } from '@/lib/i18n'
 import { menuTextField, menuTextSchema, requireEnglish } from '@/shared/utils/string/menu-text'
 
@@ -64,17 +65,7 @@ export const dishFormSchema = z
           .positive({ error: () => t('menu:dishSchema.categoryRequired') }),
       ),
     is_available: z.boolean(),
-    image: z
-      .object({
-        key: z.string(),
-        previewUrl: z.string(),
-        name: z.string(),
-        optimizedSize: z.string(),
-        savedPercent: z.number(),
-      })
-      .nullable(),
-    /** Set when the owner removes an existing image without picking a new one. */
-    delete_image: z.boolean(),
+    image: imageFieldSchema,
   })
   .superRefine((values, ctx) =>
     requireEnglish(values.name, 'name', t('menu:dishSchema.nameRequired'), ctx),

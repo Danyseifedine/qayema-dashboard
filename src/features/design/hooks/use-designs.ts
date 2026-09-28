@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import { t } from '@/lib/i18n'
 import { sessionKeys } from '@/features/auth'
-import { colorsFontsKeys } from '@/features/colors-fonts'
+import { appearanceKeys } from '@/features/appearance'
 import { designKeys } from '@/features/design/hooks/design-keys'
 import { qrKeys } from '@/features/qr'
 import { toast } from '@/shared/components/feedback'
@@ -19,7 +19,7 @@ export function useDesigns(): UseQueryResult<DesignList, ApiError> {
 /**
  * Choosing a design unlocks the rest of the dashboard, so the session is
  * refetched too: `restaurant.template_id` is what the navigation gates on.
- * Colours belong to the design, so Colors & fonts and the QR "brand" card
+ * The settings belong to the design, so Appearance and the QR "brand" card
  * change with it.
  */
 export function useSelectDesign() {
@@ -31,7 +31,7 @@ export function useSelectDesign() {
       toast.success(t('design:toast.applied'), t('design:toast.appliedDescription'))
       queryClient.setQueryData(designKeys.list(), list)
       void queryClient.invalidateQueries({ queryKey: sessionKeys.all })
-      void queryClient.invalidateQueries({ queryKey: colorsFontsKeys.all })
+      void queryClient.invalidateQueries({ queryKey: appearanceKeys.all })
       void queryClient.invalidateQueries({ queryKey: qrKeys.all })
     },
     onError: (error) => toast.error(t('design:toast.switchFailed'), error),

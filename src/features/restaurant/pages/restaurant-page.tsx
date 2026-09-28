@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { imageChanges } from '@/features/uploads'
 import { useSession } from '@/features/auth'
 import { Form, FormActions } from '@/shared/components/forms'
 import { ErrorState } from '@/shared/components/feedback'
@@ -41,7 +42,6 @@ const EMPTY: RestaurantFormValues = {
   opening_hours: CLOSED_WEEK,
   logo: null,
   cover_image: null,
-  delete_cover_image: false,
 }
 
 /**
@@ -75,7 +75,6 @@ function toFormValues(settings: Restaurant): RestaurantFormValues {
     ) as RestaurantFormValues['opening_hours'],
     logo: null,
     cover_image: null,
-    delete_cover_image: false,
   }
 }
 
@@ -135,9 +134,9 @@ export function RestaurantPage() {
         ),
         // Keys are only sent when a new file was picked in this session;
         // leaving one out keeps whatever is already stored.
-        ...(values.logo ? { logo_key: values.logo.key } : {}),
-        ...(values.cover_image ? { cover_image_key: values.cover_image.key } : {}),
-        ...(values.delete_cover_image ? { delete_cover_image: true } : {}),
+        // The logo can be replaced but never removed, so it has no delete flag.
+        ...imageChanges(values.logo, 'logo_key'),
+        ...imageChanges(values.cover_image, 'cover_image_key', 'delete_cover_image'),
       },
       { onError: (error) => applyApiError(error) },
     )
@@ -196,27 +195,33 @@ export function RestaurantPage() {
       ) : null}
 
       <Form onSubmit={onSubmit}>
-        {/* Two columns once there is room: a single column of inputs across a
-            wide screen leaves most of it empty and the save button miles down. */}
+        {/* Two columns once there is room, each stacking on its own: in a
+            row grid a short card waits for the tall one beside it (opening
+            hours) and leaves a hole. Left is what the restaurant is; right is
+            how and when to reach it. On a phone they follow one another. */}
         <div className="grid items-start gap-4 xl:grid-cols-2">
-          <IdentitySection control={form.control} languages={languages} />
-          <ContactSection
-            control={form.control}
-            locationUrl={form.watch('google_maps_url')}
-            onPickLocation={(url) =>
-              form.setValue('google_maps_url', url, {
-                shouldDirty: true,
-                shouldValidate: true,
-              })
-            }
-          />
-          <MoneyTimeSection control={form.control} />
-          <OpeningHoursSection control={form.control} />
-          <BrandingSection
-            control={form.control}
-            currentLogoUrl={data?.logo_url ?? null}
-            currentCoverUrl={data?.cover_url ?? null}
-          />
+          <div className="flex flex-col gap-4">
+            <IdentitySection control={form.control} languages={languages} />
+            <BrandingSection
+              control={form.control}
+              currentLogoUrl={data?.logo_url ?? null}
+              currentCoverUrl={data?.cover_url ?? null}
+            />
+            <MoneyTimeSection control={form.control} />
+          </div>
+          <div className="flex flex-col gap-4">
+            <ContactSection
+              control={form.control}
+              locationUrl={form.watch('google_maps_url')}
+              onPickLocation={(url) =>
+                form.setValue('google_maps_url', url, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+            />
+            <OpeningHoursSection control={form.control} />
+          </div>
         </div>
 
         {/* Pinned to the bottom of the viewport: the form is long enough that a

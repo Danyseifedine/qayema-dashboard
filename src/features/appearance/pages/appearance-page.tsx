@@ -1,28 +1,29 @@
 import { useTranslation } from 'react-i18next'
-import { ColorsCard } from '@/features/colors-fonts/components/colors/colors-card'
-import { FontsCard } from '@/features/colors-fonts/components/fonts/fonts-card'
+import { DesignSettingsCard } from '@/features/appearance/components/design/design-settings-card'
+import { FontsCard } from '@/features/appearance/components/fonts/fonts-card'
 import {
-  useColorsFonts,
-  useSaveColors,
+  useAppearance,
+  useSaveDesignSettings,
   useSaveFont,
-} from '@/features/colors-fonts/hooks/use-colors-fonts'
+} from '@/features/appearance/hooks/use-appearance'
 import { ErrorState } from '@/shared/components/feedback'
 import type { Locale } from '@/shared/constants/locales'
 import { translated, type TranslatableValue } from '@/shared/utils/string/translated'
 
-export type ColorsFontsPageProps = {
+export type AppearancePageProps = {
   locale: Locale
 }
 
 /**
- * How the menu looks. Colours belong to the design in use — each design
- * declares its own and remembers what the owner picked for it. Fonts belong to
- * the restaurant and follow it into every design.
+ * How the menu looks. The design's own settings (colours, switches, choices)
+ * belong to the design in use — each declares its own and remembers what the
+ * owner picked for it. Fonts belong to the restaurant and follow it into every
+ * design.
  */
-export function ColorsFontsPage({ locale }: ColorsFontsPageProps) {
-  const { t } = useTranslation('colors-fonts')
-  const page = useColorsFonts()
-  const saveColors = useSaveColors()
+export function AppearancePage({ locale }: AppearancePageProps) {
+  const { t } = useTranslation('appearance')
+  const page = useAppearance()
+  const saveSettings = useSaveDesignSettings()
   const saveFont = useSaveFont()
 
   if (page.isPending) {
@@ -52,12 +53,12 @@ export function ColorsFontsPage({ locale }: ColorsFontsPageProps) {
         <p className="mt-1 text-[13px] text-[var(--muted)]">{t('page.description')}</p>
       </div>
 
-      <ColorsCard
+      <DesignSettingsCard
         designName={designName.text}
-        colors={page.data.colors}
+        settings={page.data.settings}
         locale={locale}
-        saving={saveColors.isPending}
-        onSave={(changes) => saveColors.mutate(changes)}
+        saving={saveSettings.isPending}
+        onSave={(changes) => saveSettings.mutate(changes)}
       />
 
       <FontsCard

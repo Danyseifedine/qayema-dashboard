@@ -323,6 +323,29 @@ describe('RestaurantPage', () => {
     expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument()
   })
 
+  it('removes a saved cover: it disappears and the save deletes it', async () => {
+    stub({ cover_url: 'https://cdn.qayema.test/cover.webp' })
+    mock.onPatch('/api/restaurant').reply(200, { data: { ...settings, cover_url: null } })
+
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantPage />)
+
+    // Only the cover can be removed; the logo has Replace alone.
+    await user.click(await screen.findByRole('button', { name: 'Remove' }))
+    expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => {
+      const patch = mock.history.patch.find((r) => r.url === '/api/restaurant')
+      expect(patch).toBeDefined()
+      const body = JSON.parse(patch!.data as string)
+      expect(body.delete_cover_image).toBe(true)
+      expect(body.cover_image_key).toBeUndefined()
+      expect(body.logo_key).toBeUndefined()
+    })
+  })
+
   it('surfaces a failed load with a retry', async () => {
     mock.onGet('/api/restaurant').reply(500, { message: 'Something went wrong.' })
     renderWithProviders(<RestaurantPage />)

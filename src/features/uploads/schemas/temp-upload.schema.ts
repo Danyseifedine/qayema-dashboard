@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 
 /**
  * Upload contexts the API accepts, each mapping to a preset in
@@ -28,3 +29,50 @@ export const tempUploadSchema = z.object({
 })
 
 export type TempUpload = z.infer<typeof tempUploadSchema>
+
+/** A temp-upload key is a UUID. */
+const UPLOAD_KEY = /^[a-f0-9-]{36}$/
+
+/** A new image picked in this session: only its key is sent. */
+export const uploadedImageSchema = z.object({
+  key: z.string().regex(UPLOAD_KEY, { error: () => t('upload.unreadable') }),
+  previewUrl: z.string(),
+  name: z.string(),
+  /** Size of the optimized file, as the server formatted it, e.g. "42.3 KB". */
+  optimizedSize: z.string(),
+  /** How much the optimizer saved, as a percentage. */
+  savedPercent: z.number(),
+})
+
+/** The saved image was removed and nothing picked instead. */
+export const REMOVED_IMAGE = 'removed' as const
+
+/**
+ * What an ImageField holds: a new upload, the saved image removed, or null
+ * for "unchanged". The form turns these into `<field>_key` or its delete flag.
+ */
+export const imageFieldSchema = z.union([uploadedImageSchema, z.literal(REMOVED_IMAGE)]).nullable()
+
+export type UploadedImage = z.infer<typeof uploadedImageSchema>
+export type ImageFieldValue = z.infer<typeof imageFieldSchema>
+
+/**
+ * What a save sends for one image field: the new upload's key under
+ * `keyField`, `deleteField: true` when the saved image was removed, or
+ * nothing, which keeps whatever is stored.
+ */
+export function imageChanges<const K extends string, const D extends string = never>(
+  value: ImageFieldValue,
+  keyField: K,
+  deleteField?: D,
+  // NoInfer: the names come from the arguments, never from the payload the
+  // result is spread into, which would otherwise widen D to all of its keys.
+): NoInfer<{ [P in K]?: string } & { [P in D]?: true }> {
+  if (value !== null && value !== REMOVED_IMAGE) {
+    return { [keyField]: value.key } as { [P in K]?: string } & { [P in D]?: true }
+  }
+  if (value === REMOVED_IMAGE && deleteField !== undefined) {
+    return { [deleteField]: true } as { [P in K]?: string } & { [P in D]?: true }
+  }
+  return {}
+}

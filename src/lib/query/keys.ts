@@ -11,7 +11,7 @@ export const QUERY_ROOTS = {
   dishes: 'dishes',
   restaurant: 'restaurant',
   design: 'design',
-  colorsFonts: 'colors-fonts',
+  appearance: 'appearance',
   orders: 'orders',
   package: 'package',
   qr: 'qr',

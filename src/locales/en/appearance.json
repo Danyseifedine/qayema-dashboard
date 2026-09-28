@@ -1,0 +1,36 @@
+{
+  "page": {
+    "title": "Appearance",
+    "description": "How your menu looks: what your design lets you change, and a font for each language."
+  },
+  "settings": {
+    "description": "What {{design}} lets you change. Each design keeps its own, so switching designs and back brings yours back.",
+    "none": "{{design}} has a fixed look: there is nothing to change.",
+    "reset": "Reset",
+    "resetLabel": "Reset {{name}} to the design's colour",
+    "contrast": "Hard to read on {{partner}}. Try a lighter or darker shade.",
+    "save": "Save",
+    "unsaved": "Unsaved changes",
+    "saved": "All saved",
+    "invalidColor": "Use a colour like #F8D38D.",
+    "tooLong": "Keep it under 255 characters.",
+    "colorsTitle": "Colours",
+    "optionsTitle": "Options"
+  },
+  "fonts": {
+    "title": "Fonts",
+    "description": "One font for each writing system your menu uses. Languages that share letters share a font. A tap saves it.",
+    "default": "Default",
+    "categories": {
+      "sans": "Sans serif",
+      "serif": "Serif",
+      "display": "Display"
+    }
+  },
+  "toast": {
+    "saved": "Saved",
+    "savedDescription": "Your menu shows it now.",
+    "saveFailed": "Could not save",
+    "fontFailed": "Could not change the font"
+  }
+}

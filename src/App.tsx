@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthenticatedLayout } from '@/app/layouts/authenticated/authenticated-layout'
 import {
@@ -6,6 +6,7 @@ import {
   isNavItemLocked,
   type NavItem,
 } from '@/app/layouts/authenticated/nav-items'
+import { usePageKey } from '@/app/layouts/authenticated/use-page-key'
 import { SessionGate } from '@/features/auth'
 import { useLogout } from '@/features/auth'
 import type { AuthUser } from '@/features/auth'
@@ -20,7 +21,7 @@ import { SocialLinksPage } from '@/features/social-links'
 import { AccountPage } from '@/features/account'
 import { FeaturesPage } from '@/features/restaurant'
 import { RestaurantPage } from '@/features/restaurant'
-import { ColorsFontsPage } from '@/features/colors-fonts'
+import { AppearancePage } from '@/features/appearance'
 import { DesignPage } from '@/features/design'
 import { Alert, Button } from '@/shared/components/ui'
 import { translated } from '@/shared/utils/string/translated'
@@ -32,12 +33,17 @@ function Dashboard({ user }: { user: AuthUser }) {
   const hasTemplate = restaurant.template_id !== null
   const plan = restaurant.plan
 
-  // Land where the owner can actually act. Without a design chosen, most of
-  // the dashboard is locked, and Templates is the only way out of that.
-  const [chosenKey, setActiveKey] = useState(() => (hasTemplate ? 'overview' : 'design'))
+  // The page in the URL, so a refresh stays on it. With none, land where the
+  // owner can actually act: without a design chosen, most of the dashboard is
+  // locked, and Design is the only way out of that.
+  const [chosenKey, setActiveKey] = usePageKey(hasTemplate ? 'overview' : 'design')
   const switchedOff = restaurant.switched_off
   // A section switched off while it was open hands over to the overview.
-  const activeKey = isNavItemHidden(chosenKey, switchedOff) ? 'overview' : chosenKey
+  const hidden = isNavItemHidden(chosenKey, switchedOff)
+  const activeKey = hidden ? 'overview' : chosenKey
+  useEffect(() => {
+    if (hidden) setActiveKey('overview', { replace: true })
+  }, [hidden, setActiveKey])
   const logout = useLogout()
   const locale = usePreferencesStore((state) => state.locale)
   const setLocale = usePreferencesStore((state) => state.setLocale)
@@ -94,8 +100,8 @@ function Dashboard({ user }: { user: AuthUser }) {
         />
       ) : activeKey === 'design' ? (
         <DesignPage locale={locale} />
-      ) : activeKey === 'colors-fonts' ? (
-        <ColorsFontsPage locale={locale} />
+      ) : activeKey === 'appearance' ? (
+        <AppearancePage locale={locale} />
       ) : activeKey === 'categories' ? (
         <CategoriesPage locale={contentLocale} onOpenDishes={() => setActiveKey('dishes')} />
       ) : activeKey === 'dishes' ? (

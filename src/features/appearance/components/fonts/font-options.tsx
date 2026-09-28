@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { FontScript } from '@/features/colors-fonts/schemas/colors-fonts.schema'
+import type { FontScript } from '@/features/appearance/schemas/appearance.schema'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type FontOptionsProps = {
@@ -20,7 +20,7 @@ export type FontOptionsProps = {
  * waiting for a form.
  */
 export function FontOptions({ legend, script, onChange }: FontOptionsProps) {
-  const { t } = useTranslation('colors-fonts')
+  const { t } = useTranslation('appearance')
   const name = useId()
 
   return (

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FontOptions } from '@/features/colors-fonts/components/fonts/font-options'
-import type { FontScript } from '@/features/colors-fonts/schemas/colors-fonts.schema'
+import { FontOptions } from '@/features/appearance/components/fonts/font-options'
+import type { FontScript } from '@/features/appearance/schemas/appearance.schema'
 import { FormSection } from '@/shared/components/forms'
 import { languageName } from '@/shared/constants/menu-languages'
 
@@ -40,7 +40,7 @@ function useStylesheet(href: string | null) {
  * a font, so English and Spanish are one picker and Arabic is another.
  */
 export function FontsCard({ fonts, onPick }: FontsCardProps) {
-  const { t } = useTranslation('colors-fonts')
+  const { t } = useTranslation('appearance')
   useStylesheet(samplesHref(fonts))
 
   return (

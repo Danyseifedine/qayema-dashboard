@@ -61,7 +61,7 @@ describe('AuthenticatedLayout', () => {
       'Categories',
       'Dishes',
       'Design',
-      'Colors & fonts',
+      'Appearance',
       'QR code',
       'Package',
       'Restaurant',
@@ -99,7 +99,7 @@ describe('AuthenticatedLayout', () => {
     expect(within(nav).getByRole('button', { name: 'Categories' })).toBeDisabled()
     expect(within(nav).getByRole('button', { name: 'Dishes' })).toBeDisabled()
     expect(within(nav).getByRole('button', { name: 'QR code' })).toBeDisabled()
-    expect(within(nav).getByRole('button', { name: 'Colors & fonts' })).toBeDisabled()
+    expect(within(nav).getByRole('button', { name: 'Appearance' })).toBeDisabled()
     // Design is how an owner escapes the locked state, so it stays open.
     expect(within(nav).getByRole('button', { name: 'Design' })).toBeEnabled()
   })
