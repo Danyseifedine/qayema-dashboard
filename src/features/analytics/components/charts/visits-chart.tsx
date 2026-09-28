@@ -8,6 +8,7 @@ import {
   TOOLTIP_STYLE,
 } from '@/features/analytics/components/charts/chart-style'
 import { formatDay } from '@/shared/utils/format/date'
+import { formatNumber } from '@/shared/utils/format/number'
 
 export type VisitsChartProps = {
   series: StatsSummary['series']
@@ -25,8 +26,8 @@ export function VisitsChart({ series, locale }: VisitsChartProps) {
       role="img"
       aria-label={t('visits.chartLabel', {
         count: series.length,
-        views: views.toLocaleString(),
-        scans: scans.toLocaleString(),
+        views: formatNumber(views, locale),
+        scans: formatNumber(scans, locale),
       })}
       className="m-0"
     >

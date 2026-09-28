@@ -37,7 +37,8 @@
     "collapseShort": "Collapse"
   },
   "packagePill": {
-    "label": "{{name}} package. Open your package."
+    "label": "{{name}} package. Open your package.",
+    "labelEndingSoon": "{{name}} package, ending soon. Open your package."
   },
   "userMenu": {
     "trigger": "Account menu",
@@ -170,5 +171,34 @@
       "dimensions": "Images must be at most {{max}} × {{max}} pixels."
     },
     "unreadable": "That upload could not be read. Please try again."
+  },
+  "planLocked": {
+    "comesWith": "Comes with the {{name}} package. Everything you made stays as it is.",
+    "notOnPackage": "Not on your package yet.",
+    "cta": "See packages",
+    "analytics": {
+      "title": "See how guests use your menu",
+      "includes": {
+        "one": "Views, visitors and QR scans",
+        "two": "A day-by-day chart of your visits",
+        "three": "How many people opened your menu today"
+      }
+    },
+    "appearance": {
+      "title": "Make the menu look like yours",
+      "includes": {
+        "one": "Your own colours, with a readability check",
+        "two": "A font for each language on your menu",
+        "three": "Hide the name next to your logo"
+      }
+    },
+    "orders": {
+      "title": "Take orders from the menu",
+      "includes": {
+        "one": "Guests build a cart on your menu",
+        "two": "Each order reaches you on WhatsApp",
+        "three": "Follow and close orders here"
+      }
+    }
   }
 }

@@ -1,18 +1,30 @@
 {
   "page": {
     "title": "Package",
-    "description": "What your menu can hold, and what a bigger package would give you.",
-    "fallbackName": "Free"
+    "description": "What your menu can do now, and what each package adds.",
+    "fallbackName": "Free",
+    "compareTitle": "Compare packages",
+    "compareDescription": "Everything each package includes, side by side."
   },
   "current": {
     "eyebrow": "Your package",
-    "endsOn": "Renews or ends on <date>{{date}}</date>",
     "contactOnly": "Arranged with us directly.",
     "dishes": "Dishes",
     "categories": "Categories",
     "socialLinks": "Social links",
-    "qrIncluded": "QR studio is included, so you can brand your code.",
-    "qrNotIncluded": "QR studio is not included on this package."
+    "forever": "No end date.",
+    "foreverDefault": "Yours for as long as you like.",
+    "until": "Until <date>{{date}}</date>",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "endsToday": "Ends today",
+    "endingSoon": "Ending soon. Ask us to extend it so nothing switches off.",
+    "extend": "Ask to extend",
+    "lapsedTitle": "Your {{name}} package ended on {{date}}",
+    "lapsedBody": "You are on {{current}} now. Everything you made is kept and comes back with {{name}}.",
+    "renew": "Ask to renew",
+    "upcoming": "{{name}} starts on <date>{{date}}</date>.",
+    "includedTitle": "On your package"
   },
   "card": {
     "letsTalk": "Let's talk",
@@ -29,12 +41,13 @@
       "socialLinks_other": "{{number}} social links",
       "socialLinksUnlimited": "Unlimited social links"
     },
-    "qrStudio": "QR studio",
-    "basicQr": "Basic QR code",
     "yours": "Your package",
     "includedForEveryone": "Included for everyone",
     "talkToUs": "Talk to us",
-    "request": "Request this package"
+    "request": "Request this package",
+    "popular": "Most popular",
+    "everythingIn": "Everything in {{name}}, plus:",
+    "includes": "Includes:"
   },
   "request": {
     "title": "Ask about {{name}}",
@@ -50,5 +63,30 @@
     "sent": "Request sent",
     "sentDescription": "We will be in touch shortly to set this up.",
     "failed": "Could not send that request"
+  },
+  "rows": {
+    "dish_limit": "Dishes",
+    "category_limit": "Categories",
+    "social_link_limit": "Social links",
+    "multiple_languages": "Second menu language",
+    "appearance": "Your colours and fonts",
+    "premium_designs": "Premium designs",
+    "qr_studio": "QR studio",
+    "ordering": "Orders on WhatsApp",
+    "analytics": "Analytics",
+    "advanced_analytics": "Advanced analytics"
+  },
+  "groups": {
+    "menu": "Your menu",
+    "look": "Look",
+    "guests": "Guests",
+    "numbers": "Numbers"
+  },
+  "compare": {
+    "feature": "Feature",
+    "yours": "Yours",
+    "unlimited": "Unlimited",
+    "included": "Included",
+    "notIncluded": "Not included"
   }
 }

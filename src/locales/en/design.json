@@ -2,7 +2,7 @@
   "page": {
     "title": "Design",
     "pickPrompt": "Pick a design to open up the rest of your dashboard.",
-    "switchFree": "Switching between designs is always free."
+    "switchFree": "Switch whenever you like. Each design keeps its own colours."
   },
   "needsDesign": {
     "title": "Your menu needs a design",
@@ -15,11 +15,18 @@
   "card": {
     "inUse": "In use",
     "currentlyInUse": "Currently in use",
-    "use": "Use this design"
+    "use": "Use this design",
+    "premium": "Premium",
+    "comesWith": "Comes with {{name}}",
+    "seePackages": "See packages"
   },
   "toast": {
     "applied": "Design applied",
     "appliedDescription": "Your menu now uses this design.",
     "switchFailed": "Could not switch design"
+  },
+  "fallback": {
+    "title": "Your menu shows another design for now",
+    "description": "{{design}} needs a package with premium designs, so your menu uses {{fallback}} until you have one. Your choice is kept."
   }
 }

@@ -25,10 +25,6 @@ export { UrlField, type UrlFieldProps } from '@/shared/components/forms/fields/u
 
 // Translatable
 export {
-  LocaleTabs,
-  type LocaleTabsProps,
-} from '@/shared/components/forms/translatable/locale-tabs'
-export {
   TranslatableTextField,
   type TranslatableFieldProps,
 } from '@/shared/components/forms/translatable/translatable-text-field'

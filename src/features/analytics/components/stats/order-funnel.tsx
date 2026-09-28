@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { AdvancedStats } from '@/features/analytics/schemas/analytics.schema'
+import { formatNumber } from '@/shared/utils/format/number'
+import { usePreferencesStore } from '@/stores/preferences.store'
 
 export type OrderFunnelProps = {
   funnel: NonNullable<AdvancedStats['funnel']>
@@ -11,6 +13,7 @@ export type OrderFunnelProps = {
  */
 export function OrderFunnel({ funnel }: OrderFunnelProps) {
   const { t } = useTranslation('analytics')
+  const locale = usePreferencesStore((state) => state.locale)
   const steps = [
     { id: 'visitors', label: t('funnel.visitors'), value: funnel.visitors },
     { id: 'carted', label: t('funnel.carted'), value: funnel.carted },
@@ -29,7 +32,7 @@ export function OrderFunnel({ funnel }: OrderFunnelProps) {
                 <span className="me-2 text-[12px] text-[var(--muted)]">
                   {Math.round(share * 100)}%
                 </span>
-                <span className="font-semibold">{step.value.toLocaleString()}</span>
+                <span className="font-semibold">{formatNumber(step.value, locale)}</span>
               </span>
             </div>
             <div aria-hidden className="h-2 overflow-hidden rounded-full bg-[var(--hover-wash)]">

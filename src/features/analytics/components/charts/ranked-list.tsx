@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { formatNumber } from '@/shared/utils/format/number'
+import { usePreferencesStore } from '@/stores/preferences.store'
 
 export type RankedItem = {
   /** Unique within the list. */
@@ -18,6 +20,8 @@ export type RankedListProps = {
 
 /** A short ranked list with a bar under each row, sized against the first. */
 export function RankedList({ items, empty, ...aria }: RankedListProps) {
+  const locale = usePreferencesStore((state) => state.locale)
+
   if (items.length === 0) {
     return <p className="py-2 text-[13px] text-[var(--muted)]">{empty}</p>
   }
@@ -34,7 +38,7 @@ export function RankedList({ items, empty, ...aria }: RankedListProps) {
               {item.detail ? (
                 <span className="me-2 text-[12px] text-[var(--muted)]">{item.detail}</span>
               ) : null}
-              <span className="font-semibold">{item.value.toLocaleString()}</span>
+              <span className="font-semibold">{formatNumber(item.value, locale)}</span>
             </span>
           </div>
           <div aria-hidden className="h-1.5 overflow-hidden rounded-full bg-[var(--hover-wash)]">

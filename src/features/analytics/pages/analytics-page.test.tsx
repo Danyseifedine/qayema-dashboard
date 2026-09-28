@@ -179,10 +179,13 @@ describe('AnalyticsPage', () => {
     })
 
     it('shows an error with a retry when the numbers cannot load', async () => {
-      mock.onGet('/api/analytics').reply(500, { message: 'Server error', code: 'server_error' })
+      mock.onGet('/api/analytics').replyOnce(500, { message: 'Server error', code: 'server_error' })
+      stubSummary()
+      const user = userEvent.setup()
       renderWithProviders(<AnalyticsPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
 
-      expect(await screen.findByRole('button', { name: /try again/i })).toBeInTheDocument()
+      await user.click(await screen.findByRole('button', { name: /try again/i }))
+      await waitFor(() => expect(tile('Menu views')).toHaveTextContent('120'))
     })
   })
 
@@ -302,6 +305,29 @@ describe('AnalyticsPage', () => {
 
       expect(await screen.findByRole('button', { name: /try again/i })).toBeInTheDocument()
       expect(screen.getByText('Menu views')).toBeInTheDocument()
+    })
+
+    it('retries only the advanced part', async () => {
+      stubSummary()
+      mock
+        .onGet('/api/analytics/advanced')
+        .replyOnce(500, { message: 'Server error', code: 'server_error' })
+      stubAdvanced()
+      const user = userEvent.setup()
+      renderWithProviders(<AnalyticsPage locale="en" advanced onOpenPackage={vi.fn()} />)
+
+      await user.click(await screen.findByRole('button', { name: /try again/i }))
+      expect(await screen.findByText('Tapped WhatsApp')).toBeInTheDocument()
+    })
+
+    it('has nothing to compare with on all time', async () => {
+      stubSummary()
+      stubAdvanced('30d', { previous: null })
+      renderWithProviders(<AnalyticsPage locale="en" advanced onOpenPackage={vi.fn()} />)
+
+      await screen.findByText('Tapped WhatsApp')
+      expect(tile('Menu views')).toHaveTextContent('Nothing to compare yet')
+      expect(tile('QR scans')).toHaveTextContent('Nothing to compare yet')
     })
   })
 })

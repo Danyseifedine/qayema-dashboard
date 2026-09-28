@@ -6,6 +6,7 @@ import { ComboboxField, Form, FormActions, UrlField } from '@/shared/components/
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { cn } from '@/shared/utils/dom/cn'
+import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 import { useSaveSocialLink } from '@/features/social-links/hooks/use-social-links'
 import {
   PLATFORM_LABELS,
@@ -84,13 +85,18 @@ export function SocialLinkDialog({ open, link, taken, onClose }: SocialLinkDialo
 
   const platform = form.watch('platform')
 
-  const onSubmit = form.handleSubmit((values) => {
-    clearFormError()
-    save.mutate(values, {
-      onSuccess: onClose,
-      onError: (error) => applyApiError(error),
-    })
-  })
+  const once = useSubmitOnce()
+
+  const onSubmit = form.handleSubmit((values) =>
+    once((done) => {
+      clearFormError()
+      save.mutate(values, {
+        onSuccess: onClose,
+        onError: (error) => applyApiError(error),
+        onSettled: done,
+      })
+    }),
+  )
 
   return (
     <dialog

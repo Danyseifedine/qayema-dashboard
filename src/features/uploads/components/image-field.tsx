@@ -1,7 +1,13 @@
 import { ImagePlus, Trash2, UploadCloud } from 'lucide-react'
-import { useCallback, useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { useCallback, useId, useRef, useState, type DragEvent, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
+import {
+  useController,
+  type Control,
+  type FieldError,
+  type FieldPath,
+  type FieldValues,
+} from 'react-hook-form'
 import { useTempUpload } from '@/features/uploads/hooks/use-temp-upload'
 import {
   REMOVED_IMAGE,
@@ -71,11 +77,17 @@ export function ImageField<T extends FieldValues>({
   const value = field.value as ImageFieldValue
 
   const inputRef = useRef<HTMLInputElement>(null)
+  const labelId = useId()
   const [dragging, setDragging] = useState(false)
   const { uploading, progress, error: uploadError, upload, reset } = useTempUpload(context)
 
   // An upload problem outranks a schema error: it is the newer fact.
-  const error = uploadError ?? fieldState.error?.message
+  // A bad upload key is reported on `<name>.key`, one level down, so the
+  // field's own error carries no message and the save failed silently.
+  const fieldError =
+    fieldState.error?.message ??
+    (fieldState.error as { key?: FieldError } | undefined)?.key?.message
+  const error = uploadError ?? fieldError
   // Removing the saved image hides it until the form is saved (or undone);
   // a new pick shows its own preview.
   const picked = value !== null && value !== REMOVED_IMAGE ? value : null
@@ -119,7 +131,7 @@ export function ImageField<T extends FieldValues>({
   return (
     <div className={cn('flex flex-col gap-2 pt-2', className)}>
       {label ? (
-        <Label required={required} optionalText={optionalText}>
+        <Label id={labelId} required={required} optionalText={optionalText}>
           {label}
         </Label>
       ) : null}
@@ -127,6 +139,9 @@ export function ImageField<T extends FieldValues>({
       <input
         ref={inputRef}
         type="file"
+        // Named by the field's label, which is not a <label for>: clicking
+        // the title should not open the picker.
+        aria-labelledby={label ? labelId : undefined}
         accept={ACCEPTED_IMAGE_ACCEPT}
         className="sr-only"
         disabled={disabled}

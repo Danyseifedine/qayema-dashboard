@@ -14,6 +14,7 @@ import {
 import { useSaveCategory } from '@/features/menu/categories/hooks/use-categories'
 import { useMenuLanguages } from '@/features/auth'
 import { toMenuTextForm } from '@/shared/utils/string/menu-text'
+import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 
 export type CategoryDialogProps = {
   open: boolean
@@ -58,13 +59,18 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
     if (!open && dialog.open) dialog.close()
   }, [open])
 
-  const onSubmit = form.handleSubmit((values) => {
-    clearFormError()
-    save.mutate(values, {
-      onSuccess: onClose,
-      onError: (error) => applyApiError(error),
-    })
-  })
+  const once = useSubmitOnce()
+
+  const onSubmit = form.handleSubmit((values) =>
+    once((done) => {
+      clearFormError()
+      save.mutate(values, {
+        onSuccess: onClose,
+        onError: (error) => applyApiError(error),
+        onSettled: done,
+      })
+    }),
+  )
 
   return (
     <dialog

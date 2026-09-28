@@ -57,7 +57,9 @@ export function SocialLinksPage() {
         <Button
           size="sm"
           leadingIcon={<Share2 className="size-4" />}
-          disabled={atLimit || allPlatformsUsed}
+          // Not before the list arrives: the dialog picks its platform from
+          // the ones still free, and would otherwise start on a taken one.
+          disabled={links.data === undefined || atLimit || allPlatformsUsed}
           onClick={() => setDialog({ open: true, link: null })}
         >
           {t('page.add')}

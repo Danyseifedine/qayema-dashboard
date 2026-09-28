@@ -3,27 +3,38 @@ import { useTranslation } from 'react-i18next'
 import { CardGridSkeleton, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
+import { usePackageFor } from '@/features/package'
+import { translated } from '@/shared/utils/string/translated'
 import { DesignCard } from '@/features/design/components/store/design-card'
+import type { Design } from '@/features/design/schemas/design.schema'
 import { useSelectDesign, useDesigns } from '@/features/design/hooks/use-designs'
 
 export type DesignPageProps = {
   locale: Locale
+  onOpenPackage: () => void
 }
 
 /**
  * The design store.
  *
  * A new restaurant has no design, and most of the dashboard stays locked until
- * one is chosen, so this is where a new owner starts. Every design is free on
- * every package: what a package grants is limits and features, never a look.
+ * one is chosen, so this is where a new owner starts. Every design is open on
+ * every package except one marked premium, which needs the package that
+ * includes premium designs.
  */
-export function DesignPage({ locale }: DesignPageProps) {
+export function DesignPage({ locale, onOpenPackage }: DesignPageProps) {
   const { t } = useTranslation('design')
   const designs = useDesigns()
   const select = useSelectDesign()
+  const unlockedBy = usePackageFor('premium_designs', locale)
 
   const list = designs.data?.data ?? []
   const current = designs.data?.meta.current ?? null
+  const shown = designs.data?.meta.shown ?? null
+  // The chosen design needs a package the restaurant is no longer on.
+  const chosen =
+    current !== null && shown !== current ? list.find((d) => d.id === current) : undefined
+  const fallback = list.find((d) => d.id === shown)
 
   return (
     <div className="flex flex-col gap-4">
@@ -39,6 +50,15 @@ export function DesignPage({ locale }: DesignPageProps) {
       {current === null ? (
         <Alert variant="info" title={t('needsDesign.title')}>
           {t('needsDesign.description')}
+        </Alert>
+      ) : null}
+
+      {chosen && fallback ? (
+        <Alert variant="warning" title={t('fallback.title', { design: nameOf(chosen, locale) })}>
+          {t('fallback.description', {
+            design: nameOf(chosen, locale),
+            fallback: nameOf(fallback, locale),
+          })}
         </Alert>
       ) : null}
 
@@ -63,11 +83,18 @@ export function DesignPage({ locale }: DesignPageProps) {
               active={template.id === current}
               locale={locale}
               busy={select.isPending && select.variables === template.id}
+              unlockedBy={unlockedBy}
               onSelect={() => select.mutate(template.id)}
+              onOpenPackage={onOpenPackage}
             />
           ))}
         </div>
       )}
     </div>
   )
+}
+
+function nameOf(design: Design, locale: Locale): string {
+  const name = translated(design.name, locale)
+  return name.missing ? design.slug : name.text
 }

@@ -6,6 +6,7 @@ import { Form, FormActions, TextareaField } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
+import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
 import { useRequestPackage } from '@/features/package/hooks/use-packages'
@@ -60,13 +61,18 @@ export function RequestPackageDialog({ open, pkg, locale, onClose }: RequestPack
   const name = pkg === null ? '' : translated(pkg.name, locale)
   const label = pkg === null ? '' : name === '' || name.missing ? pkg.slug : name.text
 
+  // Each request counts against the owner's three a day.
+  const once = useSubmitOnce()
+
   const onSubmit = form.handleSubmit((values) => {
     if (pkg === null) return
-    clearFormError()
-    send.mutate(
-      { package: pkg.slug, ...(values.message ? { message: values.message } : {}) },
-      { onSuccess: onClose, onError: (error) => applyApiError(error) },
-    )
+    once((done) => {
+      clearFormError()
+      send.mutate(
+        { package: pkg.slug, ...(values.message ? { message: values.message } : {}) },
+        { onSuccess: onClose, onError: (error) => applyApiError(error), onSettled: done },
+      )
+    })
   })
 
   return (

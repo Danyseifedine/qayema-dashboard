@@ -3,19 +3,6 @@
  * `api/*` error is `{message, code}`, and validation failures add `errors`.
  */
 
-/** Laravel resources wrap payloads in a `data` key. */
-export type ApiEnvelope<T> = { data: T }
-
-/** Laravel's paginator meta block. */
-export type ApiPaginationMeta = {
-  current_page: number
-  last_page: number
-  per_page: number
-  total: number
-}
-
-export type ApiPaginated<T> = ApiEnvelope<T[]> & { meta: ApiPaginationMeta }
-
 /** Field name -> list of messages, exactly as a 422 returns it. */
 export type ApiValidationErrors = Record<string, string[]>
 

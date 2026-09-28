@@ -8,13 +8,22 @@ export const designSchema = z.object({
   name: translatableTextSchema,
   description: translatableTextSchema,
   thumbnail_url: z.url().nullable(),
+  /** Needs a package with premium designs. */
+  is_premium: z.boolean(),
+  /** Premium, and this restaurant's package does not include it. */
+  locked: z.boolean(),
 })
 
 export const designListSchema = z.object({
   data: z.array(designSchema),
   meta: z.object({
-    /** The restaurant's active template, null until one is chosen. */
+    /** The restaurant's chosen template, null until one is chosen. */
     current: z.number().int().nullable(),
+    /**
+     * What the menu is drawn in: the choice, or the first free design while
+     * the package does not include a premium choice.
+     */
+    shown: z.number().int().nullable(),
   }),
 })
 

@@ -293,5 +293,141 @@ describe('AppearancePage', () => {
 
       await waitFor(() => expect(screen.getByRole('radio', { name: /Inter/ })).toBeChecked())
     })
+
+    it('says so when a font fails to save', async () => {
+      stub({ fonts: [LATIN] })
+      mock.onPut('/api/appearance').reply(500, { message: 'Server down', code: 'server_error' })
+      const user = userEvent.setup()
+      renderWithProviders(<AppearancePage locale="en" />)
+
+      const poppins = await screen.findByRole('radio', { name: /Poppins/ })
+      // An earlier test's toast can still be up, so count the new one.
+      const before = screen.queryAllByText('Could not change the font').length
+      await user.click(poppins)
+
+      await waitFor(() =>
+        expect(screen.queryAllByText('Could not change the font')).toHaveLength(before + 1),
+      )
+    })
+
+    it('loads the fonts it shows, and lets go of them when the page closes', async () => {
+      stub({ fonts: [LATIN] })
+      const { unmount } = renderWithProviders(<AppearancePage locale="en" />)
+
+      await screen.findByRole('group', { name: 'English' })
+      const link = document.head.querySelector<HTMLLinkElement>(
+        'link[href^="https://fonts.googleapis.com/css2"]',
+      )
+      expect(link?.href).toContain('family=Inter&family=Poppins&family=Lora')
+      expect(link?.href).toContain('display=swap')
+
+      unmount()
+      expect(document.head.querySelector('link[href^="https://fonts.googleapis.com"]')).toBeNull()
+    })
+
+    it('loads no stylesheet when there is no font to show', async () => {
+      stub({ fonts: [] })
+      renderWithProviders(<AppearancePage locale="en" />)
+
+      await screen.findByRole('heading', { name: 'Fonts' })
+      expect(document.head.querySelector('link[href^="https://fonts.googleapis.com"]')).toBeNull()
+    })
+  })
+
+  describe('loading', () => {
+    it('shows an error with a retry when the page cannot load', async () => {
+      mock.onGet('/api/appearance').replyOnce(500, { message: 'Server down', code: 'server_error' })
+      stub()
+      const user = userEvent.setup()
+      renderWithProviders(<AppearancePage locale="en" />)
+
+      expect(await screen.findByText('Server down')).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: 'Try again' }))
+
+      expect(await screen.findByRole('textbox', { name: 'Main colour' })).toBeInTheDocument()
+    })
+  })
+
+  describe('settings without defaults', () => {
+    it('starts an unset colour at black, offers no reset, and sends what is typed', async () => {
+      stub({
+        settings: [
+          {
+            key: 'accent_color',
+            type: 'color',
+            label: { en: 'Accent', ar: null },
+            default: null,
+            value: null,
+            contrast_with: null,
+            options: [],
+          },
+        ],
+      })
+      mock.onPut('/api/appearance').reply(200, payload())
+      const user = userEvent.setup()
+      renderWithProviders(<AppearancePage locale="en" />)
+
+      const accent = await screen.findByRole('textbox', { name: 'Accent' })
+      expect(accent).toHaveValue('#000000')
+
+      await user.clear(accent)
+      await user.type(accent, '#123456')
+      expect(screen.queryByRole('button', { name: /^Reset Accent/ })).not.toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+      await waitFor(() => expect(sentBody()).toEqual({ settings: { accent_color: '#123456' } }))
+    })
+
+    it('starts an unset line of text empty, with no placeholder', async () => {
+      stub({
+        settings: [
+          {
+            key: 'tagline',
+            type: 'text',
+            label: { en: 'Tagline', ar: null },
+            default: null,
+            value: null,
+            contrast_with: null,
+            options: [],
+          },
+        ],
+      })
+      renderWithProviders(<AppearancePage locale="en" />)
+
+      const tagline = await screen.findByRole('textbox', { name: 'Tagline' })
+      expect(tagline).toHaveValue('')
+      expect(tagline).toHaveAttribute('placeholder', '')
+    })
+
+    it('says so when the settings fail to save', async () => {
+      stub()
+      mock.onPut('/api/appearance').reply(500, { message: 'Server down', code: 'server_error' })
+      const user = userEvent.setup()
+      renderWithProviders(<AppearancePage locale="en" />)
+
+      await user.click(await screen.findByRole('switch', { name: 'Name in the top bar' }))
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      expect(await screen.findByText('Could not save')).toBeInTheDocument()
+      expect(screen.getByText('Unsaved changes')).toBeInTheDocument()
+    })
+
+    it('comes back clean after a save', async () => {
+      stub()
+      mock.onPut('/api/appearance').reply(
+        200,
+        payload({
+          settings: [...CLASSIC_SETTINGS.slice(0, 3), { ...CLASSIC_SETTINGS[3]!, value: false }],
+        }),
+      )
+      const user = userEvent.setup()
+      renderWithProviders(<AppearancePage locale="en" />)
+
+      await user.click(await screen.findByRole('switch', { name: 'Name in the top bar' }))
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+
+      expect(await screen.findByText('All saved')).toBeInTheDocument()
+      expect(screen.getByRole('switch', { name: 'Name in the top bar' })).not.toBeChecked()
+    })
   })
 })

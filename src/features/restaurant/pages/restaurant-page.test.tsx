@@ -1,14 +1,32 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
+import type { AxiosProgressEvent, AxiosRequestConfig } from 'axios'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeSessionUser } from '@/test/mocks/factories/session'
+import { EMPTY_PLAN, makeSessionUser } from '@/test/mocks/factories/session'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { restaurantKeys } from '@/features/restaurant/hooks/restaurant-keys'
 import { RestaurantPage } from '@/features/restaurant/pages/restaurant-page'
 
 let mock: MockAdapter
+
+const LOGO_KEY = '11111111-2222-4333-8444-555555555555'
+const COVER_KEY = '66666666-7777-4888-9999-000000000000'
+
+function uploaded(key: string) {
+  return { key, original_size: '400 KB', optimized_size: '40 KB', saved_percent: 90 }
+}
+
+function png(name: string): File {
+  return new File([new Uint8Array(32)], name, { type: 'image/png' })
+}
+
+/** The logo's file input, then the cover's, in the order the page draws them. */
+function fileInputs(): HTMLInputElement[] {
+  return [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')]
+}
 
 type MenuText = Record<string, string | null>
 
@@ -88,42 +106,7 @@ describe('RestaurantPage', () => {
 
   it('links to the menu on its own domain, not the dashboard', async () => {
     stub()
-    mock.onGet('/api/user').reply(200, {
-      data: {
-        id: 1,
-        name: 'Dany',
-        email: 'owner@example.com',
-        role: 'menu_owner',
-        has_completed_onboarding: true,
-        has_password: true,
-        restaurant: {
-          id: 1,
-          name: { en: 'Beit Qayema', ar: null },
-          slug: 'beit-qayema',
-          languages: ['en', 'ar'],
-          second_locale: 'ar',
-          default_locale: 'en',
-          is_active: true,
-          template_id: 1,
-          logo_url: null,
-          public_url: 'https://qayema.test/beit-qayema',
-          qr_url: 'https://qayema.test/beit-qayema?qr=1',
-          package: {
-            slug: 'free',
-            name: { en: 'Free', ar: null },
-            is_contact_only: false,
-            ends_at: null,
-          },
-          limits: {
-            dishes: { used: 0, limit: 40 },
-            categories: { used: 0, limit: 10 },
-            social_links: { used: 0, limit: 2 },
-          },
-          switched_off: [],
-          plan: { qr_studio: false, ordering: false, advanced_analytics: false },
-        },
-      },
-    })
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser({ plan: EMPTY_PLAN }) })
 
     renderWithProviders(<RestaurantPage />)
 
@@ -398,6 +381,176 @@ describe('RestaurantPage', () => {
         await screen.findByText('The restaurant name is required in English.'),
       ).toBeInTheDocument()
       expect(mock.history.patch).toHaveLength(0)
+    })
+  })
+
+  describe('more of the page', () => {
+    beforeEach(() => {
+      // jsdom's File cannot become an object URL; the preview only needs a string.
+      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:preview')
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+      vi.restoreAllMocks()
+    })
+
+    it('retries a failed load', async () => {
+      mock.onGet('/api/restaurant').replyOnce(500, { message: 'Something went wrong.' })
+      stub()
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      await user.click(await screen.findByRole('button', { name: /Try again/ }))
+      expect(await screen.findByLabelText(/^Restaurant name/)).toHaveValue('Beit Qayema')
+    })
+
+    it('starts empty where nothing is saved yet', async () => {
+      stub({ phone: null, country_code: null, logo_url: null })
+      renderWithProviders(<RestaurantPage />)
+
+      expect(await screen.findByLabelText(/^Phone/)).toHaveValue('')
+      // No saved logo: the drop zone, not Replace.
+      expect(screen.queryByRole('button', { name: 'Replace' })).not.toBeInTheDocument()
+      expect(screen.getAllByRole('button', { name: /Drop an image or browse/ })).toHaveLength(2)
+    })
+
+    it('links to the menu by its slug when the session has no address', async () => {
+      stub()
+      mock.onGet('/api/user').reply(200, { data: { ...makeSessionUser(), restaurant: null } })
+      renderWithProviders(<RestaurantPage />)
+
+      expect(await screen.findByRole('link', { name: /beit-qayema/ })).toHaveAttribute(
+        'href',
+        '/beit-qayema',
+      )
+    })
+
+    it('keeps what the owner typed when the same data is fetched again', async () => {
+      stub()
+      const user = userEvent.setup()
+      const { queryClient } = renderWithProviders(<RestaurantPage />)
+
+      const name = await screen.findByLabelText(/^Restaurant name/)
+      await user.type(name, ' Two')
+      await queryClient.refetchQueries({ queryKey: restaurantKeys.all })
+
+      await waitFor(() =>
+        expect(mock.history.get.filter((call) => call.url === '/api/restaurant')).toHaveLength(2),
+      )
+      expect(screen.getByLabelText(/^Restaurant name/)).toHaveValue('Beit Qayema Two')
+    })
+
+    it('sends an empty entry for a menu language the saved text does not have yet', async () => {
+      stub({ languages: ['en'] })
+      mock.onPatch('/api/restaurant').reply(200, { data: settings })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      await user.type(await screen.findByLabelText(/^Restaurant name/), '!')
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      await waitFor(() => expect(mock.history.patch).toHaveLength(1))
+      const body = JSON.parse(mock.history.patch[0]!.data as string)
+      expect(body.name).toEqual({ en: 'Beit Qayema!', ar: '' })
+    })
+
+    it('shows a failed save above the form, and lets it be dismissed', async () => {
+      stub()
+      mock.onPatch('/api/restaurant').reply(500, { message: 'Server down', code: 'server_error' })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      await user.type(await screen.findByLabelText(/^Restaurant name/), '!')
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      const banner = (await screen.findByText('That did not save')).closest('[role="alert"]')
+      expect(banner).not.toBeNull()
+      expect(within(banner as HTMLElement).getByText('Server down')).toBeInTheDocument()
+
+      await user.click(within(banner as HTMLElement).getByRole('button', { name: 'Dismiss' }))
+      expect(screen.queryByText('That did not save')).not.toBeInTheDocument()
+    })
+
+    it('says it is finding the owner while the browser works', async () => {
+      stub({ google_maps_url: null })
+      vi.stubGlobal('navigator', {
+        ...navigator,
+        geolocation: { getCurrentPosition: vi.fn() },
+      })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      await user.click(await screen.findByRole('button', { name: /Use my current location/ }))
+
+      expect(await screen.findByRole('button', { name: /Finding you/ })).toBeInTheDocument()
+    })
+
+    it('uploads a new logo and cover, showing progress, and saves their keys', async () => {
+      stub()
+      // jsdom cannot decode an image, so the size check is left to the server.
+      vi.stubGlobal('createImageBitmap', vi.fn().mockRejectedValue(new Error('no decoder')))
+      let releaseCover: (value: [number, unknown]) => void = () => {}
+      mock.onPost('/api/uploads/temp').reply((config: AxiosRequestConfig) => {
+        const context = (config.data as FormData).get('context')
+        if (context === 'logo') return [200, uploaded(LOGO_KEY)]
+        config.onUploadProgress?.({ loaded: 50, total: 100 } as AxiosProgressEvent)
+        return new Promise((resolve) => {
+          releaseCover = resolve
+        })
+      })
+      mock.onPatch('/api/restaurant').reply(200, { data: settings })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      await screen.findByLabelText(/^Restaurant name/)
+      const [logoInput, coverInput] = fileInputs()
+      await user.upload(logoInput!, png('logo.png'))
+      expect(await screen.findByText('logo.png')).toBeInTheDocument()
+
+      await user.upload(coverInput!, png('cover.png'))
+      const progress = await screen.findByRole('progressbar')
+      await waitFor(() => expect(progress).toHaveAttribute('aria-valuenow', '50'))
+      expect(screen.getByText('Uploading…')).toBeInTheDocument()
+
+      releaseCover([200, uploaded(COVER_KEY)])
+      expect(await screen.findByText('cover.png')).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      await waitFor(() => expect(mock.history.patch).toHaveLength(1))
+      const body = JSON.parse(mock.history.patch[0]!.data as string)
+      expect(body.logo_key).toBe(LOGO_KEY)
+      expect(body.cover_image_key).toBe(COVER_KEY)
+      expect(body).not.toHaveProperty('delete_cover_image')
+      const contexts = mock.history.post
+        .filter((call) => call.url === '/api/uploads/temp')
+        .map((call) => (call.data as FormData).get('context'))
+      expect(contexts).toEqual(['logo', 'cover_image'])
+    })
+
+    it('takes back a cover picked by mistake before saving', async () => {
+      stub()
+      vi.stubGlobal('createImageBitmap', vi.fn().mockRejectedValue(new Error('no decoder')))
+      mock.onPost('/api/uploads/temp').reply(200, uploaded(COVER_KEY))
+      mock.onPatch('/api/restaurant').reply(200, { data: settings })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      await screen.findByLabelText(/^Restaurant name/)
+      await user.upload(fileInputs()[1]!, png('cover.png'))
+      expect(await screen.findByText('cover.png')).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Remove' }))
+      expect(screen.queryByText('cover.png')).not.toBeInTheDocument()
+
+      await user.type(screen.getByLabelText(/^Restaurant name/), '!')
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      await waitFor(() => expect(mock.history.patch).toHaveLength(1))
+      const body = JSON.parse(mock.history.patch[0]!.data as string)
+      expect(body).not.toHaveProperty('cover_image_key')
     })
   })
 })

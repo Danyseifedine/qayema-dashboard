@@ -154,4 +154,33 @@ describe('OverviewPage', () => {
     // The counts come from the session, so they stay up.
     expect(tile('Dishes')).toHaveTextContent('12')
   })
+
+  it('retries only the restaurant when that is what failed', async () => {
+    mock.onGet('/api/restaurant').replyOnce(500, { message: 'Server error', code: 'server_error' })
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: /try again/i }))
+
+    expect(await screen.findByText(/of 10 done/)).toBeInTheDocument()
+    const calls = (url: string) => mock.history.get.filter((call) => call.url === url).length
+    expect(calls('/api/restaurant')).toBe(2)
+    expect(calls('/api/dishes')).toBe(1)
+  })
+
+  it('retries only the dishes when those failed, with their message', async () => {
+    mock.onGet('/api/dishes').replyOnce(500, { message: 'Dishes are down', code: 'server_error' })
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} onOpen={vi.fn()} />)
+
+    expect(await screen.findByText('Dishes are down')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /try again/i }))
+
+    expect(await screen.findByText(/of 10 done/)).toBeInTheDocument()
+    const calls = (url: string) => mock.history.get.filter((call) => call.url === url).length
+    expect(calls('/api/restaurant')).toBe(1)
+    expect(calls('/api/dishes')).toBe(2)
+  })
 })

@@ -77,5 +77,13 @@ export const advancedStatsSchema = z.object({
 
 export type AdvancedStats = z.infer<typeof advancedStatsSchema>
 
+/** The one number every package sees: menu views over the last 7 days. */
+export const statsTeaserSchema = z.object({
+  range: z.literal('7d'),
+  views: z.number().int(),
+})
+export type StatsTeaser = z.infer<typeof statsTeaserSchema>
+
 export const statsSummaryResponseSchema = z.object({ data: statsSummarySchema })
+export const statsTeaserResponseSchema = z.object({ data: statsTeaserSchema })
 export const advancedStatsResponseSchema = z.object({ data: advancedStatsSchema })

@@ -6,8 +6,8 @@ export function fetchDesigns(signal?: AbortSignal): Promise<DesignList> {
 }
 
 /**
- * Switches the restaurant to a design. Every active design is available on
- * every package, so this never fails on entitlement. Returns the whole list,
+ * Switches the restaurant to a design. A premium one the package does not
+ * include is refused (403); the page never offers it. Returns the whole list,
  * with `meta.current` updated.
  */
 export function selectDesign(templateId: number): Promise<DesignList> {

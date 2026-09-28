@@ -16,5 +16,29 @@ export default defineConfig({
     setupFiles: ['./src/test/setup/vitest.setup.ts'],
     css: false,
     include: ['src/**/*.test.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/main.tsx',
+        'src/vite-env.d.ts',
+        '**/*.test.*',
+        'src/test/**',
+        'src/locales/**',
+        // Barrels that only re-export; lib/api and lib/i18n index files hold
+        // logic and stay measured.
+        'src/features/**/index.ts',
+        'src/shared/components/*/index.ts',
+      ],
+      reporter: ['text-summary', 'html'],
+      // The achieved numbers, rounded down: a change that drops coverage
+      // fails `npm run test:coverage`.
+      thresholds: {
+        lines: 100,
+        statements: 99,
+        functions: 100,
+        branches: 98,
+      },
+    },
   },
 })

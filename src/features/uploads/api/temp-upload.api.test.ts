@@ -1,5 +1,5 @@
 import MockAdapter from 'axios-mock-adapter'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { ApiError } from '@/shared/types/api'
@@ -91,5 +91,40 @@ describe('uploadTempImage', () => {
     mock.onPost('/api/uploads/temp').reply(200, { key: 'not-a-uuid' })
 
     await expect(uploadTempImage(fakeImage(), { context: 'logo' })).rejects.toBeInstanceOf(ApiError)
+  })
+  it('reports upload progress as a percentage, or null while the size is unknown', async () => {
+    mock.onGet('/api/csrf-token').reply(200, { token: 'csrf-abc' })
+    mock.onPost('/api/uploads/temp').reply((config) => {
+      config.onUploadProgress?.({ loaded: 1, total: 3 } as never)
+      config.onUploadProgress?.({ loaded: 5, total: undefined } as never)
+      return [
+        200,
+        {
+          key: '11111111-2222-4333-8444-555555555555',
+          original_size: '1.4 MB',
+          optimized_size: '42.3 KB',
+          saved_percent: 97,
+        },
+      ]
+    })
+    const onProgress = vi.fn()
+
+    await uploadTempImage(fakeImage(), { context: 'dish', onProgress })
+
+    expect(onProgress.mock.calls).toEqual([[33], [null]])
+  })
+
+  it('sends no progress handler when nobody listens', async () => {
+    mock.onGet('/api/csrf-token').reply(200, { token: 'csrf-abc' })
+    mock.onPost('/api/uploads/temp').reply(200, {
+      key: '11111111-2222-4333-8444-555555555555',
+      original_size: '1.4 MB',
+      optimized_size: '42.3 KB',
+      saved_percent: 97,
+    })
+
+    await uploadTempImage(fakeImage(), { context: 'dish' })
+
+    expect(mock.history.post[0]!.onUploadProgress).toBeUndefined()
   })
 })

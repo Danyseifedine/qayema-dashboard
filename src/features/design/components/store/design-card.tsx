@@ -1,4 +1,4 @@
-import { Check, ImageOff } from 'lucide-react'
+import { Check, Crown, ImageOff, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
@@ -12,17 +12,28 @@ export type DesignCardProps = {
   active: boolean
   locale: Locale
   busy?: boolean
+  /** The package that includes a premium design, by name. */
+  unlockedBy: string | null
   onSelect: () => void
+  onOpenPackage: () => void
 }
 
 /**
  * One menu design.
  *
- * Two states: the design in use, and any other design, which is one tap away.
- * Nothing here costs anything — a package grants limits and features, never a
- * look.
+ * Three states: the design in use, any other design, which is one tap away,
+ * and a premium design the package does not include, which points to the
+ * package that does.
  */
-export function DesignCard({ template, active, locale, busy = false, onSelect }: DesignCardProps) {
+export function DesignCard({
+  template,
+  active,
+  locale,
+  busy = false,
+  unlockedBy,
+  onSelect,
+  onOpenPackage,
+}: DesignCardProps) {
   const { t } = useTranslation('design')
   const name = translated(template.name, locale)
   const description = translated(template.description, locale)
@@ -48,6 +59,13 @@ export function DesignCard({ template, active, locale, busy = false, onSelect }:
           </div>
         )}
 
+        {template.is_premium ? (
+          <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-[var(--surface)] px-2.5 py-1 text-[11px] font-medium text-accent shadow-sm">
+            <Crown aria-hidden className="size-3" />
+            {t('card.premium')}
+          </span>
+        ) : null}
+
         {active ? (
           <div className="absolute end-2 top-2 flex gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-full bg-gold px-2.5 py-1 text-[11px] font-medium text-ink">
@@ -72,6 +90,15 @@ export function DesignCard({ template, active, locale, busy = false, onSelect }:
           {active ? (
             <Button variant="secondary" block disabled>
               {t('card.currentlyInUse')}
+            </Button>
+          ) : template.locked ? (
+            <Button
+              variant="secondary"
+              block
+              leadingIcon={<Lock aria-hidden className="size-4" />}
+              onClick={onOpenPackage}
+            >
+              {unlockedBy ? t('card.comesWith', { name: unlockedBy }) : t('card.seePackages')}
             </Button>
           ) : (
             <Button block loading={busy} onClick={onSelect}>

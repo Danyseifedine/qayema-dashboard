@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { StatTile } from '@/shared/components/data-display'
 import type { AdvancedStats, GuestAction } from '@/features/analytics/schemas/analytics.schema'
+import { formatNumber } from '@/shared/utils/format/number'
+import { usePreferencesStore } from '@/stores/preferences.store'
 
 type ActionLabel =
   'dishAdd' | 'categoryOpen' | 'search' | 'whatsapp' | 'map' | 'call' | 'social' | 'language'
@@ -28,6 +30,7 @@ export type GuestActionsProps = {
  */
 export function GuestActions({ actions, takesOrders }: GuestActionsProps) {
   const { t } = useTranslation('analytics')
+  const locale = usePreferencesStore((state) => state.locale)
 
   return (
     <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -35,7 +38,10 @@ export function GuestActions({ actions, takesOrders }: GuestActionsProps) {
         <StatTile
           key={action.label}
           label={t(`actions.labels.${action.label}`)}
-          value={action.keys.reduce((sum, key) => sum + actions[key], 0).toLocaleString()}
+          value={formatNumber(
+            action.keys.reduce((sum, key) => sum + actions[key], 0),
+            locale,
+          )}
         />
       ))}
     </dl>

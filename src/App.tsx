@@ -2,10 +2,12 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthenticatedLayout } from '@/app/layouts/authenticated/authenticated-layout'
 import {
+  NAV_ITEMS,
   isNavItemHidden,
-  isNavItemLocked,
+  navLock,
   type NavItem,
 } from '@/app/layouts/authenticated/nav-items'
+import { PlanLockedPage } from '@/app/layouts/authenticated/plan-locked-page'
 import { usePageKey } from '@/app/layouts/authenticated/use-page-key'
 import { SessionGate } from '@/features/auth'
 import { useLogout } from '@/features/auth'
@@ -13,7 +15,7 @@ import type { AuthUser } from '@/features/auth'
 import { CategoriesPage } from '@/features/menu'
 import { DishesPage } from '@/features/menu'
 import { OrdersPage } from '@/features/orders'
-import { AnalyticsPage } from '@/features/analytics'
+import { AnalyticsPage, AnalyticsTeaser } from '@/features/analytics'
 import { OverviewPage } from '@/features/overview'
 import { QrPage } from '@/features/qr'
 import { PackagePage } from '@/features/package'
@@ -26,6 +28,9 @@ import { DesignPage } from '@/features/design'
 import { Alert, Button } from '@/shared/components/ui'
 import { translated } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
+
+/** How close to its end a package shows a warning, in days. */
+const ENDING_SOON_DAYS = 7
 
 function Dashboard({ user }: { user: AuthUser }) {
   // SessionGate guarantees a restaurant, so this is never null here.
@@ -49,7 +54,8 @@ function Dashboard({ user }: { user: AuthUser }) {
   const setLocale = usePreferencesStore((state) => state.setLocale)
   const { t } = useTranslation()
 
-  const locked = isNavItemLocked(activeKey, { hasTemplate, plan })
+  const lock = navLock(activeKey, { hasTemplate, plan })
+  const activeItem = NAV_ITEMS.find((item) => item.key === activeKey)
 
   // Menu text shows in the dashboard's language when the menu is written in
   // it, and in English (the language every name has) otherwise.
@@ -64,6 +70,9 @@ function Dashboard({ user }: { user: AuthUser }) {
       activeKey={activeKey}
       onNavigate={(item: NavItem) => setActiveKey(item.key)}
       user={{ name: user.name, email: user.email }}
+      packageEndingSoon={
+        restaurant.package.days_left !== null && restaurant.package.days_left <= ENDING_SOON_DAYS
+      }
       packageName={
         packageName.missing ? (restaurant.package.slug ?? t('app.freePackage')) : packageName.text
       }
@@ -81,7 +90,15 @@ function Dashboard({ user }: { user: AuthUser }) {
         </Alert>
       ) : null}
 
-      {locked ? (
+      {lock === 'plan' && activeItem ? (
+        <PlanLockedPage
+          item={activeItem}
+          locale={locale}
+          onOpenPackage={() => setActiveKey('package')}
+        >
+          {activeKey === 'analytics' ? <AnalyticsTeaser locale={locale} /> : null}
+        </PlanLockedPage>
+      ) : lock === 'template' ? (
         <div>
           <Alert variant="info" title={t('app.lockedTitle')}>
             {t('app.lockedBody')}
@@ -99,7 +116,7 @@ function Dashboard({ user }: { user: AuthUser }) {
           onOpenPackage={() => setActiveKey('package')}
         />
       ) : activeKey === 'design' ? (
-        <DesignPage locale={locale} />
+        <DesignPage locale={locale} onOpenPackage={() => setActiveKey('package')} />
       ) : activeKey === 'appearance' ? (
         <AppearancePage locale={locale} />
       ) : activeKey === 'categories' ? (
@@ -109,7 +126,11 @@ function Dashboard({ user }: { user: AuthUser }) {
       ) : activeKey === 'orders' ? (
         <OrdersPage />
       ) : activeKey === 'qr' ? (
-        <QrPage onOpenFeatures={() => setActiveKey('features')} />
+        <QrPage
+          locale={locale}
+          onOpenFeatures={() => setActiveKey('features')}
+          onOpenPackage={() => setActiveKey('package')}
+        />
       ) : activeKey === 'social-links' ? (
         <SocialLinksPage />
       ) : activeKey === 'package' ? (

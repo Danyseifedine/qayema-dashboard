@@ -145,4 +145,111 @@ describe('OrdersPage', () => {
 
     expect(await screen.findByRole('button', { name: /Try again/ })).toBeInTheDocument()
   })
+
+  it('retries a failed load', async () => {
+    mock.onGet('/api/orders').replyOnce(500, { message: 'Something went wrong.' })
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage />)
+
+    await user.click(await screen.findByRole('button', { name: /Try again/ }))
+    expect(await screen.findByText('ABC234')).toBeInTheDocument()
+  })
+
+  it('says nothing has that status, and goes back to every order from All', async () => {
+    mock.onGet('/api/orders', { params: { status: 'cancelled' } }).reply(200, {
+      data: [],
+      meta: { open: 1 },
+    })
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage />)
+
+    await screen.findByText('ABC234')
+    await user.click(screen.getByRole('tab', { name: 'Cancelled' }))
+
+    expect(await screen.findByText('Nothing with that status')).toBeInTheDocument()
+    expect(screen.getByText('Try another status, or All.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: 'All' }))
+    expect(await screen.findByText('ABC234')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'All' })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('shows the open count on the New chip and hides the waiting note there', async () => {
+    stub([order()], 3)
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage />)
+
+    expect(await screen.findByRole('tab', { name: /^New\s*3$/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /^New\s*3$/ }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('tab', { name: /^New\s*3$/ })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      ),
+    )
+    await screen.findByText('ABC234')
+    expect(screen.queryByText(/still waiting/)).not.toBeInTheDocument()
+  })
+
+  it('shows a cancelled order without a time when none was recorded', async () => {
+    stub([order({ status: 'cancelled', placed_at: null })], 0)
+    renderWithProviders(<OrdersPage />)
+
+    const reference = await screen.findByText('ABC234')
+    const card = reference.closest('article')!
+    expect(card).toHaveClass('opacity-70')
+    expect(within(card).getByText('Cancelled')).toBeInTheDocument()
+    // Only the reference sits above the status: no date line.
+    expect(reference.parentElement?.children).toHaveLength(1)
+  })
+
+  it('keeps the order when the owner backs out of cancelling', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Cancel' }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(mock.history.patch).toHaveLength(0)
+  })
+
+  it('says so when an order could not be updated', async () => {
+    stub()
+    mock.onPatch('/api/orders/1').reply(500, { message: 'Server down', code: 'server_error' })
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Done' }))
+
+    expect(await screen.findByText('Could not update that order')).toBeInTheDocument()
+  })
+
+  it('spins only the order being updated', async () => {
+    stub([order(), order({ id: 2, reference: 'DEF567' })], 2)
+    let answer: (value: [number, unknown]) => void = () => {}
+    mock.onPatch('/api/orders/1').reply(
+      () =>
+        new Promise((resolve) => {
+          answer = resolve
+        }),
+    )
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage />)
+
+    await screen.findByText('DEF567')
+    const [first, second] = screen.getAllByRole('button', { name: 'Done' })
+    await user.click(first!)
+
+    await waitFor(() => expect(first).toHaveAttribute('aria-busy', 'true'))
+    expect(second).not.toHaveAttribute('aria-busy')
+
+    answer([200, { data: order({ status: 'done' }) }])
+    await waitFor(() => expect(first).not.toHaveAttribute('aria-busy'))
+  })
 })

@@ -1,7 +1,12 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import MockAdapter from 'axios-mock-adapter'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { api } from '@/lib/api/client'
+import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { PACKAGE_CATALOGUE } from '@/test/mocks/factories/packages'
+import { EMPTY_PLAN, FULL_PLAN } from '@/test/mocks/factories/session'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { useUiStore } from '@/stores/ui.store'
 import { AuthenticatedLayout } from '@/app/layouts/authenticated/authenticated-layout'
@@ -11,16 +16,21 @@ const NONE_HIDDEN: string[] = []
 
 function Harness({
   hasTemplate = true,
-  qrStudio = true,
+  full = true,
   hidden = NONE_HIDDEN,
   onLogout = vi.fn(),
+  initialKey = 'overview',
+  publicUrl = 'https://qayema.test/beit-qayema',
 }: {
   hasTemplate?: boolean
-  qrStudio?: boolean
+  /** Every plan flag on, or every one off (the Free package). */
+  full?: boolean
   hidden?: string[]
   onLogout?: () => void
+  initialKey?: string
+  publicUrl?: string | null
 }) {
-  const [activeKey, setActiveKey] = useState('overview')
+  const [activeKey, setActiveKey] = useState(initialKey)
   // The document direction is owned by the preferences store now, so the
   // harness drives it the same way the app does.
   const locale = usePreferencesStore((state) => state.locale)
@@ -32,9 +42,9 @@ function Harness({
       onNavigate={(item: NavItem) => setActiveKey(item.key)}
       user={{ name: 'Dany', email: 'owner@example.com' }}
       packageName="Free"
-      publicUrl="https://qayema.test/beit-qayema"
+      publicUrl={publicUrl}
       hasTemplate={hasTemplate}
-      plan={{ qr_studio: qrStudio, ordering: qrStudio, advanced_analytics: qrStudio }}
+      plan={full ? FULL_PLAN : EMPTY_PLAN}
       switchedOff={hidden}
       locale={locale}
       onLocaleChange={setLocale}
@@ -45,15 +55,25 @@ function Harness({
   )
 }
 
+let mock: MockAdapter
+
 describe('AuthenticatedLayout', () => {
+  afterEach(() => mock.restore())
+
   beforeEach(() => {
+    // The sidebar names the package that unlocks a locked section.
+    mock = new MockAdapter(api)
+    mock.onGet('/api/packages').reply(200, {
+      data: PACKAGE_CATALOGUE,
+      meta: { current: 'free', ends_at: null },
+    })
     useUiStore.setState({ sidebarCollapsed: false, mobileNavOpen: false })
     usePreferencesStore.getState().setTheme('light')
     usePreferencesStore.getState().setLocale('en')
   })
 
   it('renders the sidebar, the topbar and the page', () => {
-    render(<Harness />)
+    renderWithProviders(<Harness />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     for (const label of [
@@ -76,7 +96,7 @@ describe('AuthenticatedLayout', () => {
 
   it('moves the active item and the page title when a section is picked', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    renderWithProviders(<Harness />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     const overview = within(nav).getByRole('button', { name: 'Overview' })
@@ -93,7 +113,7 @@ describe('AuthenticatedLayout', () => {
   })
 
   it('locks the sections that need a template', () => {
-    render(<Harness hasTemplate={false} qrStudio={false} />)
+    renderWithProviders(<Harness hasTemplate={false} full={false} />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     expect(within(nav).getByRole('button', { name: 'Categories' })).toBeDisabled()
@@ -104,9 +124,21 @@ describe('AuthenticatedLayout', () => {
     expect(within(nav).getByRole('button', { name: 'Design' })).toBeEnabled()
   })
 
+  it('keeps a section the package lacks open, naming the package that has it', async () => {
+    renderWithProviders(<Harness full={false} />)
+
+    const nav = screen.getByRole('navigation', { name: 'Dashboard' })
+    const analytics = within(nav).getByRole('button', { name: /Analytics/ })
+    expect(analytics).toBeEnabled()
+    await waitFor(() => expect(analytics).toHaveTextContent('Pro'))
+    await waitFor(() =>
+      expect(within(nav).getByRole('button', { name: /Orders/ })).toHaveTextContent('Premium'),
+    )
+  })
+
   it('collapses the sidebar to an icon rail and remembers it', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    renderWithProviders(<Harness />)
 
     await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
 
@@ -116,7 +148,7 @@ describe('AuthenticatedLayout', () => {
 
   it('switches the whole document to Arabic and back', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    renderWithProviders(<Harness />)
 
     expect(document.documentElement).toHaveAttribute('dir', 'ltr')
 
@@ -135,7 +167,7 @@ describe('AuthenticatedLayout', () => {
 
   it('toggles dark mode on the document', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    renderWithProviders(<Harness />)
 
     expect(document.documentElement.dataset.theme).toBe('light')
 
@@ -152,7 +184,7 @@ describe('AuthenticatedLayout', () => {
   it('opens the user menu and logs out', async () => {
     const onLogout = vi.fn()
     const user = userEvent.setup()
-    render(<Harness onLogout={onLogout} />)
+    renderWithProviders(<Harness onLogout={onLogout} />)
 
     await user.click(screen.getByRole('button', { name: 'Account menu' }))
 
@@ -168,7 +200,7 @@ describe('AuthenticatedLayout', () => {
   })
 
   it('keeps only the package and the account in the top bar', () => {
-    render(<Harness />)
+    renderWithProviders(<Harness />)
 
     expect(screen.getByRole('button', { name: /Free package/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Account menu' })).toBeInTheDocument()
@@ -179,7 +211,7 @@ describe('AuthenticatedLayout', () => {
 
   it('keeps the account out of the sidebar and in the avatar menu', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    renderWithProviders(<Harness />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     expect(within(nav).queryByRole('button', { name: 'Account' })).not.toBeInTheDocument()
@@ -194,7 +226,7 @@ describe('AuthenticatedLayout', () => {
   })
 
   it('leaves switched-off sections out of the sidebar', () => {
-    render(<Harness hidden={['orders', 'analytics', 'qr']} />)
+    renderWithProviders(<Harness hidden={['orders', 'analytics', 'qr']} />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     expect(within(nav).queryByRole('button', { name: 'Orders' })).not.toBeInTheDocument()
@@ -205,7 +237,7 @@ describe('AuthenticatedLayout', () => {
   })
 
   it('never hides a core section, whatever the list says', () => {
-    render(<Harness hidden={['overview', 'dishes', 'features']} />)
+    renderWithProviders(<Harness hidden={['overview', 'dishes', 'features']} />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     for (const name of ['Overview', 'Dishes', 'Features']) {
@@ -215,12 +247,95 @@ describe('AuthenticatedLayout', () => {
 
   it('opens and closes the mobile drawer', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    renderWithProviders(<Harness />)
 
     await user.click(screen.getByRole('button', { name: 'Open navigation' }))
     expect(useUiStore.getState().mobileNavOpen).toBe(true)
 
     await user.keyboard('{Escape}')
     await waitFor(() => expect(useUiStore.getState().mobileNavOpen).toBe(false))
+  })
+
+  it('closes the mobile drawer from its backdrop and its close button, freeing the page scroll', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Harness />)
+
+    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
+    expect(document.body.style.overflow).toBe('hidden')
+    // Another key leaves it open.
+    await user.keyboard('a')
+    expect(useUiStore.getState().mobileNavOpen).toBe(true)
+
+    const [backdrop, closeButton] = screen.getAllByRole('button', { name: 'Close navigation' })
+    await user.click(backdrop!)
+    expect(useUiStore.getState().mobileNavOpen).toBe(false)
+    expect(document.body.style.overflow).toBe('')
+
+    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
+    await user.click(closeButton!)
+    expect(useUiStore.getState().mobileNavOpen).toBe(false)
+  })
+
+  it('keeps the closed drawer out of the tab order', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Harness />)
+    const [backdrop] = screen.getAllByRole('button', { name: 'Close navigation', hidden: true })
+
+    expect(backdrop!.closest('[inert]')).not.toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
+    expect(backdrop!.closest('[inert]')).toBeNull()
+  })
+
+  it("hides the drawer's close button while the drawer is closed", async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Harness />)
+    // It hangs outside the drawer, so sliding the drawer away does not hide it.
+    const closeButton = screen.getAllByRole('button', {
+      name: 'Close navigation',
+      hidden: true,
+    })[1]!
+
+    expect(closeButton).toHaveClass('invisible')
+
+    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
+    expect(closeButton).not.toHaveClass('invisible')
+  })
+
+  it('closes the drawer once a section is picked in it', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Harness />)
+
+    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
+    const navs = screen.getAllByRole('navigation', { name: 'Dashboard' })
+    await user.click(within(navs[1]!).getByRole('button', { name: 'Dishes' }))
+
+    expect(useUiStore.getState().mobileNavOpen).toBe(false)
+    expect(screen.getByRole('heading', { name: 'Dishes' })).toBeInTheDocument()
+  })
+
+  it('opens the package page from the package pill', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Harness />)
+
+    await user.click(screen.getByRole('button', { name: /Free package/ }))
+
+    expect(screen.getByRole('heading', { name: 'Package' })).toBeInTheDocument()
+  })
+
+  it('shows the public menu address under the title, without its scheme', () => {
+    renderWithProviders(<Harness />)
+
+    expect(screen.getByRole('link', { name: 'qayema.test/beit-qayema' })).toHaveAttribute(
+      'href',
+      'https://qayema.test/beit-qayema',
+    )
+  })
+
+  it('falls back to "Dashboard" for a page that is not a section, and no address', () => {
+    renderWithProviders(<Harness initialKey="nowhere" publicUrl={null} />)
+
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /qayema\.test/ })).not.toBeInTheDocument()
   })
 })

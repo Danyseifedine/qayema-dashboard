@@ -48,6 +48,11 @@ export const socialLinkFormSchema = z.object({
     .max(500, { error: () => t('social-links:validation.urlTooLong') })
     .refine((value) => value.startsWith('http://') || value.startsWith('https://'), {
       error: () => t('social-links:validation.urlScheme'),
+    })
+    // A browser accepts a space inside a URL and escapes it; the server's
+    // `url` rule does not, so say so here instead of after a 422.
+    .refine((value) => !/\s/.test(value), {
+      error: () => t('social-links:validation.urlInvalid'),
     }),
 })
 

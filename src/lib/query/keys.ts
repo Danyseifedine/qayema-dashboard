@@ -17,5 +17,3 @@ export const QUERY_ROOTS = {
   qr: 'qr',
   socialLinks: 'social-links',
 } as const
-
-export type QueryRoot = (typeof QUERY_ROOTS)[keyof typeof QUERY_ROOTS]

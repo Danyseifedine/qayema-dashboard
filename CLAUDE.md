@@ -26,7 +26,8 @@ React 19, Vite, TypeScript (strict), TanStack Query, Zustand, React Hook Form
 
 - Zod v4, Tailwind v4 with our own primitives in `shared/components/ui`,
   i18next (en/ar, RTL), axios, dnd-kit, recharts, qr-code-styling.
-  Tests: Vitest + Testing Library + axios-mock-adapter. Lint: oxlint. Format:
+  Tests: Vitest + Testing Library + axios-mock-adapter; end-to-end Playwright +
+  axe (`e2e/`, see ARCHITECTURE §7). Lint: oxlint. Format:
   Prettier. Hooks: Husky + lint-staged. No router library: the open page is its
   nav key in the URL (`/categories`), via `usePageKey`.
 
@@ -42,8 +43,10 @@ No third-party error telemetry.
   The vocabulary table is §2 of docs/ARCHITECTURE.md; the backend's CLAUDE.md
   carries the same names.
 - Three words never swapped: **plan** = what the restaurant may use
-  (`restaurant.plan.{qr_studio, ordering, advanced_analytics}`, `requiresPlan`
-  in nav-items); **switched off** = what the owner turned off on the Features
+  (`restaurant.plan`, one boolean per backend `Feature` flag:
+  `multiple_languages`, `appearance`, `premium_designs`, `qr_studio`,
+  `ordering`, `analytics`, `advanced_analytics`; `requiresPlan` in
+  nav-items); **switched off** = what the owner turned off on the Features
   page (`restaurant.switched_off`, `hideable` in nav-items); **grant** is a
   backend word (an admin giving one restaurant more than its package).
 - Feature-first: `src/features/<name>/{api,schemas,hooks,components/<area>,pages}`
@@ -52,7 +55,7 @@ No third-party error telemetry.
   imports only through the other feature's `index.ts`; `shared` never imports
   from `features` or `app`. Always `@/…`, never relative.
 - State ownership: server data → TanStack Query; UI preferences → Zustand;
-  form state → RHF + Zod; the open page → `useState` in `App.tsx`. Never mix.
+  form state → RHF + Zod; the open page → the URL (`usePageKey`). Never mix.
 - Every API call parses its response with a Zod schema. Every form has a Zod
   schema. `config/env.ts` validates `import.meta.env` at boot.
 - Session is the Sanctum cookie. No tokens in localStorage/sessionStorage.
@@ -103,8 +106,25 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   package.
 - Section gating is data-driven: `requiresPlan` on a nav item is matched
   against `restaurant.plan` by key. Adding a gated section is one line in
-  `app/layouts/authenticated/nav-items.ts`, not another branch in
-  `isNavItemLocked`.
+  `app/layouts/authenticated/nav-items.ts`, not another branch in `navLock`
+  (plus its copy under `planLocked.<key>` in `common.json`). A section the
+  **package** lacks stays open and shows `PlanLockedPage` (what it gives, the
+  package that has it, "See packages"); one waiting for a **design** is
+  disabled. Anything locked inside a page uses `LockedState`
+  (`shared/components/feedback`) and names its package with
+  `usePackageFor(flag, locale)` from the package barrel — never a hard-coded
+  "Pro".
+- **Package page** (`features/package`): the current package with its dates
+  from the session (`package.{starts_at, ends_at, days_left}`, `lapsed`,
+  `upcoming`) — "Until …, N days left", a warning with "Ask to extend" in the
+  last 7 days (the topbar pill shows a dot then too), "Your Pro ended on …"
+  with "Ask to renew", "Premium starts on …" —, the limits used, and what the
+  package includes. Then one card per package ("Everything in Free, plus:",
+  built by `highlightsOf()`, only when it really has everything the one before
+  has) and the comparison table. Cards and table both read
+  `utils/package-rows.ts`, the one list of features, groups and order. Tests
+  use `PACKAGE_CATALOGUE` / `makePackage()` (`test/mocks/factories/packages`)
+  and `FULL_PLAN` / `EMPTY_PLAN` (`…/session`).
 - **Features page** (`features/restaurant/pages/features-page.tsx`): one switch
   each for Orders, QR Studio, Analytics and Multiple languages, stored in
   `restaurant.switched_off` (`PUT /api/features` with `{off}`, optimistic
@@ -117,7 +137,10 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   follow `useMenuLanguages()` (from `features/auth`, it reads the session).
 - **Design page** (`features/design`): picking a design (backend `Template`
   rows, `/api/templates`). Switching invalidates Appearance and the QR
-  studio, since both follow the design.
+  studio, since both follow the design. A design with `is_premium` shows a
+  "Premium" chip; when `locked` its button opens the Package page. When
+  `meta.shown` differs from `meta.current`, the chosen design needs a package
+  the restaurant lost, and a notice says which design the menu shows meanwhile.
 - **Appearance** (`features/appearance`, `GET/PUT /api/appearance`): the
   design's settings are whatever the design in use declares — never name one
   in code. `DesignSettingsCard` draws each by its type (colour → `ColorField`
@@ -152,15 +175,24 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   and social-link counts from the session's `limits`, and a "Finish your menu"
   checklist built from the restaurant + dishes by `menuChecklist()` (a pure
   function, unit tested). Each item's action is a nav key.
-- **Analytics** (`features/analytics`): `GET /api/analytics` for every
-  package, `GET /api/analytics/advanced` only when
+- **Analytics** (`features/analytics`): the page needs `plan.analytics` (the
+  nav locks it otherwise, with `AnalyticsTeaser` — this week's views from
+  `GET /api/analytics/teaser`); `GET /api/analytics/advanced` only when
   `restaurant.plan.advanced_analytics` is on (the hook is disabled otherwise,
   never fired and caught). Charts are recharts with `responsive`; colours are
   theme tokens (`components/charts/chart-style.ts`), date helpers are
-  `shared/utils/format/date.ts`. jsdom has no ResizeObserver, so the test
+  `shared/utils/format/date.ts`, and every count goes through `formatNumber`
+  (`format/number.ts`: the reader's language, Western digits). jsdom has no ResizeObserver, so the test
   setup stubs it and chart tests read the words around a chart, not its bars.
 
 ## Commands
 
 `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` ·
-`npm run test` · `npm run format` · `npm run format:check`
+`npm run test` · `npm run test:coverage` · `npm run format` ·
+`npm run format:check` · `npm run e2e` · `npm run e2e:update-snapshots`
+
+A change is done when `typecheck`, `lint`, `format:check`, `test:coverage`,
+`build` and `e2e` are all green. E2E rules: each test builds its own owner
+through the `owner()` fixture and never changes shared data; no retries, no
+fixed sleeps; tag the main flow of an area `@matrix` so it also runs on a
+phone, in Arabic RTL and in dark mode.

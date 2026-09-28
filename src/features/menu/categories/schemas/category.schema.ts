@@ -43,8 +43,11 @@ export const categoryFormSchema = z
     name: menuTextField(255, () => t('menu:fields.name')),
     description: menuTextField(300, () => t('menu:fields.description')),
   })
-  .superRefine((values, ctx) =>
-    requireEnglish(values.name, 'name', t('menu:categorySchema.nameRequired'), ctx),
+  .superRefine(
+    (values, ctx) =>
+      requireEnglish(values.name, 'name', t('menu:categorySchema.nameRequired'), ctx),
+    // Also when the description is wrong, so one submit shows both.
+    { when: () => true },
   )
 
 export type CategoryFormValues = z.infer<typeof categoryFormSchema>

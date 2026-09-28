@@ -154,4 +154,86 @@ describe('AccountPage', () => {
 
     expect(await screen.findByText('The current password is incorrect.')).toBeInTheDocument()
   })
+
+  it('shows an error with a retry when the account cannot load', async () => {
+    mock.onGet('/api/user').replyOnce(500, { message: 'Server down', code: 'server_error' })
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage onOpenRestaurant={vi.fn()} />)
+
+    expect(await screen.findByText('Server down')).toBeInTheDocument()
+
+    stub()
+    await owner.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByLabelText(/^Your name/)).toHaveValue('Dany')
+  })
+
+  it('tells the owner when the name could not be saved', async () => {
+    stub()
+    mock.onPatch('/api/account').reply(500, { message: 'Server down', code: 'server_error' })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage onOpenRestaurant={vi.fn()} />)
+
+    await owner.type(await screen.findByLabelText(/^Your name/), ' S')
+    await owner.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Could not save your profile')).toBeInTheDocument()
+    // The form keeps a banner too, so the reason stays on screen after the toast.
+    expect(await screen.findByRole('alert')).toHaveTextContent('Server down')
+  })
+
+  it('sets a first password without sending a current one', async () => {
+    stub(false)
+    mock.onPut('/api/password').reply(200, { message: 'Done.', has_password: true })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage onOpenRestaurant={vi.fn()} />)
+
+    await owner.type(await screen.findByLabelText(/^Password/), 'a-long-new-one')
+    await owner.type(screen.getByLabelText(/^Confirm password/), 'a-long-new-one')
+    await owner.click(screen.getByRole('button', { name: 'Set password' }))
+
+    await waitFor(() => {
+      const put = mock.history.put.find((r) => r.url === '/api/password')
+      expect(put).toBeDefined()
+      expect(JSON.parse(put!.data as string)).toEqual({
+        password: 'a-long-new-one',
+        password_confirmation: 'a-long-new-one',
+      })
+    })
+    expect(await screen.findByText('Password set')).toBeInTheDocument()
+  })
+
+  it('says a first password could not be set', async () => {
+    stub(false)
+    mock.onPut('/api/password').reply(500, { message: 'Server down', code: 'server_error' })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage onOpenRestaurant={vi.fn()} />)
+
+    await owner.type(await screen.findByLabelText(/^Password/), 'a-long-new-one')
+    await owner.type(screen.getByLabelText(/^Confirm password/), 'a-long-new-one')
+    await owner.click(screen.getByRole('button', { name: 'Set password' }))
+
+    expect(await screen.findByText('Could not set a password')).toBeInTheDocument()
+  })
+
+  it('says a password could not be changed', async () => {
+    stub(true)
+    mock.onPut('/api/password').reply(500, { message: 'Server down', code: 'server_error' })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage onOpenRestaurant={vi.fn()} />)
+
+    await owner.type(await screen.findByLabelText(/^Current password/), 'old-password')
+    await owner.type(screen.getByLabelText(/^New password/), 'a-long-new-one')
+    await owner.type(screen.getByLabelText(/^Confirm password/), 'a-long-new-one')
+    // Earlier tests' toasts can still be on the shared toaster, so count the new one.
+    const before = screen.queryAllByText('Could not change your password').length
+    await owner.click(screen.getByRole('button', { name: 'Change password' }))
+
+    await waitFor(() =>
+      expect(screen.queryAllByText('Could not change your password')).toHaveLength(before + 1),
+    )
+  })
 })

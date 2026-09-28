@@ -13,6 +13,7 @@ export type TopbarProps = {
   user: { name: string; email: string }
   /** The package the restaurant is on, in the current language. */
   packageName: string
+  packageEndingSoon: boolean
   publicUrl?: string | null
   locale: Locale
   onLocaleChange: (locale: Locale) => void
@@ -32,6 +33,7 @@ export function Topbar({
   subtitle,
   user,
   packageName,
+  packageEndingSoon,
   publicUrl,
   locale,
   onLocaleChange,
@@ -71,7 +73,7 @@ export function Topbar({
           ) : null}
         </div>
 
-        <PackagePill label={packageName} onClick={onOpenPackage} />
+        <PackagePill label={packageName} endingSoon={packageEndingSoon} onClick={onOpenPackage} />
         <UserMenu
           name={user.name}
           email={user.email}

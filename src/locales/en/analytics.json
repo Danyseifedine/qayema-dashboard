@@ -96,5 +96,9 @@
       "funnel": "From visit to cart to order, and the languages guests read in"
     },
     "cta": "See packages"
+  },
+  "teaser": {
+    "views_one": "{{number}} person opened your menu this week.",
+    "views_other": "{{number}} people opened your menu this week."
   }
 }

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
+import { formatDateTime } from '@/shared/utils/format/date'
+import { usePreferencesStore } from '@/stores/preferences.store'
 import type { Order } from '@/features/orders/schemas/order.schema'
 
 export type OrderCardProps = {
@@ -33,7 +35,7 @@ export const OrderCard = memo(function OrderCard({
   className,
 }: OrderCardProps) {
   const { t } = useTranslation('orders')
-  const placed = order.placed_at === null ? null : new Date(order.placed_at)
+  const locale = usePreferencesStore((state) => state.locale)
 
   return (
     <article
@@ -47,14 +49,9 @@ export const OrderCard = memo(function OrderCard({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="force-ltr font-display text-[17px] leading-tight">{order.reference}</p>
-          {placed !== null ? (
+          {order.placed_at !== null ? (
             <p className="mt-0.5 text-[12px] text-[var(--muted)]">
-              {placed.toLocaleString(undefined, {
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              {formatDateTime(order.placed_at, locale)}
             </p>
           ) : null}
         </div>

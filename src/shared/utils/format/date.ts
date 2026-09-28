@@ -6,6 +6,25 @@ export function parseDay(date: string): Date {
   return new Date(year!, month! - 1, day!)
 }
 
+/** An ISO timestamp as a full date in the reader's language: "12 Oct 2026". */
+export function formatDate(iso: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(iso))
+}
+
+/** An ISO timestamp as day, month and time in the reader's language. */
+export function formatDateTime(iso: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(iso))
+}
+
 export function formatDay(date: string, locale: Locale): string {
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(parseDay(date))
 }

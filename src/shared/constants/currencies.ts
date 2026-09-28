@@ -1,6 +1,6 @@
 /**
  * ISO-4217 currencies the API accepts, generated from
- * ../qayema/config/currencies.php. `UpdateSettingsRequest` validates the
+ * ../qayema/config/currencies.php. `UpdateRestaurantRequest` validates the
  * submitted currency against exactly these keys, so the select must not offer
  * anything outside this list.
  */
@@ -154,12 +154,6 @@ export const CURRENCIES: Currency[] = [
   { code: 'WST', name: 'Samoan Tala', symbol: 'WS$' },
   { code: 'TOP', name: 'Tongan Paʻanga', symbol: 'T$' },
 ]
-
-/** Lebanon-first, matching the backend's onboarding default. */
-export const DEFAULT_CURRENCY = 'USD'
-
-export const findCurrency = (code: string): Currency | undefined =>
-  CURRENCIES.find((currency) => currency.code === code)
 
 /**
  * Options for the shared Combobox. The code is the label and the name is the

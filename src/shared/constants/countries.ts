@@ -41,9 +41,3 @@ export const COUNTRIES: Country[] = [
   { code: 'AU', label: 'Australia', flag: '🇦🇺', dial: '+61' },
   { code: 'CA', label: 'Canada', flag: '🇨🇦', dial: '+1' },
 ]
-
-/** The product is Lebanon-first, matching the backend default. */
-export const DEFAULT_COUNTRY = 'LB'
-
-export const findCountry = (code: string): Country | undefined =>
-  COUNTRIES.find((country) => country.code === code)

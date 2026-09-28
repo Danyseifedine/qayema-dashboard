@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { PACKAGE_CATALOGUE } from '@/test/mocks/factories/packages'
 import { QrPage } from '@/features/qr/pages/qr-page'
 
 /**
@@ -15,6 +16,8 @@ import { QrPage } from '@/features/qr/pages/qr-page'
 const drawn = vi.hoisted(() => ({
   instances: [] as { options: Record<string, unknown> }[],
   downloads: [] as { name: string; extension: string; options: Record<string, unknown> }[],
+  /** Set to make the next download reject, as a blocked download would. */
+  failNext: false,
 }))
 
 vi.mock('qr-code-styling', () => ({
@@ -29,6 +32,10 @@ vi.mock('qr-code-styling', () => ({
       this.options = options
     }
     async download({ name, extension }: { name: string; extension: string }) {
+      if (drawn.failNext) {
+        drawn.failNext = false
+        throw new Error('blocked')
+      }
       drawn.downloads.push({ name, extension, options: this.options })
     }
   },
@@ -84,6 +91,7 @@ describe('QrPage', () => {
   beforeEach(() => {
     drawn.instances.length = 0
     drawn.downloads.length = 0
+    drawn.failNext = false
     mock = new MockAdapter(api)
     resetCsrfToken(api)
     installCsrfInterceptor(api)
@@ -91,6 +99,7 @@ describe('QrPage', () => {
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     mock.restore()
     api.interceptors.request.clear()
     api.interceptors.response.clear()
@@ -99,7 +108,7 @@ describe('QrPage', () => {
 
   it('draws the simple QR for the menu link', async () => {
     stub()
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     expect(await screen.findByRole('img', { name: "Your menu's QR code" })).toBeInTheDocument()
     expect(lastDrawn()).toMatchObject({
@@ -111,7 +120,7 @@ describe('QrPage', () => {
 
   it('shows how many scans came through the code', async () => {
     stub()
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     expect(await screen.findByText('128')).toBeInTheDocument()
     expect(screen.getByText('This week')).toBeInTheDocument()
@@ -120,7 +129,7 @@ describe('QrPage', () => {
   it('downloads what is on screen, with a quiet zone round it', async () => {
     stub()
     const user = userEvent.setup()
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     await user.click(await screen.findByRole('button', { name: 'PNG' }))
     await user.click(screen.getByRole('button', { name: 'SVG' }))
@@ -135,7 +144,7 @@ describe('QrPage', () => {
   it('previews a change before it is saved', async () => {
     stub()
     const user = userEvent.setup()
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     await user.click(await screen.findByRole('radio', { name: 'Dots' }))
 
@@ -150,7 +159,7 @@ describe('QrPage', () => {
       .onPut('/api/qr')
       .reply(200, { data: payload({ settings: { ...SIMPLE, dot_style: 'rounded' } }) })
     const user = userEvent.setup()
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     // "Rounded" is both a dot shape and a corner frame, so pick it in the dots group.
     const dots = await screen.findByRole('group', { name: 'Dots' })
@@ -166,7 +175,7 @@ describe('QrPage', () => {
 
   it('keeps Save off until something changes', async () => {
     stub()
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     expect(await screen.findByRole('button', { name: 'Save' })).toBeDisabled()
   })
@@ -183,7 +192,7 @@ describe('QrPage', () => {
       },
     })
     const user = userEvent.setup()
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     await user.click(await screen.findByRole('button', { name: 'Reset to simple' }))
 
@@ -198,7 +207,7 @@ describe('QrPage', () => {
 
   it('warns when a colour is too close to the background to scan', async () => {
     stub({ settings: { ...SIMPLE, eye_color: '#EA4335' } })
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     expect(await screen.findByText('This may not scan')).toBeInTheDocument()
     expect(screen.getByText(/corner centres is too close/)).toBeInTheDocument()
@@ -206,7 +215,7 @@ describe('QrPage', () => {
 
   it('does not warn about the simple QR', async () => {
     stub()
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     await screen.findByRole('button', { name: 'PNG' })
     expect(screen.queryByText('This may not scan')).not.toBeInTheDocument()
@@ -217,7 +226,7 @@ describe('QrPage', () => {
       logo_data_url: 'data:image/png;base64,iVBORw0KGgo=',
       settings: { ...SIMPLE, logo: true },
     })
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     await screen.findByRole('button', { name: 'PNG' })
     expect(lastDrawn()).toMatchObject({
@@ -228,17 +237,29 @@ describe('QrPage', () => {
 
   it('switches the logo option off when the restaurant has no logo', async () => {
     stub()
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     expect(await screen.findByText('Add a logo on the Restaurant page first.')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Your logo in the middle' })).toBeDisabled()
   })
 
-  it('shows only the plain code when customizing is not on the package', async () => {
+  it('shows only the plain code when the studio is not on the package', async () => {
     stub({ unlocked: false, stats: null, card_url: null })
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    mock.onGet('/api/packages').reply(200, {
+      data: PACKAGE_CATALOGUE,
+      meta: { current: 'free', ends_at: null },
+    })
+    const onOpenPackage = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(
+      <QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={onOpenPackage} />,
+    )
 
-    expect(await screen.findByText('Customizing is not on your package')).toBeInTheDocument()
+    expect(await screen.findByText('Make the code your own')).toBeInTheDocument()
+    // The chip names the package that has the studio.
+    expect(await screen.findByText('Premium')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'See packages' }))
+    expect(onOpenPackage).toHaveBeenCalledOnce()
     expect(screen.getByRole('button', { name: 'PNG' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
     expect(screen.queryByText('This week')).not.toBeInTheDocument()
@@ -246,7 +267,7 @@ describe('QrPage', () => {
 
   it('shows an error with a retry when the code cannot load', async () => {
     mock.onGet('/api/qr').reply(500, { message: 'Server error', code: 'server_error' })
-    renderWithProviders(<QrPage onOpenFeatures={vi.fn()} />)
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
 
     expect(await screen.findByRole('button', { name: /try again/i })).toBeInTheDocument()
   })
@@ -255,12 +276,134 @@ describe('QrPage', () => {
     stub({ unlocked: false, switched_off: true, stats: null, card_url: null })
     const onOpenFeatures = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(<QrPage onOpenFeatures={onOpenFeatures} />)
+    renderWithProviders(
+      <QrPage locale="en" onOpenFeatures={onOpenFeatures} onOpenPackage={vi.fn()} />,
+    )
 
     expect(await screen.findByText('QR Studio is switched off')).toBeInTheDocument()
     // The plain code is still there to download.
     expect(screen.getByRole('button', { name: 'PNG' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Open Features' }))
     expect(onOpenFeatures).toHaveBeenCalledOnce()
+  })
+
+  it('retries a failed load', async () => {
+    mock.onGet('/api/qr').replyOnce(500, { message: 'Server error', code: 'server_error' })
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: /try again/i }))
+    expect(await screen.findByRole('button', { name: 'PNG' })).toBeInTheDocument()
+  })
+
+  it('says so when a download fails, and lets the owner try again', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    drawn.failNext = true
+    await user.click(await screen.findByRole('button', { name: 'SVG' }))
+
+    expect(await screen.findByText('Could not download the QR code')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'SVG' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'PNG' })).toBeEnabled()
+  })
+
+  it('names the file "menu" when the link has no last part', async () => {
+    stub({ display_url: 'localhost/' })
+    const user = userEvent.setup()
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: 'PNG' }))
+
+    await waitFor(() => expect(drawn.downloads).toHaveLength(1))
+    expect(drawn.downloads[0]).toMatchObject({ name: 'menu-qr', extension: 'png' })
+  })
+
+  it('copies the plain menu link, without the scan marker', async () => {
+    stub()
+    const user = userEvent.setup()
+    // user-event puts its own clipboard on navigator; spy on that one.
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue()
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Copy link' }))
+
+    expect(writeText).toHaveBeenCalledWith('http://localhost:8000/olive')
+    expect(await screen.findByText('Link copied')).toBeInTheDocument()
+  })
+
+  it('says so when the link cannot be copied', async () => {
+    stub()
+    const user = userEvent.setup()
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'))
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Copy link' }))
+
+    expect(await screen.findByText('Could not copy the link')).toBeInTheDocument()
+  })
+
+  it('links to the printable card, and says it shows the saved design', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    expect(
+      await screen.findByRole('link', { name: 'Open the printable table card' }),
+    ).toHaveAttribute('href', 'http://localhost:8000/olive/qr')
+    expect(screen.queryByText(/Save to see these changes on it/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('radio', { name: 'Dots' }))
+    expect(await screen.findByText(/Save to see these changes on it/)).toBeInTheDocument()
+  })
+
+  it('turns the gradient on at the brand violet, and off again', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    const gradient = await screen.findByRole('switch', { name: 'Gradient' })
+    await user.click(gradient)
+
+    expect(await screen.findByText('Second colour')).toBeInTheDocument()
+    await waitFor(() => expect(JSON.stringify(lastDrawn().dotsOptions)).toContain('#7C3AED'))
+
+    await user.click(screen.getByRole('switch', { name: 'Gradient' }))
+    await waitFor(() => expect(screen.queryByText('Second colour')).not.toBeInTheDocument())
+  })
+
+  it('lists every part that may not scan', async () => {
+    stub({
+      settings: { ...SIMPLE, dot_color: '#EEEEEE', corner_color: '#EEEEEE', eye_color: '#EEEEEE' },
+    })
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    expect(
+      await screen.findByText(/The dots, corner frames and corner centres are too close/),
+    ).toBeInTheDocument()
+  })
+
+  it('says so when the design cannot be saved', async () => {
+    stub()
+    mock.onPut('/api/qr').reply(500, { message: 'Server down', code: 'server_error' })
+    const user = userEvent.setup()
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    await user.click(await screen.findByRole('radio', { name: 'Dots' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Server down')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
+  })
+
+  it('shows the studio lock without a package name when none has the studio', async () => {
+    stub({ unlocked: false, stats: null, card_url: null })
+    mock.onGet('/api/packages').reply(500, { message: 'Server down', code: 'server_error' })
+    renderWithProviders(<QrPage locale="en" onOpenFeatures={vi.fn()} onOpenPackage={vi.fn()} />)
+
+    expect(await screen.findByText('Make the code your own')).toBeInTheDocument()
+    expect(screen.queryByText('Premium')).not.toBeInTheDocument()
   })
 })

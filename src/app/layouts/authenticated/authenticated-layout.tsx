@@ -14,6 +14,8 @@ export type AuthenticatedLayoutProps = {
   user: { name: string; email: string }
   /** The package the restaurant is on, in the current language. */
   packageName: string
+  /** The package ends within a week. */
+  packageEndingSoon?: boolean
   publicUrl?: string | null
   hasTemplate: boolean
   plan: NavAccess['plan']
@@ -34,6 +36,7 @@ export function AuthenticatedLayout({
   onNavigate,
   user,
   packageName,
+  packageEndingSoon = false,
   publicUrl,
   hasTemplate,
   plan,
@@ -103,6 +106,9 @@ export function AuthenticatedLayout({
           mobileOpen ? 'pointer-events-auto' : 'pointer-events-none',
         )}
         aria-hidden={!mobileOpen}
+        // Closed, the drawer is off-screen but still in the DOM: inert keeps
+        // its links out of the tab order too, not just out of the screen reader.
+        inert={!mobileOpen}
       >
         <button
           type="button"
@@ -127,7 +133,12 @@ export function AuthenticatedLayout({
             tabIndex={mobileOpen ? 0 : -1}
             onClick={() => setMobileOpen(false)}
             aria-label={t('layout.closeNavigation')}
-            className="absolute -end-11 top-3 grid size-9 place-items-center rounded-full bg-[var(--surface)] text-[var(--muted)] shadow-lg"
+            // It sits outside the drawer's edge, so the slide alone would leave
+            // it on screen, over the open-navigation button, while closed.
+            className={cn(
+              'absolute -end-11 top-3 grid size-9 place-items-center rounded-full bg-[var(--surface)] text-[var(--muted)] shadow-lg',
+              !mobileOpen && 'invisible',
+            )}
           >
             <X aria-hidden className="size-4" />
           </button>
@@ -152,6 +163,7 @@ export function AuthenticatedLayout({
           }
           user={user}
           packageName={packageName}
+          packageEndingSoon={packageEndingSoon}
           publicUrl={publicUrl}
           locale={locale}
           onLocaleChange={onLocaleChange}

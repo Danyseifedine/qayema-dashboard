@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { ComboboxField } from '@/shared/components/forms/fields/combobox-field'
@@ -97,5 +97,97 @@ describe('ComboboxField', () => {
       'aria-invalid',
       'true',
     )
+  })
+
+  describe('what it stores', () => {
+    function Stored({
+      numeric,
+      initial,
+      options = OPTIONS,
+    }: {
+      numeric?: boolean
+      initial: string | number | null | undefined
+      options?: { value: string; label: string }[]
+    }) {
+      const form = useForm<{ pick?: string | number | null }>({
+        defaultValues: initial === undefined ? {} : { pick: initial },
+      })
+      const pick = useWatch({ control: form.control, name: 'pick' })
+      return (
+        <>
+          <ComboboxField
+            control={form.control}
+            name="pick"
+            label="Pick"
+            options={options}
+            numeric={numeric}
+            hint="Choose one."
+            required
+            optionalText="Optional"
+            placeholder="Choose"
+            emptyText="Nothing here"
+            className="mt-3"
+          />
+          <output data-testid="value">{pick === undefined ? 'unset' : JSON.stringify(pick)}</output>
+        </>
+      )
+    }
+
+    const box = () => screen.getByRole('combobox', { name: /^Pick/ })
+    const stored = () => screen.getByTestId('value').textContent
+
+    it('stores the value as text when not numeric', async () => {
+      const user = userEvent.setup()
+      render(<Stored initial={null} />)
+
+      await user.click(box())
+      await user.click(screen.getByRole('option', { name: 'Starters' }))
+
+      expect(stored()).toBe('"1"')
+    })
+
+    it('shows a stored number as its option', () => {
+      render(<Stored numeric initial={2} />)
+
+      expect(box()).toHaveValue('Mains')
+      expect(box()).toHaveAccessibleDescription('Choose one.')
+      expect(box()).toHaveAttribute('placeholder', 'Choose')
+    })
+
+    it('shows nothing chosen for an unset value', () => {
+      render(<Stored initial={undefined} />)
+
+      expect(box()).toHaveValue('')
+    })
+
+    it('stores null when a numeric choice is cleared', async () => {
+      const user = userEvent.setup()
+      render(<Stored numeric initial={2} />)
+
+      box().focus()
+      await user.keyboard('{Escape}')
+
+      await waitFor(() => expect(stored()).toBe('null'))
+    })
+
+    it('stores null rather than NaN for a non-numeric option', async () => {
+      const user = userEvent.setup()
+      render(<Stored numeric initial={1} options={[...OPTIONS, { value: 'x', label: 'Other' }]} />)
+
+      await user.click(box())
+      await user.click(screen.getByRole('option', { name: 'Other' }))
+
+      await waitFor(() => expect(stored()).toBe('null'))
+    })
+
+    it('shows its own empty text', async () => {
+      const user = userEvent.setup()
+      render(<Stored initial={null} />)
+
+      await user.click(box())
+      await user.keyboard('zzz')
+
+      expect(await screen.findByText('Nothing here')).toBeInTheDocument()
+    })
   })
 })

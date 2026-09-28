@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { pageKeyFromPath, usePageKey } from '@/app/layouts/authenticated/use-page-key'
 
 describe('pageKeyFromPath', () => {
@@ -13,6 +13,10 @@ describe('pageKeyFromPath', () => {
     expect(pageKeyFromPath('/')).toBeNull()
     expect(pageKeyFromPath('/nowhere')).toBeNull()
     expect(pageKeyFromPath('/categories/extra')).toBeNull()
+  })
+
+  it('reads a path given without the base', () => {
+    expect(pageKeyFromPath('dishes')).toBe('dishes')
   })
 })
 
@@ -58,5 +62,29 @@ describe('usePageKey', () => {
 
     expect(window.location.pathname).toBe('/features')
     expect(window.history.length).toBe(before)
+  })
+
+  it('falls back to the landing page when the back button reaches the root', () => {
+    window.history.replaceState(null, '', '/qr')
+    const { result } = renderHook(() => usePageKey('overview'))
+    expect(result.current[0]).toBe('qr')
+
+    act(() => {
+      window.history.replaceState(null, '', '/')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    })
+    expect(result.current[0]).toBe('overview')
+  })
+
+  it('adds no history entry for the page already open', () => {
+    window.history.replaceState(null, '', '/dishes')
+    const { result } = renderHook(() => usePageKey('overview'))
+    const push = vi.spyOn(window.history, 'pushState')
+
+    act(() => result.current[1]('dishes'))
+
+    expect(push).not.toHaveBeenCalled()
+    expect(result.current[0]).toBe('dishes')
+    push.mockRestore()
   })
 })

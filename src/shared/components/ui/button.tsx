@@ -37,7 +37,7 @@ const button = cva(
         /** Destructive confirmations only. */
         danger: 'border-[0.5px] border-danger bg-danger text-white hover:brightness-110',
         /** Reads as a link, behaves as a button. */
-        link: 'text-[var(--gold-on)] underline-offset-4 hover:underline',
+        link: 'text-accent underline-offset-4 hover:underline',
       },
       size: {
         sm: 'h-9 px-3.5 text-[13px]',

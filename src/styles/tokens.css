@@ -55,8 +55,10 @@ html[data-theme='light'] {
   --elevated: #f6f4ee;
   --field: #fbfaf6;
   --text: #141109;
-  --muted: rgba(20, 17, 9, 0.58);
-  --faint: rgba(20, 17, 9, 0.4);
+  /* Both are text colours, so both clear WCAG AA's 4.5:1 on every surface
+     and wash they sit on (tokens.test.ts); --faint is the quieter of the two. */
+  --muted: rgba(20, 17, 9, 0.62);
+  --faint: rgba(20, 17, 9, 0.6);
   --placeholder: rgba(20, 17, 9, 0.32);
   --line: rgba(20, 17, 9, 0.1);
   --line-strong: rgba(20, 17, 9, 0.18);
@@ -70,25 +72,27 @@ html[data-theme='light'] {
   --shadow-card: 0 40px 90px -50px rgba(20, 17, 9, 0.45);
 
   /* ---- Accent, theme-aware ----
-     `--accent-text` is gold dark enough to read on a pale surface (4.8:1);
+     `--accent-text` is gold dark enough to read on a pale surface, and on
+     an accent wash over it (4.5:1 or more, pinned by tokens.test.ts);
      `--accent-fill` is the bright gold used behind ink. Selection washes are
      one step stronger than a status wash because they mark state, not news. */
-  --accent-text: #8f6d1f;
+  --accent-text: #82631b;
   --accent-fill: #f8d38d;
   --accent-wash: rgba(233, 189, 102, 0.16);
   --accent-wash-hover: rgba(233, 189, 102, 0.24);
   --accent-border: rgba(233, 189, 102, 0.55);
 
-  /* ---- Status, theme-aware. One alpha convention: wash .10, border .30. */
-  --status-danger: #b45040;
-  --status-danger-wash: rgba(180, 80, 64, 0.1);
-  --status-danger-border: rgba(180, 80, 64, 0.3);
+  /* ---- Status, theme-aware. One alpha convention: wash .10, border .30.
+     Each colour reads at 4.5:1 on its own wash (tokens.test.ts). */
+  --status-danger: #a3483a;
+  --status-danger-wash: rgba(163, 72, 58, 0.1);
+  --status-danger-border: rgba(163, 72, 58, 0.3);
   --status-warn: #9a5b12;
   --status-warn-wash: rgba(154, 91, 18, 0.1);
   --status-warn-border: rgba(154, 91, 18, 0.3);
-  --status-success: #5c7a4f;
-  --status-success-wash: rgba(92, 122, 79, 0.1);
-  --status-success-border: rgba(92, 122, 79, 0.3);
+  --status-success: #506c46;
+  --status-success-wash: rgba(80, 108, 70, 0.1);
+  --status-success-border: rgba(80, 108, 70, 0.3);
   --status-info: #4a6b86;
   --status-info-wash: rgba(74, 107, 134, 0.1);
   --status-info-border: rgba(74, 107, 134, 0.3);
@@ -112,7 +116,7 @@ html[data-theme='dark'] {
   --field: #111111;
   --text: #f5f1e8;
   --muted: rgba(245, 241, 232, 0.6);
-  --faint: rgba(245, 241, 232, 0.4);
+  --faint: rgba(245, 241, 232, 0.55);
   --placeholder: rgba(245, 241, 232, 0.32);
   --line: rgba(245, 241, 232, 0.12);
   --line-strong: rgba(245, 241, 232, 0.22);

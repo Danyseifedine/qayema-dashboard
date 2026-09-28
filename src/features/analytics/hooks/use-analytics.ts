@@ -1,10 +1,15 @@
 import { keepPreviousData, useQuery, type UseQueryResult } from '@tanstack/react-query'
 import type { ApiError } from '@/shared/types/api'
-import { fetchAdvancedStats, fetchStatsSummary } from '@/features/analytics/api/analytics.api'
+import {
+  fetchAdvancedStats,
+  fetchStatsSummary,
+  fetchStatsTeaser,
+} from '@/features/analytics/api/analytics.api'
 import type {
   AdvancedStats,
   StatsRange,
   StatsSummary,
+  StatsTeaser,
 } from '@/features/analytics/schemas/analytics.schema'
 import { analyticsKeys } from '@/features/analytics/hooks/analytics-keys'
 
@@ -31,6 +36,15 @@ export function useAdvancedStats(
     queryFn: ({ signal }) => fetchAdvancedStats(range, signal),
     enabled,
     placeholderData: keepPreviousData,
+    staleTime: STALE,
+  })
+}
+
+/** This week's menu views, for a package without analytics. */
+export function useStatsTeaser(): UseQueryResult<StatsTeaser, ApiError> {
+  return useQuery<StatsTeaser, ApiError>({
+    queryKey: analyticsKeys.teaser(),
+    queryFn: ({ signal }) => fetchStatsTeaser(signal),
     staleTime: STALE,
   })
 }

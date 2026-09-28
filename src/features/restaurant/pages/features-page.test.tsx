@@ -2,17 +2,44 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { useSession } from '@/features/auth'
+import { i18n } from '@/lib/i18n'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/utils/render-with-providers'
+import { FULL_PLAN, makeSessionUser } from '@/test/mocks/factories/session'
 import { FeaturesPage, type FeaturesPageProps } from '@/features/restaurant/pages/features-page'
 
 let mock: MockAdapter
 
-const ALL = { qr_studio: true, ordering: true, advanced_analytics: true }
+const ALL = FULL_PLAN
 
 function page(props: Partial<FeaturesPageProps> = {}) {
   return <FeaturesPage off={[]} plan={ALL} secondLocale="ar" defaultLocale="en" {...props} />
+}
+
+/** The page as the app mounts it: everything read from the session cache. */
+function FromSession() {
+  const restaurant = useSession().data?.restaurant
+  if (!restaurant) return null
+  return (
+    <FeaturesPage
+      off={restaurant.switched_off}
+      plan={restaurant.plan}
+      secondLocale={restaurant.second_locale}
+      defaultLocale={restaurant.default_locale}
+    />
+  )
+}
+
+/** A reply the test lets go of when it is ready, to look at the in-between state. */
+function held() {
+  let release: (value: [number, unknown]) => void = () => {}
+  const reply = () =>
+    new Promise<[number, unknown]>((resolve) => {
+      release = resolve
+    })
+  return { reply, release: (value: [number, unknown]) => release(value) }
 }
 
 describe('FeaturesPage', () => {
@@ -105,5 +132,127 @@ describe('FeaturesPage', () => {
     renderWithProviders(page({ plan: { ...ALL, qr_studio: false } }))
 
     expect(screen.getByText('Not on your package')).toBeInTheDocument()
+  })
+
+  it('hides the language pickers when the package has no second language', () => {
+    renderWithProviders(page({ plan: { ...ALL, multiple_languages: false } }))
+
+    expect(screen.getByText('Not on your package')).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: /Second language/ })).not.toBeInTheDocument()
+  })
+
+  it('switches a feature back on by taking it off the list', async () => {
+    mock.onPut('/api/features').reply(200, { data: { off: [] } })
+    const user = userEvent.setup()
+    renderWithProviders(page({ off: ['orders'] }))
+
+    await user.click(screen.getByRole('switch', { name: 'Orders on' }))
+
+    await waitFor(() => expect(mock.history.put).toHaveLength(1))
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({ off: [] })
+  })
+
+  it('moves the switch at once and keeps what the server saved', async () => {
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser({ switched_off: [] }) })
+    const answer = held()
+    mock.onPut('/api/features').reply(answer.reply)
+    const user = userEvent.setup()
+    renderWithProviders(<FromSession />)
+
+    await user.click(await screen.findByRole('switch', { name: 'Analytics on' }))
+
+    // Optimistic: off before the server has answered.
+    expect(screen.getByRole('switch', { name: 'Analytics on' })).not.toBeChecked()
+
+    answer.release([200, { data: { off: ['analytics', 'qr'] } }])
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: 'QR Studio on' })).not.toBeChecked(),
+    )
+    expect(screen.getByRole('switch', { name: 'Analytics on' })).not.toBeChecked()
+  })
+
+  it('snaps the switch back and says why when the save fails', async () => {
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser({ switched_off: [] }) })
+    const answer = held()
+    mock.onPut('/api/features').reply(answer.reply)
+    const user = userEvent.setup()
+    renderWithProviders(<FromSession />)
+
+    await user.click(await screen.findByRole('switch', { name: 'Analytics on' }))
+    expect(screen.getByRole('switch', { name: 'Analytics on' })).not.toBeChecked()
+
+    answer.release([500, { message: 'Server down', code: 'server_error' }])
+
+    await waitFor(() => expect(screen.getByRole('switch', { name: 'Analytics on' })).toBeChecked())
+    expect(await screen.findByText('Could not update your features')).toBeInTheDocument()
+  })
+
+  it('writes the saved languages into the session, so the pickers follow', async () => {
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
+    mock.onPut('/api/menu-languages').reply(200, {
+      data: { languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' },
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<FromSession />)
+
+    await user.click(await screen.findByRole('combobox', { name: /Second language/ }))
+    // Earlier tests' toasts can still be up, so count the new one.
+    const toasts = screen.queryAllByText('Menu languages saved').length
+    await user.click(await screen.findByRole('option', { name: /French/ }))
+
+    expect(await screen.findByRole('tab', { name: 'French' })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Arabic' })).not.toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.queryAllByText('Menu languages saved')).toHaveLength(toasts + 1),
+    )
+  })
+
+  it('says so when the languages cannot be saved', async () => {
+    mock.onPut('/api/menu-languages').reply(500, { message: 'Server down', code: 'server_error' })
+    const user = userEvent.setup()
+    renderWithProviders(page())
+
+    await user.click(screen.getByRole('tab', { name: 'Arabic' }))
+
+    expect(await screen.findByText('Could not save your menu languages')).toBeInTheDocument()
+  })
+
+  it('keeps the menu opening in the second language when that language changes', async () => {
+    mock.onPut('/api/menu-languages').reply(200, {
+      data: { languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'fr' },
+    })
+    const user = userEvent.setup()
+    renderWithProviders(page({ defaultLocale: 'ar' }))
+
+    expect(screen.getByRole('tab', { name: 'Arabic' })).toHaveAttribute('aria-selected', 'true')
+    await user.click(screen.getByRole('combobox', { name: /Second language/ }))
+    await user.click(await screen.findByRole('option', { name: /French/ }))
+
+    await waitFor(() => expect(mock.history.put).toHaveLength(1))
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      second_locale: 'fr',
+      default_locale: 'fr',
+    })
+  })
+
+  it('offers no opening language before a second one is chosen', () => {
+    renderWithProviders(page({ secondLocale: null }))
+
+    expect(screen.getByRole('combobox', { name: /Second language/ })).toBeInTheDocument()
+    expect(screen.queryByRole('tablist', { name: 'The menu opens in' })).not.toBeInTheDocument()
+  })
+
+  it('names each language once when the dashboard already speaks it', async () => {
+    await i18n.changeLanguage('ar')
+    try {
+      const user = userEvent.setup()
+      renderWithProviders(page({ secondLocale: null }))
+
+      await user.click(screen.getByRole('combobox'))
+      // In Arabic, Arabic's own name and its dashboard name are the same word.
+      expect(await screen.findByRole('option', { name: 'العربية' })).toBeInTheDocument()
+    } finally {
+      await i18n.changeLanguage('en')
+    }
   })
 })

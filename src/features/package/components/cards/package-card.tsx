@@ -1,14 +1,18 @@
-import { Check } from 'lucide-react'
+import { Check, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
 import { Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
+import { useRowText } from '@/features/package/hooks/use-row-text'
 import type { Package } from '@/features/package/schemas/package.schema'
+import { highlightsOf } from '@/features/package/utils/package-rows'
 
 export type PackageCardProps = {
   pkg: Package
+  /** The package before this one, so the card can say "Everything in …, plus". */
+  previous: Package | undefined
   /** True when this is the package the restaurant is on. */
   current: boolean
   locale: Locale
@@ -16,37 +20,38 @@ export type PackageCardProps = {
 }
 
 /**
- * One package.
+ * One package: its price, what it adds, and the way to ask for it.
  *
- * Nothing is bought here: the only action is asking for it, because an admin
- * assigns packages by hand. The default package needs no action at all, since
- * every restaurant already has it.
+ * Nothing is bought here: the only action is asking, because an admin assigns
+ * packages by hand. The default package needs no action at all, since every
+ * restaurant already has it.
  */
-export function PackageCard({ pkg, current, locale, onRequest }: PackageCardProps) {
+export function PackageCard({ pkg, previous, current, locale, onRequest }: PackageCardProps) {
   const { t } = useTranslation('package')
+  const rowText = useRowText()
   const name = translated(pkg.name, locale)
   const description = translated(pkg.description, locale)
-
-  /** A limit of null is unlimited, which reads better as a word than a symbol. */
-  const limitText = (value: number | null, noun: 'dishes' | 'categories' | 'socialLinks') =>
-    value === null
-      ? t(`card.limits.${noun}Unlimited`)
-      : t(`card.limits.${noun}`, { count: value, number: value.toLocaleString() })
-
-  const lines = [
-    limitText(pkg.features.dish_limit, 'dishes'),
-    limitText(pkg.features.category_limit, 'categories'),
-    limitText(pkg.features.social_link_limit, 'socialLinks'),
-    pkg.features.qr_studio ? t('card.qrStudio') : t('card.basicQr'),
-  ]
+  const { base, rows } = highlightsOf(pkg, previous)
+  const baseName = base ? translated(base.name, locale) : null
 
   return (
     <article
       className={cn(
-        'flex flex-col rounded-[14px] border-[0.5px] bg-[var(--surface)] p-4',
-        current ? 'border-gold shadow-[0_0_0_1px_var(--color-gold)]' : 'border-[var(--line)]',
+        'relative flex flex-col rounded-[14px] border-[0.5px] bg-[var(--surface)] p-4',
+        current
+          ? 'border-gold shadow-[0_0_0_1px_var(--color-gold)]'
+          : pkg.is_featured
+            ? 'border-accent-border'
+            : 'border-[var(--line)]',
       )}
     >
+      {pkg.is_featured ? (
+        <span className="absolute -top-2.5 start-4 inline-flex items-center gap-1 rounded-full bg-gold px-2.5 py-0.5 text-[11px] font-medium text-ink">
+          <Sparkles aria-hidden className="size-3" />
+          {t('card.popular')}
+        </span>
+      ) : null}
+
       <h3 className="font-display text-[17px] leading-tight">
         {name.missing ? pkg.slug : name.text}
       </h3>
@@ -77,11 +82,16 @@ export function PackageCard({ pkg, current, locale, onRequest }: PackageCardProp
         <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--muted)]">{description.text}</p>
       ) : null}
 
-      <ul className="mt-3 flex flex-col gap-1.5">
-        {lines.map((line) => (
-          <li key={line} className="flex items-start gap-2 text-[13px]">
+      <p className="mt-3 text-[12px] font-medium text-[var(--muted)]">
+        {base && baseName
+          ? t('card.everythingIn', { name: baseName.missing ? base.slug : baseName.text })
+          : t('card.includes')}
+      </p>
+      <ul className="mt-1.5 flex flex-col gap-1.5">
+        {rows.map((row) => (
+          <li key={row.key} className="flex items-start gap-2 text-[13px]">
             <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-accent" />
-            <span>{line}</span>
+            <span>{rowText(row, pkg)}</span>
           </li>
         ))}
       </ul>
@@ -96,7 +106,7 @@ export function PackageCard({ pkg, current, locale, onRequest }: PackageCardProp
             {t('card.includedForEveryone')}
           </Button>
         ) : (
-          <Button block onClick={onRequest}>
+          <Button block variant={pkg.is_featured ? 'primary' : 'secondary'} onClick={onRequest}>
             {pkg.is_contact_only ? t('card.talkToUs') : t('card.request')}
           </Button>
         )}

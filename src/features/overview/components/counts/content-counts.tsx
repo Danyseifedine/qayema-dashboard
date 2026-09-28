@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { LimitBadge, StatTile } from '@/shared/components/data-display'
 import type { AuthRestaurant } from '@/features/auth'
+import { formatNumber } from '@/shared/utils/format/number'
+import { usePreferencesStore } from '@/stores/preferences.store'
 type Limits = AuthRestaurant['limits']
 
 const ITEMS: { key: keyof Limits; label: 'dishes' | 'categories' | 'socialLinks' }[] = [
@@ -12,6 +14,7 @@ const ITEMS: { key: keyof Limits; label: 'dishes' | 'categories' | 'socialLinks'
 /** How much is on the menu, each against what the package allows. */
 export function ContentCounts({ limits }: { limits: Limits }) {
   const { t } = useTranslation('overview')
+  const locale = usePreferencesStore((state) => state.locale)
 
   return (
     <dl className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
@@ -21,7 +24,7 @@ export function ContentCounts({ limits }: { limits: Limits }) {
           <StatTile
             key={key}
             label={t(`counts.${label}`)}
-            value={used.toLocaleString()}
+            value={formatNumber(used, locale)}
             hint={
               limit === null ? (
                 t('counts.noLimit')

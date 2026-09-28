@@ -54,11 +54,12 @@ export const DishCard = memo(function DishCard({
       className={cn(
         'flex h-full flex-col overflow-hidden rounded-[14px] border-[0.5px] border-[var(--line)]',
         'bg-[var(--surface)] transition-colors hover:border-[var(--line-strong)]',
-        !dish.is_available && 'opacity-70',
         className,
       )}
     >
-      <div className="relative">
+      {/* Only the photo dims for a sold-out dish: its name, price and switch
+          stay readable (and editable) at full contrast. */}
+      <div className={cn('relative', !dish.is_available && '[&>:first-child]:opacity-60')}>
         {dish.image_url ? (
           <img
             src={dish.image_url}

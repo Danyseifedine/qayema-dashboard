@@ -7,7 +7,13 @@ import {
   requestPackage,
   type PackageRequestPayload,
 } from '@/features/package/api/package.api'
-import type { PackageList, PackageRequestResult } from '@/features/package/schemas/package.schema'
+import type {
+  PackageFlag,
+  PackageList,
+  PackageRequestResult,
+} from '@/features/package/schemas/package.schema'
+import type { Locale } from '@/shared/constants/locales'
+import { translated } from '@/shared/utils/string/translated'
 import { packageKeys } from '@/features/package/hooks/package-keys'
 
 export function usePackages(): UseQueryResult<PackageList, ApiError> {
@@ -32,4 +38,18 @@ export function useRequestPackage() {
     },
     onError: (error) => toast.error(t('package:toast.failed'), error),
   })
+}
+
+/**
+ * The first package, in the catalogue's order, that includes a feature — the
+ * one a locked feature points the owner to — by name in the reader's language.
+ * Null while the catalogue loads, or when no package has it.
+ */
+export function usePackageFor(flag: PackageFlag, locale: Locale): string | null {
+  const packages = usePackages()
+  const found = packages.data?.data.find((pkg) => pkg.features[flag])
+
+  if (found === undefined) return null
+  const name = translated(found.name, locale)
+  return name.missing ? found.slug : name.text
 }

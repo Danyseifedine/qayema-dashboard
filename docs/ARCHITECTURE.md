@@ -52,7 +52,7 @@ explained in §2 of the backend `CLAUDE.md`.
 | Sidebar (group)           | Feature folder · nav key · i18n namespace · query root | API                                             |
 | ------------------------- | ------------------------------------------------------ | ----------------------------------------------- |
 | Overview                  | `overview`                                             | `/api/user`, `/api/restaurant`, dishes          |
-| Analytics                 | `analytics`                                            | `/api/analytics[/advanced]`                     |
+| Analytics                 | `analytics`                                            | `/api/analytics[/advanced,/teaser]`             |
 | Categories, Dishes (MENU) | `menu` (sub-features `categories`, `dishes`)           | `/api/categories`, `/api/dishes`                |
 | Design (MENU)             | `design`                                               | `/api/templates` (a design is a `Template` row) |
 | Appearance (MENU)         | `appearance`                                           | `/api/appearance`                               |
@@ -74,6 +74,9 @@ languages read from the session) and `uploads` (temp image upload and the
 qayema-dashboard/
 ├── CLAUDE.md                        Working rules for agents
 ├── docs/ARCHITECTURE.md             This file
+├── e2e/                             Playwright, whole product (§7): fixtures/, specs/, support/,
+│                                    __snapshots__/ (visual baselines), global-setup.ts
+├── playwright.config.ts             Servers, projects (desktop, phone, arabic-rtl, dark, visual)
 ├── public/                          Served as-is
 └── src/
     ├── main.tsx                     Entry: providers + App
@@ -92,20 +95,22 @@ qayema-dashboard/
     ├── app/
     │   ├── providers/               app-providers, query-provider, toast-provider
     │   └── layouts/authenticated/   authenticated-layout, nav-items (the sidebar table), use-page-key (the URL),
-    │       ├── sidebar/             sidebar, sidebar-group, sidebar-item
+    │       │                        plan-locked-page (a section the package lacks)
+    │       ├── sidebar/             sidebar, sidebar-group, sidebar-item, plan-badge
     │       └── topbar/              topbar, user-menu, package-pill, language-switcher
     ├── shared/                      Used by more than one feature; knows nothing about features
     │   ├── components/ui/           Primitives: button, input, switch, combobox, segmented, alert…
     │   ├── components/forms/        fields/ (text, price, color, choice…), layout/ (Form, FormSection, Field),
     │   │                            translatable/ (TranslatableTextField, LocaleTabs), index.ts
-    │   ├── components/feedback/     dialogs/confirm, skeletons, states/{empty,error}, toasts, index.ts
+    │   ├── components/feedback/     dialogs/confirm, skeletons, states/{empty,error,locked}, toasts, index.ts
     │   ├── components/data-display/ badges/{limit-badge,limit-notice}, formatters/money, stats/stat-tile
     │   ├── constants/               countries, currencies, locales (UI languages), menu-languages
     │   ├── hooks/                   use-api-form-errors
     │   ├── types/                   api.ts
-    │   └── utils/                   dom/cn, color/contrast, format/{money,change,date}, string/{menu-text,translated}
+    │   └── utils/                   dom/cn, color/contrast, format/{money,change,date,number}, string/{menu-text,translated}
     ├── features/                    One folder per row of the vocabulary table (§3)
-    └── test/                        setup/vitest.setup.ts, utils/render-with-providers, mocks/factories
+    └── test/                        setup/vitest.setup.ts, utils/render-with-providers,
+                                     mocks/factories/{session (FULL_PLAN, EMPTY_PLAN), packages, menu}
 ```
 
 ---
@@ -163,8 +168,28 @@ sidebar, the topbar title, the locks and the Features switches:
 - `requiresTemplate`: locked until a design is chosen (Categories, Dishes,
   Appearance, Orders, QR code, Restaurant). Design is always open: it is
   the way out.
-- `requiresPlan`: locked unless `restaurant.plan[flag]` is true (Orders needs
-  `ordering`). Gating a new section is one line here, not a new branch.
+- `requiresPlan`: locked unless `restaurant.plan[flag]` is true (Analytics
+  needs `analytics`, Appearance `appearance`, Orders `ordering`). Gating a new
+  section is one line here, not a new branch.
+
+`navLock(key, access)` says why a section is closed, and the two reasons look
+different on purpose:
+
+- `'template'`: the row is disabled and the page says "Choose a menu design
+  first" — there is nothing to work on yet.
+- `'plan'`: the row stays open with a chip naming the package that has it
+  (`PlanBadge`), and the page is `PlanLockedPage`: what the section gives, that
+  package, and "See packages". Analytics adds this week's views
+  (`AnalyticsTeaser`, `GET /api/analytics/teaser`). The owner always sees what
+  they are missing.
+
+"The package that has it" is `usePackageFor(flag, locale)` from the package
+barrel: the first package in the catalogue's order with the flag on. In-page
+locks use the same component, `LockedState` (`shared/components/feedback`):
+the QR studio, advanced analytics. The Design page marks a premium design and
+points a locked one to the Package page; the Features page marks a switch the
+package lacks and hides the language pickers without `multiple_languages`.
+
 - `hideable`: leaves the sidebar when its key is in `restaurant.switched_off`
   (Analytics, Orders). A page switched off while open hands over to Overview.
 - `ACCOUNT_ITEM` is a page without a sidebar row; the avatar menu opens it.
@@ -225,13 +250,35 @@ Sanctum stateful auth. The SPA's responsibilities:
 | Unit (utils, schemas, items) | Vitest                                            | co-located `*.test.ts`  |
 | Component / page             | Vitest + Testing Library + `axios-mock-adapter`   | co-located `*.test.tsx` |
 | Translations                 | `lib/i18n/translations.test.ts` (parity, plurals) | `lib/i18n`              |
+| End-to-end                   | Playwright + `@axe-core/playwright`               | `e2e/specs/*.spec.ts`   |
 
-Fixtures: `test/mocks/factories/` (`makeSessionUser`, menu factories),
+Fixtures: `test/mocks/factories/` (`makeSessionUser`, `FULL_PLAN`,
+`EMPTY_PLAN`, `makePackage`, `PACKAGE_CATALOGUE`, menu factories),
 `test/utils/render-with-providers.tsx`. Tests run in English (set in
 `test/setup/vitest.setup.ts`, which also stubs `ResizeObserver` for recharts).
-There are no end-to-end tests yet.
+`npm run test:coverage` fails under the thresholds in `vitest.config.ts`.
 
-Gate before handing work back: `typecheck && lint && format:check && test && build`.
+**End-to-end** (`e2e/`, `npm run e2e`): the real Laravel app with
+`APP_ENV=e2e` (port 8001, its own SQLite database, `composer e2e:reset` before
+each run) and Vite on 5174, both started by `playwright.config.ts`.
+
+- `e2e/fixtures/test.ts`: `owner(input)` builds an owner through the backend's
+  test-only `POST /__e2e/scenario` and signs the browser in; `scenario`,
+  `signIn`, `setPackage`, `expectAccessible` (axe, WCAG 2.1 A/AA, serious and
+  critical fail), `either(en, ar)` for labels in both languages,
+  `daysFromNow`. The `page` fixture fails the test on any uncaught browser
+  error or `console.error`.
+- **Each test builds its own owner** and never changes shared data (packages,
+  designs, the admin), so tests run in parallel and in any order. No retries.
+- Projects: `desktop` runs everything; `phone`, `arabic-rtl` and `dark` re-run
+  tests tagged `@matrix` (use `either()` or roles there); `visual` and
+  `visual-phone` run `@visual` screenshot tests. After an intended design
+  change: `npm run e2e:update-snapshots`, look at the new baselines, keep them.
+- `E2E_SKIP_RESET=1` keeps the current e2e data (to run one spec while another
+  run uses the same servers).
+
+Gate before handing work back: `typecheck && lint && format:check &&
+test:coverage && build && e2e`.
 
 ---
 
@@ -258,14 +305,14 @@ Gate before handing work back: `typecheck && lint && format:check && test && bui
 
 ### Dev / tooling
 
-| Package                                                                              | Purpose                  |
-| ------------------------------------------------------------------------------------ | ------------------------ |
-| `typescript`, `vite`, `@vitejs/plugin-react`, `oxlint`, `prettier`                   | Build, lint, format      |
-| `husky`, `lint-staged`                                                               | Pre-commit lint/format   |
-| `vitest`, `@vitest/coverage-v8`, `jsdom`                                             | Unit and component tests |
-| `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom` | Component testing        |
-| `axios-mock-adapter`                                                                 | API mocking in tests     |
-| `@tanstack/react-query-devtools`                                                     | Dev-only inspector       |
+| Package                                                                              | Purpose                   |
+| ------------------------------------------------------------------------------------ | ------------------------- |
+| `typescript`, `vite`, `@vitejs/plugin-react`, `oxlint`, `prettier`                   | Build, lint, format       |
+| `husky`, `lint-staged`                                                               | Pre-commit lint/format    |
+| `vitest`, `@vitest/coverage-v8`, `jsdom`                                             | Unit and component tests  |
+| `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom` | Component testing         |
+| `axios-mock-adapter`                                                                 | API mocking in tests      |
+| `@playwright/test`, `@axe-core/playwright`                                           | End-to-end, accessibility |
 
 Do not add a dependency without the owner's approval.
 
@@ -293,5 +340,4 @@ Do not add a dependency without the owner's approval.
 | Item              | Note                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------- |
 | A router library  | Only when a page needs its own sub-paths (e.g. `/dishes/12`); `usePageKey` covers one level |
-| End-to-end tests  | Playwright against a seeded Laravel instance                                                |
 | More menu designs | Each is a backend `Template` row plus a Blade view                                          |

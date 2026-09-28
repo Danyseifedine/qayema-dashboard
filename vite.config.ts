@@ -29,6 +29,10 @@ export default defineConfig(({ mode }) => {
             hmr: { host: devHost, protocol: 'wss', clientPort: 443 },
           }
         : {}),
+      // The end-to-end suite (`vite --mode e2e`) must not have a page reload
+      // under it when a file is saved mid-run; the next page load still gets
+      // the new code.
+      ...(mode === 'e2e' ? { hmr: false } : {}),
     },
   }
 })

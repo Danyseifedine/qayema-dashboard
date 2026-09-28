@@ -53,6 +53,21 @@ describe('SocialLinksPage', () => {
     expect(screen.getByRole('button', { name: 'Add your first link' })).toBeEnabled()
   })
 
+  it('waits for the list before offering Add, so the dialog never starts on a taken platform', async () => {
+    let answer!: (value: [number, object]) => void
+    mock
+      .onGet('/api/social-links')
+      .reply(() => new Promise<[number, object]>((resolve) => (answer = resolve)))
+    renderWithProviders(<SocialLinksPage />)
+
+    const add = screen.getByRole('button', { name: /^Add link$/ })
+    expect(add).toBeDisabled()
+
+    await waitFor(() => expect(answer).toBeDefined())
+    answer([200, { data: [instagram], meta: { used: 1, limit: 2 } }])
+    await waitFor(() => expect(add).toBeEnabled())
+  })
+
   it('shows plan usage and blocks adding at the limit', async () => {
     stub([instagram, facebook], 2, 2)
     renderWithProviders(<SocialLinksPage />)
@@ -184,5 +199,45 @@ describe('SocialLinksPage', () => {
     renderWithProviders(<SocialLinksPage />)
 
     expect(await screen.findByRole('button', { name: /Try again/ })).toBeInTheDocument()
+  })
+
+  it('retries a failed load', async () => {
+    mock.onGet('/api/social-links').replyOnce(500, { message: 'Something went wrong.' })
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<SocialLinksPage />)
+
+    await user.click(await screen.findByRole('button', { name: /Try again/ }))
+    expect(await screen.findByText('Instagram')).toBeInTheDocument()
+  })
+
+  it('keeps the link when the owner backs out of removing it', async () => {
+    stub([instagram], 1)
+    const user = userEvent.setup()
+    renderWithProviders(<SocialLinksPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Remove Instagram link' }))
+    const confirm = screen.getByText('Remove this link?').closest('dialog')!
+    expect(confirm.open).toBe(true)
+    await user.click(within(confirm).getByRole('button', { name: 'Cancel' }))
+
+    await waitFor(() => expect(confirm.open).toBe(false))
+    expect(mock.history.delete).toHaveLength(0)
+  })
+
+  it('says so when a link cannot be removed', async () => {
+    stub([instagram], 1)
+    mock
+      .onDelete('/api/social-links/1')
+      .reply(500, { message: 'Server down', code: 'server_error' })
+    const user = userEvent.setup()
+    renderWithProviders(<SocialLinksPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Remove Instagram link' }))
+    await user.click(screen.getByRole('button', { name: 'Remove' }))
+
+    expect(await screen.findByText('Could not remove that link')).toBeInTheDocument()
+    // The confirmation stays up so the owner can try again.
+    expect(screen.getByText('Remove this link?')).toBeInTheDocument()
   })
 })

@@ -11,6 +11,7 @@ import {
   SwitchField,
   TranslatableTextField,
 } from '@/shared/components/forms'
+import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 import { ImageField, imageChanges } from '@/features/uploads'
 import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
@@ -99,6 +100,16 @@ export function DishDialog({
     })
   }, [open, dishId, defaultCategoryId, languages, form, clearFormError])
 
+  // Opened before the categories arrived (a slow connection), the form had
+  // none to preselect. Fill the empty choice once they are here, touching
+  // nothing the owner typed.
+  const firstCategoryId = categories[0]?.id ?? null
+  useEffect(() => {
+    if (!open || firstCategoryId === null) return
+    if (form.getValues('category_id') !== null) return
+    form.setValue('category_id', defaultCategoryId ?? firstCategoryId, { shouldValidate: false })
+  }, [open, firstCategoryId, defaultCategoryId, form])
+
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
@@ -106,22 +117,26 @@ export function DishDialog({
     if (!open && dialog.open) dialog.close()
   }, [open])
 
-  const onSubmit = form.handleSubmit((values) => {
-    clearFormError()
-    save.mutate(
-      {
-        name: values.name,
-        ingredients: values.ingredients,
-        price: values.price,
-        category_id: values.category_id,
-        is_available: values.is_available,
-        // A key only for an image uploaded in this session; the flag only
-        // when the saved one was removed.
-        ...imageChanges(values.image, 'image_key', 'delete_image'),
-      },
-      { onSuccess: onClose, onError: (error) => applyApiError(error) },
-    )
-  })
+  const once = useSubmitOnce()
+
+  const onSubmit = form.handleSubmit((values) =>
+    once((done) => {
+      clearFormError()
+      save.mutate(
+        {
+          name: values.name,
+          ingredients: values.ingredients,
+          price: values.price,
+          category_id: values.category_id,
+          is_available: values.is_available,
+          // A key only for an image uploaded in this session; the flag only
+          // when the saved one was removed.
+          ...imageChanges(values.image, 'image_key', 'delete_image'),
+        },
+        { onSuccess: onClose, onError: (error) => applyApiError(error), onSettled: done },
+      )
+    }),
+  )
 
   const options = categories.map((category) => {
     const name = translated(category.name, locale)

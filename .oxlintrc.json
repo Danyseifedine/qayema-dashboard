@@ -1,7 +1,15 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["react", "typescript", "oxc"],
-  "ignorePatterns": ["dist", "coverage", "node_modules", "**/*.gen.ts"],
+  "ignorePatterns": [
+    "dist",
+    "coverage",
+    "node_modules",
+    "**/*.gen.ts",
+    "e2e/.report",
+    "e2e/.results",
+    "e2e/__snapshots__"
+  ],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",
@@ -16,5 +24,13 @@
       }
     ],
     "react/react-in-jsx-scope": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["e2e/**/*.ts"],
+      "rules": {
+        "no-await-in-loop": "off"
+      }
+    }
+  ]
 }

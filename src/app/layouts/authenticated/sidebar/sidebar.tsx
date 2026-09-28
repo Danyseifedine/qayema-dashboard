@@ -5,12 +5,13 @@ import wordmark from '@/assets/images/brand/qayema-wordmark.png'
 import {
   NAV_GROUPS,
   isNavItemHidden,
-  isNavItemLocked,
+  navLock,
   type NavAccess,
   type NavItem,
 } from '@/app/layouts/authenticated/nav-items'
 import { cn } from '@/shared/utils/dom/cn'
 import { SidebarGroup } from '@/app/layouts/authenticated/sidebar/sidebar-group'
+import { PlanBadge } from '@/app/layouts/authenticated/sidebar/plan-badge'
 import { SidebarItem } from '@/app/layouts/authenticated/sidebar/sidebar-item'
 
 export type SidebarProps = {
@@ -42,7 +43,7 @@ export function Sidebar({
   className,
 }: SidebarProps) {
   const { t } = useTranslation()
-  const isLocked = (item: NavItem) => isNavItemLocked(item.key, { hasTemplate, plan })
+  const lockOf = (item: NavItem) => navLock(item.key, { hasTemplate, plan })
 
   return (
     <nav
@@ -78,17 +79,27 @@ export function Sidebar({
               label={group.labelKey ? t(group.labelKey) : undefined}
               collapsed={collapsed}
             >
-              {items.map((item) => (
-                <SidebarItem
-                  key={item.key}
-                  icon={item.icon}
-                  label={t(item.labelKey)}
-                  active={item.key === activeKey}
-                  collapsed={collapsed}
-                  locked={isLocked(item)}
-                  onSelect={() => onSelect(item)}
-                />
-              ))}
+              {items.map((item) => {
+                const lock = lockOf(item)
+                return (
+                  <SidebarItem
+                    key={item.key}
+                    icon={item.icon}
+                    label={t(item.labelKey)}
+                    active={item.key === activeKey}
+                    collapsed={collapsed}
+                    locked={lock === 'template'}
+                    // A section the package lacks still opens, to show what
+                    // it would give; the chip names the package that has it.
+                    badge={
+                      lock === 'plan' && item.requiresPlan ? (
+                        <PlanBadge flag={item.requiresPlan} />
+                      ) : undefined
+                    }
+                    onSelect={() => onSelect(item)}
+                  />
+                )
+              })}
             </SidebarGroup>
           )
         })}

@@ -8,10 +8,20 @@ import { menuTextSchema, translatableTextSchema } from '@/shared/utils/string/me
  * the dashboard branches on to decide between the wizard and the app.
  */
 const planSchema = z.object({
+  multiple_languages: z.boolean(),
+  appearance: z.boolean(),
+  premium_designs: z.boolean(),
   qr_studio: z.boolean(),
   ordering: z.boolean(),
+  analytics: z.boolean(),
   advanced_analytics: z.boolean(),
 })
+
+/** A package named in the session, in both interface languages. */
+const packageSummary = {
+  slug: z.string().nullable(),
+  name: translatableTextSchema,
+}
 
 const limit = z.object({
   used: z.number(),
@@ -36,16 +46,26 @@ export const restaurantSchema = z.object({
   public_url: z.string(),
   qr_url: z.string(),
   /**
-   * The package actually in force. An expired assignment reports as the
-   * default one, because that is where the limits below came from.
+   * The package actually in force. An assignment that has not started or has
+   * ended reports as the default one, because that is where the limits below
+   * came from.
    */
   package: z.object({
-    slug: z.string().nullable(),
-    name: translatableTextSchema,
+    ...packageSummary,
     is_contact_only: z.boolean(),
-    /** ISO-8601, or null when the package does not expire. */
+    /** ISO-8601, or null when it has always applied. */
+    starts_at: z.string().nullable(),
+    /** ISO-8601, or null when the package does not end. */
     ends_at: z.string().nullable(),
+    /** Whole days until it ends, 0 on its last day; null when it does not end. */
+    days_left: z.number().int().nullable(),
   }),
+  /** The package the restaurant was given when it has ended. */
+  lapsed: z.object({ ...packageSummary, ended_at: z.string().nullable() }).nullable(),
+  /** The package the restaurant was given when it starts later. */
+  upcoming: z
+    .object({ ...packageSummary, starts_at: z.string().nullable(), ends_at: z.string().nullable() })
+    .nullable(),
   limits: z.object({
     dishes: limit,
     categories: limit,

@@ -61,7 +61,13 @@ export const NAV_GROUPS: NavGroup[] = [
     key: 'main',
     items: [
       { key: 'overview', labelKey: 'nav.overview', icon: LayoutDashboard },
-      { key: 'analytics', labelKey: 'nav.analytics', icon: ChartNoAxesColumn, hideable: true },
+      {
+        key: 'analytics',
+        labelKey: 'nav.analytics',
+        icon: ChartNoAxesColumn,
+        requiresPlan: 'analytics',
+        hideable: true,
+      },
     ],
   },
   {
@@ -78,6 +84,7 @@ export const NAV_GROUPS: NavGroup[] = [
         labelKey: 'nav.appearance',
         icon: SwatchBook,
         requiresTemplate: true,
+        requiresPlan: 'appearance',
       },
     ],
   },
@@ -133,20 +140,26 @@ export type NavAccess = {
 }
 
 /**
- * Whether a section is closed to this owner.
+ * Why a section is closed to this owner, or null when it is open.
+ *
+ * `template`: nothing to work on until a design is chosen — the row is
+ * disabled. `plan`: the package does not include it — the row stays open and
+ * the page shows what it would give and which package has it.
  *
  * The sidebar and the page body both read this, so a locked row can never sit
  * next to a rendered page, which is exactly the mismatch that let the app open
  * on a section the owner could not use.
  */
-export function isNavItemLocked(key: string, access: NavAccess): boolean {
-  const item = NAV_ITEMS.find((candidate) => candidate.key === key)
-  if (!item) return false
+export type NavLock = 'template' | 'plan' | null
 
-  if (item.requiresTemplate === true && !access.hasTemplate) return true
+export function navLock(key: string, access: NavAccess): NavLock {
+  const item = NAV_ITEMS.find((candidate) => candidate.key === key)
+  if (!item) return null
+
+  if (item.requiresTemplate === true && !access.hasTemplate) return 'template'
   // Data-driven, so gating a new section on a new flag is one line in the
   // table above rather than another branch here.
-  if (item.requiresPlan !== undefined && !access.plan[item.requiresPlan]) return true
+  if (item.requiresPlan !== undefined && !access.plan[item.requiresPlan]) return 'plan'
 
-  return false
+  return null
 }

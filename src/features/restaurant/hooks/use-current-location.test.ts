@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   googleMapsUrlFor,
   mapEmbedUrlFor,
   parseMapCoordinates,
+  useCurrentLocation,
 } from '@/features/restaurant/hooks/use-current-location'
 
 describe('parseMapCoordinates', () => {
@@ -70,5 +72,69 @@ describe('mapEmbedUrlFor', () => {
     expect(maxLng!).toBeGreaterThan(35.4955)
     expect(minLat!).toBeLessThan(33.8886)
     expect(maxLat!).toBeGreaterThan(33.8886)
+  })
+})
+
+describe('useCurrentLocation', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  /** A browser whose position request fails with the given code. */
+  function failingWith(code: number) {
+    const getCurrentPosition = vi.fn((_found: unknown, failed: (error: unknown) => void) =>
+      failed({ code, PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 }),
+    )
+    vi.stubGlobal('navigator', { ...navigator, geolocation: { getCurrentPosition } })
+  }
+
+  it('says so when the browser cannot share a location at all', () => {
+    vi.stubGlobal('navigator', { ...navigator, geolocation: undefined })
+    const onFound = vi.fn()
+    const { result } = renderHook(() => useCurrentLocation())
+
+    act(() => result.current.locate(onFound))
+
+    expect(result.current.error).toBe('This browser cannot share a location.')
+    expect(result.current.locating).toBe(false)
+    expect(onFound).not.toHaveBeenCalled()
+  })
+
+  it('is locating until the browser answers, then hands the point back', () => {
+    let answer: (position: { coords: { latitude: number; longitude: number } }) => void = () => {}
+    const getCurrentPosition = vi.fn((found: typeof answer) => {
+      answer = found
+    })
+    vi.stubGlobal('navigator', { ...navigator, geolocation: { getCurrentPosition } })
+    const onFound = vi.fn()
+    const { result } = renderHook(() => useCurrentLocation())
+
+    act(() => result.current.locate(onFound))
+    expect(result.current.locating).toBe(true)
+    expect(getCurrentPosition).toHaveBeenCalledWith(expect.any(Function), expect.any(Function), {
+      enableHighAccuracy: true,
+      timeout: 10_000,
+      maximumAge: 0,
+    })
+
+    act(() => answer({ coords: { latitude: 1.5, longitude: 2.5 } }))
+    expect(result.current.locating).toBe(false)
+    expect(result.current.error).toBeNull()
+    expect(onFound).toHaveBeenCalledWith({ lat: 1.5, lng: 2.5 })
+  })
+
+  it.each([
+    [1, 'Location is blocked for this site. Allow it in your browser, then try again.'],
+    [2, 'Your device could not work out where it is. Paste a map link instead.'],
+    [3, 'That took too long. Try again, or paste a map link instead.'],
+    [99, 'We could not get your location. Paste a map link instead.'],
+  ])('turns failure code %i into a sentence', (code, message) => {
+    failingWith(code)
+    const { result } = renderHook(() => useCurrentLocation())
+
+    act(() => result.current.locate(vi.fn()))
+
+    expect(result.current.error).toBe(message)
+    expect(result.current.locating).toBe(false)
   })
 })

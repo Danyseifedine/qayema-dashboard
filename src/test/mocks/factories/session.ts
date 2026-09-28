@@ -1,4 +1,27 @@
-import type { AuthUser } from '@/features/auth'
+import type { AuthUser, Plan } from '@/features/auth'
+
+/** Every flag on: the tests of a page are about the page, not its lock. */
+export const FULL_PLAN: Plan = {
+  multiple_languages: true,
+  appearance: true,
+  premium_designs: true,
+  qr_studio: true,
+  ordering: true,
+  analytics: true,
+  advanced_analytics: true,
+}
+
+/** Every flag off, as the Free package ships. */
+export const EMPTY_PLAN: Plan = {
+  multiple_languages: false,
+  appearance: false,
+  premium_designs: false,
+  qr_studio: false,
+  ordering: false,
+  analytics: false,
+  advanced_analytics: false,
+}
+
 /**
  * A signed-in owner as `GET /api/user` returns one, with a menu written in
  * English and Arabic unless the test says otherwise.
@@ -29,15 +52,19 @@ export function makeSessionUser(
         slug: 'free',
         name: { en: 'Free', ar: null },
         is_contact_only: false,
+        starts_at: null,
         ends_at: null,
+        days_left: null,
       },
+      lapsed: null,
+      upcoming: null,
       limits: {
         dishes: { used: 0, limit: 40 },
         categories: { used: 0, limit: 10 },
         social_links: { used: 0, limit: 2 },
       },
       switched_off: [],
-      plan: { qr_studio: true, ordering: true, advanced_analytics: true },
+      plan: FULL_PLAN,
       ...restaurant,
     },
   }

@@ -16,12 +16,20 @@ export const packageSchema = z.object({
   /** The package every restaurant starts on, and falls back to. */
   is_default: z.boolean(),
   sort_order: z.number().int(),
+  /** Marked "Most popular". */
+  is_featured: z.boolean(),
   features: z.object({
     /** Null is unlimited. */
     dish_limit: z.number().int().nullable(),
     category_limit: z.number().int().nullable(),
     social_link_limit: z.number().int().nullable(),
+    multiple_languages: z.boolean(),
+    appearance: z.boolean(),
+    premium_designs: z.boolean(),
     qr_studio: z.boolean(),
+    ordering: z.boolean(),
+    analytics: z.boolean(),
+    advanced_analytics: z.boolean(),
   }),
 })
 
@@ -50,6 +58,12 @@ export const requestPackageFormSchema = z.object({
 })
 
 export type Package = z.infer<typeof packageSchema>
+export type PackageFeatures = Package['features']
+/** The on/off features, the same keys as the session's `plan`. */
+export type PackageFlag = {
+  [K in keyof PackageFeatures]: PackageFeatures[K] extends boolean ? K : never
+}[keyof PackageFeatures]
+export type PackageLimit = Exclude<keyof PackageFeatures, PackageFlag>
 export type PackageList = z.infer<typeof packageListSchema>
 export type PackageRequestResult = z.infer<typeof packageRequestResultSchema>
 export type RequestPackageFormValues = z.infer<typeof requestPackageFormSchema>

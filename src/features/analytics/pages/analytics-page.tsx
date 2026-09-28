@@ -59,7 +59,7 @@ export function AnalyticsPage({ locale, advanced, onOpenPackage }: AnalyticsPage
       )}
 
       {!advanced ? (
-        <AdvancedLocked onOpenPackage={onOpenPackage} />
+        <AdvancedLocked locale={locale} onOpenPackage={onOpenPackage} />
       ) : insights.isPending ? (
         <div className="h-[420px] animate-pulse rounded-[14px] bg-[var(--hover-wash)]" />
       ) : insights.isError ? (

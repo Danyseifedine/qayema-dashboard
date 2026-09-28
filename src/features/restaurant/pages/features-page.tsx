@@ -23,8 +23,8 @@ export type FeaturesPageProps = {
 const ROWS: { key: FeatureKey; icon: LucideIcon; plan?: keyof Plan }[] = [
   { key: 'orders', icon: ReceiptText, plan: 'ordering' },
   { key: 'qr', icon: QrCode, plan: 'qr_studio' },
-  { key: 'analytics', icon: ChartNoAxesColumn },
-  { key: 'languages', icon: Languages },
+  { key: 'analytics', icon: ChartNoAxesColumn, plan: 'analytics' },
+  { key: 'languages', icon: Languages, plan: 'multiple_languages' },
 ]
 
 /**
@@ -78,7 +78,9 @@ export function FeaturesPage({ off, plan, secondLocale, defaultLocale }: Feature
                       {offNote}
                     </p>
                   ) : null}
-                  {key === 'languages' && on ? (
+                  {/* The pickers need the package: the server refuses a second
+                      language without it. */}
+                  {key === 'languages' && on && plan.multiple_languages ? (
                     <LanguageChoice secondLocale={secondLocale} defaultLocale={defaultLocale} />
                   ) : null}
                 </div>

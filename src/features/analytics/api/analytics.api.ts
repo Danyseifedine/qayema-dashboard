@@ -2,9 +2,11 @@ import { request } from '@/lib/api'
 import {
   advancedStatsResponseSchema,
   statsSummaryResponseSchema,
+  statsTeaserResponseSchema,
   type AdvancedStats,
   type StatsRange,
   type StatsSummary,
+  type StatsTeaser,
 } from '@/features/analytics/schemas/analytics.schema'
 
 export async function fetchStatsSummary(
@@ -28,6 +30,15 @@ export async function fetchAdvancedStats(
     method: 'GET',
     url: '/api/analytics/advanced',
     params: { range },
+    signal,
+  })
+  return data
+}
+
+export async function fetchStatsTeaser(signal?: AbortSignal): Promise<StatsTeaser> {
+  const { data } = await request(statsTeaserResponseSchema, {
+    method: 'GET',
+    url: '/api/analytics/teaser',
     signal,
   })
   return data

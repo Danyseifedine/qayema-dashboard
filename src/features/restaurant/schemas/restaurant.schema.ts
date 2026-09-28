@@ -11,7 +11,7 @@ import {
 } from '@/shared/utils/string/menu-text'
 
 /**
- * Mirrors ../qayema/app/Http/Requests/UpdateSettingsRequest.php.
+ * Mirrors ../qayema/app/Http/Requests/UpdateRestaurantRequest.php.
  *
  * The server is still the authority; this exists so an owner sees the problem
  * before a round trip, and so the messages read the same on both sides.
@@ -19,7 +19,7 @@ import {
 
 /** Rejects interior control characters, as the server's `/u` regex does. */
 // Rejecting control characters is the intent here, mirroring the
-// server's `/u` regex in UpdateSettingsRequest.
+// server's `/u` regex in UpdateRestaurantRequest.
 // oxlint-disable-next-line no-control-regex
 const NO_CONTROL_CHARS = /^[^\u0000-\u001F\u007F]+$/
 
@@ -152,10 +152,14 @@ export const restaurantFormSchema = z
 
     timezone: z.string().min(1, { error: () => t('restaurant:validation.chooseTimezone') }),
   })
-  .superRefine((values, ctx) => {
-    requireEnglish(values.name, 'name', t('restaurant:validation.nameRequiredInEnglish'), ctx)
-    checkNames(values.name, ctx)
-  })
+  .superRefine(
+    (values, ctx) => {
+      requireEnglish(values.name, 'name', t('restaurant:validation.nameRequiredInEnglish'), ctx)
+      checkNames(values.name, ctx)
+    },
+    // Also when another field is wrong, so one submit shows every problem.
+    { when: () => true },
+  )
 
 /** What the server checks on every written name: two characters, no control characters. */
 function checkNames(name: MenuTextForm, ctx: z.RefinementCtx): void {

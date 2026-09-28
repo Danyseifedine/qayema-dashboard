@@ -7,6 +7,7 @@ import {
   TOOLTIP_STYLE,
 } from '@/features/analytics/components/charts/chart-style'
 import { formatHour, weekdayNames } from '@/shared/utils/format/date'
+import { formatNumber } from '@/shared/utils/format/number'
 
 export type BusyTimesChartProps = {
   /** Views by hour, 0–23, in the restaurant's timezone. */
@@ -47,12 +48,14 @@ export function BusyTimesChart({ hours, weekdays, locale }: BusyTimesChartProps)
           data={hours.map((views, hour) => ({ name: formatHour(hour), views }))}
           peak={peakHour}
           tickInterval={5}
+          locale={locale}
         />
         <Bars
           label={t('busiest.byDay')}
           data={weekdays.map((views, day) => ({ name: days[day]!, views }))}
           peak={peakDay}
           tickInterval={0}
+          locale={locale}
         />
       </div>
     </div>
@@ -64,11 +67,13 @@ function Bars({
   data,
   peak,
   tickInterval,
+  locale,
 }: {
   label: string
   data: { name: string; views: number }[]
   peak: number
   tickInterval: number
+  locale: Locale
 }) {
   const { t } = useTranslation('analytics')
 
@@ -92,7 +97,7 @@ function Bars({
           <Tooltip
             cursor={{ fill: 'var(--hover-wash)' }}
             contentStyle={TOOLTIP_STYLE}
-            formatter={(value) => [Number(value).toLocaleString(), t('busiest.views')]}
+            formatter={(value) => [formatNumber(Number(value), locale), t('busiest.views')]}
           />
           <Bar dataKey="views" radius={[4, 4, 0, 0]}>
             {data.map((entry, index) => (

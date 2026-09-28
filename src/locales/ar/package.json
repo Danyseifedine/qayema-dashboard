@@ -1,18 +1,34 @@
 {
   "page": {
     "title": "الباقة",
-    "description": "ما تتّسع له قائمتك، وما تمنحك إياه باقة أكبر.",
-    "fallbackName": "مجانية"
+    "description": "ما تستطيع قائمتك فعله الآن، وما تضيفه كل باقة.",
+    "fallbackName": "مجانية",
+    "compareTitle": "قارن الباقات",
+    "compareDescription": "كل ما تتضمنه كل باقة، جنبًا إلى جنب."
   },
   "current": {
     "eyebrow": "باقتك",
-    "endsOn": "تتجدّد أو تنتهي في <date>{{date}}</date>",
     "contactOnly": "مُتّفق عليها معنا مباشرةً.",
     "dishes": "الأطباق",
     "categories": "الأقسام",
     "socialLinks": "روابط التواصل الاجتماعي",
-    "qrIncluded": "استوديو QR مشمول، فيمكنك تصميم رمزك بهويتك.",
-    "qrNotIncluded": "استوديو QR غير مشمول في هذه الباقة."
+    "forever": "بلا تاريخ انتهاء.",
+    "foreverDefault": "لك ما دمت تريد.",
+    "until": "حتى <date>{{date}}</date>",
+    "daysLeft_zero": "ينتهي اليوم",
+    "daysLeft_one": "بقي يوم واحد",
+    "daysLeft_two": "بقي يومان",
+    "daysLeft_few": "بقيت {{count}} أيام",
+    "daysLeft_many": "بقي {{count}} يومًا",
+    "daysLeft_other": "بقي {{count}} يوم",
+    "endsToday": "ينتهي اليوم",
+    "endingSoon": "تنتهي قريبًا. اطلب منا تمديدها حتى لا يتوقف شيء.",
+    "extend": "اطلب التمديد",
+    "lapsedTitle": "انتهت باقة {{name}} في {{date}}",
+    "lapsedBody": "أنت الآن على {{current}}. كل ما أنشأته محفوظ ويعود مع {{name}}.",
+    "renew": "اطلب التجديد",
+    "upcoming": "تبدأ {{name}} في <date>{{date}}</date>.",
+    "includedTitle": "في باقتك"
   },
   "card": {
     "letsTalk": "لنتحدّث",
@@ -41,12 +57,13 @@
       "socialLinks_other": "{{number}} رابط للتواصل الاجتماعي",
       "socialLinksUnlimited": "روابط تواصل اجتماعي بلا حدود"
     },
-    "qrStudio": "استوديو QR",
-    "basicQr": "رمز QR أساسي",
     "yours": "باقتك",
     "includedForEveryone": "متاحة للجميع",
     "talkToUs": "تواصل معنا",
-    "request": "اطلب هذه الباقة"
+    "request": "اطلب هذه الباقة",
+    "popular": "الأكثر اختيارًا",
+    "everythingIn": "كل ما في {{name}}، إضافةً إلى:",
+    "includes": "تتضمن:"
   },
   "request": {
     "title": "استفسار عن {{name}}",
@@ -62,5 +79,30 @@
     "sent": "تم إرسال الطلب",
     "sentDescription": "سنتواصل معك قريبًا لإعداد ذلك.",
     "failed": "تعذّر إرسال الطلب"
+  },
+  "rows": {
+    "dish_limit": "الأطباق",
+    "category_limit": "الأقسام",
+    "social_link_limit": "روابط التواصل الاجتماعي",
+    "multiple_languages": "لغة ثانية للقائمة",
+    "appearance": "ألوانك وخطوطك",
+    "premium_designs": "تصاميم مميّزة",
+    "qr_studio": "استوديو QR",
+    "ordering": "الطلبات عبر واتساب",
+    "analytics": "الإحصائيات",
+    "advanced_analytics": "تحليلات متقدمة"
+  },
+  "groups": {
+    "menu": "قائمتك",
+    "look": "المظهر",
+    "guests": "الضيوف",
+    "numbers": "الأرقام"
+  },
+  "compare": {
+    "feature": "الميزة",
+    "yours": "باقتك",
+    "unlimited": "بلا حدود",
+    "included": "مشمول",
+    "notIncluded": "غير مشمول"
   }
 }

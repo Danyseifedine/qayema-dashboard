@@ -67,8 +67,11 @@ export const dishFormSchema = z
     is_available: z.boolean(),
     image: imageFieldSchema,
   })
-  .superRefine((values, ctx) =>
-    requireEnglish(values.name, 'name', t('menu:dishSchema.nameRequired'), ctx),
+  .superRefine(
+    (values, ctx) => requireEnglish(values.name, 'name', t('menu:dishSchema.nameRequired'), ctx),
+    // Also when another field is wrong, so one submit shows every mistake
+    // instead of revealing the missing name only after the rest is fixed.
+    { when: () => true },
   )
 
 export type DishFormInput = z.input<typeof dishFormSchema>

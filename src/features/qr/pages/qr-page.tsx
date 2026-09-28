@@ -1,10 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { TFunction } from 'i18next'
-import { Copy, Download, ExternalLink, RotateCcw } from 'lucide-react'
+import { Copy, Download, ExternalLink, Palette, RotateCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { ErrorState, toast } from '@/shared/components/feedback'
+import { usePackageFor } from '@/features/package'
+import { ErrorState, LockedState, toast } from '@/shared/components/feedback'
+import type { Locale } from '@/shared/constants/locales'
 import { Form, FormActions, FormSection } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import { CardControls } from '@/features/qr/components/controls/card-controls'
@@ -45,11 +47,14 @@ const LOOK_FIELDS = [
  * code already on the tables keeps working whatever is saved here.
  */
 export type QrPageProps = {
+  locale: Locale
   /** Opens the Features page, where the owner switches the studio back on. */
   onOpenFeatures: () => void
+  /** Opens the Package page, for a package without the studio. */
+  onOpenPackage: () => void
 }
 
-export function QrPage({ onOpenFeatures }: QrPageProps) {
+export function QrPage(props: QrPageProps) {
   const { t } = useTranslation('qr')
   const qr = useQr()
 
@@ -68,13 +73,13 @@ export function QrPage({ onOpenFeatures }: QrPageProps) {
       ) : qr.isError ? (
         <ErrorState description={qr.error.message} onRetry={() => void qr.refetch()} />
       ) : (
-        <QrStudio qr={qr.data} onOpenFeatures={onOpenFeatures} />
+        <QrStudio qr={qr.data} {...props} />
       )}
     </div>
   )
 }
 
-function QrStudio({ qr, onOpenFeatures }: { qr: Qr; onOpenFeatures: () => void }) {
+function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & { qr: Qr }) {
   const { t } = useTranslation('qr')
   const save = useSaveQr()
   const [downloading, setDownloading] = useState<'png' | 'svg' | null>(null)
@@ -186,7 +191,7 @@ function QrStudio({ qr, onOpenFeatures }: { qr: Qr; onOpenFeatures: () => void }
             href={qr.card_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-[var(--gold-on)] underline-offset-4 hover:underline"
+            className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-accent underline-offset-4 hover:underline"
           >
             <ExternalLink aria-hidden className="size-4" />
             {t('page.openCard')}
@@ -242,9 +247,7 @@ function QrStudio({ qr, onOpenFeatures }: { qr: Qr; onOpenFeatures: () => void }
             </Button>
           </Alert>
         ) : (
-          <Alert variant="info" title={t('page.lockedTitle')}>
-            {t('page.lockedDescription')}
-          </Alert>
+          <StudioLocked locale={locale} onOpenPackage={onOpenPackage} />
         )}
       </div>
     </div>
@@ -267,4 +270,23 @@ function listParts(parts: WeakPart[], t: TFunction<'qr'>): string {
   const names = parts.map((part) => t(PART_KEYS[part]))
   if (names.length === 1) return names[0]!
   return `${names.slice(0, -1).join(t('contrast.separator'))}${t('contrast.lastSeparator')}${names.at(-1)}`
+}
+
+/** The studio on a package without it: the plain code works, this is what it would add. */
+function StudioLocked({ locale, onOpenPackage }: { locale: Locale; onOpenPackage: () => void }) {
+  const { t } = useTranslation('qr')
+  const unlockedBy = usePackageFor('qr_studio', locale)
+
+  return (
+    <LockedState
+      icon={Palette}
+      title={t('page.lockedTitle')}
+      description={t('page.lockedDescription')}
+      includes={(['colors', 'shapes', 'logo', 'card'] as const).map((line) =>
+        t(`page.lockedIncludes.${line}`),
+      )}
+      unlockedBy={unlockedBy ?? undefined}
+      action={{ label: t('page.seePackages'), onClick: onOpenPackage }}
+    />
+  )
 }

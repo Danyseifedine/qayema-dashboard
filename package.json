@@ -15,7 +15,12 @@
     "prepare": "husky",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:update-snapshots": "playwright test --project=visual --project=visual-phone --update-snapshots",
+    "check": "npm run lint && npm run typecheck && npm run format:check && npm run test:coverage && npm run build",
+    "check:all": "composer --working-dir=../qayema check && npm run check && npm run e2e"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -44,7 +49,8 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@tanstack/react-query-devtools": "^5.103.2",
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
