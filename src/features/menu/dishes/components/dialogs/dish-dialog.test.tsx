@@ -303,7 +303,9 @@ describe('DishDialog', () => {
     await user.upload(dialog.querySelector<HTMLInputElement>('input[type="file"]')!, jpeg())
 
     expect(await within(dialog).findByText('Server error')).toBeInTheDocument()
-    expect(within(dialog).queryByText('Cropped to 1200 x 900 and converted to WebP.')).toBeNull()
+    expect(
+      within(dialog).queryByText('We trim it to fit the dish card and make it quick to load.'),
+    ).toBeNull()
   })
 
   it('fills the form from the dish being edited', async () => {

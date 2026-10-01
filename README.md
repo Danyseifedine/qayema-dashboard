@@ -19,6 +19,14 @@ npm run dev               # http://127.0.0.1:5173
 The Laravel app (`../qayema`, `composer serve`) must be running, and its
 `CORS_ALLOWED_ORIGINS` / `SANCTUM_STATEFUL_DOMAINS` must list this origin.
 
+## Production build
+
+`npm run build` bakes the `VITE_` values into `dist/`, reading
+`.env.production` (git-ignored; `https://qayema.com`) over `.env`. The server
+only serves `dist/` and reads no `.env`, so a changed value means a rebuild.
+`public/.htaccess` is copied into `dist/` and sends every page to
+`index.html` on Apache.
+
 ## Commands
 
 | Command                                                       | What it does                                                          |

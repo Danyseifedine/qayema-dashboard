@@ -3,6 +3,7 @@ import type { AxiosRequestConfig } from 'axios'
 import type { ZodType } from 'zod'
 import { api } from '@/lib/api/client'
 import { toApiError } from '@/lib/api/errors'
+import { ApiError } from '@/shared/types/api'
 
 /**
  * Performs a request and parses the response against a schema.
@@ -31,7 +32,7 @@ export async function request<T>(schema: ZodType<T>, config: AxiosRequestConfig)
     }
 
     // The URL is in the log above; the owner only needs to know it failed.
-    throw toApiError(new Error(t('errors.unexpected')))
+    throw new ApiError({ message: t('errors.unexpected'), status: 0, code: 'unexpected_response' })
   }
 
   return result.data

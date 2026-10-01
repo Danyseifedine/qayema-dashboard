@@ -45,8 +45,8 @@ describe('request', () => {
     await expect(failure).rejects.toBeInstanceOf(ApiError)
     await expect(failure).rejects.toMatchObject({
       status: 0,
-      code: 'unknown_error',
-      message: 'The server sent an unexpected response.',
+      code: 'unexpected_response',
+      message: 'Something went wrong on our side. Please try again in a moment.',
     })
     expect(log).toHaveBeenCalledWith(
       '[api] response did not match its schema',
@@ -60,7 +60,7 @@ describe('request', () => {
     mock.onGet('/api/thing').reply(200, 'not json')
 
     await expect(request(schema, { method: 'GET', url: '/api/thing' })).rejects.toMatchObject({
-      message: 'The server sent an unexpected response.',
+      message: 'Something went wrong on our side. Please try again in a moment.',
     })
     expect(log).not.toHaveBeenCalled()
   })

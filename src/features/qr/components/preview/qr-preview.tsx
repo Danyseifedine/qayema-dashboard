@@ -16,28 +16,18 @@ export type QrPreviewProps = {
 export function QrPreview({ options }: QrPreviewProps) {
   const { t } = useTranslation('qr')
   const host = useRef<HTMLDivElement>(null)
-  const code = useRef<QRCodeStyling | null>(null)
 
-  useEffect(() => {
-    const drawn = { ...options, width: SIZE, height: SIZE, type: 'svg' as const }
-
-    if (code.current === null) {
-      code.current = new QRCodeStyling(drawn)
-      if (host.current) code.current.append(host.current)
-      return
-    }
-
-    code.current.update(drawn)
-  }, [options])
-
-  // Let a remount start clean rather than stack a second drawing.
+  // A fresh drawing for every change. The library's update() merges into the
+  // options it already has, so a gradient switched off or a logo removed (a
+  // key that is simply absent now) would stay on the code.
   useEffect(() => {
     const element = host.current
-    return () => {
-      element?.replaceChildren()
-      code.current = null
-    }
-  }, [])
+    if (!element) return
+
+    new QRCodeStyling({ ...options, width: SIZE, height: SIZE, type: 'svg' }).append(element)
+
+    return () => element.replaceChildren()
+  }, [options])
 
   return (
     <div

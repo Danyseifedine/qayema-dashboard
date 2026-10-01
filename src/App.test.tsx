@@ -147,7 +147,7 @@ describe('App', () => {
     signIn()
     renderWithProviders(<App />)
 
-    expect(screen.getByText('Checking your session…')).toBeInTheDocument()
+    expect(screen.getByText('Loading your dashboard…')).toBeInTheDocument()
     expect(await page('overview')).toBeInTheDocument()
   })
 

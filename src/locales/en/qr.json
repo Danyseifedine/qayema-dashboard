@@ -67,7 +67,7 @@
   },
   "logo": {
     "label": "Your logo in the middle",
-    "description": "Error correction rises so the code still scans with part of it covered.",
+    "description": "The code is made stronger so it still scans with your logo in the middle.",
     "noLogo": "Add a logo on the Restaurant page first.",
     "size": "Logo size",
     "sizeHint": "A larger logo covers more of the code. If it stops scanning, go smaller.",

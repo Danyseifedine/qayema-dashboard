@@ -67,3 +67,31 @@ describe.each(LANGUAGES)('the %s translation', (language) => {
     expect(values.filter((value) => typeof value !== 'string' || value.trim() === '')).toEqual([])
   })
 })
+
+/**
+ * Owners are restaurant people, not developers: "Checking your session…" or
+ * "The server sent an unexpected response" means nothing to them. Say what
+ * happened in their words ("Loading your dashboard…", "We could not connect").
+ */
+const JARGON: Record<string, RegExp> = {
+  en: /\b(session|server|redirect\w*|API|credentials?|token|cache|template|endpoint|backend|schema|payload)\b/i,
+  ar: /(الخادم|جلست|الواجهة البرمجية|بيانات الاعتماد|القالب|إعادة التوجيه)/,
+}
+
+function textsOf(messages: Record<string, unknown>, prefix = ''): [string, string][] {
+  return Object.entries(messages).flatMap(([key, value]) =>
+    value !== null && typeof value === 'object'
+      ? textsOf(value as Record<string, unknown>, `${prefix}${key}.`)
+      : [[`${prefix}${key}`, String(value)] as [string, string]],
+  )
+}
+
+describe.each(Object.keys(JARGON))('the %s text an owner reads', (language) => {
+  it.each(NAMESPACES)('in %s.json uses no technical words', (namespace) => {
+    const technical = textsOf(messagesFor(language)[namespace] ?? {}).filter(([, text]) =>
+      JARGON[language]!.test(text),
+    )
+
+    expect(technical).toEqual([])
+  })
+})

@@ -204,7 +204,9 @@ describe('FeaturesPage', () => {
   })
 
   it('moves the switch at once and keeps what the server saved', async () => {
-    mock.onGet('/api/user').reply(200, { data: makeSessionUser({ switched_off: [] }) })
+    // The session reloads after a save, so it answers with what was saved.
+    let saved: string[] = []
+    mock.onGet('/api/user').reply(() => [200, { data: makeSessionUser({ switched_off: saved }) }])
     const answer = held()
     mock.onPut('/api/features').reply(answer.reply)
     const user = userEvent.setup()
@@ -215,7 +217,8 @@ describe('FeaturesPage', () => {
     // Optimistic: off before the server has answered.
     expect(screen.getByRole('switch', { name: 'Analytics on' })).not.toBeChecked()
 
-    answer.release([200, { data: { off: ['analytics', 'qr'] } }])
+    saved = ['analytics', 'qr']
+    answer.release([200, { data: { off: saved } }])
     await waitFor(() =>
       expect(screen.getByRole('switch', { name: 'QR Studio on' })).not.toBeChecked(),
     )

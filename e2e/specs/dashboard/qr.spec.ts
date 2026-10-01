@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import type { Page } from '@playwright/test'
 import { API_URL, DASHBOARD_URL } from '../../support/urls'
 import { either, expect, test } from '../../support/fixtures'
-import { lockedCard } from '../../support/helpers'
+import { lockedCard, openSidebar } from '../../support/helpers'
 
 type QrOptions = {
   data: string
@@ -308,6 +308,57 @@ test.describe('QR code', () => {
     await expect(warning).toBeHidden()
   })
 
+  test('card text as long as the fields allow stays inside the card', async ({ page, owner }) => {
+    // One unbroken word per line, at each field's maximum length.
+    const { restaurant } = await owner({
+      package: 'premium',
+      qr_settings: { title: 'W'.repeat(60), subtitle: 'x'.repeat(80), cta: 'x'.repeat(60) },
+    })
+    await page.goto(`${restaurant.public_url}/qr`)
+
+    const card = page.locator('.card')
+    await expect(card.locator('.cta')).toHaveText('x'.repeat(60))
+    const bounds = await card.boundingBox()
+
+    for (const line of ['.title', '.subtitle', '.cta', '.url']) {
+      const box = await card.locator(line).boundingBox()
+      expect(box, line).not.toBeNull()
+      expect(box!.x, line).toBeGreaterThanOrEqual(bounds!.x)
+      expect(box!.x + box!.width, line).toBeLessThanOrEqual(bounds!.x + bounds!.width)
+      expect(
+        await card.locator(line).evaluate((element) => element.scrollWidth <= element.clientWidth),
+        line,
+      ).toBe(true)
+    }
+  })
+
+  test('switching the gradient or the logo off takes it off the preview', async ({
+    page,
+    owner,
+  }) => {
+    // The drawing library's update() merged, so both stayed on the code.
+    await owner({ package: 'premium', logo: true })
+    await page.goto('/qr')
+    const preview = page.getByRole('img', { name: "Your menu's QR code" })
+    const gradients = preview.locator('linearGradient, radialGradient')
+    const logos = preview.locator('image')
+
+    const gradient = page.getByRole('switch', { name: 'Gradient' })
+    await gradient.click()
+    await expect(gradients).not.toHaveCount(0)
+    await gradient.click()
+    await expect(gradient).toHaveAttribute('aria-checked', 'false')
+    await expect(gradients).toHaveCount(0)
+
+    const logo = page.getByRole('switch', { name: 'Your logo in the middle' })
+    await logo.click()
+    await expect(logos).toHaveCount(1)
+    await logo.click()
+    await expect(logo).toHaveAttribute('aria-checked', 'false')
+    await expect(logos).toHaveCount(0)
+    await expect(preview.locator('svg')).toHaveCount(1)
+  })
+
   test('the logo switch waits for a logo', async ({ page, owner }) => {
     await owner({ package: 'premium' })
     await page.goto('/qr')
@@ -351,6 +402,69 @@ test.describe('QR code', () => {
     await expect(page.locator('dl > div').filter({ hasText: 'All time' })).toContainText('4')
     await expect(lockedCard(page, /Make the code your own/)).toContainText('Premium')
     await expect(page.getByRole('button', { name: 'Save' })).toHaveCount(0)
+  })
+
+  test('QR Studio switched off and on shows on the QR page at once, with no reload', async ({
+    page,
+    owner,
+  }) => {
+    // Invalidated only, the QR page opened on its old copy until the refetch
+    // landed. Holding the refetch catches that copy on screen.
+    await owner({ package: 'premium' })
+    await page.goto('/qr')
+    // The studio's own sections; "Make the code your own" is the locked one.
+    const studio = page.getByRole('heading', { name: 'Colours', exact: true })
+    const off = page.getByText('QR Studio is switched off')
+    await expect(studio).toBeVisible()
+
+    const open = async (name: string) => {
+      const nav = await openSidebar(page)
+      await nav.getByRole('button', { name, exact: true }).click()
+    }
+    const holdTheQrPage = async () => {
+      let release = () => {}
+      const held = new Promise<void>((resolve) => (release = resolve))
+      await page.route('**/api/qr', async (route) => {
+        await held
+        await route.continue()
+      })
+      return async () => {
+        release()
+        // Waits for the held request to go through before dropping the hold.
+        await page.unrouteAll({ behavior: 'wait' })
+      }
+    }
+    const flipQrStudio = async (to: 'true' | 'false') => {
+      const saved = page.waitForResponse(
+        (response) =>
+          response.url().endsWith('/api/features') && response.request().method() === 'PUT',
+      )
+      await page.getByRole('switch', { name: 'QR Studio on' }).click()
+      expect((await saved).ok()).toBeTruthy()
+      await expect(page.getByRole('switch', { name: 'QR Studio on' })).toHaveAttribute(
+        'aria-checked',
+        to,
+      )
+    }
+
+    // Off: back on the QR page, the old studio never shows.
+    await open('Features')
+    await flipQrStudio('false')
+    let release = await holdTheQrPage()
+    await open('QR code')
+    await expect(studio).toHaveCount(0)
+    await release()
+    await expect(off).toBeVisible()
+    await expect(studio).toHaveCount(0)
+
+    // On again: the old "switched off" never shows.
+    await open('Features')
+    await flipQrStudio('true')
+    release = await holdTheQrPage()
+    await open('QR code')
+    await expect(off).toHaveCount(0)
+    await release()
+    await expect(studio).toBeVisible()
   })
 
   test('with QR Studio switched off the page points to Features', async ({ page, owner }) => {

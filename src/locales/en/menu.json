@@ -101,7 +101,7 @@
     "category": "Category",
     "categoryPlaceholder": "Choose a category",
     "photo": "Photo",
-    "photoHint": "Cropped to 1200 x 900 and converted to WebP.",
+    "photoHint": "We trim it to fit the dish card and make it quick to load.",
     "available": "Available",
     "availableDescription": "Turn this off to keep the dish on your menu but marked sold out.",
     "save": "Save dish",

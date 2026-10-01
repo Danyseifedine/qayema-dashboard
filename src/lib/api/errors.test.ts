@@ -27,9 +27,7 @@ describe('toApiError', () => {
     expect(error).toBeInstanceOf(ApiError)
     expect(error.status).toBe(0)
     expect(error.code).toBe('network_error')
-    expect(error.message).toBe(
-      'We could not reach the server. Check your connection and try again.',
-    )
+    expect(error.message).toBe('We could not connect. Check your internet and try again.')
   })
 
   it('keeps the Laravel envelope: message, code and body', () => {
@@ -93,12 +91,12 @@ describe('toApiError', () => {
     expect(html.body).toEqual({})
   })
 
-  it("keeps a thrown Error's message", () => {
-    const error = toApiError(new Error('The server sent an unexpected response.'))
+  it("never shows a stray error's own wording to the owner", () => {
+    const error = toApiError(new TypeError("Cannot read properties of undefined (reading 'id')"))
 
     expect(error.status).toBe(0)
     expect(error.code).toBe('unknown_error')
-    expect(error.message).toBe('The server sent an unexpected response.')
+    expect(error.message).toBe('Something went wrong. Please try again.')
   })
 
   it('uses the generic message for an empty Error or a non-Error throw', () => {

@@ -229,18 +229,24 @@ test.describe('portal', () => {
 
     await page.locator('nav.nav .lang').getByRole('link', { name: 'ع' }).click()
 
-    await expect(page).toHaveURL(`${API_URL}/`)
+    // Arabic has its own address, which is what lets Google index it.
+    await expect(page).toHaveURL(`${API_URL}/ar`)
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
     await expect(page.locator('html')).toHaveAttribute('lang', 'ar')
     await expect(navCta(page)).toHaveText('ابدأ مجاناً')
 
-    // The choice follows the visitor to the next page.
-    await page.goto(CONTACT_URL)
+    // Links on an Arabic page stay in Arabic.
+    await page.locator('footer').getByRole('link', { name: 'تواصل', exact: true }).click()
+    await expect(page).toHaveURL(`${API_URL}/ar/contact`)
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
     await expect(page.getByRole('button', { name: 'إرسال الرسالة' })).toBeVisible()
 
+    // Typing the bare address after choosing Arabic lands on the Arabic home.
     await page.goto(API_URL)
+    await expect(page).toHaveURL(`${API_URL}/ar`)
+
     await page.locator('nav.nav .lang').getByRole('link', { name: 'EN' }).click()
+    await expect(page).toHaveURL(`${API_URL}/`)
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr')
     await expect(navCta(page)).toHaveText('Get started free')
   })

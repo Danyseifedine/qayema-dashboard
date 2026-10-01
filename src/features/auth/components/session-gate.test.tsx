@@ -36,19 +36,53 @@ describe('SessionGate', () => {
     mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
     renderWithProviders(<SessionGate>{dashboard}</SessionGate>)
 
-    expect(screen.getByText('Checking your session…')).toBeInTheDocument()
+    expect(screen.getByText('Loading your dashboard…')).toBeInTheDocument()
     expect(await screen.findByText('Dashboard for Dany')).toBeInTheDocument()
     expect(dashboard).toHaveBeenCalledWith(expect.objectContaining({ email: 'owner@example.com' }))
   })
 
-  it('says it is leaving for sign-in on a 401, with nothing to retry', async () => {
+  it('leaves for sign-in on a 401 by itself, with a button should it not', async () => {
+    // It used to rely on the 401 interceptor, which fires once per page, so a
+    // spent redirect left this screen up for good.
     mock.onGet('/api/user').reply(401, { message: 'Unauthenticated.' })
+    const user = userEvent.setup()
     renderWithProviders(<SessionGate>{dashboard}</SessionGate>)
 
     expect(await screen.findByText('Taking you to sign in')).toBeInTheDocument()
     expect(screen.getByText('One moment…')).toBeInTheDocument()
+    expect(safeRedirect).toHaveBeenCalledWith('https://qayema.test/get-started')
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument()
     expect(dashboard).not.toHaveBeenCalled()
+
+    vi.mocked(safeRedirect).mockClear()
+    await user.click(screen.getByRole('button', { name: 'Go to sign in' }))
+    expect(safeRedirect).toHaveBeenCalledWith('https://qayema.test/get-started')
+  })
+
+  it('reloads a page the browser restores from its back-forward cache', async () => {
+    // Back after a logout brought the page back as it left: mid-redirect.
+    const reload = vi.fn()
+    const location = window.location
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...location, reload },
+    })
+    try {
+      mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
+      const { unmount } = renderWithProviders(<SessionGate>{dashboard}</SessionGate>)
+      await screen.findByText('Dashboard for Dany')
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: false }))
+      expect(reload).not.toHaveBeenCalled()
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))
+      expect(reload).toHaveBeenCalledTimes(1)
+
+      unmount()
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))
+      expect(reload).toHaveBeenCalledTimes(1)
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: location })
+    }
   })
 
   it('shows any other failure with a retry that asks again', async () => {
@@ -69,7 +103,9 @@ describe('SessionGate', () => {
     mock.onGet('/api/user').reply(200, { data: { id: 'nope' } })
     renderWithProviders(<SessionGate>{dashboard}</SessionGate>)
 
-    expect(await screen.findByText('The server sent an unexpected response.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Something went wrong on our side. Please try again in a moment.'),
+    ).toBeInTheDocument()
   })
 
   it('sends an owner who has not finished onboarding back to the wizard', async () => {

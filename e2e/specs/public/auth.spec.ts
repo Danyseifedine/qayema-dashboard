@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import { either, expect, test } from '../../support/fixtures'
 import { API_URL, DASHBOARD_URL, LOGIN_URL } from '../../support/urls'
 
-const FAILED = 'These credentials do not match our records.'
+const FAILED = 'The email or password is not correct.'
 
 /** The login form at LOGIN_URL, filled and sent the way a person would. */
 async function signInWithForm(page: Page, email: string, password: string) {
@@ -151,6 +151,32 @@ test.describe('session', () => {
     // The session is gone on the server, not just in this tab.
     await page.goto('/overview')
     await expect(page).toHaveURL(LOGIN_URL)
+  })
+
+  test('Back after logging out leads to sign in, not a stuck dashboard', async ({
+    page,
+    owner,
+  }) => {
+    await owner()
+    await page.goto('/overview')
+    await page.getByRole('button', { name: 'Account menu' }).click()
+    await page.getByRole('menuitem', { name: 'Log out' }).click()
+    await expect(page).toHaveURL(LOGIN_URL)
+
+    await page.goBack()
+
+    await expect(page).toHaveURL(LOGIN_URL)
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
+  })
+
+  test('Back after being sent to sign in leads to sign in again', async ({ page }) => {
+    await page.goto('/categories')
+    await expect(page).toHaveURL(LOGIN_URL)
+
+    await page.goBack()
+
+    await expect(page).toHaveURL(LOGIN_URL)
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
   })
 
   test('a session lost mid-use sends the owner back to sign in', async ({ page, owner }) => {

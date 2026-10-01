@@ -315,7 +315,7 @@ test.describe('navigation', () => {
 
     const [guest] = await Promise.all([page.waitForEvent('popup'), link.click()])
     await expect(guest).toHaveURL(restaurant.public_url)
-    await expect(guest).toHaveTitle('Public Link Diner')
+    await expect(guest).toHaveTitle('Public Link Diner: menu and prices')
     await guest.close()
     await expect(page.getByRole('menu')).toHaveCount(0)
   })

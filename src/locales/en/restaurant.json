@@ -67,7 +67,7 @@
     "logoLabel": "Logo",
     "logoHint": "Every menu shows a logo, so this can be replaced but not removed.",
     "coverLabel": "Cover image",
-    "coverHint": "Cropped to 1920 x 600 and converted to WebP."
+    "coverHint": "We trim it to a wide banner and make it quick to load."
   },
   "validation": {
     "timeFormat": "Use a time like 09:00.",

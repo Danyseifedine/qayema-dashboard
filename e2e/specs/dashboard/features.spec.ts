@@ -25,6 +25,50 @@ async function flip(page: Page, name: RegExp | string) {
 }
 
 test.describe('features', () => {
+  test('Multiple languages off takes the second language out of the category and dish forms', async ({
+    page,
+    owner,
+  }) => {
+    // Only the switch changed in the session before, so the forms kept an
+    // Arabic field until the page reloaded.
+    await owner({
+      package: 'premium',
+      second_locale: 'ar',
+      categories: [{ name: { en: 'Grills' } }],
+    })
+    await page.goto('/categories')
+
+    const open = async (name: string) => {
+      const nav = await openSidebar(page)
+      await nav.getByRole('button', { name, exact: true }).click()
+    }
+    const arabicIn = async (page_: 'Categories' | 'Dishes') => {
+      await open(page_)
+      const add = page_ === 'Categories' ? 'Add category' : 'Add dish'
+      await page.getByRole('button', { name: add }).first().click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog.getByRole('textbox').first()).toBeVisible()
+      const arabic = dialog.getByRole('tab', { name: 'AR' })
+      const count = await arabic.count()
+      await page.keyboard.press('Escape')
+      await expect(dialog).toHaveCount(0)
+      return count
+    }
+
+    expect(await arabicIn('Categories')).toBeGreaterThan(0)
+    expect(await arabicIn('Dishes')).toBeGreaterThan(0)
+
+    await open('Features')
+    await flip(page, 'Multiple languages on')
+    expect(await arabicIn('Categories')).toBe(0)
+    expect(await arabicIn('Dishes')).toBe(0)
+
+    await open('Features')
+    await flip(page, 'Multiple languages on')
+    expect(await arabicIn('Categories')).toBeGreaterThan(0)
+    expect(await arabicIn('Dishes')).toBeGreaterThan(0)
+  })
+
   test('switching Analytics off takes it out of the sidebar, and back on returns it @matrix', async ({
     page,
     owner,

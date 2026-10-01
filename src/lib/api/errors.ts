@@ -64,11 +64,7 @@ export function toApiError(error: unknown): ApiError {
     })
   }
 
-  // A thrown Error carries a message worth keeping, e.g. the schema-mismatch
-  // text built by `request()`; replacing it loses the only useful detail.
-  return new ApiError({
-    message: error instanceof Error && error.message !== '' ? error.message : t('errors.generic'),
-    status: 0,
-    code: 'unknown_error',
-  })
+  // Anything else is a slip in the page itself ("Cannot read properties of
+  // undefined"), which means nothing to an owner: they get the plain words.
+  return new ApiError({ message: t('errors.generic'), status: 0, code: 'unknown_error' })
 }

@@ -6,8 +6,8 @@
     "lockedTitle": "Choose a menu design first",
     "lockedBody": "Your menu, QR code and settings open up once you pick a design. Picking one is free, and you can switch whenever you like.",
     "browseDesigns": "Browse designs",
-    "notBuiltTitle": "Not built yet",
-    "notBuiltBody": "This section has its folder and its place in the navigation. The form library, the shell and the API client are done; the pages come next."
+    "notBuiltTitle": "This page is not available",
+    "notBuiltBody": "Choose a page from the menu on the side."
   },
   "nav": {
     "overview": "Overview",
@@ -141,16 +141,17 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
-    "network": "We could not reach the server. Check your connection and try again.",
+    "network": "We could not connect. Check your internet and try again.",
     "rateLimited": "Too many requests. Wait a moment and try again.",
     "rateLimitedIn_one": "Too many requests. Try again in {{count}} second.",
     "rateLimitedIn_other": "Too many requests. Try again in {{count}} seconds.",
-    "unexpected": "The server sent an unexpected response."
+    "unexpected": "Something went wrong on our side. Please try again in a moment."
   },
   "session": {
-    "checking": "Checking your session…",
+    "checking": "Loading your dashboard…",
     "redirectingTitle": "Taking you to sign in",
     "redirectingBody": "One moment…",
+    "signIn": "Go to sign in",
     "loadFailed": "We could not load your account",
     "retry": "Try again",
     "onboardingTitle": "Let's finish setting up",

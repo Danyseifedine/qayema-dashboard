@@ -57,7 +57,7 @@ test.describe('public menu', () => {
     const response = await page.goto(owner.restaurant.public_url)
     expect(response?.status()).toBe(200)
 
-    await expect(page).toHaveTitle('Beit Beirut')
+    await expect(page).toHaveTitle('Beit Beirut: menu and prices')
     await expect(page.getByRole('heading', { level: 1, name: 'Beit Beirut' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: 'Starters' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: 'Mains' })).toBeAttached()

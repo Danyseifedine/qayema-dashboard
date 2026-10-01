@@ -23,9 +23,10 @@ export function useSaveMenuLanguages() {
       queryClient.setQueryData<AuthUser>(sessionKeys.current(), (user) =>
         user?.restaurant ? { ...user, restaurant: { ...user.restaurant, ...saved } } : user,
       )
-      // Menu text follows the languages: every list that shows it reloads.
+      // Menu text follows the languages: every page that shows it drops its
+      // copy and loads again, so none opens on the old languages first.
       for (const key of [restaurantKeys.all, categoryKeys.all, dishKeys.all, appearanceKeys.all]) {
-        void queryClient.invalidateQueries({ queryKey: key })
+        void queryClient.resetQueries({ queryKey: key })
       }
       toast.success(t('features:languages.saved'))
     },

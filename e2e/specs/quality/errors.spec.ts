@@ -55,10 +55,9 @@ test.describe('errors', () => {
     await page.goto('/categories')
 
     const alert = page.getByRole('alert').filter({ hasText: 'That did not load' })
-    await expect(alert).toContainText(
-      'We could not reach the server. Check your connection and try again.',
-      { timeout: 20_000 },
-    )
+    await expect(alert).toContainText('We could not connect. Check your internet and try again.', {
+      timeout: 20_000,
+    })
 
     await page.unroute(CATEGORIES_API)
     await alert.getByRole('button', { name: 'Try again' }).click()
