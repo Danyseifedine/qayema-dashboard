@@ -628,9 +628,9 @@ test.describe('admin', () => {
 
     const menu = await page.context().newPage()
     await menu.goto(`${owner.restaurant.public_url}?lang=en`)
-    await expect(menu).toHaveTitle(`Cedar Hall ${word}`)
+    await expect(menu).toHaveTitle(`Cedar Hall ${word}: menu and prices`)
     await menu.goto(`${owner.restaurant.public_url}?lang=ar`)
-    await expect(menu).toHaveTitle('بيت الأرز')
+    await expect(menu).toHaveTitle('بيت الأرز: المنيو والأسعار')
     await menu.close()
   })
 

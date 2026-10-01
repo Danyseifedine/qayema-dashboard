@@ -128,6 +128,24 @@ test.describe('accessibility: what guests see', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     await expectAccessible()
   })
+
+  // The topic, pricing and guide pages, in English and in Arabic.
+  for (const path of [
+    '/qr-menu-lebanon',
+    '/digital-menu-for-cafes',
+    '/pricing',
+    '/guides',
+    '/guides/how-to-make-a-qr-menu',
+    '/ar/qr-menu-lebanon',
+    '/ar/pricing',
+    '/ar/guides/qr-menu-vs-paper-menu-cost',
+  ]) {
+    test(`the ${path} page`, async ({ page, expectAccessible }) => {
+      await page.goto(`${API_URL}${path}`)
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      await expectAccessible()
+    })
+  }
 })
 
 test.describe('accessibility: signing in and setting up', () => {

@@ -223,6 +223,26 @@ test.describe('portal', () => {
     )
   })
 
+  test('on the narrowest phone the navbar fits, logo and button included', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 })
+
+    for (const path of ['/', '/ar', '/guides/qr-menu-vs-paper-menu-cost']) {
+      await page.goto(`${API_URL}${path}`)
+      for (const part of [page.locator('nav.nav .brand'), navCta(page)]) {
+        const box = await part.boundingBox()
+        expect(box, path).not.toBeNull()
+        expect(box!.x, path).toBeGreaterThanOrEqual(0)
+        expect(box!.x + box!.width, path).toBeLessThanOrEqual(320)
+      }
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+        path,
+      ).toBe(true)
+    }
+    // The label is shorter on screen, but still the whole sentence to read out.
+    await expect(navCta(page)).toHaveAccessibleName('Get started free')
+  })
+
   test('switching the portal to Arabic turns it right to left, and back', async ({ page }) => {
     await page.goto(API_URL)
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr')
