@@ -14,6 +14,8 @@ const base = {
   is_available: true,
   image: null,
   delete_image: false,
+  variants: [],
+  addons: [],
 }
 
 describe('dishFormSchema', () => {

@@ -262,8 +262,9 @@ test.describe('packages: the Package page', () => {
 
     const cells = (name: string) =>
       table.getByRole('row', { name: new RegExp(`^${name}\\b`) }).getByRole('cell')
-    await expect(cells('Dishes')).toHaveText(['40', '150', '500', 'Unlimited'])
-    await expect(cells('Categories')).toHaveText(['8', '15', '30', 'Unlimited'])
+    // Premium's dishes and categories read unlimited (1,000 each is fair use).
+    await expect(cells('Dishes')).toHaveText(['40', '150', 'Unlimited', 'Unlimited'])
+    await expect(cells('Categories')).toHaveText(['8', '15', 'Unlimited', 'Unlimited'])
     await expect(cells('Social links')).toHaveText(['1', '2', '10', 'Unlimited'])
     await expect(cells('Orders on WhatsApp')).toHaveText([
       'Not included',

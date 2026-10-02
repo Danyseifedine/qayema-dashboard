@@ -18,6 +18,16 @@ const FULL: ScenarioInput = {
           name: { en: 'Kafta', ar: 'كفتة' },
           price: 12,
           ingredients: { en: 'Lamb, parsley, onion', ar: 'لحم، بقدونس، بصل' },
+          variants: [
+            {
+              name: { en: 'Serving', ar: 'التقديم' },
+              options: [
+                { name: { en: 'Sandwich', ar: 'سندويش' } },
+                { name: { en: 'Plate', ar: 'صحن' }, price: 4 },
+              ],
+            },
+          ],
+          addons: [{ name: { en: 'Extra garlic', ar: 'ثوم إضافي' }, price: 0.5 }],
         },
         { name: { en: 'Shish taouk', ar: 'شيش طاووق' }, price: 11 },
       ],
@@ -85,6 +95,14 @@ test.describe('accessibility: the dashboard', () => {
     })
   }
 
+  test('the dish form with variants and add-ons', async ({ page, owner, expectAccessible }) => {
+    await owner(FULL)
+    await openDashboardPage(page, 'dishes', 'Dishes')
+    await page.getByRole('button', { name: 'Edit Kafta' }).click()
+    await expect(page.getByRole('dialog').getByLabel('Variant name')).toHaveValue('Serving')
+    await expectAccessible()
+  })
+
   test('the request dialog on the Package page', async ({ page, owner, expectAccessible }) => {
     await owner({ package: 'free' })
     await openDashboardPage(page, 'package', 'Package')
@@ -105,6 +123,23 @@ test.describe('accessibility: what guests see', () => {
     const created = await scenario(FULL)
     await page.goto(`${created.restaurant.public_url}?lang=en`)
     await expect(page.getByText('Kafta')).toBeVisible()
+    await expectAccessible()
+  })
+
+  test('a dish’s sheet of variants and add-ons @matrix', async ({
+    page,
+    scenario,
+    expectAccessible,
+  }) => {
+    const created = await scenario(FULL)
+    await page.goto(`${created.restaurant.public_url}?lang=en`)
+    await page.getByRole('button', { name: 'Add Kafta' }).click()
+    const sheet = page.getByRole('dialog', { name: 'Kafta' })
+    await sheet.getByText('Plate').click()
+    await sheet.getByText('Extra garlic').click()
+    await page.evaluate(() =>
+      Promise.all(document.getAnimations().map((animation) => animation.finished)),
+    )
     await expectAccessible()
   })
 

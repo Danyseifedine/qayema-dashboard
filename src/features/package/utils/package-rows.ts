@@ -17,6 +17,8 @@ export const PACKAGE_ROWS: readonly PackageRow[] = [
   { kind: 'limit', key: 'category_limit', group: 'menu' },
   { kind: 'limit', key: 'social_link_limit', group: 'menu' },
   { kind: 'flag', key: 'multiple_languages', group: 'menu' },
+  { kind: 'flag', key: 'variants', group: 'menu' },
+  { kind: 'flag', key: 'addons', group: 'menu' },
   { kind: 'flag', key: 'appearance', group: 'look' },
   { kind: 'flag', key: 'premium_designs', group: 'look' },
   { kind: 'flag', key: 'qr_studio', group: 'guests' },

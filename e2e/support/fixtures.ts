@@ -26,10 +26,19 @@ export type ScenarioInput = {
   categories?: {
     name: MenuText
     description?: MenuText
-    dishes?: { name: MenuText; price?: number; ingredients?: MenuText; is_available?: boolean }[]
+    dishes?: {
+      name: MenuText
+      price?: number
+      ingredients?: MenuText
+      is_available?: boolean
+      variants?: { name: MenuText; options: { name: MenuText; price?: number }[] }[]
+      addons?: { name: MenuText; price?: number }[]
+    }[]
   }[]
   social_links?: { platform: string; url: string }[]
   orders?: number
+  /** The orders' line carries a size and an add-on. */
+  order_choices?: boolean
   visits?: number
   qr_scans?: number
   settings?: Record<string, string | boolean>

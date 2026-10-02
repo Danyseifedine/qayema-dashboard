@@ -23,6 +23,8 @@ const packageSchema = z.object({
     category_limit: z.number().int().nullable(),
     social_link_limit: z.number().int().nullable(),
     multiple_languages: z.boolean(),
+    variants: z.boolean(),
+    addons: z.boolean(),
     appearance: z.boolean(),
     premium_designs: z.boolean(),
     qr_studio: z.boolean(),

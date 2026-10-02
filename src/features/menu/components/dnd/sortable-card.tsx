@@ -1,3 +1,4 @@
+import type { UniqueIdentifier } from '@dnd-kit/core'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useMemo, type ReactNode } from 'react'
@@ -5,7 +6,7 @@ import { cn } from '@/shared/utils/dom/cn'
 import { DragHandle } from '@/features/menu/components/dnd/drag-handle'
 
 export type SortableCardProps = {
-  id: number
+  id: UniqueIdentifier
   /** True when the handle lands on a photo and needs its own background. */
   overlayHandle?: boolean
   /** Receives the handle to place wherever the card wants it. */

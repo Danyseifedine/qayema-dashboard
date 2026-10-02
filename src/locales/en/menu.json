@@ -87,7 +87,11 @@
     "edit": "Edit {{name}}",
     "editUnnamed": "Edit dish",
     "delete": "Delete {{name}}",
-    "deleteUnnamed": "Delete dish"
+    "deleteUnnamed": "Delete dish",
+    "variants_one": "{{count}} variant",
+    "variants_other": "{{count}} variants",
+    "addons_one": "{{count}} add-on",
+    "addons_other": "{{count}} add-ons"
   },
   "dishDialog": {
     "titleNew": "New dish",
@@ -107,6 +111,43 @@
     "save": "Save dish",
     "add": "Add dish"
   },
+  "choices": {
+    "title": "Variants and add-ons",
+    "description": "Choices guests make on this dish. Each price is added to the dish price.",
+    "copyFrom": "Copy from another dish",
+    "variants": "Variants",
+    "variantsHint": "Guests pick one option of each, like a size or a spice level. An option with no price is free.",
+    "addons": "Add-ons",
+    "addonsHint": "Extras guests may add, as many as they like. An add-on with no price is free.",
+    "variantNumber": "Variant {{number}}",
+    "variantName": "Variant name",
+    "variantPlaceholder": "e.g. Size",
+    "removeVariant": "Remove {{name}}",
+    "optionName": "{{variant}}, option {{number}}",
+    "optionPrice": "{{variant}}, option {{number}}, extra price",
+    "removeOption": "Remove option {{number}} of {{variant}}",
+    "optionPlaceholder": "e.g. Large",
+    "addOption": "Add option",
+    "addVariant": "Add variant",
+    "orStartFrom": "or start from",
+    "presets": {
+      "size": "Size",
+      "spice": "Spice level",
+      "quantity": "Quantity"
+    },
+    "addonName": "Add-on {{number}}",
+    "addonPrice": "Add-on {{number}}, price",
+    "removeAddon": "Remove add-on {{number}}",
+    "addonPlaceholder": "e.g. Extra cheese",
+    "addAddon": "Add add-on",
+    "free": "Free",
+    "guestsPay": "Guests pay <min />",
+    "guestsPayRange": "Guests pay <min /> to <max />",
+    "needTwo": "A variant needs at least 2 options.",
+    "variantNameRequired": "Give every variant a name in English.",
+    "optionNameRequired": "Give every option a name in English.",
+    "addonNameRequired": "Give every add-on a name in English."
+  },
   "dishToast": {
     "added": "Dish added",
     "saved": "Dish saved",
@@ -121,7 +162,8 @@
     "priceNegative": "A price cannot be negative.",
     "priceTooHigh": "That price is too high.",
     "categoryRequired": "Choose a category.",
-    "nameRequired": "A dish name is required in English."
+    "nameRequired": "A dish name is required in English.",
+    "priceForChoices": "Give the dish a price before adding variants or add-ons."
   },
   "fields": {
     "name": "name",

@@ -31,6 +31,19 @@ const RESTAURANT: ScenarioInput = {
           name: { en: 'Kafta', ar: 'كفتة' },
           price: 12,
           ingredients: { en: 'Lamb, parsley, onion', ar: 'لحم، بقدونس، بصل' },
+          variants: [
+            {
+              name: { en: 'Serving', ar: 'التقديم' },
+              options: [
+                { name: { en: 'Sandwich', ar: 'سندويش' }, price: 0 },
+                { name: { en: 'Plate', ar: 'صحن' }, price: 4 },
+              ],
+            },
+          ],
+          addons: [
+            { name: { en: 'Extra garlic', ar: 'ثوم إضافي' }, price: 0.5 },
+            { name: { en: 'Fries', ar: 'بطاطا' }, price: 2 },
+          ],
         },
         { name: { en: 'Shish taouk', ar: 'شيش طاووق' }, price: 11 },
       ],
@@ -102,6 +115,23 @@ test.describe('visual: the dashboard', () => {
     })
   }
 
+  test('the dish form with variants and add-ons @visual', async ({ page, owner }) => {
+    const restaurantSlug = slug()
+    await owner({ ...RESTAURANT, slug: restaurantSlug })
+    await page.goto('/dishes')
+    await page.getByRole('button', { name: 'Edit Kafta' }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByLabel('Variant name')).toHaveValue('Serving')
+    await settle(page)
+
+    // The variants block alone: the whole section is taller than a phone.
+    const variants = dialog
+      .getByRole('region', { name: 'Variants and add-ons' })
+      .locator('div', { has: page.getByRole('heading', { level: 4, name: 'Variants' }) })
+      .first()
+    await expect(variants).toHaveScreenshot('dish-form-choices.png')
+  })
+
   test('analytics, locked on Free @visual', async ({ page, owner }) => {
     const restaurantSlug = slug()
     await owner({ package: 'free', slug: restaurantSlug, name: { en: 'Cedar & Salt' } })
@@ -124,6 +154,23 @@ test.describe('visual: guests and signing in', () => {
     await settle(page)
 
     await expect(page).toHaveScreenshot('public-menu.png', { fullPage: true })
+  })
+
+  test('the dish sheet @visual', async ({ page, scenario }) => {
+    const created = await scenario({ ...RESTAURANT, slug: slug() })
+    await page.goto(created.restaurant.public_url)
+    await page.getByRole('button', { name: 'Add Kafta' }).click()
+    const sheet = page.getByRole('dialog', { name: 'Kafta' })
+    await sheet.getByText('Plate').click()
+    await sheet.getByText('Extra garlic').click()
+    // Still, so the shot is not taken mid-slide.
+    await expect(sheet).toHaveJSProperty('className', 'dish-sheet')
+    await page.evaluate(() =>
+      Promise.all(document.getAnimations().map((animation) => animation.finished)),
+    )
+    await settle(page)
+
+    await expect(page).toHaveScreenshot('dish-sheet.png')
   })
 
   test('the login page @visual', async ({ page }) => {

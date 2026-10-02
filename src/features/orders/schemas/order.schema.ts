@@ -13,6 +13,14 @@ const orderStatusSchema = z.enum(ORDER_STATUSES)
 const orderItemSchema = z.object({
   id: z.number().int(),
   name: z.string(),
+  /** The guest's variants and add-ons, as they were named then; null for none. */
+  options: z
+    .object({
+      variants: z.array(z.object({ name: z.string(), choice: z.string(), price: z.string() })),
+      addons: z.array(z.object({ name: z.string(), price: z.string() })),
+    })
+    .nullable()
+    .default(null),
   quantity: z.number().int(),
   line_total: z.string(),
 })

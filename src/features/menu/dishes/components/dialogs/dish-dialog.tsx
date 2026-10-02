@@ -20,8 +20,14 @@ import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
 import { useSaveDish } from '@/features/menu/dishes/hooks/use-dishes'
-import { useMenuLanguages } from '@/features/auth'
+import { useDishChoices, useMenuLanguages } from '@/features/auth'
 import { toMenuTextForm } from '@/shared/utils/string/menu-text'
+import { DishChoicesSection } from '@/features/menu/dishes/components/options/dish-choices-section'
+import {
+  toAddonsPayload,
+  toChoicesForm,
+  toVariantsPayload,
+} from '@/features/menu/dishes/schemas/dish-choices.schema'
 import {
   dishFormSchema,
   type Dish,
@@ -33,6 +39,8 @@ export type DishDialogProps = {
   open: boolean
   /** Null creates a new dish. */
   dish: Dish | null
+  /** The restaurant's dishes, to copy variants and add-ons from. */
+  dishes: Dish[]
   categories: Category[]
   /** Preselected category when adding from a filtered view. */
   defaultCategoryId: number | null
@@ -46,6 +54,7 @@ export type DishDialogProps = {
 export function DishDialog({
   open,
   dish,
+  dishes,
   categories,
   defaultCategoryId,
   currency,
@@ -57,6 +66,8 @@ export function DishDialog({
   const ref = useRef<HTMLDialogElement>(null)
   const save = useSaveDish(dish?.id ?? null)
   const languages = useMenuLanguages()
+  const show = useDishChoices()
+  const withChoices = show.variants || show.addons
 
   const form = useForm<DishFormInput, unknown, DishFormValues>({
     resolver: zodResolver(dishFormSchema),
@@ -67,6 +78,8 @@ export function DishDialog({
       category_id: defaultCategoryId ?? categories[0]?.id ?? null,
       is_available: true,
       image: null,
+      variants: [],
+      addons: [],
     },
   })
 
@@ -88,6 +101,9 @@ export function DishDialog({
   useEffect(() => {
     if (!open) return
     const current = dishRef.current
+    // A list that is switched off is left out of the form, and so out of
+    // the save: it stays on the dish as it was.
+    const choices = toChoicesForm(current, languages)
     clearFormError()
     form.reset({
       name: toMenuTextForm(current?.name, languages),
@@ -97,8 +113,10 @@ export function DishDialog({
         current?.category_id ?? defaultCategoryId ?? categoriesRef.current[0]?.id ?? null,
       is_available: current?.is_available ?? true,
       image: null,
+      variants: show.variants ? choices.variants : [],
+      addons: show.addons ? choices.addons : [],
     })
-  }, [open, dishId, defaultCategoryId, languages, form, clearFormError])
+  }, [open, dishId, defaultCategoryId, languages, show, form, clearFormError])
 
   // Opened before the categories arrived (a slow connection), the form had
   // none to preselect. Fill the empty choice once they are here, touching
@@ -132,6 +150,8 @@ export function DishDialog({
           // A key only for an image uploaded in this session; the flag only
           // when the saved one was removed.
           ...imageChanges(values.image, 'image_key', 'delete_image'),
+          ...(show.variants ? { variants: toVariantsPayload(values.variants) } : {}),
+          ...(show.addons ? { addons: toAddonsPayload(values.addons) } : {}),
         },
         { onSuccess: onClose, onError: (error) => applyApiError(error), onSettled: done },
       )
@@ -157,7 +177,9 @@ export function DishDialog({
         if (event.target === ref.current && !save.isPending) onClose()
       }}
       className={cn(
-        'm-auto max-h-[90dvh] w-[min(94vw,560px)] overflow-y-auto rounded-[16px] p-0',
+        'm-auto max-h-[90dvh] overflow-y-auto rounded-[16px] p-0',
+        // Variant and add-on rows want the room for a name and a price.
+        withChoices ? 'w-[min(94vw,640px)]' : 'w-[min(94vw,560px)]',
         'border-[0.5px] border-[var(--line)] bg-[var(--surface)] text-[var(--text)]',
         'shadow-pop',
       )}
@@ -238,6 +260,17 @@ export function DishDialog({
               }
             />
           </FieldGroup>
+
+          {withChoices ? (
+            <DishChoicesSection
+              form={form}
+              languages={languages}
+              currency={currency}
+              locale={locale}
+              show={show}
+              dishes={dishes.filter((other) => other.id !== dish?.id)}
+            />
+          ) : null}
 
           <ImageField
             control={form.control}

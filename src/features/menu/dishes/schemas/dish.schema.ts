@@ -2,6 +2,13 @@ import { z } from 'zod'
 import { imageFieldSchema } from '@/features/uploads'
 import { t } from '@/lib/i18n'
 import { menuTextField, menuTextSchema, requireEnglish } from '@/shared/utils/string/menu-text'
+import {
+  addonsField,
+  addonsSchema,
+  requireChoiceNames,
+  variantSchema,
+  variantsField,
+} from '@/features/menu/dishes/schemas/dish-choices.schema'
 
 /**
  * Mirrors ../qayema/app/Http/Resources/DishResource.php.
@@ -19,6 +26,9 @@ const dishSchema = z.object({
   // Null once its category has been deleted; the dish survives, orphaned.
   category_id: z.number().int().nullable(),
   image_url: z.url().nullable(),
+  /** Sent whether or not the owner has them switched on. */
+  variants: z.array(variantSchema),
+  addons: addonsSchema,
 })
 
 export const dishListSchema = z.object({
@@ -64,9 +74,23 @@ export const dishFormSchema = z
       ),
     is_available: z.boolean(),
     image: imageFieldSchema,
+    /** Empty while the switch for them is off; they are not sent then. */
+    variants: variantsField,
+    addons: addonsField,
   })
   .superRefine(
-    (values, ctx) => requireEnglish(values.name, 'name', t('menu:dishSchema.nameRequired'), ctx),
+    (values, ctx) => {
+      requireEnglish(values.name, 'name', t('menu:dishSchema.nameRequired'), ctx)
+      requireChoiceNames(values, ctx)
+      // A variant or add-on adds to the price, so the dish needs one.
+      if (values.price === null && (values.variants.length > 0 || values.addons.length > 0)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['price'],
+          message: t('menu:dishSchema.priceForChoices'),
+        })
+      }
+    },
     // Also when another field is wrong, so one submit shows every mistake
     // instead of revealing the missing name only after the rest is fixed.
     { when: () => true },

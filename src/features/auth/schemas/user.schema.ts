@@ -9,6 +9,8 @@ import { translatableTextSchema } from '@/shared/utils/string/menu-text'
  */
 const planSchema = z.object({
   multiple_languages: z.boolean(),
+  variants: z.boolean(),
+  addons: z.boolean(),
   appearance: z.boolean(),
   premium_designs: z.boolean(),
   qr_studio: z.boolean(),

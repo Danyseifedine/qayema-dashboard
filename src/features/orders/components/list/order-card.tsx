@@ -68,6 +68,14 @@ export const OrderCard = memo(function OrderCard({
             <span className="min-w-0">
               <span className="tabular-nums text-[var(--muted)]">{item.quantity}×</span>{' '}
               <span>{item.name}</span>
+              {item.options ? (
+                <span className="block text-[12.5px] text-[var(--muted)]">
+                  {[
+                    ...item.options.variants.map((variant) => `${variant.name}: ${variant.choice}`),
+                    ...item.options.addons.map((addon) => `+ ${addon.name}`),
+                  ].join(' · ')}
+                </span>
+              ) : null}
             </span>
             <Money
               amount={Number(item.line_total)}

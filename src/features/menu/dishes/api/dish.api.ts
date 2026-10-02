@@ -1,6 +1,10 @@
 import { z } from 'zod'
 import { request } from '@/lib/api'
 import type { MenuTextForm } from '@/shared/utils/string/menu-text'
+import type {
+  ChoicePayload,
+  VariantPayload,
+} from '@/features/menu/dishes/schemas/dish-choices.schema'
 import {
   dishCollectionSchema,
   dishListSchema,
@@ -19,6 +23,10 @@ export type DishPayload = {
   /** Temp-upload key from POST /api/uploads/temp. */
   image_key?: string
   delete_image?: boolean
+  /** The whole list, in order. Left out while its switch is off, so the
+   *  saved one stays as it is. */
+  variants?: VariantPayload[]
+  addons?: ChoicePayload[]
 }
 
 /**

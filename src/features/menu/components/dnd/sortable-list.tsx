@@ -6,6 +6,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type UniqueIdentifier,
 } from '@dnd-kit/core'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
 import {
@@ -17,11 +18,12 @@ import {
 } from '@dnd-kit/sortable'
 import type { ReactNode } from 'react'
 
-export type SortableListProps<T extends { id: number }> = {
+export type SortableListProps<T extends { id: UniqueIdentifier }> = {
+  /** Saved rows by their id, or form rows by their field-array key. */
   items: T[]
-  /** Called with the new order once a drag settles. */
-  onReorder: (ordered: T[]) => void
-  /** Grid for dish cards, list for category rows. */
+  /** Called with the new order once a drag settles, and where the item moved. */
+  onReorder: (ordered: T[], from: number, to: number) => void
+  /** Grid for dish cards, list for category rows and form rows. */
   layout: 'grid' | 'list'
   children: ReactNode
 }
@@ -33,7 +35,7 @@ export type SortableListProps<T extends { id: number }> = {
  * phone still reads as a tap. Reordering is reported once, on drop, rather
  * than on every frame.
  */
-export function SortableList<T extends { id: number }>({
+export function SortableList<T extends { id: UniqueIdentifier }>({
   items,
   onReorder,
   layout,
@@ -52,7 +54,7 @@ export function SortableList<T extends { id: number }>({
     const to = items.findIndex((item) => item.id === over.id)
     if (from === -1 || to === -1) return
 
-    onReorder(arrayMove(items, from, to))
+    onReorder(arrayMove(items, from, to), from, to)
   }
 
   return (

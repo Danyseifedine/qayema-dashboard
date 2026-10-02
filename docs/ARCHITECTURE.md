@@ -113,7 +113,7 @@ qayema-dashboard/
     │   ├── types/                   api.ts
     │   └── utils/                   dom/cn, color/contrast, format/{money,change,date,number}, string/{menu-text,translated}
     ├── features/                    One folder per row of the vocabulary table (§3)
-    └── test/                        setup.ts, render-with-providers.tsx,
+    └── test/                        setup.ts, render-with-providers.tsx, sortable.ts (keyboard drags in jsdom),
                                      factories/{session (FULL_PLAN, EMPTY_PLAN), packages, menu}
 ```
 
@@ -148,6 +148,8 @@ features/restaurant/
 - `menu` is the one composite feature: `categories/` and `dishes/` are
   sub-features with the same shape, and `menu/components/` holds what both
   share (drag-and-drop, the category filter). Its two pages sit in `menu/pages`.
+  `dishes/components/` has `dialogs/` (the dish form), `list/` (the card) and
+  `options/` (the dish form's variants and add-ons section).
 
 ---
 
@@ -258,7 +260,8 @@ Sanctum stateful auth. The SPA's responsibilities:
 
 Fixtures: `test/factories/` (`makeSessionUser`, `FULL_PLAN`, `EMPTY_PLAN`,
 `makePackage`, `PACKAGE_CATALOGUE`, menu factories),
-`test/render-with-providers.tsx`. Tests run in English (set in
+`test/render-with-providers.tsx`, `test/sortable.ts` (`stubSortableRects`,
+`moveDown`: a keyboard drag in jsdom). Tests run in English (set in
 `test/setup.ts`, which also stubs `ResizeObserver` for recharts).
 `npm run test:coverage` fails under the thresholds in `vitest.config.ts`.
 Everything a run writes (coverage, the Playwright report and traces) goes to

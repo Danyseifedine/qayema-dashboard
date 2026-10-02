@@ -24,6 +24,15 @@ async function flip(page: Page, name: RegExp | string) {
   expect((await saved).ok()).toBeTruthy()
 }
 
+const SWITCHES = [
+  'Orders on',
+  'Variants on',
+  'Add-ons on',
+  'QR Studio on',
+  'Analytics on',
+  'Multiple languages on',
+]
+
 test.describe('features', () => {
   test('Multiple languages off takes the second language out of the category and dish forms', async ({
     page,
@@ -105,7 +114,7 @@ test.describe('features', () => {
     await expect(analyticsRow).toBeVisible()
   })
 
-  test('each of the four switches goes off and on, and survives a reload', async ({
+  test('each of the six switches goes off and on, and survives a reload', async ({
     page,
     owner,
     expectAccessible,
@@ -114,7 +123,7 @@ test.describe('features', () => {
     await page.goto('/features')
     const nav = page.getByRole('navigation', { name: 'Dashboard' })
 
-    for (const name of ['Orders on', 'QR Studio on', 'Analytics on', 'Multiple languages on']) {
+    for (const name of SWITCHES) {
       await flip(page, name)
       await expect(page.getByRole('switch', { name })).toHaveAttribute('aria-checked', 'false')
     }
@@ -131,19 +140,21 @@ test.describe('features', () => {
       page.getByText('Your plain black QR code stays on the QR code page', { exact: false }),
     ).toBeVisible()
     await expect(page.getByText('Your menu shows English only.', { exact: false })).toBeVisible()
+    await expect(page.getByText('Your variants are kept.', { exact: false })).toBeVisible()
+    await expect(page.getByText('Your add-ons are kept.', { exact: false })).toBeVisible()
     await expect(page.getByRole('combobox', { name: 'Second language' })).toHaveCount(0)
     await expectAccessible()
 
     await page.reload()
-    for (const name of ['Orders on', 'QR Studio on', 'Analytics on', 'Multiple languages on']) {
+    for (const name of SWITCHES) {
       await expect(page.getByRole('switch', { name })).toHaveAttribute('aria-checked', 'false')
     }
 
-    for (const name of ['Orders on', 'QR Studio on', 'Analytics on', 'Multiple languages on']) {
+    for (const name of SWITCHES) {
       await flip(page, name)
     }
     await page.reload()
-    for (const name of ['Orders on', 'QR Studio on', 'Analytics on', 'Multiple languages on']) {
+    for (const name of SWITCHES) {
       await expect(page.getByRole('switch', { name })).toHaveAttribute('aria-checked', 'true')
     }
     await expect(nav.getByRole('button', { name: /^Orders/ })).toBeVisible()
@@ -236,17 +247,17 @@ test.describe('features', () => {
     await owner({ package: 'free' })
     await page.goto('/features')
 
-    await expect(page.getByRole('switch')).toHaveCount(4)
+    await expect(page.getByRole('switch')).toHaveCount(6)
     // Each names the first package that has it.
     await expect(
       page.getByRole('button', { name: 'Available on Premium. See packages' }),
     ).toHaveCount(2)
     await expect(page.getByRole('button', { name: 'Available on Pro. See packages' })).toHaveCount(
-      2,
+      4,
     )
     // Nothing on this page is in Free: every switch is off and locked, and
     // each one offers the packages that have it.
-    for (const name of ['Orders on', 'QR Studio on', 'Analytics on', 'Multiple languages on']) {
+    for (const name of SWITCHES) {
       await expect(page.getByRole('switch', { name })).toHaveAttribute('aria-checked', 'false')
       await expect(page.getByRole('switch', { name })).toBeDisabled()
     }

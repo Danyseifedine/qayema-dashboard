@@ -23,6 +23,12 @@
    (English or Arabic), tests, docs or messages. Write a comma, colon,
    semicolon, parentheses or a new sentence instead (in Arabic, the Arabic comma ، or a colon);
    never an en dash or `--` in its place. An empty-value placeholder is `-`.
+6. **Never run a full suite unless the user says to.** Not `npm run check`,
+   `npm run test`, `npm run test:coverage` or `npm run e2e`, and not
+   `composer check` in ../qayema. Check your work with targeted runs only:
+   the test files you touched (`npx vitest run <path>`), or one Playwright
+   spec on one project (`--project=desktop`). When you are done, say which
+   full suites have not been run and leave the decision to the user.
 
 ## Stack
 
@@ -48,9 +54,9 @@ No third-party error telemetry.
   carries the same names.
 - Three words never swapped: **plan** = what the restaurant may use
   (`restaurant.plan`, one boolean per backend `Feature` flag:
-  `multiple_languages`, `appearance`, `premium_designs`, `qr_studio`,
-  `ordering`, `analytics`, `advanced_analytics`; `requiresPlan` in
-  nav-items); **switched off** = what the owner turned off on the Features
+  `multiple_languages`, `variants`, `addons`, `appearance`, `premium_designs`,
+  `qr_studio`, `ordering`, `analytics`, `advanced_analytics`; `requiresPlan`
+  in nav-items); **switched off** = what the owner turned off on the Features
   page (`restaurant.switched_off`, `hideable` in nav-items); **grant** is a
   backend word (an admin giving one restaurant more than its package).
 - Feature-first: `src/features/<name>/{api,schemas,hooks,components/<area>,pages}`
@@ -130,7 +136,8 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   use `PACKAGE_CATALOGUE` / `makePackage()` (`test/factories/packages`)
   and `FULL_PLAN` / `EMPTY_PLAN` (`…/session`).
 - **Features page** (`features/restaurant/pages/features-page.tsx`): one switch
-  each for Orders, QR Studio, Analytics and Multiple languages, stored in
+  each for Orders, Variants, Add-ons, QR Studio, Analytics and Multiple
+  languages, stored in
   `restaurant.switched_off` (`PUT /api/features` with `{off}`, optimistic
   through the session cache; must match `Restaurant::OPTIONAL_FEATURES`). A nav
   item with `hideable: true` (analytics, orders) leaves the sidebar when off
@@ -157,7 +164,19 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   sample line from the API, saved on tap (optimistic). The Features page and
   the menu-languages save invalidate it.
 - An order is written once by the guest who placed it. The dashboard may change
-  its `status` and nothing else.
+  its `status` and nothing else. A line's `options` (the guest's variants and
+  add-ons, as named then) show under the dish on its card.
+- **Variants and add-ons** (`features/menu/dishes/components/options/`,
+  `schemas/dish-choices.schema.ts`): a section of the dish form, shown per
+  list while `useDishChoices()` (from `features/auth`: package flag and not
+  switched off) says it is on. Variants (Size: Small / Large) and add-ons
+  (Extra cheese), each row a name and what it adds to the price; one set of
+  `LocaleTabs` switches every name's language; rows drag into order
+  (`SortableList` takes field-array keys); ready-made Size / Spice level /
+  Quantity; "Copy from another dish" copies as new rows. Rows keep the saved
+  id as `savedId` (RHF field arrays own `id`) and send it back as `id`. A
+  list that is off is left out of the form and of the save, so the server
+  keeps it. Limits mirror `../qayema/config/menu.php`.
 - The QR preview mirrors the printable card: `features/qr/utils/qr-options.ts`
   is the twin of `QrStyle::options()` in `../qayema`, tested against the same
   cases. Change one, change both. `qr-code-styling` needs a real canvas, so
@@ -196,7 +215,8 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
 `npm run format:check` · `npm run e2e` · `npm run e2e:update-snapshots`
 
 A change is done when `typecheck`, `lint`, `format:check`, `test:coverage`,
-`build` and `e2e` are all green. E2E rules: each test builds its own owner
+`build` and `e2e` are all green; the full runs happen only when the user asks
+for them (rule 6). E2E rules: each test builds its own owner
 through the `owner()` fixture and never changes shared data; no retries, no
 fixed sleeps; tag the main flow of an area `@matrix` so it also runs on a
 phone, in Arabic RTL and in dark mode. Specs go in `e2e/specs/<surface>/`

@@ -38,7 +38,11 @@ test.describe('portal', () => {
     await expect(popular).toContainText('Premium')
     await expect(popular).toContainText('$29')
     await expect(popular).toContainText('Everything in Pro, plus:')
-    await expect(popular).toContainText('500 dishes')
+    // Unlimited on screen, with the fair-use number stated under the cards.
+    await expect(popular).toContainText('Unlimited dishes*')
+    await expect(pricing).toContainText(
+      '* Fair use on Premium: up to 1,000 dishes and 1,000 categories.',
+    )
     await expect(pricing.locator('.plan', { hasText: 'Pro' }).first()).toContainText('150 dishes')
     await expect(
       pricing.locator('.plan').last().getByRole('link', { name: 'Talk to us' }),

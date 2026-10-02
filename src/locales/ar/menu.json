@@ -91,7 +91,19 @@
     "edit": "تعديل {{name}}",
     "editUnnamed": "تعديل الطبق",
     "delete": "حذف {{name}}",
-    "deleteUnnamed": "حذف الطبق"
+    "deleteUnnamed": "حذف الطبق",
+    "variants_zero": "بدون خيارات",
+    "variants_one": "خيار واحد",
+    "variants_two": "خياران",
+    "variants_few": "{{count}} خيارات",
+    "variants_many": "{{count}} خيارًا",
+    "variants_other": "{{count}} خيار",
+    "addons_zero": "بدون إضافات",
+    "addons_one": "إضافة واحدة",
+    "addons_two": "إضافتان",
+    "addons_few": "{{count}} إضافات",
+    "addons_many": "{{count}} إضافة",
+    "addons_other": "{{count}} إضافة"
   },
   "dishDialog": {
     "titleNew": "طبق جديد",
@@ -111,6 +123,43 @@
     "save": "حفظ الطبق",
     "add": "إضافة الطبق"
   },
+  "choices": {
+    "title": "الخيارات والإضافات",
+    "description": "اختيارات يقوم بها الزبون على هذا الطبق. يُضاف كل سعر إلى سعر الطبق.",
+    "copyFrom": "انسخ من طبق آخر",
+    "variants": "الخيارات",
+    "variantsHint": "يختار الزبون اختيارًا واحدًا من كل خيار، مثل الحجم أو مستوى البهارات. الاختيار بدون سعر مجاني.",
+    "addons": "الإضافات",
+    "addonsHint": "إضافات يختارها الزبون، بقدر ما يشاء. الإضافة بدون سعر مجانية.",
+    "variantNumber": "الخيار {{number}}",
+    "variantName": "اسم الخيار",
+    "variantPlaceholder": "مثلًا: الحجم",
+    "removeVariant": "إزالة {{name}}",
+    "optionName": "{{variant}}، الاختيار {{number}}",
+    "optionPrice": "{{variant}}، الاختيار {{number}}، السعر الإضافي",
+    "removeOption": "إزالة الاختيار {{number}} من {{variant}}",
+    "optionPlaceholder": "مثلًا: كبير",
+    "addOption": "إضافة اختيار",
+    "addVariant": "إضافة خيار",
+    "orStartFrom": "أو ابدأ من",
+    "presets": {
+      "size": "الحجم",
+      "spice": "مستوى البهارات",
+      "quantity": "الكمية"
+    },
+    "addonName": "الإضافة {{number}}",
+    "addonPrice": "الإضافة {{number}}، السعر",
+    "removeAddon": "إزالة الإضافة {{number}}",
+    "addonPlaceholder": "مثلًا: جبنة إضافية",
+    "addAddon": "إضافة جديدة",
+    "free": "مجانًا",
+    "guestsPay": "يدفع الزبون <min />",
+    "guestsPayRange": "يدفع الزبون من <min /> إلى <max />",
+    "needTwo": "يحتاج كل خيار إلى اختيارين على الأقل.",
+    "variantNameRequired": "اكتب اسم كل خيار بالإنجليزية.",
+    "optionNameRequired": "اكتب اسم كل اختيار بالإنجليزية.",
+    "addonNameRequired": "اكتب اسم كل إضافة بالإنجليزية."
+  },
   "dishToast": {
     "added": "تمت إضافة الطبق",
     "saved": "تم حفظ الطبق",
@@ -125,7 +174,8 @@
     "priceNegative": "لا يمكن أن يكون السعر سالبًا.",
     "priceTooHigh": "هذا السعر مرتفع جدًا.",
     "categoryRequired": "اختر قسمًا.",
-    "nameRequired": "اسم الطبق مطلوب بالإنجليزية."
+    "nameRequired": "اسم الطبق مطلوب بالإنجليزية.",
+    "priceForChoices": "أضف سعرًا للطبق قبل إضافة الخيارات أو الإضافات."
   },
   "fields": {
     "name": "الاسم",

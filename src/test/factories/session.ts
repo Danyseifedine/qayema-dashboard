@@ -3,6 +3,8 @@ import type { AuthUser, Plan } from '@/features/auth'
 /** Every flag on: the tests of a page are about the page, not its lock. */
 export const FULL_PLAN: Plan = {
   multiple_languages: true,
+  variants: true,
+  addons: true,
   appearance: true,
   premium_designs: true,
   qr_studio: true,
@@ -14,6 +16,8 @@ export const FULL_PLAN: Plan = {
 /** Every flag off, as the Free package ships. */
 export const EMPTY_PLAN: Plan = {
   multiple_languages: false,
+  variants: false,
+  addons: false,
   appearance: false,
   premium_designs: false,
   qr_studio: false,

@@ -1,11 +1,13 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
-import userEvent, { type UserEvent } from '@testing-library/user-event'
+import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { makeCategory, makeDish, resetFactories } from '@/test/factories/menu'
 import { renderWithProviders } from '@/test/render-with-providers'
+import { makeSessionUser } from '@/test/factories/session'
+import { moveDown, stubSortableRects } from '@/test/sortable'
 import { DishesPage } from '@/features/menu/pages/dishes-page'
 
 let mock: MockAdapter
@@ -26,40 +28,6 @@ const dishes = [
     is_available: false,
   }),
 ]
-
-const HANDLE = '[aria-roledescription="sortable"]'
-
-/**
- * jsdom lays nothing out, so every rect is zero and dnd-kit's keyboard sensor
- * finds nothing "below" the picked-up card. Each sortable wrapper (the one
- * element holding exactly one handle inside a parent holding several) gets a
- * row of its own; everything else is one big box, so the parent-bound
- * modifier never clamps the move.
- */
-function stubSortableRects() {
-  return vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
-    this: Element,
-  ) {
-    const parent = this.parentElement
-    if (
-      this.querySelectorAll(HANDLE).length === 1 &&
-      parent !== null &&
-      parent.querySelectorAll(HANDLE).length > 1
-    ) {
-      const index = Array.from(parent.children).indexOf(this)
-      return DOMRect.fromRect({ x: 0, y: index * 100, width: 300, height: 80 })
-    }
-    return DOMRect.fromRect({ x: 0, y: 0, width: 1000, height: 5000 })
-  })
-}
-
-/** Picks a card up by its grip, moves it one place down, and drops it. */
-async function moveDown(user: UserEvent, handle: HTMLElement) {
-  handle.focus()
-  await user.keyboard(' ')
-  await user.keyboard('{ArrowDown}')
-  await user.keyboard(' ')
-}
 
 function deferred<T>() {
   let resolve!: (value: T) => void
@@ -106,6 +74,27 @@ describe('DishesPage', () => {
     expect(screen.getByText('$8.50')).toBeInTheDocument()
     expect(screen.getByText('$24.50')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('counts a dish’s variants and add-ons on its card', async () => {
+    const burger = makeDish({
+      id: 50,
+      name: { en: 'Burger', ar: null },
+      category_id: 1,
+      variants: [
+        { id: 1, name: { en: 'Size' }, options: [] },
+        { id: 2, name: { en: 'Spice level' }, options: [] },
+      ],
+      addons: [{ id: 3, name: { en: 'Cheese' }, price: '1.00' }],
+    })
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
+    mock.onGet('/api/categories').reply(200, { data: categories, meta: { used: 2, limit: 10 } })
+    mock
+      .onGet('/api/dishes')
+      .reply(200, { data: [burger], meta: { used: 1, limit: 40, currency: 'USD' } })
+    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+
+    expect(await screen.findByText('2 variants · 1 add-on')).toBeInTheDocument()
   })
 
   it('marks an unavailable dish as sold out', async () => {

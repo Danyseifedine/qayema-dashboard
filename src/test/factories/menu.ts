@@ -23,6 +23,8 @@ export function makeDish(overrides: Partial<Dish> = {}): Dish {
     is_available: true,
     category_id: 1,
     image_url: null,
+    variants: [],
+    addons: [],
     ...overrides,
   }
 }

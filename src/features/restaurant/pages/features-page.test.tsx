@@ -68,13 +68,20 @@ describe('FeaturesPage', () => {
     resetCsrfToken(api)
   })
 
-  it('has a switch for orders, the QR studio, analytics and multiple languages', () => {
+  it('has a switch for orders, variants, add-ons, the QR studio, analytics and languages', () => {
     renderWithProviders(page({ off: ['orders'] }))
 
     const switches = screen
       .getAllByRole('switch')
       .map((element) => element.getAttribute('aria-label'))
-    expect(switches).toEqual(['Orders on', 'QR Studio on', 'Analytics on', 'Multiple languages on'])
+    expect(switches).toEqual([
+      'Orders on',
+      'Variants on',
+      'Add-ons on',
+      'QR Studio on',
+      'Analytics on',
+      'Multiple languages on',
+    ])
     expect(screen.getByRole('switch', { name: 'Orders on' })).not.toBeChecked()
     expect(screen.getByRole('switch', { name: 'Analytics on' })).toBeChecked()
   })

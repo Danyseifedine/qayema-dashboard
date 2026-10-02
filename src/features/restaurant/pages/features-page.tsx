@@ -1,6 +1,8 @@
 import {
   ChartNoAxesColumn,
+  CirclePlus,
   Languages,
+  ListChecks,
   Lock,
   type LucideIcon,
   QrCode,
@@ -17,7 +19,7 @@ import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { cn } from '@/shared/utils/dom/cn'
 
-type FeatureKey = 'orders' | 'qr' | 'analytics' | 'languages'
+type FeatureKey = 'orders' | 'variants' | 'addons' | 'qr' | 'analytics' | 'languages'
 
 export type FeaturesPageProps = {
   /** Features the owner switched off. */
@@ -34,6 +36,8 @@ export type FeaturesPageProps = {
 
 const ROWS: { key: FeatureKey; icon: LucideIcon; plan: PackageFlag }[] = [
   { key: 'orders', icon: ReceiptText, plan: 'ordering' },
+  { key: 'variants', icon: ListChecks, plan: 'variants' },
+  { key: 'addons', icon: CirclePlus, plan: 'addons' },
   { key: 'qr', icon: QrCode, plan: 'qr_studio' },
   { key: 'analytics', icon: ChartNoAxesColumn, plan: 'analytics' },
   { key: 'languages', icon: Languages, plan: 'multiple_languages' },

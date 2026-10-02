@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
-import userEvent, { type UserEvent } from '@testing-library/user-event'
+import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
@@ -7,43 +7,10 @@ import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/c
 import { makeCategory, resetFactories } from '@/test/factories/menu'
 import { makeSessionUser } from '@/test/factories/session'
 import { renderWithProviders } from '@/test/render-with-providers'
+import { moveDown, stubSortableRects } from '@/test/sortable'
 import { CategoriesPage } from '@/features/menu/pages/categories-page'
 
 let mock: MockAdapter
-
-const HANDLE = '[aria-roledescription="sortable"]'
-
-/**
- * jsdom lays nothing out, so every rect is zero and dnd-kit's keyboard sensor
- * finds nothing "below" the picked-up card. Each sortable wrapper (the one
- * element holding exactly one handle inside a parent holding several) gets a
- * row of its own; everything else is one big box, so the parent-bound
- * modifier never clamps the move.
- */
-function stubSortableRects() {
-  return vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
-    this: Element,
-  ) {
-    const parent = this.parentElement
-    if (
-      this.querySelectorAll(HANDLE).length === 1 &&
-      parent !== null &&
-      parent.querySelectorAll(HANDLE).length > 1
-    ) {
-      const index = Array.from(parent.children).indexOf(this)
-      return DOMRect.fromRect({ x: 0, y: index * 100, width: 300, height: 80 })
-    }
-    return DOMRect.fromRect({ x: 0, y: 0, width: 1000, height: 5000 })
-  })
-}
-
-/** Picks a card up by its grip, moves it one place down, and drops it. */
-async function moveDown(user: UserEvent, handle: HTMLElement) {
-  handle.focus()
-  await user.keyboard(' ')
-  await user.keyboard('{ArrowDown}')
-  await user.keyboard(' ')
-}
 
 function deferred<T>() {
   let resolve!: (value: T) => void

@@ -13,6 +13,9 @@ export type DishCardProps = {
   currency: string
   locale: Locale
   handle: ReactNode
+  /** Count the dish's variants and add-ons on its face, when each is on. */
+  showVariants: boolean
+  showAddons: boolean
   /**
    * These take the dish back rather than closing over it, so the page can pass
    * one callback that never changes identity and the card can skip re-rendering
@@ -38,6 +41,8 @@ export const DishCard = memo(function DishCard({
   currency,
   locale,
   handle,
+  showVariants,
+  showAddons,
   onEdit,
   onDelete,
   onToggleAvailability,
@@ -46,6 +51,14 @@ export const DishCard = memo(function DishCard({
   const name = translated(dish.name, locale)
   const ingredients = translated(dish.ingredients, locale)
   const price = dish.price === null ? null : Number(dish.price)
+  const choices = [
+    showVariants && dish.variants.length > 0
+      ? t('dishCard.variants', { count: dish.variants.length })
+      : null,
+    showAddons && dish.addons.length > 0
+      ? t('dishCard.addons', { count: dish.addons.length })
+      : null,
+  ].filter((part) => part !== null)
 
   return (
     <article
@@ -107,6 +120,10 @@ export const DishCard = memo(function DishCard({
           <p className="line-clamp-2 text-[12.5px] leading-relaxed text-[var(--muted)]">
             {ingredients.text}
           </p>
+        ) : null}
+
+        {choices.length > 0 ? (
+          <p className="text-[12px] font-medium text-[var(--muted)]">{choices.join(' · ')}</p>
         ) : null}
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-2.5">

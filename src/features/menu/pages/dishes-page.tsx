@@ -21,6 +21,7 @@ import {
   ErrorState,
 } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
+import { useDishChoices } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
 
 export type DishesPageProps = {
@@ -43,6 +44,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
   const reorder = useReorderDishes()
   const availability = useDishAvailability()
   const remove = useDeleteDish()
+  const show = useDishChoices()
 
   const [filter, setFilter] = useState<number | null>(null)
   const [dialog, setDialog] = useState<{ open: boolean; dish: Dish | null }>({
@@ -186,6 +188,8 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
                         currency={currency}
                         locale={locale}
                         handle={handle}
+                        showVariants={show.variants}
+                        showAddons={show.addons}
                         onEdit={openEdit}
                         onDelete={confirmDelete}
                         onToggleAvailability={toggleAvailability}
@@ -202,6 +206,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
       <DishDialog
         open={dialog.open}
         dish={dialog.dish}
+        dishes={dishList}
         categories={categoryList}
         defaultCategoryId={filter === null || filter === UNCATEGORISED ? null : filter}
         currency={currency}

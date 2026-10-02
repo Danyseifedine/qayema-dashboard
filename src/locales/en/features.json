@@ -12,6 +12,16 @@
     "description": "Guests add dishes to a cart and send you the order on WhatsApp.",
     "offNote": "Guests can't order from your menu while this is off. Orders you already have stay saved."
   },
+  "variants": {
+    "label": "Variants",
+    "description": "Choices on a dish, like size or spice level. Guests pick one, and each can add to the price.",
+    "offNote": "Your menu shows dishes without their variants while this is off. Your variants are kept."
+  },
+  "addons": {
+    "label": "Add-ons",
+    "description": "Extras guests can add to a dish, like extra cheese, each with its own price.",
+    "offNote": "Your menu shows dishes without their add-ons while this is off. Your add-ons are kept."
+  },
   "qr": {
     "label": "QR Studio",
     "description": "Colours, shapes, your logo and a printable table card for your QR code.",

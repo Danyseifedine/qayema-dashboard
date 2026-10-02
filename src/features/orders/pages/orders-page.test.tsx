@@ -56,6 +56,28 @@ describe('OrdersPage', () => {
     expect(screen.getByText('$39.00')).toBeInTheDocument()
   })
 
+  it('shows what the guest chose under the dish', async () => {
+    stub([
+      order({
+        items: [
+          {
+            id: 1,
+            name: 'Burger',
+            options: {
+              variants: [{ name: 'Size', choice: 'Large', price: '3.00' }],
+              addons: [{ name: 'Extra cheese', price: '1.00' }],
+            },
+            quantity: 1,
+            line_total: '12.00',
+          },
+        ],
+      }),
+    ])
+    renderWithProviders(<OrdersPage />)
+
+    expect(await screen.findByText('Size: Large · + Extra cheese')).toBeInTheDocument()
+  })
+
   it('shows a guest note when there is one', async () => {
     stub([order({ note: 'No coriander please' })])
     renderWithProviders(<OrdersPage />)

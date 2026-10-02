@@ -65,7 +65,8 @@ describe('SortableList', () => {
 
     drop(1, 3)
 
-    expect(onReorder).toHaveBeenCalledWith([{ id: 2 }, { id: 3 }, { id: 1 }])
+    // The new order, and where the dragged card went from and to.
+    expect(onReorder).toHaveBeenCalledWith([{ id: 2 }, { id: 3 }, { id: 1 }], 0, 2)
   })
 
   it('reports nothing for a drop outside every card or back on itself', () => {

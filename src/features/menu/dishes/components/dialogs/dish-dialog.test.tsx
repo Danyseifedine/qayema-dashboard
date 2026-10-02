@@ -55,6 +55,7 @@ function Harness({
       <DishDialog
         open
         dish={dish}
+        dishes={[]}
         categories={[...categories]}
         defaultCategoryId={null}
         currency="USD"
@@ -141,6 +142,7 @@ describe('DishDialog', () => {
       <DishDialog
         open
         dish={null}
+        dishes={[]}
         categories={[]}
         defaultCategoryId={null}
         currency="USD"
@@ -155,6 +157,7 @@ describe('DishDialog', () => {
       <DishDialog
         open
         dish={null}
+        dishes={[]}
         categories={CATEGORIES}
         defaultCategoryId={null}
         currency="USD"
