@@ -133,7 +133,7 @@ test.describe('accessibility: what guests see', () => {
   }) => {
     const created = await scenario(FULL)
     await page.goto(`${created.restaurant.public_url}?lang=en`)
-    await page.getByRole('button', { name: 'Add Kafta' }).click()
+    await page.getByRole('button', { name: 'See options: Kafta' }).click()
     const sheet = page.getByRole('dialog', { name: 'Kafta' })
     await sheet.getByText('Plate').click()
     await sheet.getByText('Extra garlic').click()

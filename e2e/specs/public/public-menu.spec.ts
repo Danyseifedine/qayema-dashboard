@@ -251,6 +251,25 @@ test.describe('public menu', () => {
     await expect(pop).toBeHidden()
   })
 
+  test('the QR code is ready before the guest asks for it', async ({ page, scenario }) => {
+    const owner = await scenario({ categories: MENU })
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto(owner.restaurant.public_url)
+
+    // Drawn in the closed pop-up once the menu has loaded, with no tap.
+    const code = page.locator('#pop-qr [data-qr-canvas] svg')
+    await expect(code).toBeAttached()
+
+    // So the tap asks the server for nothing more.
+    let fetched = 0
+    page.on('request', (request) => {
+      if (/qr-options|qr-code-styling/.test(request.url())) fetched++
+    })
+    await page.locator('.topbar').getByRole('button', { name: 'Share menu' }).click()
+    await expect(code).toBeVisible()
+    expect(fetched).toBe(0)
+  })
+
   test('on a wide screen the header opens the same QR pop-up', async ({ page, scenario }) => {
     const owner = await scenario({ categories: MENU })
     await page.setViewportSize({ width: 1280, height: 800 })

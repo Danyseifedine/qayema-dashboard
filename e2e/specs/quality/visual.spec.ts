@@ -159,7 +159,7 @@ test.describe('visual: guests and signing in', () => {
   test('the dish sheet @visual', async ({ page, scenario }) => {
     const created = await scenario({ ...RESTAURANT, slug: slug() })
     await page.goto(created.restaurant.public_url)
-    await page.getByRole('button', { name: 'Add Kafta' }).click()
+    await page.getByRole('button', { name: 'See options: Kafta' }).click()
     const sheet = page.getByRole('dialog', { name: 'Kafta' })
     await sheet.getByText('Plate').click()
     await sheet.getByText('Extra garlic').click()

@@ -55,7 +55,7 @@ test.describe('dish variants and add-ons on the menu', () => {
     const burger = dish(page, 'Burger')
     await expect(burger.locator('.price')).toHaveText('$8.00')
 
-    await burger.getByRole('button', { name: 'Add Burger' }).click()
+    await burger.getByRole('button', { name: 'See options: Burger' }).click()
     const sheet = page.getByRole('dialog', { name: 'Burger' })
     await expect(sheet).toBeVisible()
     await expect(sheet).toContainText('Beef, pickles')
@@ -77,7 +77,7 @@ test.describe('dish variants and add-ons on the menu', () => {
     await expect(burger.locator('.add-count')).toHaveText('2')
 
     // The same burger again, as it comes: a line of its own.
-    await burger.getByRole('button', { name: 'Add Burger' }).click()
+    await burger.getByRole('button', { name: 'See options: Burger' }).click()
     await expect(add).toHaveText('Add$8.00')
     await add.click()
     await expect(burger.locator('.add-count')).toHaveText('3')
@@ -143,7 +143,7 @@ test.describe('dish variants and add-ons on the menu', () => {
     const owner = await scenario({ package: 'premium', second_locale: 'ar', categories: BURGERS })
     await page.goto(`${owner.restaurant.public_url}?lang=ar`)
 
-    await dish(page, 'برغر').getByRole('button', { name: 'إضافة برغر' }).click()
+    await dish(page, 'برغر').getByRole('button', { name: 'عرض الخيارات: برغر' }).click()
     const sheet = page.getByRole('dialog', { name: 'برغر' })
     await expect(sheet.getByRole('group', { name: /الحجم/ })).toContainText('اختر واحدًا')
     await expect(sheet.getByRole('radio', { name: 'كبير' })).toBeAttached()
@@ -213,7 +213,7 @@ test.describe('dish variants and add-ons on the menu', () => {
     await page.goto(restaurant.public_url)
     const burger = dish(page, 'Burger')
     await expect(burger.locator('.price')).toHaveText('$8.00')
-    await burger.getByRole('button', { name: 'Add Burger' }).click()
+    await burger.getByRole('button', { name: 'See options: Burger' }).click()
     const sheet = page.getByRole('dialog', { name: 'Burger' })
     await expect(sheet.getByRole('group', { name: /Add-ons/ })).toBeVisible()
     await expect(sheet.getByRole('group', { name: /Size/ })).toHaveCount(0)
@@ -235,7 +235,7 @@ test.describe('dish variants and add-ons on the menu', () => {
     await page.getByRole('switch', { name: 'Variants on' }).click()
     expect((await back).ok()).toBeTruthy()
     await page.goto(restaurant.public_url)
-    await dish(page, 'Burger').getByRole('button', { name: 'Add Burger' }).click()
+    await dish(page, 'Burger').getByRole('button', { name: 'See options: Burger' }).click()
     await expect(sheet.getByRole('group', { name: /Size/ })).toBeVisible()
   })
 })
