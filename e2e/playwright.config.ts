@@ -98,6 +98,8 @@ export default defineConfig<Options>({
       env: {
         VITE_API_URL: API_URL,
         VITE_LOGIN_URL: `${API_URL}/get-started`,
+        // No Pusher in the suite: the dashboard checks once a minute instead.
+        VITE_PUSHER_KEY: '',
       },
     },
   ],

@@ -34,7 +34,13 @@
   "sidebar": {
     "expand": "توسيع الشريط الجانبي",
     "collapse": "طيّ الشريط الجانبي",
-    "collapseShort": "طيّ"
+    "collapseShort": "طيّ",
+    "waiting_zero": "لا طلبات بانتظارك",
+    "waiting_one": "طلب واحد بانتظارك",
+    "waiting_two": "طلبان بانتظارك",
+    "waiting_few": "{{count}} طلبات بانتظارك",
+    "waiting_many": "{{count}} طلبًا بانتظارك",
+    "waiting_other": "{{count}} طلب بانتظارك"
   },
   "packagePill": {
     "label": "الباقة: {{name}}. افتح صفحة باقتك.",

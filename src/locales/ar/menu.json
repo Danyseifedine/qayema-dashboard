@@ -114,6 +114,8 @@
     "ingredientsHint": "نص حر يظهر تحت الطبق في قائمتك.",
     "price": "السعر",
     "priceHint": "اتركه فارغًا لإخفاء السعر.",
+    "priceHintFromVariant": "بدون سعر للطبق: كل اختيار من {{variant}} هو السعر الكامل.",
+    "priceHintWithVariant": "تُضاف أسعار الخيارات إلى هذا السعر. اتركه فارغًا لتسعير الطبق حسب {{variant}} فقط.",
     "category": "القسم",
     "categoryPlaceholder": "اختر قسمًا",
     "photo": "الصورة",
@@ -125,7 +127,7 @@
   },
   "choices": {
     "title": "الخيارات والإضافات",
-    "description": "اختيارات يقوم بها الزبون على هذا الطبق. يُضاف كل سعر إلى سعر الطبق.",
+    "description": "اختيارات يقوم بها الزبون على هذا الطبق.",
     "copyFrom": "انسخ من طبق آخر",
     "variants": "الخيارات",
     "variantsHint": "يختار الزبون اختيارًا واحدًا من كل خيار، مثل الحجم أو مستوى البهارات. الاختيار بدون سعر مجاني.",
@@ -137,6 +139,7 @@
     "removeVariant": "إزالة {{name}}",
     "optionName": "{{variant}}، الاختيار {{number}}",
     "optionPrice": "{{variant}}، الاختيار {{number}}، السعر الإضافي",
+    "optionFullPrice": "{{variant}}، الاختيار {{number}}، السعر",
     "removeOption": "إزالة الاختيار {{number}} من {{variant}}",
     "optionPlaceholder": "مثلًا: كبير",
     "addOption": "إضافة اختيار",
@@ -175,7 +178,8 @@
     "priceTooHigh": "هذا السعر مرتفع جدًا.",
     "categoryRequired": "اختر قسمًا.",
     "nameRequired": "اسم الطبق مطلوب بالإنجليزية.",
-    "priceForChoices": "أضف سعرًا للطبق قبل إضافة الخيارات أو الإضافات."
+    "priceForAddons": "أضف سعرًا للطبق قبل إضافة الإضافات.",
+    "optionPriceRequired": "أضف له سعرًا، أو أضف سعرًا للطبق."
   },
   "fields": {
     "name": "الاسم",

@@ -173,6 +173,77 @@ test.describe('visual: guests and signing in', () => {
     await expect(page).toHaveScreenshot('dish-sheet.png')
   })
 
+  test('the cart, ordering in the menu, and the note that it went @visual', async ({
+    page,
+    scenario,
+  }) => {
+    const created = await scenario({ ...RESTAURANT, slug: slug(), order_mode: 'menu' })
+    await page.goto(created.restaurant.public_url)
+    await page.getByRole('button', { name: 'Add Shish taouk' }).click()
+
+    // A column of its own on a wide screen, a sheet from the header on a phone.
+    const wide = (page.viewportSize()?.width ?? 0) >= 1024
+    const cart = wide ? page.locator('aside.col-aside') : page.locator('#cart-sheet')
+    if (!wide) await page.getByRole('button', { name: 'Your cart' }).click()
+    // Waits out what slides in; a pulse that never ends (the order bar's
+    // "waiting" dot) is frozen by the screenshot itself.
+    const still = () =>
+      page.evaluate(() =>
+        Promise.all(
+          document
+            .getAnimations()
+            .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
+            .map((animation) => animation.finished),
+        ),
+      )
+    // Empty, so every box shows its hint.
+    await still()
+    await settle(page)
+    await expect(page).toHaveScreenshot('menu-cart.png')
+
+    // The country code's list, searched.
+    await cart.getByRole('button', { name: /^Country code/ }).click()
+    await cart.getByRole('combobox', { name: 'Search a country or code' }).fill('a')
+    await still()
+    await expect(page).toHaveScreenshot('menu-cart-countries.png')
+    await cart.getByRole('combobox', { name: 'Search a country or code' }).press('Escape')
+
+    // The location shared and the street filled in, the rest typed.
+    await page.context().grantPermissions(['geolocation'])
+    await page.context().setGeolocation({ latitude: 33.8959, longitude: 35.4784 })
+    await cart.getByRole('button', { name: 'Use my current location' }).click()
+    await expect(cart.getByLabel('Address')).toHaveValue('Bliss Street, Ras Beirut, Beirut')
+    await cart.getByLabel('Your name').fill('Rami')
+    await cart.getByLabel('Phone number').fill('70 123 456')
+    await cart.getByLabel('Phone number').blur()
+    await still()
+    await expect(page).toHaveScreenshot('menu-cart-located.png')
+
+    await cart.getByRole('button', { name: /Place order/ }).click()
+    const toast = page.getByRole('status').filter({ hasText: 'Order sent' })
+    await expect(toast).toBeVisible()
+    await still()
+    // The order number is new every time.
+    await expect(page).toHaveScreenshot('order-sent.png', {
+      mask: [toast.locator('.menu-toast-text > span'), page.locator('.order-bar-text strong')],
+    })
+
+    // The sheet the guest follows it in, over the menu.
+    await toast.getByRole('link', { name: 'Track your order' }).click()
+    const sheet = page.getByRole('dialog', { name: 'Order tracking' })
+    await expect(sheet.locator('.track-status')).toContainText('Order sent')
+    await still()
+    await settle(page)
+    // The order number and the time it was sent change every run.
+    await expect(page).toHaveScreenshot('order-tracking.png', {
+      mask: [
+        sheet.locator('.track-ref'),
+        sheet.locator('.track-step-time'),
+        page.locator('.order-bar-text strong'),
+      ],
+    })
+  })
+
   test('the login page @visual', async ({ page }) => {
     await page.goto(LOGIN_URL)
     await expect(page.getByRole('button', { name: /Sign in/ })).toBeVisible()

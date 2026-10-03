@@ -49,20 +49,20 @@ of re-implementing it, always report status truthfully.
 One word per page, used everywhere. `plan`, `grant` and `switched off` are
 explained in §2 of the backend `CLAUDE.md`.
 
-| Sidebar (group)           | Feature folder · nav key · i18n namespace · query root | API                                             |
-| ------------------------- | ------------------------------------------------------ | ----------------------------------------------- |
-| Overview                  | `overview`                                             | `/api/user`, `/api/restaurant`, dishes          |
-| Analytics                 | `analytics`                                            | `/api/analytics[/advanced,/teaser]`             |
-| Categories, Dishes (MENU) | `menu` (sub-features `categories`, `dishes`)           | `/api/categories`, `/api/dishes`                |
-| Design (MENU)             | `design`                                               | `/api/templates` (a design is a `Template` row) |
-| Appearance (MENU)         | `appearance`                                           | `/api/appearance`                               |
-| Orders (GUESTS)           | `orders`                                               | `/api/orders`                                   |
-| QR code (GUESTS)          | `qr`                                                   | `/api/qr`                                       |
-| Social links (GUESTS)     | `social-links`                                         | `/api/social-links`                             |
-| Restaurant (SETTINGS)     | `restaurant`                                           | `/api/restaurant`                               |
-| Features (SETTINGS)       | `features` page inside `restaurant`                    | `/api/features`, `/api/menu-languages`          |
-| Package (SETTINGS)        | `package`                                              | `/api/packages`                                 |
-| Account (avatar menu)     | `account`                                              | `/api/account`, `/api/password`                 |
+| Sidebar (group)           | Feature folder · nav key · i18n namespace · query root | API                                               |
+| ------------------------- | ------------------------------------------------------ | ------------------------------------------------- |
+| Overview                  | `overview`                                             | `/api/user`, `/api/restaurant`, dishes            |
+| Analytics                 | `analytics`                                            | `/api/analytics[/advanced,/teaser]`               |
+| Categories, Dishes (MENU) | `menu` (sub-features `categories`, `dishes`)           | `/api/categories`, `/api/dishes`                  |
+| Design (MENU)             | `design`                                               | `/api/templates` (a design is a `Template` row)   |
+| Appearance (MENU)         | `appearance`                                           | `/api/appearance`                                 |
+| Orders (GUESTS)           | `orders`                                               | `/api/orders[/pulse]`                             |
+| QR code (GUESTS)          | `qr`                                                   | `/api/qr`                                         |
+| Social links (GUESTS)     | `social-links`                                         | `/api/social-links`                               |
+| Restaurant (SETTINGS)     | `restaurant`                                           | `/api/restaurant`                                 |
+| Features (SETTINGS)       | `features` page inside `restaurant`                    | `/api/features[/ordering]`, `/api/menu-languages` |
+| Package (SETTINGS)        | `package`                                              | `/api/packages`                                   |
+| Account (avatar menu)     | `account`                                              | `/api/account`, `/api/password`                   |
 
 Two features have no page: `auth` (the session, the gate, logout, the menu
 languages read from the session) and `uploads` (temp image upload and the
@@ -95,6 +95,7 @@ qayema-dashboard/
     │   ├── api/                     axios client, request(), interceptors/{csrf,auth-redirect,locale}
     │   ├── i18n/                    loader (discovers locales/*), resources.ts (typed keys), parity test
     │   ├── query/                   QueryClient, QUERY_ROOTS
+    │   ├── realtime/                echo.ts: Laravel Echo on Pusher, made on first use (null without a key)
     │   └── security/                input-guards.ts, safe-redirect.ts
     ├── app/
     │   ├── providers/               app-providers, query-provider, toast-provider

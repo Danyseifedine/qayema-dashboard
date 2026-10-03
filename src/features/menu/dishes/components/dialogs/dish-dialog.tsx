@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import {
   ComboboxField,
@@ -15,6 +15,7 @@ import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 import { ImageField, imageChanges } from '@/features/uploads'
 import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
+import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
@@ -84,6 +85,21 @@ export function DishDialog({
   })
 
   const { formError, applyApiError, clearFormError } = useApiFormErrors(form.setError)
+
+  // The price hint follows the variants: with one, an empty price means the
+  // first variant's options are the prices (a sandwich by size alone).
+  const [watchedPrice, watchedVariants] = useWatch({
+    control: form.control,
+    name: ['price', 'variants'],
+  })
+  const firstVariant =
+    watchedVariants[0]?.name[MAIN_LANGUAGE]?.trim() || t('choices.variantNumber', { number: 1 })
+  const priceHint =
+    !show.variants || watchedVariants.length === 0
+      ? t('dishDialog.priceHint')
+      : watchedPrice === null || watchedPrice === undefined
+        ? t('dishDialog.priceHintFromVariant', { variant: firstVariant })
+        : t('dishDialog.priceHintWithVariant', { variant: firstVariant })
 
   // Kept current every render so the reset below can read them without
   // taking them as dependencies.
@@ -242,7 +258,7 @@ export function DishDialog({
               name="price"
               currency={currency}
               label={t('dishDialog.price')}
-              hint={t('dishDialog.priceHint')}
+              hint={priceHint}
             />
             <ComboboxField
               control={form.control}

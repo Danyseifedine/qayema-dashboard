@@ -19,6 +19,8 @@ export type ChoiceRowProps = {
   handle: ReactNode
   nameLabel: string
   priceLabel: string
+  /** The price is the dish's whole price, not an extra (ChoicePriceInput). */
+  full?: boolean
   removeLabel: string
   placeholder?: string
   onRemove: () => void
@@ -34,6 +36,7 @@ export function ChoiceRow({
   handle,
   nameLabel,
   priceLabel,
+  full,
   removeLabel,
   placeholder,
   onRemove,
@@ -59,6 +62,7 @@ export function ChoiceRow({
           name={`${path}.price`}
           currency={currency}
           label={priceLabel}
+          full={full}
           className="col-start-1 row-start-2 sm:col-start-3 sm:row-start-1"
         />
         <Button

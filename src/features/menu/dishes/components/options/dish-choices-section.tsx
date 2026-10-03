@@ -95,12 +95,13 @@ export function DishChoicesSection({
     control,
     name: ['price', 'variants', 'addons'],
   })
+  // With no price of its own the dish is priced by its first variant.
+  const priced = price !== null && price !== undefined
   const range =
-    price === null ||
-    price === undefined ||
-    (variantValues.length === 0 && addonValues.length === 0)
+    (variantValues.length === 0 && addonValues.length === 0) ||
+    (!priced && variantValues.length === 0)
       ? null
-      : priceRange(price, variantValues, addonValues)
+      : priceRange(priced ? price : 0, variantValues, addonValues)
 
   const copyable = dishes.filter(hasChoices)
   const copy = (id: string | null) => {

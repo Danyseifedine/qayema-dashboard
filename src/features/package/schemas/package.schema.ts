@@ -29,6 +29,7 @@ const packageSchema = z.object({
     premium_designs: z.boolean(),
     qr_studio: z.boolean(),
     ordering: z.boolean(),
+    menu_ordering: z.boolean(),
     analytics: z.boolean(),
     advanced_analytics: z.boolean(),
   }),

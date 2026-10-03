@@ -7,6 +7,8 @@ import { usePreferencesStore } from '@/stores/preferences.store'
 
 export type SummaryTilesProps = {
   totals: StatsSummary['totals']
+  /** What the orders tile counts (StatsSummary['order_channel']). */
+  channel: StatsSummary['order_channel']
   /**
    * The period before, from advanced analytics. Left out, the tiles show no
    * change line at all; null ("All time") says there is nothing to compare.
@@ -15,7 +17,7 @@ export type SummaryTilesProps = {
 }
 
 /** The headline numbers for the range. */
-export function SummaryTiles({ totals, previous }: SummaryTilesProps) {
+export function SummaryTiles({ totals, channel, previous }: SummaryTilesProps) {
   const { t } = useTranslation('analytics')
   const locale = usePreferencesStore((state) => state.locale)
   const change = (key: 'views' | 'unique_visitors' | 'qr_scans' | 'orders', current: number) => {
@@ -43,9 +45,18 @@ export function SummaryTiles({ totals, previous }: SummaryTilesProps) {
         change={change('qr_scans', totals.qr_scans)}
       />
       {totals.orders !== null ? (
+        // A WhatsApp order is a guest who opened WhatsApp with it, which
+        // is all we can know; the tile says exactly that.
         <StatTile
-          label={t('summary.orders')}
+          label={t(channel === 'whatsapp' ? 'summary.sentToWhatsapp' : 'summary.orders')}
           value={formatNumber(totals.orders, locale)}
+          hint={
+            channel === 'whatsapp'
+              ? t('summary.whatsappHint')
+              : totals.orders_done !== null
+                ? t('summary.ordersDone', { count: totals.orders_done })
+                : undefined
+          }
           change={change('orders', totals.orders)}
         />
       ) : null}

@@ -55,7 +55,7 @@ No third-party error telemetry.
 - Three words never swapped: **plan** = what the restaurant may use
   (`restaurant.plan`, one boolean per backend `Feature` flag:
   `multiple_languages`, `variants`, `addons`, `appearance`, `premium_designs`,
-  `qr_studio`, `ordering`, `analytics`, `advanced_analytics`; `requiresPlan`
+  `qr_studio`, `ordering`, `menu_ordering`, `analytics`, `advanced_analytics`; `requiresPlan`
   in nav-items); **switched off** = what the owner turned off on the Features
   page (`restaurant.switched_off`, `hideable` in nav-items); **grant** is a
   backend word (an admin giving one restaurant more than its package).
@@ -146,6 +146,10 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   languages carries its own pickers (second language, opening language) saved
   with `PUT /api/menu-languages`; the Restaurant page's text fields just
   follow `useMenuLanguages()` (from `features/auth`, it reads the session).
+  Orders carries how guests send them (`OrderingChoice`): "On WhatsApp" or
+  "In your menu" (locked without `plan.menu_ordering`), and in the menu
+  delivery, pickup or both; `PUT /api/features/ordering`, optimistic into
+  `restaurant.ordering` (`useSaveOrdering`).
 - **Design page** (`features/design`): picking a design (backend `Template`
   rows, `/api/templates`). Switching invalidates Appearance and the QR
   studio, since both follow the design. A design with `is_premium` shows a
@@ -166,6 +170,34 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
 - An order is written once by the guest who placed it. The dashboard may change
   its `status` and nothing else. A line's `options` (the guest's variants and
   add-ons, as named then) show under the dish on its card.
+- **Orders come one way at a time** (`useOrderingMode()` from `features/auth`:
+  `whatsapp`, `menu`, or null without ordering). On WhatsApp the Orders page
+  says the orders are handled there (we never learn if one was sent) and
+  lists only orders placed in the menu before a switch. In the menu, each
+  card shows the guest's name, Delivery/Pickup, their phone (call and WhatsApp links),
+  the address and a map link. One button moves it on (`nextStep()` in the
+  card): **Accept** (`accepted`, which the guest sees on their tracking page),
+  then **On its way** (delivery) or **Ready** (pickup), both `ready`, then
+  **Done**. A guest may change an order (or add dishes to it) only until it
+  is accepted: the card then says "Changed by the guest at …" (amber while
+  it waits to be accepted), and the pulse's
+  `changed` chimes like a new order. Taking on a new order sends the card's
+  `guest_updates`; the server refuses (409) a version the owner has not
+  seen and any step back, and the hook refreshes the lists on a 409. Pusher
+  counts as heard only once the private channel is joined (`.subscribed`);
+  a refused sign-in (`.error`) brings the minute's check back, and a pushed
+  pulse is parsed with `orderPulseSchema` like any answer. The
+  New chip and the waiting count are only orders not yet accepted.
+  `useOrderPulse` (mounted in `App`, on only in menu mode) listens on Pusher
+  (`private-orders.{restaurant.id}`, event `orders.changed`, via
+  `lib/realtime/echo.ts`; `VITE_PUSHER_KEY` / `VITE_PUSHER_CLUSTER`, the
+  private channel signed at `POST /api/broadcasting/auth`) and asks
+  `/api/orders/pulse` only once a minute while Pusher cannot be heard, in a
+  background tab too:
+  a new order plays `public/new_order_alert.mp3`, toasts and refreshes the
+  list; the number waiting is the sidebar badge (`counts`) and the tab title
+  "(2) …". Analytics label the orders tile and the funnel's last step from
+  `order_channel` ("Sent to WhatsApp" vs "Orders").
 - **Variants and add-ons** (`features/menu/dishes/components/options/`,
   `schemas/dish-choices.schema.ts`): a section of the dish form, shown per
   list while `useDishChoices()` (from `features/auth`: package flag and not
@@ -207,6 +239,20 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `shared/utils/format/date.ts`, and every count goes through `formatNumber`
   (`format/number.ts`: the reader's language, Western digits). jsdom has no ResizeObserver, so the test
   setup stubs it and chart tests read the words around a chart, not its bars.
+
+## Speed
+
+- Every page but Orders is `lazy()` in `App.tsx` (`PAGES`), so the first
+  download is the shell; the rest load on idle (`usePrefetchPages`) and a
+  page still on its way shows `PageSkeleton`. Pusher's library loads only
+  in menu mode (`realtime()` imports it). Keep heavy libraries (recharts,
+  qr-code-styling, dnd-kit) inside their feature, never in `shared` or the
+  shell, or they come back into the first download.
+- A tab from before a release asks for files that are gone:
+  `app/new-release.ts` reloads it once (`vite:preloadError`).
+- `public/.htaccess` ships with the build: `index.html` is `no-cache`,
+  hashed files are kept a year, and a missing `assets/` file is a 404 (not
+  the page). Fonts load without blocking the first paint.
 
 ## Commands
 

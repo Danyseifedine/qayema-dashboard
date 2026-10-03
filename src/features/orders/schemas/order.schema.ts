@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 /** Mirrors ../qayema/app/Enums/OrderStatus.php. */
-export const ORDER_STATUSES = ['placed', 'done', 'cancelled'] as const
+export const ORDER_STATUSES = ['placed', 'accepted', 'ready', 'done', 'cancelled'] as const
 
 const orderStatusSchema = z.enum(ORDER_STATUSES)
 
@@ -33,7 +33,21 @@ const orderSchema = z.object({
   currency: z.string(),
   total: z.string(),
   note: z.string().nullable(),
+  /** How the guest gets it; null on an order sent to WhatsApp before. */
+  fulfilment: z.enum(['delivery', 'pickup']).nullable().default(null),
+  /** Who to ask for. */
+  name: z.string().nullable().default(null),
+  /** The guest's number, international ("+96170123456"). */
+  phone: z.string().nullable().default(null),
+  address: z.string().nullable().default(null),
+  /** Where the guest shared their location, on Google Maps. */
+  map_url: z.string().nullable().default(null),
   placed_at: z.string().nullable(),
+  /** When the owner accepted it; the guest following it sees that. */
+  accepted_at: z.string().nullable().default(null),
+  /** The guest changed it after placing it: when last, and how many times. */
+  guest_updated_at: z.string().nullable().default(null),
+  guest_updates: z.number().int().default(0),
   items: z.array(orderItemSchema).default([]),
 })
 
@@ -47,6 +61,19 @@ export const orderListSchema = z.object({
 
 export const orderResponseSchema = z.object({ data: orderSchema })
 
+/** GET /api/orders/pulse: what the dashboard polls for new orders. */
+export const orderPulseSchema = z.object({
+  data: z.object({
+    /** Orders still waiting. */
+    open: z.number().int(),
+    /** The newest order's id; null before the first one. */
+    latest: z.number().int().nullable(),
+    /** When a guest last changed an order (ISO); null when none has. */
+    changed: z.string().nullable().default(null),
+  }),
+})
+
 export type OrderStatus = z.infer<typeof orderStatusSchema>
 export type Order = z.infer<typeof orderSchema>
 export type OrderList = z.infer<typeof orderListSchema>
+export type OrderPulse = z.infer<typeof orderPulseSchema>['data']

@@ -25,7 +25,11 @@ export type SidebarProps = {
   plan: NavAccess['plan']
   /** Sections the owner switched off on the Features page; left out entirely. */
   off: readonly string[]
+  /** A count to wear beside a section, by nav key: orders waiting. */
+  counts?: Partial<Record<string, number>>
 }
+
+const NO_COUNTS: Partial<Record<string, number>> = {}
 
 /**
  * The dashboard's primary navigation. Collapses to an icon rail on desktop and
@@ -39,6 +43,7 @@ export function Sidebar({
   hasTemplate,
   plan,
   off,
+  counts = NO_COUNTS,
 }: SidebarProps) {
   const { t } = useTranslation()
   const lockOf = (item: NavItem) => navLock(item.key, { hasTemplate, plan })
@@ -91,6 +96,13 @@ export function Sidebar({
                     badge={
                       lock === 'plan' && item.requiresPlan ? (
                         <PlanBadge flag={item.requiresPlan} />
+                      ) : (counts[item.key] ?? 0) > 0 ? (
+                        <span
+                          aria-label={t('sidebar.waiting', { count: counts[item.key] })}
+                          className="rounded-full bg-accent-wash px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-accent"
+                        >
+                          {counts[item.key]}
+                        </span>
                       ) : undefined
                     }
                     onSelect={() => onSelect(item)}

@@ -56,7 +56,7 @@ function advanced(overrides: Record<string, unknown> = {}) {
     top_categories: [{ name: 'Mains', count: 14 }],
     searches: [{ term: 'falafel', count: 3 }],
     missed_searches: [{ term: 'sushi', count: 2 }],
-    funnel: { visitors: 80, carted: 20, ordered: 12 },
+    funnel: { visitors: 80, carted: 20, ordered: 12, channel: 'menu' },
     ...overrides,
   }
 }
@@ -98,6 +98,35 @@ describe('AnalyticsPage', () => {
       expect(tile('Menu views')).toHaveTextContent('7 today')
       expect(tile('QR scans')).toHaveTextContent('90')
       expect(tile('Orders')).toHaveTextContent('12')
+    })
+
+    it('counts orders placed in the menu, with how many were done', async () => {
+      stubSummary('30d', {
+        totals: {
+          views: 120,
+          unique_visitors: 80,
+          qr_scans: 90,
+          views_today: 7,
+          orders: 12,
+          orders_done: 9,
+        },
+        order_channel: 'menu',
+      })
+      renderWithProviders(<AnalyticsPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
+
+      await screen.findByText('Menu views')
+      expect(tile('Orders')).toHaveTextContent('12')
+      expect(tile('Orders')).toHaveTextContent('9 done')
+    })
+
+    it('calls WhatsApp orders only what they are: sent there', async () => {
+      stubSummary('30d', { order_channel: 'whatsapp' })
+      renderWithProviders(<AnalyticsPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
+
+      await screen.findByText('Menu views')
+      expect(tile('Sent to WhatsApp')).toHaveTextContent('12')
+      expect(tile('Sent to WhatsApp')).toHaveTextContent("We can't see if they were completed")
+      expect(screen.queryByText('Orders')).not.toBeInTheDocument()
     })
 
     it('splits visits into QR scans and links', async () => {

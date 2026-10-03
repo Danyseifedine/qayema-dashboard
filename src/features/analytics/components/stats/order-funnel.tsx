@@ -17,7 +17,11 @@ export function OrderFunnel({ funnel }: OrderFunnelProps) {
   const steps = [
     { id: 'visitors', label: t('funnel.visitors'), value: funnel.visitors },
     { id: 'carted', label: t('funnel.carted'), value: funnel.carted },
-    { id: 'ordered', label: t('funnel.ordered'), value: funnel.ordered },
+    {
+      id: 'ordered',
+      label: t(funnel.channel === 'whatsapp' ? 'funnel.sentToWhatsapp' : 'funnel.ordered'),
+      value: funnel.ordered,
+    },
   ]
 
   return (

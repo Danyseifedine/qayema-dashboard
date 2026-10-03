@@ -155,11 +155,51 @@ describe('dish variants and add-ons in the dish form', () => {
     await user.click(screen.getByRole('button', { name: 'Add dish' }))
 
     expect(
-      await screen.findByText('Give the dish a price before adding variants or add-ons.'),
+      await within(region).findByText('Give every variant a name in English.'),
     ).toBeInTheDocument()
-    expect(within(region).getByText('Give every variant a name in English.')).toBeInTheDocument()
     expect(within(region).getByText('Give every add-on a name in English.')).toBeInTheDocument()
     expect(mock.history.post).toHaveLength(0)
+  })
+
+  it('prices a dish by its sizes when it has no price of its own, and says so', async () => {
+    const user = userEvent.setup()
+    open()
+    const region = await section()
+
+    await user.type(screen.getByLabelText(/^Name/), 'Sandwich')
+    await user.click(within(region).getByRole('button', { name: 'Size' }))
+
+    // No dish price: Size's options are the prices, not extras.
+    expect(screen.getByText('No dish price: each Size sets the full price.')).toBeInTheDocument()
+    const small = within(region).getByLabelText('Size, option 1, price')
+    expect(within(small.parentElement!).queryByText('+ USD')).not.toBeInTheDocument()
+    expect(within(small.parentElement!).getByText('USD')).toBeInTheDocument()
+    // An empty full price is asked for, never taken as free.
+    await user.click(screen.getByRole('button', { name: 'Add dish' }))
+    expect(
+      await within(region).findAllByText('Give it a price, or give the dish one.'),
+    ).toHaveLength(3)
+    expect(mock.history.post).toHaveLength(0)
+
+    await user.type(small, '7')
+    await user.type(within(region).getByLabelText('Size, option 2, price'), '9')
+    await user.type(within(region).getByLabelText('Size, option 3, price'), '12')
+    expect(region).toHaveTextContent('Guests pay $7.00 to $12.00')
+
+    // With a dish price, the same boxes are extras on top of it.
+    await user.type(screen.getByLabelText('Price'), '5')
+    expect(
+      screen.getByText('Variant prices are added to this. Leave it empty to price by Size alone.'),
+    ).toBeInTheDocument()
+    expect(within(region).getByLabelText('Size, option 1, extra price')).toBeInTheDocument()
+    await user.clear(screen.getByLabelText('Price'))
+
+    await user.click(screen.getByRole('button', { name: 'Add dish' }))
+    await waitFor(() => expect(mock.history.post).toHaveLength(1))
+    expect(sent()).toMatchObject({
+      price: null,
+      variants: [{ options: [{ price: 7 }, { price: 9 }, { price: 12 }] }],
+    })
   })
 
   it('asks for two options per variant', async () => {

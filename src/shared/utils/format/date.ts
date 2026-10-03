@@ -25,6 +25,13 @@ export function formatDateTime(iso: string, locale: Locale): string {
   }).format(new Date(iso))
 }
 
+/** An ISO timestamp as the time of day in the reader's language: "13:05". */
+export function formatTime(iso: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(
+    new Date(iso),
+  )
+}
+
 export function formatDay(date: string, locale: Locale): string {
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(parseDay(date))
 }

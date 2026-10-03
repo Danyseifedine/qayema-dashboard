@@ -21,6 +21,8 @@ export type AuthenticatedLayoutProps = {
   plan: NavAccess['plan']
   /** Sections the owner switched off. */
   switchedOff: readonly string[]
+  /** A count to wear beside a section, by nav key: orders waiting. */
+  counts?: Partial<Record<string, number>>
   locale: Locale
   onLocaleChange: (locale: Locale) => void
   onLogout: () => void
@@ -41,6 +43,7 @@ export function AuthenticatedLayout({
   hasTemplate,
   plan,
   switchedOff,
+  counts,
   locale,
   onLocaleChange,
   onLogout,
@@ -91,6 +94,7 @@ export function AuthenticatedLayout({
       hasTemplate={hasTemplate}
       plan={plan}
       off={switchedOff}
+      counts={counts}
     />
   )
 

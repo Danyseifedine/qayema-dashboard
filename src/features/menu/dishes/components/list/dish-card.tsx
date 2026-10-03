@@ -50,7 +50,21 @@ export const DishCard = memo(function DishCard({
   const { t } = useTranslation('menu')
   const name = translated(dish.name, locale)
   const ingredients = translated(dish.ingredients, locale)
-  const price = dish.price === null ? null : Number(dish.price)
+  // A dish with no price of its own is priced by its variants: the card
+  // shows the least a guest pays, as the menu does.
+  const pricedByVariants = dish.price === null && showVariants && dish.variants.length > 0
+  const price = pricedByVariants
+    ? dish.variants.reduce(
+        (sum, variant) =>
+          sum +
+          (variant.options.length > 0
+            ? Math.min(...variant.options.map((o) => Number(o.price)))
+            : 0),
+        0,
+      )
+    : dish.price === null
+      ? null
+      : Number(dish.price)
   const choices = [
     showVariants && dish.variants.length > 0
       ? t('dishCard.variants', { count: dish.variants.length })

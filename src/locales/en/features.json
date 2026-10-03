@@ -9,8 +9,20 @@
   "packageChip": "{{note}}. See packages",
   "orders": {
     "label": "Orders",
-    "description": "Guests add dishes to a cart and send you the order on WhatsApp.",
-    "offNote": "Guests can't order from your menu while this is off. Orders you already have stay saved."
+    "description": "Guests add dishes to a cart and send you the order.",
+    "offNote": "Guests can't order from your menu while this is off. Orders you already have stay saved.",
+    "modeLabel": "Guests send their order",
+    "whatsapp": "WhatsApp",
+    "menu": "In your menu",
+    "whatsappHint": "The order opens in WhatsApp for the guest to send you. It won't show on your Orders page, and we can't tell if it was sent or completed.",
+    "menuHint": "Guests order in the menu with their phone number and address. Orders arrive on your Orders page with a sound, so keep the dashboard open in a tab.",
+    "typesLabel": "You take",
+    "typesHint": "Guests pick one when you take both.",
+    "types": {
+      "both": "Both",
+      "delivery": "Delivery",
+      "pickup": "Pickup"
+    }
   },
   "variants": {
     "label": "Variants",

@@ -58,18 +58,22 @@ export type ChoicePriceInputProps = {
   name: string
   currency: string
   label: string
+  /** A full price (an option of a dish with no price of its own), not an extra. */
+  full?: boolean
   className?: string
 }
 
 /**
  * What a choice adds to the dish's price. Empty means free, and says so; the
- * "+ USD" only appears once there is a price to add.
+ * "+ USD" only appears once there is a price to add. A full price reads
+ * "USD", never "+": it is the price, not something on top.
  */
 export function ChoicePriceInput({
   control,
   name,
   currency,
   label,
+  full = false,
   className,
 }: ChoicePriceInputProps) {
   const { t } = useTranslation('menu')
@@ -95,8 +99,8 @@ export function ChoicePriceInput({
       min={0}
       step="0.01"
       dir="ltr"
-      placeholder={t('choices.free')}
-      prefix={empty ? undefined : `+ ${currency}`}
+      placeholder={full ? '0.00' : t('choices.free')}
+      prefix={full ? currency : empty ? undefined : `+ ${currency}`}
       className="text-start tabular-nums"
       shellClassName={cn('w-full', className)}
     />

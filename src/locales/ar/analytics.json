@@ -16,7 +16,15 @@
     "viewsToday": "{{views}} اليوم",
     "visitors": "الزوار",
     "qrScans": "مسح رمز QR",
-    "orders": "الطلبات"
+    "orders": "الطلبات",
+    "sentToWhatsapp": "أُرسلت إلى واتساب",
+    "whatsappHint": "لا يمكننا معرفة إن اكتملت",
+    "ordersDone_zero": "لا شيء منجز",
+    "ordersDone_one": "طلب واحد منجز",
+    "ordersDone_two": "طلبان منجزان",
+    "ordersDone_few": "{{count}} طلبات منجزة",
+    "ordersDone_many": "{{count}} طلبًا منجزًا",
+    "ordersDone_other": "{{count}} طلب منجز"
   },
   "visits": {
     "title": "الزيارات",
@@ -64,7 +72,8 @@
     "title": "من الزيارة إلى الطلب",
     "visitors": "فتحوا القائمة",
     "carted": "أضافوا شيئًا إلى السلة",
-    "ordered": "أرسلوا طلبًا"
+    "ordered": "أرسلوا طلبًا",
+    "sentToWhatsapp": "أرسلوا طلبهم إلى واتساب"
   },
   "topAdded": {
     "title": "الأكثر إضافة إلى السلة",

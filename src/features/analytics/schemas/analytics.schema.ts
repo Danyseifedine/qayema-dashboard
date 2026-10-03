@@ -22,7 +22,14 @@ const statsSummarySchema = z.object({
     views_today: count,
     /** Null when the package does not take orders. */
     orders: count.nullable(),
+    /** Orders marked done; only orders placed in the menu can be. */
+    orders_done: count.nullable().default(null),
   }),
+  /**
+   * What `orders` counts: guests sent to WhatsApp (never known to be
+   * completed), or orders placed in the menu. Null without ordering.
+   */
+  order_channel: z.enum(['whatsapp', 'menu']).nullable().default(null),
   series: z.array(z.object({ date: z.string(), views: count, qr_scans: count })),
 })
 
@@ -68,7 +75,15 @@ const advancedStatsSchema = z.object({
   searches: termsSchema,
   missed_searches: termsSchema,
   /** Null when the package does not take orders. */
-  funnel: z.object({ visitors: count, carted: count, ordered: count }).nullable(),
+  funnel: z
+    .object({
+      visitors: count,
+      carted: count,
+      ordered: count,
+      /** Whether "ordered" means sent to WhatsApp or placed in the menu. */
+      channel: z.enum(['whatsapp', 'menu']).default('whatsapp'),
+    })
+    .nullable(),
 })
 
 export type AdvancedStats = z.infer<typeof advancedStatsSchema>

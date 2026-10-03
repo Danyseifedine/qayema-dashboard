@@ -286,7 +286,7 @@ test.describe('public menu', () => {
     await expect(pop).toBeHidden()
   })
 
-  test('a Premium guest builds a cart, places the order on WhatsApp and the owner sees it', async ({
+  test('a Premium guest builds a cart and sends the order, with a note, on WhatsApp', async ({
     page,
     owner,
   }) => {
@@ -322,6 +322,10 @@ test.describe('public menu', () => {
     await dish(page, 'Fattoush').getByRole('button', { name: 'Add Fattoush' }).click()
     await expect(total).toHaveText('Total$19.00')
 
+    // On WhatsApp the cart asks only for a note, which goes into the message.
+    await expect(cart.getByLabel('Phone number')).toHaveCount(0)
+    await cart.getByLabel(/Note for the restaurant/).fill('Extra lemon')
+
     // WhatsApp is the hand-off; it is stood in for so nothing leaves the machine.
     await page.route('https://wa.me/**', (route) =>
       route.fulfill({ status: 200, contentType: 'text/html', body: '<p>WhatsApp</p>' }),
@@ -336,10 +340,13 @@ test.describe('public menu', () => {
     expect(text).toContain('1 × Kafta  $12.00')
     expect(text).toContain('1 × Fattoush  $7.00')
     expect(text).toContain('Total: $19.00')
+    expect(text).toContain('Note: Extra lemon')
 
-    // The order is on the owner's Orders page.
+    // Whether it was sent and served happens in WhatsApp, so the Orders page
+    // says so instead of listing it.
     await page.goto(`${DASHBOARD_URL}/orders`)
-    await expect(page.getByText(reference, { exact: true })).toBeVisible()
+    await expect(page.getByText('Your orders go to WhatsApp')).toBeVisible()
+    await expect(page.getByText(reference, { exact: true })).toHaveCount(0)
 
     // And the guest's cart was emptied once the order went through.
     await page.goto(restaurant.restaurant.public_url)

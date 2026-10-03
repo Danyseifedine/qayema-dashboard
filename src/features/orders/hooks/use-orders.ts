@@ -7,11 +7,12 @@ import type { Order, OrderList, OrderStatus } from '@/features/orders/schemas/or
 import { orderKeys } from '@/features/orders/hooks/order-keys'
 
 /**
- * Orders for the restaurant, newest first.
+ * Orders placed in the menu, newest first.
  *
- * Refetched on a timer while the page is open: an order arrives from a guest's
- * phone, and nothing in this product pushes. WhatsApp is what actually gets the
- * owner's attention; this is so the page is not stale when they look at it.
+ * New and changed orders refresh the list the moment they are heard
+ * (useOrderPulse, through Pusher or its once-a-minute check). The list's own
+ * minute is a safety net for a status moved in another tab while Pusher
+ * could not be heard.
  */
 export function useOrders(status: OrderStatus | null): UseQueryResult<OrderList, ApiError> {
   return useQuery<OrderList, ApiError>({
@@ -23,15 +24,17 @@ export function useOrders(status: OrderStatus | null): UseQueryResult<OrderList,
 }
 
 /**
- * Marking an order done or cancelled. Every list is invalidated rather than
- * patched: an order can move out of the filter the owner is looking at, and
- * the open count on every one of them changes.
+ * Moving an order on, or cancelling it. Every list is invalidated rather
+ * than patched: an order can move out of the filter the owner is looking at,
+ * and the open count on every one of them changes. A refusal (the guest
+ * changed it, or another tab moved it) refreshes them too, so the card shows
+ * the order as it now stands.
  */
 export function useSetOrderStatus() {
   const queryClient = useQueryClient()
 
-  return useMutation<Order, ApiError, { id: number; status: OrderStatus }>({
-    mutationFn: ({ id, status }) => setOrderStatus(id, status),
+  return useMutation<Order, ApiError, { id: number; status: OrderStatus; guestUpdates?: number }>({
+    mutationFn: ({ id, status, guestUpdates }) => setOrderStatus(id, status, guestUpdates),
     onSuccess: (order) => {
       toast.success(
         t('orders:toast.updated', {
@@ -41,6 +44,9 @@ export function useSetOrderStatus() {
       )
       void queryClient.invalidateQueries({ queryKey: orderKeys.all })
     },
-    onError: (error) => toast.error(t('orders:toast.updateFailed'), error),
+    onError: (error) => {
+      toast.error(t('orders:toast.updateFailed'), error)
+      if (error.status === 409) void queryClient.invalidateQueries({ queryKey: orderKeys.all })
+    },
   })
 }

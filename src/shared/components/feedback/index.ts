@@ -1,5 +1,6 @@
 export { ConfirmDialog } from '@/shared/components/feedback/dialogs/confirm-dialog'
 export { CardGridSkeleton } from '@/shared/components/feedback/skeletons/card-skeleton'
+export { PageSkeleton } from '@/shared/components/feedback/skeletons/page-skeleton'
 export { EmptyState } from '@/shared/components/feedback/states/empty-state'
 export { ErrorState } from '@/shared/components/feedback/states/error-state'
 export { LockedState } from '@/shared/components/feedback/states/locked-state'

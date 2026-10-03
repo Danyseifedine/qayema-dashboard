@@ -15,6 +15,7 @@ const planSchema = z.object({
   premium_designs: z.boolean(),
   qr_studio: z.boolean(),
   ordering: z.boolean(),
+  menu_ordering: z.boolean(),
   analytics: z.boolean(),
   advanced_analytics: z.boolean(),
 })
@@ -32,6 +33,8 @@ const limit = z.object({
 })
 
 const restaurantSchema = z.object({
+  /** Names the live orders channel. */
+  id: z.number().int(),
   /** What the menu is written in: English, then the second language if any. */
   languages: z.array(z.string()).min(1),
   /** The second language chosen, kept even while "Multiple languages" is off. */
@@ -64,6 +67,15 @@ const restaurantSchema = z.object({
   }),
   /** Optional features the owner switched off on the Features page. */
   switched_off: z.array(z.string()),
+  /**
+   * How guests send their orders while ordering is on: to WhatsApp, or in
+   * the menu (only while the package includes it), and which kinds of order
+   * the menu takes.
+   */
+  ordering: z.object({
+    mode: z.enum(['whatsapp', 'menu']),
+    types: z.array(z.enum(['delivery', 'pickup'])).min(1),
+  }),
   /** What this restaurant may use: its package plus any grants. */
   plan: planSchema,
 })
@@ -82,3 +94,5 @@ export const userResponseSchema = z.object({ data: userSchema })
 export type AuthUser = z.infer<typeof userSchema>
 export type AuthRestaurant = z.infer<typeof restaurantSchema>
 export type Plan = z.infer<typeof planSchema>
+export type OrderMode = AuthRestaurant['ordering']['mode']
+export type OrderType = AuthRestaurant['ordering']['types'][number]

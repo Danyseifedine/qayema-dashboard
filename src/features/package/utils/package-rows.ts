@@ -23,6 +23,7 @@ export const PACKAGE_ROWS: readonly PackageRow[] = [
   { kind: 'flag', key: 'premium_designs', group: 'look' },
   { kind: 'flag', key: 'qr_studio', group: 'guests' },
   { kind: 'flag', key: 'ordering', group: 'guests' },
+  { kind: 'flag', key: 'menu_ordering', group: 'guests' },
   { kind: 'flag', key: 'analytics', group: 'numbers' },
   { kind: 'flag', key: 'advanced_analytics', group: 'numbers' },
 ]

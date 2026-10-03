@@ -14,6 +14,16 @@ const schema = z.object({
 
   /** Where to send a visitor with no session. */
   VITE_LOGIN_URL: z.url('VITE_LOGIN_URL must be an absolute URL'),
+
+  /**
+   * Pusher's public key and cluster, for live orders. Left empty, the
+   * dashboard checks for orders once a minute instead.
+   */
+  VITE_PUSHER_KEY: z
+    .string()
+    .optional()
+    .transform((value) => value || undefined),
+  VITE_PUSHER_CLUSTER: z.string().optional().default('eu'),
 })
 
 const parsed = schema.safeParse(import.meta.env)

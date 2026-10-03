@@ -117,7 +117,7 @@ describe('dish choices in the form', () => {
     expect(hasChoices({ variants: [], addons: [] })).toBe(false)
   })
 
-  it('needs English names, two options, and a price for the dish', () => {
+  it('needs English names and two options', () => {
     const result = dishFormSchema.safeParse({
       ...valid,
       price: null,
@@ -134,13 +134,35 @@ describe('dish choices in the form', () => {
     const messages = Object.fromEntries(
       result.error!.issues.map((issue) => [issue.path.join('.'), issue.message]),
     )
+    // No dish price is fine with a variant: its options price the dish.
+    expect(messages).not.toHaveProperty('price')
     expect(messages).toMatchObject({
-      price: 'Give the dish a price before adding variants or add-ons.',
       'variants.0.name.en': 'Give every variant a name in English.',
       'variants.0.options': 'A variant needs at least 2 options.',
       'addons.0.name.en': 'Give every add-on a name in English.',
       'addons.0.price': 'A price cannot be negative.',
     })
+  })
+
+  it('needs a dish price for add-ons alone, and none when a variant prices it', () => {
+    const addon = { savedId: null, name: { en: 'Cheese' }, price: 1 }
+    const size = {
+      savedId: null,
+      name: { en: 'Size' },
+      options: [
+        { savedId: null, name: { en: 'Small' }, price: 7 },
+        { savedId: null, name: { en: 'Large' }, price: 12 },
+      ],
+    }
+
+    const alone = dishFormSchema.safeParse({ ...valid, price: null, addons: [addon] })
+    expect(alone.error?.issues.map((issue) => issue.message)).toEqual([
+      'Give the dish a price before adding add-ons.',
+    ])
+    expect(
+      dishFormSchema.safeParse({ ...valid, price: null, variants: [size], addons: [addon] })
+        .success,
+    ).toBe(true)
   })
 
   it('says plainly when a name runs long or a price is not one', () => {

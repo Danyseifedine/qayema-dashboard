@@ -22,6 +22,7 @@ function page(props: Partial<FeaturesPageProps> = {}) {
       plan={ALL}
       secondLocale="ar"
       defaultLocale="en"
+      ordering={{ mode: 'whatsapp', types: ['delivery', 'pickup'] }}
       onOpenPackage={() => {}}
       {...props}
     />
@@ -38,6 +39,7 @@ function FromSession() {
       plan={restaurant.plan}
       secondLocale={restaurant.second_locale}
       defaultLocale={restaurant.default_locale}
+      ordering={restaurant.ordering}
       onOpenPackage={() => {}}
     />
   )
@@ -315,5 +317,98 @@ describe('FeaturesPage', () => {
     } finally {
       await i18n.changeLanguage('en')
     }
+  })
+
+  describe('how guests send their orders', () => {
+    it('chooses ordering in the menu, with both kinds of order', async () => {
+      mock.onPut('/api/features/ordering').reply(200, {
+        data: { mode: 'menu', types: ['delivery', 'pickup'] },
+      })
+      const user = userEvent.setup()
+      renderWithProviders(page())
+
+      expect(screen.getByText(/won't show on your Orders page/)).toBeInTheDocument()
+      await user.click(screen.getByRole('tab', { name: 'In your menu' }))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(1))
+      expect(mock.history.put[0]!.url).toBe('/api/features/ordering')
+      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+        mode: 'menu',
+        types: ['delivery', 'pickup'],
+      })
+    })
+
+    it('takes pickup only', async () => {
+      mock.onPut('/api/features/ordering').reply(200, { data: { mode: 'menu', types: ['pickup'] } })
+      const user = userEvent.setup()
+      renderWithProviders(page({ ordering: { mode: 'menu', types: ['delivery', 'pickup'] } }))
+
+      expect(screen.getByText(/Orders arrive on your Orders page with a sound/)).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: 'Both' })).toHaveAttribute('aria-selected', 'true')
+      await user.click(screen.getByRole('tab', { name: 'Pickup' }))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(1))
+      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+        mode: 'menu',
+        types: ['pickup'],
+      })
+    })
+
+    it('asks nothing about delivery while orders go to WhatsApp', () => {
+      renderWithProviders(page())
+
+      expect(screen.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.queryByRole('tablist', { name: 'You take' })).not.toBeInTheDocument()
+    })
+
+    it('locks ordering in the menu without the package and names the one that has it', async () => {
+      mock.onGet('/api/packages').reply(200, { data: PACKAGE_CATALOGUE, meta: { current: 'pro' } })
+      const onOpenPackage = vi.fn()
+      const user = userEvent.setup()
+      renderWithProviders(page({ plan: { ...ALL, menu_ordering: false }, onOpenPackage }))
+
+      expect(screen.getByRole('tab', { name: 'In your menu' })).toBeDisabled()
+      await user.click(
+        await screen.findByRole('button', { name: 'Available on Premium. See packages' }),
+      )
+      expect(onOpenPackage).toHaveBeenCalledOnce()
+    })
+
+    it('has no choice to make while orders are off', () => {
+      renderWithProviders(page({ off: ['orders'] }))
+
+      expect(
+        screen.queryByRole('tablist', { name: 'Guests send their order' }),
+      ).not.toBeInTheDocument()
+    })
+
+    it('moves at once, and snaps back with a reason when the save fails', async () => {
+      mock.onGet('/api/user').reply(200, {
+        data: makeSessionUser({ ordering: { mode: 'whatsapp', types: ['delivery', 'pickup'] } }),
+      })
+      const answer = held()
+      mock.onPut('/api/features/ordering').reply(answer.reply)
+      const user = userEvent.setup()
+      renderWithProviders(<FromSession />)
+
+      await user.click(await screen.findByRole('tab', { name: 'In your menu' }))
+      expect(screen.getByRole('tab', { name: 'In your menu' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+
+      answer.release([500, { message: 'Server down', code: 'server_error' }])
+      await waitFor(() =>
+        expect(screen.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute(
+          'aria-selected',
+          'true',
+        ),
+      )
+      // The toaster outlives a test, so the one before may still show its own.
+      expect((await screen.findAllByText('Could not update your features')).length).toBeGreaterThan(
+        0,
+      )
+      expect(mock.history.put).toHaveLength(1)
+    })
   })
 })

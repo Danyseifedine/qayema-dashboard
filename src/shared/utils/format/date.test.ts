@@ -4,6 +4,7 @@ import {
   formatDateTime,
   formatDay,
   formatHour,
+  formatTime,
   parseDay,
   weekdayNames,
 } from '@/shared/utils/format/date'
@@ -41,6 +42,13 @@ describe('formatDate', () => {
 
     expect(text).toContain('أكتوبر')
     expect(text).not.toContain('Oct')
+  })
+})
+
+describe('formatTime', () => {
+  it("shows only the time of day, in the reader's language", () => {
+    expect(formatTime('2026-10-12T14:05:00', 'en')).toMatch(/^02:05\sPM$/)
+    expect(formatTime('2026-10-12T14:05:00', 'ar')).not.toContain('أكتوبر')
   })
 })
 

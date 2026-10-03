@@ -1,10 +1,13 @@
 {
   "page": {
     "title": "Orders",
-    "description": "What guests ordered from your menu. Each one also reaches you on WhatsApp."
+    "description": "Orders guests placed in your menu. Call them back, then mark each one done."
   },
   "status": {
     "placed": "New",
+    "accepted": "Accepted",
+    "ready": "Ready",
+    "onItsWay": "On its way",
     "done": "Done",
     "cancelled": "Cancelled"
   },
@@ -14,7 +17,7 @@
   },
   "empty": {
     "title": "No orders yet",
-    "description": "When a guest orders from your menu it lands here, and on your WhatsApp.",
+    "description": "When a guest orders from your menu it lands here, with a sound.",
     "filteredTitle": "Nothing with that status",
     "filteredDescription": "Try another status, or All."
   },
@@ -22,15 +25,36 @@
   "waiting_other": "{{count}} orders are still waiting.",
   "cancelDialog": {
     "title": "Cancel this order?",
-    "description": "It stays in your history, marked cancelled. The guest is not told, so let them know yourself.",
+    "description": "It stays in your history, marked cancelled. The guest's order page will say it was cancelled; call them if they need to know why.",
     "confirm": "Cancel order"
   },
   "card": {
+    "accept": "Accept",
     "markDone": "Done",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "delivery": "Delivery",
+    "pickup": "Pickup",
+    "whatsapp": "WhatsApp",
+    "openMap": "Open their location on the map",
+    "onItsWay": "On its way",
+    "ready": "Ready",
+    "changed_one": "Changed by the guest at {{time}}",
+    "changed_other": "Changed by the guest {{count}} times, last at {{time}}"
   },
   "toast": {
     "updated": "Order {{reference}} marked {{status}}",
     "updateFailed": "Could not update that order"
+  },
+  "whatsapp": {
+    "title": "Your orders go to WhatsApp",
+    "description": "Guests send each order to your WhatsApp, so you handle it there and it doesn't show here. To get orders here instead, with the guest's phone and address and a sound when one arrives, let guests order in your menu.",
+    "action": "Open Features",
+    "earlier": "New orders open in WhatsApp. Below are the ones guests placed in your menu before."
+  },
+  "alert": {
+    "title": "New order",
+    "description": "A guest just ordered from your menu.",
+    "changedTitle": "An order was changed",
+    "changedDescription": "A guest changed an order they placed. Check it before you accept it."
   }
 }

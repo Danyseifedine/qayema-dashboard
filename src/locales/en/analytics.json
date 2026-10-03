@@ -16,7 +16,11 @@
     "viewsToday": "{{views}} today",
     "visitors": "Visitors",
     "qrScans": "QR scans",
-    "orders": "Orders"
+    "orders": "Orders",
+    "sentToWhatsapp": "Sent to WhatsApp",
+    "whatsappHint": "We can't see if they were completed",
+    "ordersDone_one": "{{count}} done",
+    "ordersDone_other": "{{count}} done"
   },
   "visits": {
     "title": "Visits",
@@ -60,7 +64,8 @@
     "title": "From visit to order",
     "visitors": "Opened the menu",
     "carted": "Added something to the cart",
-    "ordered": "Placed an order"
+    "ordered": "Placed an order",
+    "sentToWhatsapp": "Sent their order to WhatsApp"
   },
   "topAdded": {
     "title": "Most added to the cart",

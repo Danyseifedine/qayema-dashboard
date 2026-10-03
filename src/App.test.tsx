@@ -54,7 +54,8 @@ vi.mock('@/features/menu', async (importOriginal) => ({
   CategoriesPage: stubPage('categories'),
   DishesPage: stubPage('dishes'),
 }))
-vi.mock('@/features/orders', () => ({
+vi.mock('@/features/orders', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/orders')>()),
   OrdersPage: stubPage('orders'),
 }))
 vi.mock('@/features/analytics', () => ({
@@ -196,7 +197,7 @@ describe('App', () => {
     { path: '/analytics', name: 'analytics', action: 'onOpenPackage', lands: 'package' },
     { path: '/design', name: 'design', action: 'onOpenPackage', lands: 'package' },
     { path: '/appearance', name: 'appearance' },
-    { path: '/orders', name: 'orders' },
+    { path: '/orders', name: 'orders', action: 'onOpenFeatures', lands: 'features' },
     { path: '/qr', name: 'qr', action: 'onOpenFeatures', lands: 'features' },
     { path: '/qr', name: 'qr', action: 'onOpenPackage', lands: 'package' },
     { path: '/social-links', name: 'social-links' },
@@ -240,6 +241,7 @@ describe('App', () => {
       off: ['qr'],
       secondLocale: 'fr',
       defaultLocale: 'fr',
+      ordering: { mode: 'whatsapp', types: ['delivery', 'pickup'] },
     })
   })
 

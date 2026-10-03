@@ -39,6 +39,9 @@ export function VariantCard({
   const { t } = useTranslation('menu')
   const options = useFieldArray({ control, name: `variants.${index}.options` })
   const name = useWatch({ control, name: `variants.${index}.name.${MAIN_LANGUAGE}` })
+  // The first variant of a dish with no price of its own holds the prices.
+  const dishPrice = useWatch({ control, name: 'price' })
+  const full = index === 0 && (dishPrice === null || dishPrice === undefined)
   const label = name?.trim() || t('choices.variantNumber', { number: index + 1 })
 
   return (
@@ -95,7 +98,11 @@ export function VariantCard({
                   currency={currency}
                   handle={optionHandle}
                   nameLabel={t('choices.optionName', { variant: label, number: option + 1 })}
-                  priceLabel={t('choices.optionPrice', { variant: label, number: option + 1 })}
+                  priceLabel={t(full ? 'choices.optionFullPrice' : 'choices.optionPrice', {
+                    variant: label,
+                    number: option + 1,
+                  })}
+                  full={full}
                   removeLabel={t('choices.removeOption', { variant: label, number: option + 1 })}
                   placeholder={t('choices.optionPlaceholder')}
                   onRemove={() => options.remove(option)}

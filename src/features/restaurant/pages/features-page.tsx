@@ -9,13 +9,14 @@ import {
   ReceiptText,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { Plan } from '@/features/auth'
+import type { AuthRestaurant, OrderMode, Plan } from '@/features/auth'
 import { usePackageFor, type PackageFlag } from '@/features/package'
 import { Field, FormSection } from '@/shared/components/forms'
 import { Combobox, Segmented, Switch } from '@/shared/components/ui'
 import { MAIN_LANGUAGE, MENU_LANGUAGES, languageName } from '@/shared/constants/menu-languages'
 import { useSaveMenuLanguages } from '@/features/restaurant/hooks/use-menu-languages-save'
 import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
+import { useSaveOrdering } from '@/features/restaurant/hooks/use-ordering-save'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -30,6 +31,8 @@ export type FeaturesPageProps = {
   secondLocale: string | null
   /** What the menu opens in. */
   defaultLocale: string
+  /** How guests send their orders, and which kinds the menu takes. */
+  ordering: AuthRestaurant['ordering']
   /** Opens the Package page, from a feature the package does not include. */
   onOpenPackage: () => void
 }
@@ -54,6 +57,7 @@ export function FeaturesPage({
   plan,
   secondLocale,
   defaultLocale,
+  ordering,
   onOpenPackage,
 }: FeaturesPageProps) {
   const { t } = useTranslation('features')
@@ -103,6 +107,13 @@ export function FeaturesPage({
                   ) : null}
                   {/* The pickers need the package: the server refuses a second
                       language without it. */}
+                  {key === 'orders' && on ? (
+                    <OrderingChoice
+                      ordering={ordering}
+                      menuIncluded={plan.menu_ordering}
+                      onOpenPackage={onOpenPackage}
+                    />
+                  ) : null}
                   {key === 'languages' && on ? (
                     <LanguageChoice secondLocale={secondLocale} defaultLocale={defaultLocale} />
                   ) : null}
@@ -149,6 +160,83 @@ function PackageChip({ flag, onOpenPackage }: { flag: PackageFlag; onOpenPackage
       <Lock aria-hidden className="size-3" />
       {name ?? t('notOnPackage')}
     </button>
+  )
+}
+
+type TypesChoice = 'both' | 'delivery' | 'pickup'
+
+/**
+ * How guests send their orders: to WhatsApp, or in the menu (its own
+ * package flag) with delivery, pickup or both. One way at a time, so the
+ * owner never wonders where an order went. Saves on change.
+ */
+function OrderingChoice({
+  ordering,
+  menuIncluded,
+  onOpenPackage,
+}: {
+  ordering: AuthRestaurant['ordering']
+  menuIncluded: boolean
+  onOpenPackage: () => void
+}) {
+  const { t } = useTranslation('features')
+  const save = useSaveOrdering()
+  const { mode, types } = ordering
+  const choice: TypesChoice = types.length === 1 && types[0] ? types[0] : 'both'
+
+  const setMode = (next: OrderMode) => {
+    if (next !== mode) save.mutate({ mode: next, types })
+  }
+  const setTypes = (next: TypesChoice) => {
+    save.mutate({ mode, types: next === 'both' ? ['delivery', 'pickup'] : [next] })
+  }
+
+  return (
+    <div className="mt-3 grid gap-4 rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-3.5">
+      <Field
+        label={t('orders.modeLabel')}
+        hint={t(mode === 'menu' ? 'orders.menuHint' : 'orders.whatsappHint')}
+        className="pt-0"
+      >
+        {() => (
+          <div className="flex flex-wrap items-center gap-2">
+            <Segmented
+              aria-label={t('orders.modeLabel')}
+              value={mode}
+              onChange={setMode}
+              options={[
+                { value: 'whatsapp', label: t('orders.whatsapp') },
+                {
+                  value: 'menu',
+                  label: t('orders.menu'),
+                  disabled: !menuIncluded,
+                  icon: menuIncluded ? undefined : <Lock aria-hidden className="size-3" />,
+                },
+              ]}
+            />
+            {menuIncluded ? null : (
+              <PackageChip flag="menu_ordering" onOpenPackage={onOpenPackage} />
+            )}
+          </div>
+        )}
+      </Field>
+
+      {mode === 'menu' ? (
+        <Field label={t('orders.typesLabel')} hint={t('orders.typesHint')} className="pt-0">
+          {() => (
+            <Segmented
+              aria-label={t('orders.typesLabel')}
+              value={choice}
+              onChange={setTypes}
+              options={(['both', 'delivery', 'pickup'] as const).map((value) => ({
+                value,
+                label: t(`orders.types.${value}`),
+              }))}
+            />
+          )}
+        </Field>
+      ) : null}
+    </div>
   )
 }
 

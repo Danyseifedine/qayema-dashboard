@@ -82,12 +82,26 @@ export const dishFormSchema = z
     (values, ctx) => {
       requireEnglish(values.name, 'name', t('menu:dishSchema.nameRequired'), ctx)
       requireChoiceNames(values, ctx)
-      // A variant or add-on adds to the price, so the dish needs one.
-      if (values.price === null && (values.variants.length > 0 || values.addons.length > 0)) {
+      // An add-on adds to the price, so the dish needs one, unless its
+      // variants price it (a sandwich by size alone).
+      if (values.price === null && values.addons.length > 0 && values.variants.length === 0) {
         ctx.addIssue({
           code: 'custom',
           path: ['price'],
-          message: t('menu:dishSchema.priceForChoices'),
+          message: t('menu:dishSchema.priceForAddons'),
+        })
+      }
+      // Priced by its first variant, each of its options needs a price: an
+      // empty one would be a free sandwich, not a forgotten one.
+      if (values.price === null) {
+        values.variants[0]?.options.forEach((option, index) => {
+          if (option.price === null) {
+            ctx.addIssue({
+              code: 'custom',
+              path: ['variants', 0, 'options', index, 'price'],
+              message: t('menu:dishSchema.optionPriceRequired'),
+            })
+          }
         })
       }
     },

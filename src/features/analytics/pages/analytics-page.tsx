@@ -86,7 +86,7 @@ function Summary({
 
   return (
     <>
-      <SummaryTiles totals={totals} previous={previous} />
+      <SummaryTiles totals={totals} channel={summary.order_channel} previous={previous} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <FormSection title={t('visits.title')} description={t('visits.description')}>

@@ -9,6 +9,7 @@ export const FULL_PLAN: Plan = {
   premium_designs: true,
   qr_studio: true,
   ordering: true,
+  menu_ordering: true,
   analytics: true,
   advanced_analytics: true,
 }
@@ -22,6 +23,7 @@ export const EMPTY_PLAN: Plan = {
   premium_designs: false,
   qr_studio: false,
   ordering: false,
+  menu_ordering: false,
   analytics: false,
   advanced_analytics: false,
 }
@@ -39,6 +41,7 @@ export function makeSessionUser(
     has_completed_onboarding: true,
     has_password: true,
     restaurant: {
+      id: 7,
       languages: ['en', 'ar'],
       second_locale: 'ar',
       default_locale: 'en',
@@ -59,6 +62,7 @@ export function makeSessionUser(
         social_links: { used: 0, limit: 2 },
       },
       switched_off: [],
+      ordering: { mode: 'whatsapp', types: ['delivery', 'pickup'] },
       plan: FULL_PLAN,
       ...restaurant,
     },

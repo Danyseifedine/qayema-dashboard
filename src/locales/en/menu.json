@@ -102,6 +102,8 @@
     "ingredientsHint": "Free text, shown under the dish on your menu.",
     "price": "Price",
     "priceHint": "Leave empty to hide the price.",
+    "priceHintFromVariant": "No dish price: each {{variant}} sets the full price.",
+    "priceHintWithVariant": "Variant prices are added to this. Leave it empty to price by {{variant}} alone.",
     "category": "Category",
     "categoryPlaceholder": "Choose a category",
     "photo": "Photo",
@@ -113,7 +115,7 @@
   },
   "choices": {
     "title": "Variants and add-ons",
-    "description": "Choices guests make on this dish. Each price is added to the dish price.",
+    "description": "Choices guests make on this dish.",
     "copyFrom": "Copy from another dish",
     "variants": "Variants",
     "variantsHint": "Guests pick one option of each, like a size or a spice level. An option with no price is free.",
@@ -125,6 +127,7 @@
     "removeVariant": "Remove {{name}}",
     "optionName": "{{variant}}, option {{number}}",
     "optionPrice": "{{variant}}, option {{number}}, extra price",
+    "optionFullPrice": "{{variant}}, option {{number}}, price",
     "removeOption": "Remove option {{number}} of {{variant}}",
     "optionPlaceholder": "e.g. Large",
     "addOption": "Add option",
@@ -163,7 +166,8 @@
     "priceTooHigh": "That price is too high.",
     "categoryRequired": "Choose a category.",
     "nameRequired": "A dish name is required in English.",
-    "priceForChoices": "Give the dish a price before adding variants or add-ons."
+    "priceForAddons": "Give the dish a price before adding add-ons.",
+    "optionPriceRequired": "Give it a price, or give the dish one."
   },
   "fields": {
     "name": "name",

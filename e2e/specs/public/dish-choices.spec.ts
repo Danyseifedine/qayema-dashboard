@@ -49,7 +49,13 @@ test.describe('dish variants and add-ons on the menu', () => {
     page,
     owner,
   }) => {
-    const restaurant = await owner({ package: 'premium', categories: BURGERS })
+    // Ordered in the menu, so the order lands on the owner's Orders page.
+    const restaurant = await owner({
+      package: 'premium',
+      order_mode: 'menu',
+      order_types: ['pickup'],
+      categories: BURGERS,
+    })
     await page.goto(restaurant.restaurant.public_url)
 
     const burger = dish(page, 'Burger')
@@ -80,6 +86,8 @@ test.describe('dish variants and add-ons on the menu', () => {
     await burger.getByRole('button', { name: 'See options: Burger' }).click()
     await expect(add).toHaveText('Add$8.00')
     await add.click()
+    // The page behind takes no typing until the sheet has slid away.
+    await expect(sheet).toBeHidden()
     await expect(burger.locator('.add-count')).toHaveText('3')
 
     const cart = await openCart(page)
@@ -90,22 +98,67 @@ test.describe('dish variants and add-ons on the menu', () => {
     await expect(lines.nth(1)).toContainText('Small, Mild')
     await expect(cart.locator('.cart-total')).toHaveText('Total$32.00')
 
-    await page.route('https://wa.me/**', (route) =>
-      route.fulfill({ status: 200, contentType: 'text/html', body: '<p>WhatsApp</p>' }),
-    )
+    await cart.getByLabel('Your name').fill('Rami')
+
+    await cart.getByLabel('Phone number').fill('70 123 456')
+    const placed = page.waitForResponse((response) => response.url().endsWith('/order'))
     await cart.getByRole('button', { name: /Place order/ }).click()
+    const answer = (await (await placed).json()) as { data: { reference: string; total: string } }
+    expect(answer.data.total).toBe('32.00')
+    await expect(page.getByRole('status').filter({ hasText: answer.data.reference })).toBeVisible()
 
-    await expect(page).toHaveURL(/^https:\/\/wa\.me\//)
-    const text = new URL(page.url()).searchParams.get('text') ?? ''
-    expect(text).toContain('2 × Burger  $24.00\n    Size: Large, Spice level: Hot, + Extra cheese')
-    expect(text).toContain('1 × Burger  $8.00\n    Size: Small, Spice level: Mild')
-    expect(text).toContain('Total: $32.00')
-    const reference = text.split('\n')[0]!.replace('New order ', '')
-
-    // The owner reads the same choices on the order.
+    // The owner reads the same choices on the order. (The WhatsApp message
+    // lists them too: tests/Feature/Orders/OrderChoicesTest in ../qayema.)
     await page.goto(`${DASHBOARD_URL}/orders`)
-    const card = page.getByRole('article').filter({ hasText: reference })
+    const card = page.getByRole('article').filter({ hasText: answer.data.reference })
     await expect(card).toContainText('Size: Large · Spice level: Hot · + Extra cheese')
+    await expect(card).toContainText('Size: Small · Spice level: Mild')
+    await expect(card).toContainText('$32.00')
+  })
+
+  test('a sandwich priced by its size shows the sizes as prices, not extras', async ({
+    page,
+    scenario,
+  }) => {
+    const owner = await scenario({
+      package: 'premium',
+      categories: [
+        {
+          name: { en: 'Sandwiches' },
+          dishes: [
+            {
+              name: { en: 'Taouk' },
+              price: null,
+              variants: [
+                {
+                  name: { en: 'Size' },
+                  options: [
+                    { name: { en: 'Small' }, price: 7 },
+                    { name: { en: 'Large' }, price: 12 },
+                  ],
+                },
+              ],
+              addons: [{ name: { en: 'Fries inside' }, price: 1 }],
+            },
+          ],
+        },
+      ],
+    })
+    await page.goto(owner.restaurant.public_url)
+
+    const taouk = dish(page, 'Taouk')
+    await expect(taouk.locator('.price')).toHaveText('$7.00')
+    await taouk.getByRole('button', { name: 'See options: Taouk' }).click()
+    const sheet = page.getByRole('dialog', { name: 'Taouk' })
+    await expect(sheet.locator('label', { hasText: 'Small' })).toContainText('$7.00')
+    await expect(sheet.locator('label', { hasText: 'Small' })).not.toContainText('+')
+    await expect(sheet.locator('label', { hasText: 'Fries inside' })).toContainText('+$1.00')
+
+    await sheet.getByText('Large').click()
+    await expect(sheet.locator('.dish-sheet-add')).toHaveText('Add$12.00')
+    await sheet.locator('.dish-sheet-add').click()
+    const cart = await openCart(page)
+    await expect(cart.locator('.cart-total')).toHaveText('Total$12.00')
   })
 
   test('without ordering, a guest still sees the choices and their prices', async ({

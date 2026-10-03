@@ -28,7 +28,8 @@ export type ScenarioInput = {
     description?: MenuText
     dishes?: {
       name: MenuText
-      price?: number
+      /** Null for none (a dish priced by its variants); 10 when left out. */
+      price?: number | null
       ingredients?: MenuText
       is_available?: boolean
       variants?: { name: MenuText; options: { name: MenuText; price?: number }[] }[]
@@ -36,7 +37,13 @@ export type ScenarioInput = {
     }[]
   }[]
   social_links?: { platform: string; url: string }[]
+  /** How guests send their orders: WhatsApp (the default) or in the menu. */
+  order_mode?: 'whatsapp' | 'menu'
+  /** What the menu takes when guests order in it; both when left out. */
+  order_types?: ('delivery' | 'pickup')[]
   orders?: number
+  /** How the seeded orders came in: placed in the menu (the default, with a phone and an address) or sent to WhatsApp. */
+  order_channel?: 'menu' | 'whatsapp'
   /** The orders' line carries a size and an add-on. */
   order_choices?: boolean
   visits?: number
@@ -70,8 +77,12 @@ type Fixtures = {
     restaurantId: number,
     input: Pick<ScenarioInput, 'package' | 'package_starts_at' | 'package_ends_at'>,
   ) => Promise<void>
-  /** Fail on serious or critical accessibility problems on the current page. */
-  expectAccessible: (page?: Page) => Promise<void>
+  /**
+   * Fail on serious or critical accessibility problems on the current page,
+   * or only in `include` (a selector): a full-screen sheet hides the page
+   * behind it, which axe would read against the sheet's colour.
+   */
+  expectAccessible: (page?: Page, options?: { include?: string }) => Promise<void>
 }
 
 async function post(request: APIRequestContext, path: string, data: object) {
@@ -147,10 +158,14 @@ export const test = base.extend<Fixtures & Options>({
   },
 
   expectAccessible: async ({ page }, provide) => {
-    await provide(async (target = page) => {
-      const results = await new AxeBuilder({ page: target })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-        .analyze()
+    await provide(async (target = page, { include } = {}) => {
+      const builder = new AxeBuilder({ page: target }).withTags([
+        'wcag2a',
+        'wcag2aa',
+        'wcag21a',
+        'wcag21aa',
+      ])
+      const results = await (include ? builder.include(include) : builder).analyze()
       const serious = results.violations
         .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
         .map((violation) => `${violation.id}: ${violation.help} (${violation.nodes.length})`)

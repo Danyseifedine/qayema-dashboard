@@ -143,6 +143,82 @@ test.describe('accessibility: what guests see', () => {
     await expectAccessible()
   })
 
+  test('the cart, ordering in the menu, with a mistake to fix @matrix', async ({
+    page,
+    scenario,
+    expectAccessible,
+  }) => {
+    const created = await scenario({ ...FULL, order_mode: 'menu' })
+    await page.goto(`${created.restaurant.public_url}?lang=en`)
+    await page.getByRole('button', { name: 'Add Shish taouk' }).click()
+
+    // A column of its own on a wide screen, a sheet from the header on a phone.
+    const wide = (page.viewportSize()?.width ?? 0) >= 1024
+    const cart = wide ? page.locator('aside.col-aside') : page.locator('#cart-sheet')
+    if (!wide) await page.getByRole('button', { name: 'Your cart' }).click()
+    await cart.getByRole('button', { name: /Place order/ }).click()
+    await expect(
+      cart.getByText('Add your phone number so the restaurant can call you.'),
+    ).toBeVisible()
+    await page.evaluate(() =>
+      Promise.all(document.getAnimations().map((animation) => animation.finished)),
+    )
+    // On a phone the cart covers the whole screen: only it is there to read.
+    await expectAccessible(page, wide ? {} : { include: '#cart-sheet' })
+  })
+
+  test('the sheet a guest follows their order in @matrix', async ({
+    page,
+    scenario,
+    expectAccessible,
+  }) => {
+    const created = await scenario({ ...FULL, order_mode: 'menu' })
+    await page.goto(`${created.restaurant.public_url}?lang=en`)
+    const placed = await page.evaluate(
+      async ({ url, dishId }) => {
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-CSRF-TOKEN': token ?? '',
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            items: [{ dish_id: dishId, quantity: 2 }],
+            mode: 'menu',
+            fulfilment: 'delivery',
+            name: 'Rami',
+            phone_country: 'LB',
+            phone: '70 123 456',
+            address: 'Bliss Street, Ras Beirut',
+            client_token: crypto.randomUUID(),
+          }),
+        })
+        return (await response.json()) as { data: { tracking_url: string } }
+      },
+      {
+        url: `${created.restaurant.public_url}/order`,
+        dishId: created.categories[0]!.dishes[1]!.id,
+      },
+    )
+
+    // Its link: the menu, with the tracking sheet up over it.
+    await page.goto(placed.data.tracking_url)
+    const sheet = page.getByRole('dialog', { name: 'Order tracking' })
+    await expect(sheet.locator('.track-title')).toHaveText('Order sent')
+    await page.evaluate(() =>
+      Promise.all(
+        document
+          .getAnimations()
+          .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
+          .map((animation) => animation.finished),
+      ),
+    )
+    await expectAccessible(page, { include: '#track-sheet' })
+  })
+
   test('the public menu in Arabic', async ({ page, scenario, expectAccessible }) => {
     const created = await scenario(FULL)
     await page.goto(`${created.restaurant.public_url}?lang=ar`)

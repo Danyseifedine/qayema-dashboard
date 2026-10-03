@@ -21,6 +21,7 @@ function Harness({
   onLogout = vi.fn(),
   initialKey = 'overview',
   publicUrl = 'https://qayema.test/beit-qayema',
+  counts,
 }: {
   hasTemplate?: boolean
   /** Every plan flag on, or every one off (the Free package). */
@@ -29,6 +30,7 @@ function Harness({
   onLogout?: () => void
   initialKey?: string
   publicUrl?: string | null
+  counts?: Partial<Record<string, number>>
 }) {
   const [activeKey, setActiveKey] = useState(initialKey)
   // The document direction is owned by the preferences store now, so the
@@ -46,6 +48,7 @@ function Harness({
       hasTemplate={hasTemplate}
       plan={full ? FULL_PLAN : EMPTY_PLAN}
       switchedOff={hidden}
+      counts={counts}
       locale={locale}
       onLocaleChange={setLocale}
       onLogout={onLogout}
@@ -234,6 +237,16 @@ describe('AuthenticatedLayout', () => {
     // The QR studio switched off still leaves the plain QR code page.
     expect(within(nav).getByRole('button', { name: 'QR code' })).toBeInTheDocument()
     expect(within(nav).getByRole('button', { name: 'Features' })).toBeInTheDocument()
+  })
+
+  it('shows how many orders are waiting beside Orders, and nothing at none', () => {
+    const { rerender } = renderWithProviders(<Harness counts={{ orders: 3 }} />)
+
+    const nav = screen.getByRole('navigation', { name: 'Dashboard' })
+    expect(within(nav).getByLabelText('3 orders waiting')).toHaveTextContent('3')
+
+    rerender(<Harness counts={{ orders: 0 }} />)
+    expect(within(nav).queryByLabelText(/orders waiting/)).not.toBeInTheDocument()
   })
 
   it('never hides a core section, whatever the list says', () => {

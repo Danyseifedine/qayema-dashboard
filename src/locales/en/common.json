@@ -34,7 +34,9 @@
   "sidebar": {
     "expand": "Expand sidebar",
     "collapse": "Collapse sidebar",
-    "collapseShort": "Collapse"
+    "collapseShort": "Collapse",
+    "waiting_one": "{{count}} order waiting",
+    "waiting_other": "{{count}} orders waiting"
   },
   "packagePill": {
     "label": "{{name}} package. Open your package.",
