@@ -9,12 +9,25 @@
     <title>Qayema Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts never hold up the first paint: the text shows in the system
+         font and swaps once they arrive (the menu does the same). -->
     <link
       href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=El+Messiri:wght@400;500;600;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media = 'all'"
     />
-    <script type="module" crossorigin src="/assets/index-cYHOfnYo.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-B5i9Eb9x.css">
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=El+Messiri:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+    <script type="module" crossorigin src="/assets/index-HgEpBxn8.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-QTnfLwEv.js">
+    <link rel="modulepreload" crossorigin href="/assets/use-api-form-errors-BicI6C1g.js">
+    <link rel="modulepreload" crossorigin href="/assets/translated-C_WWQD-s.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-D2aKR681.css">
   </head>
   <body>
     <div id="root"></div>
