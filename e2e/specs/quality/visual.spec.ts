@@ -79,6 +79,19 @@ const DASHBOARD_PAGES = [
 /** Wait until the page has loaded everything it shows, fonts included. */
 async function settle(page: Page): Promise<void> {
   await expect(page.locator('.animate-pulse, .animate-spin')).toHaveCount(0)
+  // Fonts load without holding up the page: their stylesheet comes as
+  // media="print" and switches to "all" once it arrives. Until then no font
+  // is pending, so fonts.ready alone would pass with the fallback font.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          () => document.querySelectorAll('link[rel="stylesheet"][media="print"]').length,
+        ),
+      // Google Fonts can be slow; the test's own limit still stops a hang.
+      { timeout: 45_000 },
+    )
+    .toBe(0)
   await page.evaluate(() => document.fonts.ready)
   await expect
     .poll(() => page.evaluate(() => Array.from(document.images).every((image) => image.complete)))

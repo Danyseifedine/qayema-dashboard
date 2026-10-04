@@ -8,6 +8,13 @@ const packageSchema = z.object({
   slug: z.string(),
   name: translatableTextSchema,
   description: translatableTextSchema,
+  /**
+   * The card's own lines, written by the admin per language. Empty, the card
+   * lists what the package adds, worked out from its features.
+   */
+  highlights: z
+    .object({ en: z.array(z.string()), ar: z.array(z.string()) })
+    .default({ en: [], ar: [] }),
   /** Cents. Zero is free; null means the price is not published. */
   price_cents: z.number().int().nullable(),
   currency: z.string(),

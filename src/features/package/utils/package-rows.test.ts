@@ -9,6 +9,7 @@ function pkg(slug: string, features: Partial<Package['features']>): Package {
     slug,
     name: { en: slug, ar: null },
     description: { en: null, ar: null },
+    highlights: { en: [], ar: [] },
     price_cents: 0,
     currency: 'USD',
     is_contact_only: false,

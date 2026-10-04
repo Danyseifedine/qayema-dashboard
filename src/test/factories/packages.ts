@@ -11,6 +11,7 @@ export function makePackage(
     slug: 'free',
     name: { en: 'Free', ar: 'مجانية' },
     description: { en: 'Enough to go live.', ar: null },
+    highlights: { en: [], ar: [] },
     price_cents: 0,
     currency: 'USD',
     is_contact_only: false,

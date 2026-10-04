@@ -275,6 +275,33 @@ describe('PackagePage', () => {
     expect(within(pro).queryByText('QR studio')).not.toBeInTheDocument()
   })
 
+  it("lists the admin's own lines on a card instead of what it adds, in the reader's language", async () => {
+    session()
+    const custom = PACKAGE_CATALOGUE.at(-1)!
+    mock.onGet('/api/packages').reply(200, {
+      data: [
+        ...PACKAGE_CATALOGUE.slice(0, -1),
+        {
+          ...custom,
+          highlights: {
+            en: ['A menu design made for your brand'],
+            ar: ['تصميم قائمة خاص بعلامتك'],
+          },
+        },
+      ],
+      meta: { current: 'free' },
+    })
+    const { unmount } = renderWithProviders(<PackagePage locale="en" />)
+
+    const card = (await screen.findByRole('heading', { name: 'Custom' })).closest('article')!
+    expect(within(card).getByText('A menu design made for your brand')).toBeInTheDocument()
+    expect(within(card).queryByText('Unlimited social links')).not.toBeInTheDocument()
+    unmount()
+
+    renderWithProviders(<PackagePage locale="ar" />)
+    expect(await screen.findByText('تصميم قائمة خاص بعلامتك')).toBeInTheDocument()
+  })
+
   it('compares every feature across every package', async () => {
     stub()
     renderWithProviders(<PackagePage locale="en" />)

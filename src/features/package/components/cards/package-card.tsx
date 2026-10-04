@@ -32,6 +32,10 @@ export function PackageCard({ pkg, previous, current, locale, onRequest }: Packa
   const name = translated(pkg.name, locale)
   const description = translated(pkg.description, locale)
   const { base, rows } = highlightsOf(pkg, previous)
+  // The admin's own lines (Custom: a design of their own...), in the
+  // reader's language or English; otherwise what the package adds.
+  const written =
+    locale === 'ar' && pkg.highlights.ar.length > 0 ? pkg.highlights.ar : pkg.highlights.en
   const baseName = base ? translated(base.name, locale) : null
 
   return (
@@ -88,10 +92,13 @@ export function PackageCard({ pkg, previous, current, locale, onRequest }: Packa
           : t('card.includes')}
       </p>
       <ul className="mt-1.5 flex flex-col gap-1.5">
-        {rows.map((row) => (
-          <li key={row.key} className="flex items-start gap-2 text-[13px]">
+        {(written.length > 0
+          ? written.map((line, index) => ({ key: `line-${index}`, text: line }))
+          : rows.map((row) => ({ key: row.key, text: rowText(row, pkg) }))
+        ).map((line) => (
+          <li key={line.key} className="flex items-start gap-2 text-[13px]">
             <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-accent" />
-            <span>{rowText(row, pkg)}</span>
+            <span>{line.text}</span>
           </li>
         ))}
       </ul>
