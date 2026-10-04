@@ -14,6 +14,22 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    // Pages load on demand (App.tsx), so the dev server would find what only
+    // they use at their first visit and bundle it then, reloading the page
+    // under whoever opened it (an end-to-end test, mid-load). Named here, it
+    // is bundled at start instead. The production build is unaffected.
+    optimizeDeps: {
+      include: [
+        'recharts',
+        'qr-code-styling',
+        '@dnd-kit/core',
+        '@dnd-kit/sortable',
+        '@dnd-kit/modifiers',
+        '@dnd-kit/utilities',
+        'laravel-echo',
+        'pusher-js',
+      ],
+    },
     // Resolves the `@/*` alias straight from tsconfig.app.json.
     resolve: { tsconfigPaths: true },
     server: {

@@ -248,6 +248,9 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   in menu mode (`realtime()` imports it). Keep heavy libraries (recharts,
   qr-code-styling, dnd-kit) inside their feature, never in `shared` or the
   shell, or they come back into the first download.
+- A library only a lazy page uses goes in `optimizeDeps.include`
+  (`vite.config.ts`): otherwise the dev server bundles it at that page's
+  first visit and reloads the page mid-load, which times out e2e tests.
 - A tab from before a release asks for files that are gone:
   `app/new-release.ts` reloads it once (`vite:preloadError`).
 - `public/.htaccess` ships with the build: `index.html` is `no-cache`,
