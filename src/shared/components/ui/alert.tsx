@@ -1,15 +1,15 @@
-import { AlertTriangle, CheckCircle2, Info, XCircle, X } from 'lucide-react'
+import { IconAlertTriangle, IconCircleCheck, IconInfoCircle, IconCircleX, IconX } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 
 type AlertVariant = 'error' | 'warning' | 'success' | 'info'
 
-const ICONS: Record<AlertVariant, typeof Info> = {
-  error: XCircle,
-  warning: AlertTriangle,
-  success: CheckCircle2,
-  info: Info,
+const ICONS: Record<AlertVariant, typeof IconInfoCircle> = {
+  error: IconCircleX,
+  warning: IconAlertTriangle,
+  success: IconCircleCheck,
+  info: IconInfoCircle,
 }
 
 const STYLES: Record<AlertVariant, string> = {
@@ -67,7 +67,7 @@ export function Alert({
           onClick={onDismiss}
           className="-m-1 shrink-0 rounded-md p-1 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
         >
-          <X aria-hidden className="size-3.5" />
+          <IconX aria-hidden className="size-3.5" />
         </button>
       ) : null}
     </div>

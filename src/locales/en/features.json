@@ -17,12 +17,20 @@
     "whatsappHint": "The order opens in WhatsApp for the guest to send you. It won't show on your Orders page, and we can't tell if it was sent or completed.",
     "menuHint": "Guests order in the menu with their phone number and address. Orders arrive on your Orders page with a sound, so keep the dashboard open in a tab.",
     "typesLabel": "You take",
-    "typesHint": "Guests pick one when you take both.",
     "types": {
-      "both": "Both",
       "delivery": "Delivery",
       "pickup": "Pickup"
+    },
+    "typeHints": {
+      "delivery": "Guests give their phone number and address.",
+      "pickup": "Guests give their phone number and collect it."
     }
+  },
+  "dine_in": {
+    "label": "Ordering at the table",
+    "description": "Each table gets its own QR code. Guests order straight to their table, no phone number needed, and orders arrive on the Table orders page. Works whatever you choose for orders above.",
+    "offNote": "Table QR codes still open your menu, but guests can't order to their table while this is off. Your tables are kept.",
+    "openTables": "Set up your tables"
   },
   "variants": {
     "label": "Variants",

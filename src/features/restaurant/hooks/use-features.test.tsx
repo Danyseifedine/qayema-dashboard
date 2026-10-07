@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import MockAdapter from 'axios-mock-adapter'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { analyticsKeys } from '@/features/analytics'
 import { appearanceKeys } from '@/features/appearance'
 import { sessionKeys } from '@/features/auth'
 import { categoryKeys, dishKeys } from '@/features/menu'
@@ -13,6 +14,7 @@ import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/c
 import { makeSessionUser } from '@/test/factories/session'
 import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
 import { useSaveMenuLanguages } from '@/features/restaurant/hooks/use-menu-languages-save'
+import { useSaveOrdering } from '@/features/restaurant/hooks/use-ordering-save'
 
 let mock: MockAdapter
 
@@ -74,6 +76,7 @@ describe('what a feature or language save throws away', () => {
     categories: categoryKeys.all,
     dishes: dishKeys.all,
     appearance: appearanceKeys.all,
+    analytics: analyticsKeys.advanced('30d'),
   }
 
   /** A session with a restaurant, and every page's copy already cached. */
@@ -101,9 +104,10 @@ describe('what a feature or language save throws away', () => {
     resetCsrfToken(api)
   })
 
-  it('switching a feature drops every page it changes, the QR page included', async () => {
+  it('switching a feature drops every page it changes, the QR page and analytics included', async () => {
     // Merely invalidated, the QR page opened on its old copy ("QR Studio is
-    // switched off") until the refetch landed.
+    // switched off") until the refetch landed, and analytics still showed the
+    // in-menu orders section a second after ordering was switched off.
     mock.onPut('/api/features').reply(200, { data: { off: ['qr'] } })
     const { queryClient, wrapper } = withCachedPages()
 
@@ -131,6 +135,19 @@ describe('what a feature or language save throws away', () => {
     }
     // The QR code does not depend on the languages.
     expect(queryClient.getQueryData(pages.qr)).toEqual({ cached: true })
+  })
+
+  it('changing how orders arrive drops analytics, which counts each way on its own', async () => {
+    mock.onPut('/api/features/ordering').reply(200, {
+      data: { mode: 'whatsapp', types: ['delivery', 'pickup'] },
+    })
+    const { queryClient, wrapper } = withCachedPages()
+
+    const { result } = renderHook(() => useSaveOrdering(), { wrapper })
+    result.current.mutate({ mode: 'whatsapp', types: ['delivery', 'pickup'] })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(queryClient.getQueryData(pages.analytics)).toBeUndefined()
   })
 })
 

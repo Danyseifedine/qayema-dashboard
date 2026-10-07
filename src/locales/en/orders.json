@@ -8,7 +8,9 @@
     "accepted": "Accepted",
     "ready": "Ready",
     "onItsWay": "On its way",
+    "preparing": "Preparing",
     "done": "Done",
+    "served": "Served",
     "cancelled": "Cancelled"
   },
   "filter": {
@@ -30,20 +32,32 @@
   },
   "card": {
     "accept": "Accept",
+    "startPreparing": "Start preparing",
     "markDone": "Done",
     "cancel": "Cancel",
     "delivery": "Delivery",
     "pickup": "Pickup",
+    "dine_in": "At the table",
     "whatsapp": "WhatsApp",
     "openMap": "Open their location on the map",
     "onItsWay": "On its way",
     "ready": "Ready",
+    "served": "Served",
     "changed_one": "Changed by the guest at {{time}}",
-    "changed_other": "Changed by the guest {{count}} times, last at {{time}}"
+    "changed_other": "Changed by the guest {{count}} times, last at {{time}}",
+    "edit": "Edit order {{reference}}",
+    "editShort": "Edit",
+    "delete": "Delete order {{reference}}",
+    "deleteShort": "Delete",
+    "ownerChanged": "Changed by you at {{time}}"
   },
   "toast": {
     "updated": "Order {{reference}} marked {{status}}",
-    "updateFailed": "Could not update that order"
+    "updateFailed": "Could not update that order",
+    "edited": "Order {{reference}} updated",
+    "editFailed": "Could not update that order",
+    "deleted": "Order {{reference}} deleted",
+    "deleteFailed": "Could not delete that order"
   },
   "whatsapp": {
     "title": "Your orders go to WhatsApp",
@@ -56,5 +70,38 @@
     "description": "A guest just ordered from your menu.",
     "changedTitle": "An order was changed",
     "changedDescription": "A guest changed an order they placed. Check it before you accept it."
+  },
+  "tables": {
+    "title": "Table orders",
+    "description": "Orders guests placed from the QR code on their table, by table, waiting longest first.",
+    "emptyTitle": "No table orders yet",
+    "emptyDescription": "When a guest scans the QR code on their table and orders, it shows here with the table's name and a sound.",
+    "openTables": "Set up your tables",
+    "count_one": "{{count}} order",
+    "count_other": "{{count}} orders"
+  },
+  "deleteDialog": {
+    "title": "Delete order {{reference}}?",
+    "description": "The order and everything in it are deleted for good. It leaves your analytics, and a guest following it no longer can. To keep a record, cancel it instead.",
+    "confirm": "Delete for good"
+  },
+  "edit": {
+    "title": "Edit order {{reference}}",
+    "description": "Change how many of each dish, take one off, or add dishes. Dishes already on it keep the price they were ordered at.",
+    "descriptionNew": "Change how many of each dish, take one off, or add dishes. Saving accepts the order, so the guest can no longer change it.",
+    "each": "{{price}} each",
+    "new": "Added",
+    "removeAdded": "Remove {{name}}",
+    "addTitle": "Add a dish",
+    "dish": "Dish",
+    "dishPlaceholder": "Pick a dish from your menu",
+    "noDish": "No dish matches that.",
+    "hidden": "Hidden from guests",
+    "quantity": "How many",
+    "addDish": "Add",
+    "total": "Total",
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "empty": "An order needs at least one dish. To call it off, cancel it."
   }
 }

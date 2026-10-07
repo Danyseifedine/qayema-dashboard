@@ -1,19 +1,21 @@
 import {
-  ChartNoAxesColumn,
-  Crown,
-  LayoutDashboard,
-  LayoutList,
-  type LucideIcon,
-  Palette,
-  QrCode,
-  ReceiptText,
-  Store,
-  SwatchBook,
-  Share2,
-  ToggleRight,
-  UserRound,
-  UtensilsCrossed,
-} from 'lucide-react'
+  IconChartHistogram,
+  IconCrown,
+  IconLayoutDashboard,
+  IconLayoutList,
+  type TablerIcon,
+  IconPalette,
+  IconQrcode,
+  IconReceipt,
+  IconBuildingStore,
+  IconColorSwatch,
+  IconShare,
+  IconToggleRight,
+  IconUserCircle,
+  IconToolsKitchen2,
+  IconArmchair,
+  IconBowlSpoon,
+} from '@tabler/icons-react'
 import type { Plan } from '@/features/auth'
 import type common from '@/locales/en/common.json'
 
@@ -31,7 +33,7 @@ export type NavItem = {
   /** Stable id: the page `App.tsx` shows, and the feature folder's name. */
   key: string
   labelKey: NavLabelKey
-  icon: LucideIcon
+  icon: TablerIcon
   /** Locked until the owner has picked a design. */
   requiresTemplate?: boolean
   /** Locked unless the restaurant's plan includes the flag. */
@@ -41,6 +43,11 @@ export type NavItem = {
    * Features page (same key in `Restaurant::OPTIONAL_FEATURES`, ../qayema).
    */
   hideable?: true
+  /**
+   * The Features switch that hides it, when that is not its own key: two
+   * pages can belong to one feature (Tables and Table orders, `dine_in`).
+   */
+  switchKey?: string
 }
 
 export type NavGroup = {
@@ -51,22 +58,49 @@ export type NavGroup = {
 }
 
 /**
- * The sidebar, grouped by what the owner is doing: looking at the numbers,
- * building the menu, reaching guests, or setting the restaurant up. Keys are
- * the feature folders under `src/features/`. Anything that works on the menu
- * itself only unlocks once a design is chosen (`requiresTemplate`).
+ * The sidebar, ordered by how often the owner opens each page: the numbers
+ * and the orders they work through all day first, then building the menu
+ * and its look, then what is printed or shared once (the QR code, the
+ * tables' codes, social links), then the restaurant's settings. Keys are
+ * the feature folders under `src/features/` (Table orders is a page of
+ * `orders`). Anything that works on the menu itself only unlocks once a
+ * design is chosen (`requiresTemplate`).
  */
 export const NAV_GROUPS: NavGroup[] = [
   {
     key: 'main',
     items: [
-      { key: 'overview', labelKey: 'nav.overview', icon: LayoutDashboard },
+      { key: 'overview', labelKey: 'nav.overview', icon: IconLayoutDashboard },
       {
         key: 'analytics',
         labelKey: 'nav.analytics',
-        icon: ChartNoAxesColumn,
+        icon: IconChartHistogram,
         requiresPlan: 'analytics',
         hideable: true,
+      },
+    ],
+  },
+  {
+    key: 'orders',
+    labelKey: 'nav.ordersGroup',
+    items: [
+      {
+        key: 'orders',
+        labelKey: 'nav.orders',
+        icon: IconReceipt,
+        requiresTemplate: true,
+        requiresPlan: 'ordering',
+        hideable: true,
+      },
+      // Ordering at the table: a feature of its own, apart from Orders.
+      {
+        key: 'table-orders',
+        labelKey: 'nav.tableOrders',
+        icon: IconToolsKitchen2,
+        requiresTemplate: true,
+        requiresPlan: 'dine_in',
+        hideable: true,
+        switchKey: 'dine_in',
       },
     ],
   },
@@ -74,45 +108,63 @@ export const NAV_GROUPS: NavGroup[] = [
     key: 'menu',
     labelKey: 'nav.menu',
     items: [
-      { key: 'categories', labelKey: 'nav.categories', icon: LayoutList, requiresTemplate: true },
-      { key: 'dishes', labelKey: 'nav.dishes', icon: UtensilsCrossed, requiresTemplate: true },
+      {
+        key: 'categories',
+        labelKey: 'nav.categories',
+        icon: IconLayoutList,
+        requiresTemplate: true,
+      },
+      { key: 'dishes', labelKey: 'nav.dishes', icon: IconBowlSpoon, requiresTemplate: true },
+    ],
+  },
+  {
+    key: 'look',
+    labelKey: 'nav.look',
+    items: [
       // Always open: it is how an owner gets out of the locked state.
-      { key: 'design', labelKey: 'nav.design', icon: Palette },
+      { key: 'design', labelKey: 'nav.design', icon: IconPalette },
       // Its settings are the design's, so it waits for one to be chosen.
       {
         key: 'appearance',
         labelKey: 'nav.appearance',
-        icon: SwatchBook,
+        icon: IconColorSwatch,
         requiresTemplate: true,
         requiresPlan: 'appearance',
       },
     ],
   },
   {
-    key: 'guests',
-    labelKey: 'nav.guests',
+    key: 'sharing',
+    labelKey: 'nav.sharing',
     items: [
-      {
-        key: 'orders',
-        labelKey: 'nav.orders',
-        icon: ReceiptText,
-        requiresTemplate: true,
-        requiresPlan: 'ordering',
-        hideable: true,
-      },
       // Always open: the plain code is every restaurant's. The studio's
       // styling is what the plan and the Features switch decide.
-      { key: 'qr', labelKey: 'nav.qr', icon: QrCode, requiresTemplate: true },
-      { key: 'social-links', labelKey: 'nav.socialLinks', icon: Share2 },
+      { key: 'qr', labelKey: 'nav.qr', icon: IconQrcode, requiresTemplate: true },
+      // A QR code per table, printed beside the menu's own.
+      {
+        key: 'tables',
+        labelKey: 'nav.tables',
+        icon: IconArmchair,
+        requiresTemplate: true,
+        requiresPlan: 'dine_in',
+        hideable: true,
+        switchKey: 'dine_in',
+      },
+      { key: 'social-links', labelKey: 'nav.socialLinks', icon: IconShare },
     ],
   },
   {
     key: 'settings',
     labelKey: 'nav.settings',
     items: [
-      { key: 'restaurant', labelKey: 'nav.restaurant', icon: Store, requiresTemplate: true },
-      { key: 'features', labelKey: 'nav.features', icon: ToggleRight },
-      { key: 'package', labelKey: 'nav.package', icon: Crown },
+      {
+        key: 'restaurant',
+        labelKey: 'nav.restaurant',
+        icon: IconBuildingStore,
+        requiresTemplate: true,
+      },
+      { key: 'features', labelKey: 'nav.features', icon: IconToggleRight },
+      { key: 'package', labelKey: 'nav.package', icon: IconCrown },
     ],
   },
 ]
@@ -121,7 +173,7 @@ export const NAV_GROUPS: NavGroup[] = [
  * The owner's own account is a page too, but it is about the person, not the
  * restaurant, so it opens from the avatar menu rather than the sidebar.
  */
-const ACCOUNT_ITEM: NavItem = { key: 'account', labelKey: 'nav.account', icon: UserRound }
+const ACCOUNT_ITEM: NavItem = { key: 'account', labelKey: 'nav.account', icon: IconUserCircle }
 
 /** Every page, flattened, for lookups by key. */
 export const NAV_ITEMS: NavItem[] = [...NAV_GROUPS.flatMap((group) => group.items), ACCOUNT_ITEM]
@@ -131,7 +183,8 @@ const HIDEABLE_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.hideable)
 
 /** Whether the owner switched this section off. Only hideable sections can be. */
 export function isNavItemHidden(key: string, off: readonly string[]): boolean {
-  return off.includes(key) && HIDEABLE_ITEMS.some((item) => item.key === key)
+  const item = HIDEABLE_ITEMS.find((candidate) => candidate.key === key)
+  return item !== undefined && off.includes(item.switchKey ?? item.key)
 }
 
 export type NavAccess = {

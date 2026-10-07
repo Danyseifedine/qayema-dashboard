@@ -1,4 +1,4 @@
-import { GripVertical } from 'lucide-react'
+import { IconGripVertical } from '@tabler/icons-react'
 import type { ComponentProps } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
@@ -37,7 +37,7 @@ export function DragHandle({ overlay = false, className, ...props }: DragHandleP
       )}
       {...props}
     >
-      <GripVertical aria-hidden className="size-4" />
+      <IconGripVertical aria-hidden className="size-4" />
     </button>
   )
 }

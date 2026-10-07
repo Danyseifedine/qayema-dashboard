@@ -1,9 +1,9 @@
-import { Lock, type LucideIcon } from 'lucide-react'
+import { IconLock, type TablerIcon } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { Button } from '@/shared/components/ui'
 
 export type LockedStateProps = {
-  icon: LucideIcon
+  icon: TablerIcon
   title: string
   description: string
   /** What the locked thing would give, one line each. */
@@ -40,11 +40,11 @@ export function LockedState({
         <div className="flex min-w-0 flex-col items-start gap-1">
           {unlockedBy ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-gold px-2 py-0.5 text-[11px] font-medium text-ink">
-              <Lock aria-hidden className="size-3" />
+              <IconLock aria-hidden className="size-3" />
               {unlockedBy}
             </span>
           ) : (
-            <Lock aria-hidden className="size-3.5 text-[var(--muted)]" />
+            <IconLock aria-hidden className="size-3.5 text-[var(--muted)]" />
           )}
           <h3 className="font-display text-[19px] leading-tight font-normal">{title}</h3>
         </div>

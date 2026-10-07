@@ -1,4 +1,4 @@
-import { Check, Minus } from 'lucide-react'
+import { IconCheck, IconMinus } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
@@ -40,12 +40,12 @@ export function CompareTable({ packages, current, locale }: CompareTableProps) {
 
     return pkg.features[row.key] ? (
       <>
-        <Check aria-hidden className="mx-auto size-4 text-accent" />
+        <IconCheck aria-hidden className="mx-auto size-4 text-accent" />
         <span className="sr-only">{t('compare.included')}</span>
       </>
     ) : (
       <>
-        <Minus aria-hidden className="mx-auto size-4 text-[var(--faint)]" />
+        <IconMinus aria-hidden className="mx-auto size-4 text-[var(--faint)]" />
         <span className="sr-only">{t('compare.notIncluded')}</span>
       </>
     )

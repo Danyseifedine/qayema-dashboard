@@ -1,4 +1,10 @@
-import { ExternalLink, Languages, LogOut, Moon, UserRound } from 'lucide-react'
+import {
+  IconExternalLink,
+  IconLanguage,
+  IconLogout,
+  IconMoon,
+  IconUserCircle,
+} from '@tabler/icons-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Switch } from '@/shared/components/ui'
@@ -106,7 +112,7 @@ export function UserMenu({
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-[var(--text)] transition-colors hover:bg-[var(--hover-wash)]"
               >
-                <ExternalLink aria-hidden className="size-4 text-[var(--muted)]" />
+                <IconExternalLink aria-hidden className="size-4 text-[var(--muted)]" />
                 {t('userMenu.viewPublicMenu')}
               </a>
             ) : null}
@@ -120,7 +126,7 @@ export function UserMenu({
               }}
               className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-[var(--text)] transition-colors hover:bg-[var(--hover-wash)]"
             >
-              <UserRound aria-hidden className="size-4 text-[var(--muted)]" />
+              <IconUserCircle aria-hidden className="size-4 text-[var(--muted)]" />
               {t('userMenu.account')}
             </button>
           </div>
@@ -131,12 +137,12 @@ export function UserMenu({
             className="mt-1.5 border-t-[0.5px] border-[var(--line)] pt-1.5"
           >
             <div className="flex items-center gap-2.5 px-2.5 py-1.5 text-[13.5px]">
-              <Languages aria-hidden className="size-4 text-[var(--muted)]" />
+              <IconLanguage aria-hidden className="size-4 text-[var(--muted)]" />
               <span className="me-auto">{t('userMenu.language')}</span>
               <LanguageSwitcher value={locale} onChange={onLocaleChange} />
             </div>
             <label className="flex cursor-pointer items-center gap-2.5 px-2.5 py-2 text-[13.5px]">
-              <Moon aria-hidden className="size-4 text-[var(--muted)]" />
+              <IconMoon aria-hidden className="size-4 text-[var(--muted)]" />
               <span className="me-auto">{t('userMenu.darkMode')}</span>
               <Switch
                 checked={dark}
@@ -156,7 +162,7 @@ export function UserMenu({
               }}
               className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-status-danger transition-colors hover:bg-status-danger-wash"
             >
-              <LogOut aria-hidden className="size-4 rtl:rotate-180" />
+              <IconLogout aria-hidden className="size-4 rtl:rotate-180" />
               {t('userMenu.logOut')}
             </button>
           </div>

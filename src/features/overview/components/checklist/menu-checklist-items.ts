@@ -3,8 +3,8 @@ import type { Dish } from '@/features/menu'
 import type { Restaurant } from '@/features/restaurant'
 import { t } from '@/lib/i18n'
 
-/** A dashboard section a checklist item sends the owner to. */
-export type ChecklistTarget = 'restaurant' | 'categories' | 'dishes' | 'social-links'
+/** A dashboard section a checklist item (or a step's own action) sends the owner to. */
+export type ChecklistTarget = 'restaurant' | 'categories' | 'dishes' | 'social-links' | 'qr'
 
 export type ChecklistItem = {
   id: string
@@ -109,4 +109,40 @@ export function menuChecklist({ settings, dishes, limits }: ChecklistInput): Che
       action: { label: add, target: 'social-links' },
     },
   ]
+}
+
+/** The three stages of setting up a menu, in the order an owner goes through them. */
+export type SetupStepId = 'restaurant' | 'menu' | 'share'
+
+export type SetupStep = {
+  id: SetupStepId
+  items: ChecklistItem[]
+  done: boolean
+}
+
+const STEP_OF: Record<string, SetupStepId> = {
+  logo: 'restaurant',
+  cover: 'restaurant',
+  description: 'restaurant',
+  hours: 'restaurant',
+  location: 'restaurant',
+  phone: 'restaurant',
+  categories: 'menu',
+  dishes: 'menu',
+  photos: 'menu',
+  social: 'share',
+}
+
+/**
+ * The checklist as steps: who you are, what you serve, then getting it to
+ * guests. A step is done when all its items are; one with no items left
+ * (a section switched off) is left out.
+ */
+export function setupSteps(items: ChecklistItem[]): SetupStep[] {
+  return (['restaurant', 'menu', 'share'] as const)
+    .map((id) => {
+      const mine = items.filter((item) => STEP_OF[item.id] === id)
+      return { id, items: mine, done: mine.every((item) => item.done) }
+    })
+    .filter((step) => step.items.length > 0)
 }

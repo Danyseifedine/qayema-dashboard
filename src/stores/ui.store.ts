@@ -1,18 +1,19 @@
 import { create } from 'zustand'
 
 const COLLAPSED_KEY = 'qayema.dashboard.sidebar.collapsed.v1'
+const GUIDE_KEY = 'qayema.dashboard.overview.guide-hidden.v1'
 
-function readCollapsed(): boolean {
+function readFlag(key: string): boolean {
   try {
-    return localStorage.getItem(COLLAPSED_KEY) === '1'
+    return localStorage.getItem(key) === '1'
   } catch {
     return false
   }
 }
 
-function persistCollapsed(collapsed: boolean): void {
+function persistFlag(key: string, on: boolean): void {
   try {
-    localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0')
+    localStorage.setItem(key, on ? '1' : '0')
   } catch {
     // Blocked site data simply loses the preference.
   }
@@ -23,17 +24,25 @@ type UiState = {
   sidebarCollapsed: boolean
   /** Mobile: the sidebar slides in over the content. */
   mobileNavOpen: boolean
+  /** The Overview's "How it works" guide, put away by the owner. */
+  guideHidden: boolean
   toggleSidebar: () => void
   setMobileNavOpen: (open: boolean) => void
+  setGuideHidden: (hidden: boolean) => void
 }
 
 export const useUiStore = create<UiState>((set, get) => ({
-  sidebarCollapsed: readCollapsed(),
+  sidebarCollapsed: readFlag(COLLAPSED_KEY),
   mobileNavOpen: false,
+  guideHidden: readFlag(GUIDE_KEY),
   toggleSidebar: () => {
     const next = !get().sidebarCollapsed
-    persistCollapsed(next)
+    persistFlag(COLLAPSED_KEY, next)
     set({ sidebarCollapsed: next })
   },
   setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
+  setGuideHidden: (hidden) => {
+    persistFlag(GUIDE_KEY, hidden)
+    set({ guideHidden: hidden })
+  },
 }))

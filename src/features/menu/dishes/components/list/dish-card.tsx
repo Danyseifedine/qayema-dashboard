@@ -1,4 +1,4 @@
-import { ImageOff, Pencil, Trash2 } from 'lucide-react'
+import { IconPhotoOff, IconPencil, IconTrash } from '@tabler/icons-react'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
@@ -96,7 +96,7 @@ export const DishCard = memo(function DishCard({
           />
         ) : (
           <div className="grid aspect-[4/3] w-full place-items-center bg-[var(--hover-wash)] text-[var(--faint)]">
-            <ImageOff aria-hidden className="size-6" />
+            <IconPhotoOff aria-hidden className="size-6" />
           </div>
         )}
 
@@ -163,7 +163,7 @@ export const DishCard = memo(function DishCard({
                 name.text ? t('dishCard.edit', { name: name.text }) : t('dishCard.editUnnamed')
               }
             >
-              <Pencil aria-hidden className="size-4" />
+              <IconPencil aria-hidden className="size-4" />
             </Button>
             <Button
               variant="ghost"
@@ -174,7 +174,7 @@ export const DishCard = memo(function DishCard({
               }
               className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
             >
-              <Trash2 aria-hidden className="size-4" />
+              <IconTrash aria-hidden className="size-4" />
             </Button>
           </div>
         </div>

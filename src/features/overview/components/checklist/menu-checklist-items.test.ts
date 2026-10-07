@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { Restaurant } from '@/features/restaurant'
 import { makeDish } from '@/test/factories/menu'
-import { menuChecklist } from '@/features/overview/components/checklist/menu-checklist-items'
+import {
+  menuChecklist,
+  setupSteps,
+} from '@/features/overview/components/checklist/menu-checklist-items'
 
 const CLOSED = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null }
 
@@ -95,5 +98,37 @@ describe('menuChecklist', () => {
 
     expect(photos.done).toBe(false)
     expect(photos.label).toBe('Dish photos')
+  })
+
+  it('groups the checklist into three steps, in the order an owner goes', () => {
+    const steps = setupSteps(menuChecklist({ settings: settings(), dishes: [], limits: EMPTY }))
+
+    expect(steps.map((step) => step.id)).toEqual(['restaurant', 'menu', 'share'])
+    expect(steps[0]!.items.map((item) => item.id)).toEqual([
+      'logo',
+      'cover',
+      'description',
+      'hours',
+      'location',
+      'phone',
+    ])
+    expect(steps[1]!.items.map((item) => item.id)).toEqual(['categories', 'dishes', 'photos'])
+    expect(steps[2]!.items.map((item) => item.id)).toEqual(['social'])
+    expect(steps.every((step) => !step.done)).toBe(true)
+  })
+
+  it('marks a step done once all its items are, and leaves out an empty one', () => {
+    const items = menuChecklist({
+      settings: settings(),
+      dishes: [],
+      limits: { ...EMPTY, social_links: { used: 1, limit: 2 } },
+    })
+
+    const share = setupSteps(items).find((step) => step.id === 'share')!
+    expect(share.done).toBe(true)
+    // A section switched off takes its items, and so its step, away.
+    expect(setupSteps(items.filter((item) => item.id !== 'social')).map((step) => step.id)).toEqual(
+      ['restaurant', 'menu'],
+    )
   })
 })

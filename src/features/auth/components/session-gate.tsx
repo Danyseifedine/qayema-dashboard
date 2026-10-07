@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react'
+import { IconLoader2 } from '@tabler/icons-react'
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { env } from '@/config/env'
@@ -58,7 +58,7 @@ export function SessionGate({ children }: SessionGateProps) {
     return (
       <div className="grid min-h-dvh place-items-center bg-[var(--bg)] text-[var(--muted)]">
         <p className="flex items-center gap-2.5 text-[14px]">
-          <Loader2 aria-hidden className="size-4 animate-spin" />
+          <IconLoader2 aria-hidden className="size-4 animate-spin" />
           {t('session.checking')}
         </p>
       </div>

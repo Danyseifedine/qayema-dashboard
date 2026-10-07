@@ -171,7 +171,8 @@ describe('dish choices in the form', () => {
     const result = dishFormSchema.safeParse({
       ...valid,
       variants: [
-        { savedId: null, name: { en: long }, options: [option(Number.NaN), option(100_000)] },
+        // Past the 99,999,999.99 a dish's own price may be (a million is fine).
+        { savedId: null, name: { en: long }, options: [option(Number.NaN), option(100_000_000)] },
       ],
       addons: [{ savedId: null, name: { en: long }, price: 1 }],
     })

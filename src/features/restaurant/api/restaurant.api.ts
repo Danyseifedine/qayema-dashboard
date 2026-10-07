@@ -6,8 +6,8 @@ import {
 } from '@/features/restaurant/schemas/restaurant.schema'
 
 /**
- * What the owner may change about their restaurant. The slug is absent from
- * the payload on purpose: the public address is fixed at onboarding.
+ * What the owner may change about their restaurant. The slug has its own
+ * call (`changeSlug`): a new link is a deliberate step, not part of a save.
  */
 export type RestaurantPayload = {
   /** One entry per menu language; a blank one clears it. */
@@ -40,6 +40,20 @@ export async function updateRestaurant(payload: RestaurantPayload): Promise<Rest
     method: 'PATCH',
     url: '/api/restaurant',
     data: payload,
+  })
+  return data
+}
+
+/**
+ * Moves the menu to a new link. The server writes it cleanly (spaces and
+ * capitals become dashes and lowercase) and keeps the old link forwarding,
+ * so printed QR codes keep working.
+ */
+export async function changeSlug(slug: string): Promise<Restaurant> {
+  const { data } = await request(restaurantResponseSchema, {
+    method: 'PUT',
+    url: '/api/restaurant/slug',
+    data: { slug },
   })
   return data
 }

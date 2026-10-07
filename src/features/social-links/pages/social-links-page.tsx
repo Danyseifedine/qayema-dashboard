@@ -1,4 +1,4 @@
-import { Share2 } from 'lucide-react'
+import { IconShare } from '@tabler/icons-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LimitNotice } from '@/shared/components/data-display/badges/limit-notice'
@@ -56,7 +56,7 @@ export function SocialLinksPage() {
         />
         <Button
           size="sm"
-          leadingIcon={<Share2 className="size-4" />}
+          leadingIcon={<IconShare className="size-4" />}
           // Not before the list arrives: the dialog picks its platform from
           // the ones still free, and would otherwise start on a taken one.
           disabled={links.data === undefined || atLimit || allPlatformsUsed}
@@ -81,7 +81,7 @@ export function SocialLinksPage() {
       ) : list.length === 0 ? (
         <EmptyState
           fill
-          icon={Share2}
+          icon={IconShare}
           title={t('page.emptyTitle')}
           description={t('page.emptyDescription', {
             platforms: Object.values(PLATFORM_LABELS).join(', '),

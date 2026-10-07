@@ -39,7 +39,8 @@ export const CHOICE_LIMITS = {
   options: 10,
   addons: 20,
   name: 60,
-  price: 99_999.99,
+  // As a dish's own price: a menu in Lebanese pounds runs to millions.
+  price: 99_999_999.99,
 } as const
 
 const choiceRow = z.object({

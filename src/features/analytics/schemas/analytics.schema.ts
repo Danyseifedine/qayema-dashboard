@@ -84,6 +84,42 @@ const advancedStatsSchema = z.object({
       channel: z.enum(['whatsapp', 'menu']).default('whatsapp'),
     })
     .nullable(),
+  /**
+   * Orders placed in the menu, which carry a total and a status. Null unless
+   * the restaurant takes orders in the menu (never for WhatsApp ordering).
+   */
+  menu_orders: z
+    .object({
+      currency: z.string(),
+      /** What the orders came to, cancelled ones and other currencies left out. */
+      sales: z.number().nonnegative(),
+      /** Null with no order to average. */
+      average: z.number().nonnegative().nullable(),
+      /** Sales in the period before; null for "All time". */
+      previous_sales: z.number().nonnegative().nullable(),
+      statuses: z.object({
+        placed: count,
+        accepted: count,
+        ready: count,
+        done: count,
+        cancelled: count,
+      }),
+      fulfilment: breakdownSchema,
+      guests: count,
+      /** Guests who ordered more than once in the range. */
+      returning_guests: count,
+      /** The median wait before the restaurant took an order on; null with none. */
+      minutes_to_accept: count.nullable(),
+      /** Orders by hour of day, 0 to 23, in the restaurant's timezone. */
+      hours: z.array(count).length(24),
+      /** Orders by weekday, Monday first. */
+      weekdays: z.array(count).length(7),
+      top_ordered: z.array(
+        z.object({ name: z.string(), quantity: count, sales: z.number().nonnegative() }),
+      ),
+    })
+    .nullable()
+    .default(null),
 })
 
 export type AdvancedStats = z.infer<typeof advancedStatsSchema>

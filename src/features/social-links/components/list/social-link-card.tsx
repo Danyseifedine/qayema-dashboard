@@ -1,4 +1,4 @@
-import { ExternalLink, Pencil, Trash2 } from 'lucide-react'
+import { IconExternalLink, IconPencil, IconTrash } from '@tabler/icons-react'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
@@ -53,7 +53,7 @@ export const SocialLinkCard = memo(function SocialLinkCard({
           )}
         >
           <span className="truncate">{link.url.replace(/^https?:\/\//, '')}</span>
-          <ExternalLink aria-hidden className="size-3 shrink-0" />
+          <IconExternalLink aria-hidden className="size-3 shrink-0" />
         </a>
       </div>
 
@@ -64,7 +64,7 @@ export const SocialLinkCard = memo(function SocialLinkCard({
           onClick={() => onEdit(link)}
           aria-label={t('card.edit', { platform: label })}
         >
-          <Pencil aria-hidden className="size-4" />
+          <IconPencil aria-hidden className="size-4" />
         </Button>
         <Button
           variant="ghost"
@@ -73,7 +73,7 @@ export const SocialLinkCard = memo(function SocialLinkCard({
           aria-label={t('card.remove', { platform: label })}
           className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
         >
-          <Trash2 aria-hidden className="size-4" />
+          <IconTrash aria-hidden className="size-4" />
         </Button>
       </div>
     </div>

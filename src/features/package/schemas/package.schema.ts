@@ -37,6 +37,7 @@ const packageSchema = z.object({
     qr_studio: z.boolean(),
     ordering: z.boolean(),
     menu_ordering: z.boolean(),
+    dine_in: z.boolean(),
     analytics: z.boolean(),
     advanced_analytics: z.boolean(),
   }),

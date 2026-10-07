@@ -4,6 +4,7 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
+import { makeDish } from '@/test/factories/menu'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { makeSessionUser } from '@/test/factories/session'
 import { OrdersPage } from '@/features/orders/pages/orders-page'
@@ -103,7 +104,7 @@ describe('OrdersPage', () => {
 
     await waitFor(() => {
       const request = mock.history.get.filter((r) => r.url === '/api/orders').at(-1)
-      expect(request?.params).toEqual({ status: 'done' })
+      expect(request?.params).toEqual({ kind: 'away', status: 'done' })
     })
   })
 
@@ -187,6 +188,114 @@ describe('OrdersPage', () => {
       const patch = mock.history.patch.find((r) => r.url === '/api/orders/1')
       expect(JSON.parse(patch!.data as string)).toEqual({ status: 'ready' })
     })
+  })
+
+  it('takes an order at the table from preparing straight to served', async () => {
+    stub([order({ status: 'accepted', fulfilment: 'dine_in', table: 'Table 4' })])
+    mock.onPatch('/api/orders/1').reply(200, {
+      data: order({ status: 'done', fulfilment: 'dine_in', table: 'Table 4' }),
+    })
+
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    expect(await screen.findByText('Table 4')).toBeInTheDocument()
+    expect(screen.getByText('At the table')).toBeInTheDocument()
+    expect(screen.getByText('Preparing', { selector: 'span' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Served' }))
+
+    await waitFor(() => {
+      const patch = mock.history.patch.find((r) => r.url === '/api/orders/1')
+      expect(JSON.parse(patch!.data as string)).toEqual({ status: 'done' })
+    })
+  })
+
+  it('starts preparing a new order at the table', async () => {
+    stub([order({ status: 'placed', fulfilment: 'dine_in', table: 'Table 4' })])
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    expect(await screen.findByRole('button', { name: 'Start preparing' })).toBeInTheDocument()
+  })
+
+  it('calls an order at the table served once it is done', async () => {
+    stub([order({ status: 'done', fulfilment: 'dine_in', table: 'Terrace 2' })])
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    expect(await screen.findByText('Served', { selector: 'span' })).toBeInTheDocument()
+  })
+
+  it('edits an order: changes a quantity, takes a line off and adds a dish', async () => {
+    stub([order({ status: 'accepted', fulfilment: 'pickup' })])
+    mock.onGet('/api/dishes').reply(200, {
+      data: [makeDish({ id: 7, name: { en: 'Kebab', ar: null }, price: '6.00' })],
+      meta: { used: 1, limit: 40, currency: 'USD' },
+    })
+    mock.onPut('/api/orders/1/items').reply(200, { data: order({ status: 'accepted' }) })
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Edit order ABC234' }))
+    const dialog = screen.getByRole('dialog')
+    // House Bowl: 2 to 3. Daily Tart: off.
+    await user.click(within(dialog).getByRole('button', { name: 'House Bowl +1' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Daily Tart -1' }))
+    await user.click(within(dialog).getByRole('combobox', { name: 'Dish' }))
+    await user.click(await screen.findByRole('option', { name: 'Kebab' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Add' }))
+    expect(within(dialog).getByText('Kebab')).toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(mock.history.put).toHaveLength(1))
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      items: [{ id: 1, quantity: 3 }],
+      add: [{ dish_id: 7, quantity: 1, options: [], addons: [] }],
+    })
+    expect(await screen.findByText('Order ABC234 updated')).toBeInTheDocument()
+  })
+
+  it('keeps at least one dish on an order being edited', async () => {
+    stub([order({ status: 'accepted', fulfilment: 'pickup' })])
+    mock
+      .onGet('/api/dishes')
+      .reply(200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } })
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Edit order ABC234' }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'House Bowl -1' }))
+    await user.click(within(dialog).getByRole('button', { name: 'House Bowl -1' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Daily Tart -1' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+
+    expect(
+      await within(dialog).findByText(
+        'An order needs at least one dish. To call it off, cancel it.',
+      ),
+    ).toBeInTheDocument()
+    expect(mock.history.put).toHaveLength(0)
+  })
+
+  it('deletes an order for good, after asking', async () => {
+    stub([order({ status: 'done', fulfilment: 'pickup' })])
+    mock.onDelete('/api/orders/1').reply(204)
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Delete order ABC234' }))
+    expect(screen.getByText(/deleted for good/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Delete for good' }))
+
+    await waitFor(() => expect(mock.history.delete).toHaveLength(1))
+    expect(await screen.findByText('Order ABC234 deleted')).toBeInTheDocument()
+  })
+
+  it('cannot edit a cancelled order, only delete it', async () => {
+    stub([order({ status: 'cancelled', fulfilment: 'pickup' })])
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    expect(await screen.findByRole('button', { name: 'Delete order ABC234' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit order ABC234' })).not.toBeInTheDocument()
   })
 
   it('makes an accepted pickup ready', async () => {
@@ -286,7 +395,7 @@ describe('OrdersPage', () => {
   })
 
   it('says nothing has that status, and goes back to every order from All', async () => {
-    mock.onGet('/api/orders', { params: { status: 'cancelled' } }).reply(200, {
+    mock.onGet('/api/orders', { params: { kind: 'away', status: 'cancelled' } }).reply(200, {
       data: [],
       meta: { open: 1 },
     })

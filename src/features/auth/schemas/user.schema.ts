@@ -16,6 +16,7 @@ const planSchema = z.object({
   qr_studio: z.boolean(),
   ordering: z.boolean(),
   menu_ordering: z.boolean(),
+  dine_in: z.boolean(),
   analytics: z.boolean(),
   advanced_analytics: z.boolean(),
 })
@@ -85,6 +86,14 @@ const userSchema = z.object({
   email: z.email(),
   has_completed_onboarding: z.boolean(),
   has_password: z.boolean(),
+  /**
+   * An admin viewing this account from /admin (Users → Impersonate): their
+   * name, and the link that hands the session back. Null for the owner.
+   */
+  impersonation: z
+    .object({ admin: z.string().nullable(), leave_url: z.string() })
+    .nullable()
+    .default(null),
   restaurant: restaurantSchema.nullable(),
 })
 

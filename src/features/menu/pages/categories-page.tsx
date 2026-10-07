@@ -1,4 +1,4 @@
-import { FolderPlus } from 'lucide-react'
+import { IconFolderPlus } from '@tabler/icons-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CategoryDialog } from '@/features/menu/categories/components/dialogs/category-dialog'
@@ -62,7 +62,7 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
         />
         <Button
           size="sm"
-          leadingIcon={<FolderPlus className="size-4" />}
+          leadingIcon={<IconFolderPlus className="size-4" />}
           disabled={atLimit}
           onClick={() => setDialog({ open: true, category: null })}
         >
@@ -86,7 +86,7 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
       ) : list.length === 0 ? (
         <EmptyState
           fill
-          icon={FolderPlus}
+          icon={IconFolderPlus}
           title={t('categoriesPage.emptyTitle')}
           description={t('categoriesPage.emptyDescription')}
           action={

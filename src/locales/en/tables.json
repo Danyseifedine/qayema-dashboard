@@ -1,0 +1,72 @@
+{
+  "page": {
+    "title": "Tables",
+    "description": "Give every table its own QR code. Guests who scan it order straight to that table, and the order arrives saying which one.",
+    "add": "Add tables",
+    "addFirst": "Add your tables",
+    "printAll": "Print all cards",
+    "emptyTitle": "No tables yet",
+    "emptyDescription": "Add your tables to get a QR code for each one. Print the cards and put one on every table.",
+    "notOrderingTitle": "Ordering at the table is switched off",
+    "notOrderingBody": "Guests can open your menu from these codes, but can't order to their table. Switch it on in Features.",
+    "openFeatures": "Open Features",
+    "atLimit": "You have {{limit}} tables, the most a restaurant can have.",
+    "newCodeTitle": "New code for {{name}}?",
+    "newCodeDescription": "The card on this table stops working straight away. Print the new one and swap it in. Use this if a card was taken or copied.",
+    "newCodeConfirm": "Make a new code",
+    "removeTitle": "Remove {{name}}?",
+    "removeDescription": "Its QR code stops working. Orders already made at this table keep its name.",
+    "removeConfirm": "Remove table"
+  },
+  "card": {
+    "qrLabel": "QR code for {{name}}",
+    "open": "Open the menu at this table",
+    "download": "Download QR code",
+    "print": "Print card",
+    "rename": "Rename",
+    "newCode": "New code",
+    "remove": "Remove"
+  },
+  "dialog": {
+    "addTitle": "Add tables",
+    "addDescription": "Each table gets its own QR code. You can rename any table later.",
+    "modeLabel": "How to add them",
+    "numbered": "Numbered",
+    "single": "One by name",
+    "defaultPrefix": "Table",
+    "prefix": "Name",
+    "from": "From",
+    "to": "To",
+    "preview_one": "Adds {{first}}.",
+    "preview_other": "Adds {{count}} tables, {{first}} to {{last}}.",
+    "previewNone": "Pick where the numbers start and end.",
+    "name": "Table name",
+    "namePlaceholder": "Terrace, Bar, Window",
+    "nameMissing": "Give the table a name.",
+    "nameMax": "Keep the name under {{max}} characters.",
+    "numberInvalid": "Use a whole number.",
+    "rangeInvalid": "Check the numbers: \"To\" has to be the same as \"From\" or higher.",
+    "rangeTooBig": "Add up to {{max}} tables at a time.",
+    "addOne": "Add table",
+    "addMany_one": "Add {{count}} table",
+    "addMany_other": "Add {{count}} tables",
+    "renameTitle": "Rename table",
+    "renameDescription": "The table keeps its QR code, so the card already on it still works.",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "print": {
+    "ctaOrder": "Scan to see the menu and order",
+    "ctaMenu": "Scan to see the menu"
+  },
+  "toast": {
+    "added_one": "Table added",
+    "added_other": "{{count}} tables added",
+    "renamed": "Table renamed",
+    "newCode": "{{name}} has a new code",
+    "newCodeHint": "Print its card again: the old one no longer works.",
+    "newCodeFailed": "Could not make a new code",
+    "removed": "Table removed",
+    "removeFailed": "Could not remove that table"
+  }
+}

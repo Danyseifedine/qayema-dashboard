@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ExternalLink } from 'lucide-react'
+import { IconExternalLink } from '@tabler/icons-react'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -14,6 +14,7 @@ import { ContactSection } from '@/features/restaurant/components/contact/contact
 import { MoneyTimeSection } from '@/features/restaurant/components/hours/money-time-section'
 import { OpeningHoursSection } from '@/features/restaurant/components/hours/opening-hours-section'
 import { BrandingSection } from '@/features/restaurant/components/branding/branding-section'
+import { LinkSection } from '@/features/restaurant/components/identity/link-section'
 import { IdentitySection } from '@/features/restaurant/components/identity/identity-section'
 import { useSaveRestaurant, useRestaurant } from '@/features/restaurant/hooks/use-restaurant'
 import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
@@ -183,7 +184,7 @@ export function RestaurantPage() {
             )}
           >
             /{data.slug}
-            <ExternalLink aria-hidden className="size-3" />
+            <IconExternalLink aria-hidden className="size-3" />
           </a>
         ) : null}
       </div>
@@ -193,6 +194,10 @@ export function RestaurantPage() {
           {formError}
         </Alert>
       ) : null}
+
+      {/* Its own small form, outside the page's save: a new link is a
+          deliberate step, confirmed, and the old one keeps forwarding. */}
+      {data ? <LinkSection slug={data.slug} publicUrl={publicUrl} /> : null}
 
       <Form onSubmit={onSubmit}>
         {/* Two columns once there is room, each stacking on its own: in a

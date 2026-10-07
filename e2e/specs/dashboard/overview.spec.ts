@@ -6,7 +6,18 @@ import { fixtureFile } from '../../support/helpers'
 const tile = (page: Page, label: RegExp) =>
   page.locator('dl > div').filter({ has: page.locator('dt').getByText(label) })
 
-const checklist = (page: Page) => page.getByRole('list', { name: either('To do', 'المهام') })
+const STEPS = {
+  restaurant: 'Your restaurant',
+  menu: 'Your dishes',
+  share: 'Share your menu',
+} as const
+
+/** A set-up step's list of items, opening the step first when it is closed. */
+async function step(page: Page, which: keyof typeof STEPS) {
+  const toggle = page.getByRole('button', { name: new RegExp(STEPS[which]) })
+  if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
+  return page.getByRole('list', { name: STEPS[which] })
+}
 
 const EVERY_DAY = Object.fromEntries(
   ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => [
@@ -44,7 +55,11 @@ test.describe('overview', () => {
     await expect(social.getByText('1 / 1')).toHaveAttribute('dir', 'ltr')
 
     await expect(
-      page.getByRole('heading', { name: either('Finish your menu', 'أكمل قائمتك') }),
+      page.getByRole('heading', { name: either('Set up your menu', 'جهّز قائمتك') }),
+    ).toBeVisible()
+    // The menu's link comes first, ready to copy.
+    await expect(
+      page.getByRole('button', { name: either('Copy link', 'نسخ الرابط') }),
     ).toBeVisible()
   })
 
@@ -73,42 +88,47 @@ test.describe('overview', () => {
     await page.goto('/overview')
 
     await expect(page.getByText('2 of 10 done')).toBeVisible()
-    await expect(page.getByRole('progressbar', { name: 'Menu checklist' })).toHaveAttribute(
+    await expect(page.getByRole('progressbar', { name: 'Menu set-up' })).toHaveAttribute(
       'aria-valuenow',
       '2',
     )
-    await expect(
-      page.getByText('Each of these makes your menu more useful to guests.'),
-    ).toBeVisible()
+    await expect(page.getByText('Three steps, each with what is still missing.')).toBeVisible()
 
-    const rows = checklist(page).getByRole('listitem')
-    await expect(rows).toHaveCount(10)
+    // The first step is open: the restaurant, with its description and phone done.
+    const rows = (await step(page, 'restaurant')).getByRole('listitem')
+    await expect(rows).toHaveCount(6)
     // What is done comes last and has no button.
-    await expect(rows.nth(8)).toContainText('(done)')
-    await expect(rows.nth(9)).toContainText('(done)')
-    await expect(rows.nth(9).getByRole('button')).toHaveCount(0)
+    await expect(rows.nth(4)).toContainText('(done)')
+    await expect(rows.nth(5)).toContainText('(done)')
+    await expect(rows.nth(5).getByRole('button')).toHaveCount(0)
     await expect(rows.first()).toContainText('(to do)')
   })
 
   test('each item to do opens the page that fixes it', async ({ page, owner }) => {
     await owner({ package: 'free' })
 
-    const targets: [button: string, path: string][] = [
-      ['Add: Your logo', 'restaurant'],
-      ['Add: A cover photo', 'restaurant'],
-      ['Add: Opening hours', 'restaurant'],
-      ['Add: Your location', 'restaurant'],
-      ['Add: A category', 'categories'],
-      ['Add: A dish', 'dishes'],
-      ['Fix: Dish photos', 'dishes'],
-      ['Add: A social link', 'social-links'],
+    const targets: [which: keyof typeof STEPS, button: string, path: string][] = [
+      ['restaurant', 'Add: Your logo', 'restaurant'],
+      ['restaurant', 'Add: A cover photo', 'restaurant'],
+      ['restaurant', 'Add: Opening hours', 'restaurant'],
+      ['restaurant', 'Add: Your location', 'restaurant'],
+      ['menu', 'Add: A category', 'categories'],
+      ['menu', 'Add: A dish', 'dishes'],
+      ['menu', 'Fix: Dish photos', 'dishes'],
+      ['share', 'Add: A social link', 'social-links'],
     ]
 
-    for (const [button, path] of targets) {
+    for (const [which, button, path] of targets) {
       await page.goto('/overview')
-      await checklist(page).getByRole('button', { name: button }).click()
+      await (await step(page, which)).getByRole('button', { name: button }).click()
       await expect(page).toHaveURL(new RegExp(`/${path}$`))
     }
+
+    // Sharing ends at the QR code.
+    await page.goto('/overview')
+    await step(page, 'share')
+    await page.getByRole('button', { name: 'Get your QR code' }).click()
+    await expect(page).toHaveURL(/\/qr$/)
   })
 
   test('the photo item counts the dishes still without one', async ({ page, owner }) => {
@@ -120,7 +140,11 @@ test.describe('overview', () => {
     })
     await page.goto('/overview')
 
-    await checklist(page).getByRole('button', { name: 'Fix: 2 dishes have no photo' }).click()
+    await (
+      await step(page, 'menu')
+    )
+      .getByRole('button', { name: 'Fix: 2 dishes have no photo' })
+      .click()
     await expect(page).toHaveURL(/\/dishes$/)
   })
 
@@ -137,7 +161,11 @@ test.describe('overview', () => {
     await expect(page.getByText('8 of 10 done')).toBeVisible()
 
     // The cover photo, from the Restaurant page.
-    await checklist(page).getByRole('button', { name: 'Add: A cover photo' }).click()
+    await (
+      await step(page, 'restaurant')
+    )
+      .getByRole('button', { name: 'Add: A cover photo' })
+      .click()
     await expect(page).toHaveURL(/\/restaurant$/)
     // Two image fields: the logo, then the cover.
     await page.locator('input[type="file"]').nth(1).setInputFiles(fixtureFile('dish.jpg'))
@@ -148,7 +176,11 @@ test.describe('overview', () => {
     // The last dish photo, from the Dishes page.
     await page.goto('/overview')
     await expect(page.getByText('9 of 10 done')).toBeVisible()
-    await checklist(page).getByRole('button', { name: 'Fix: 1 dish has no photo' }).click()
+    await (
+      await step(page, 'menu')
+    )
+      .getByRole('button', { name: 'Fix: 1 dish has no photo' })
+      .click()
     await expect(page).toHaveURL(/\/dishes$/)
     await page.getByRole('button', { name: 'Edit Shish taouk' }).click()
     const dialog = page.getByRole('dialog')
@@ -159,12 +191,18 @@ test.describe('overview', () => {
 
     await page.goto('/overview')
     await expect(page.getByText('10 of 10 done')).toBeVisible()
-    await expect(page.getByText('Everything guests look for is on your menu.')).toBeVisible()
-    await expect(page.getByRole('progressbar', { name: 'Menu checklist' })).toHaveAttribute(
+    await expect(
+      page.getByText('Your menu is ready: everything guests look for is on it.'),
+    ).toBeVisible()
+    await expect(page.getByRole('progressbar', { name: 'Menu set-up' })).toHaveAttribute(
       'aria-valuenow',
       '10',
     )
-    await expect(checklist(page).getByRole('button')).toHaveCount(0)
-    await expect(checklist(page).getByText('Every dish has a photo')).toBeVisible()
+    for (const name of Object.values(STEPS)) {
+      await expect(page.getByRole('button', { name: new RegExp(name) })).toContainText('Done')
+    }
+    const dishes = await step(page, 'menu')
+    await expect(dishes.getByRole('button')).toHaveCount(0)
+    await expect(dishes.getByText('Every dish has a photo')).toBeVisible()
   })
 })

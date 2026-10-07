@@ -1,4 +1,4 @@
-import { Store } from 'lucide-react'
+import { IconBuildingStore } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { useSession } from '@/features/auth'
 import { ErrorState } from '@/shared/components/feedback'
@@ -35,7 +35,7 @@ export function AccountPage({ onOpenRestaurant }: AccountPageProps) {
         <Button
           variant="secondary"
           size="sm"
-          leadingIcon={<Store className="size-4" />}
+          leadingIcon={<IconBuildingStore className="size-4" />}
           onClick={onOpenRestaurant}
         >
           {t('page.editRestaurant')}

@@ -32,7 +32,8 @@ const COUNTRY_CODES = COUNTRIES.map((country) => country.code)
 /**
  * Mirrors ../qayema/app/Http/Resources/SettingsResource.php.
  *
- * `slug` is read-only: the public address is fixed once onboarding sets it.
+ * `slug` is not part of the page's save: a new link goes through
+ * `changeSlug` (the Menu link section), which keeps the old one forwarding.
  * The menu's languages are set on the Features page; text here follows them.
  */
 /** Monday first, as the API keys them. */

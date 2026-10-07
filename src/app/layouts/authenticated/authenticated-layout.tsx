@@ -1,8 +1,10 @@
-import { X } from 'lucide-react'
+import { IconX } from '@tabler/icons-react'
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ImpersonationBanner } from '@/app/layouts/authenticated/impersonation-banner'
 import { Sidebar } from '@/app/layouts/authenticated/sidebar/sidebar'
 import { Topbar } from '@/app/layouts/authenticated/topbar/topbar'
+import type { AuthUser } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { useUiStore } from '@/stores/ui.store'
@@ -26,6 +28,8 @@ export type AuthenticatedLayoutProps = {
   locale: Locale
   onLocaleChange: (locale: Locale) => void
   onLogout: () => void
+  /** An admin viewing this dashboard as its owner, with the way back. */
+  impersonation?: AuthUser['impersonation']
   children: ReactNode
 }
 
@@ -47,6 +51,7 @@ export function AuthenticatedLayout({
   locale,
   onLocaleChange,
   onLogout,
+  impersonation = null,
   children,
 }: AuthenticatedLayoutProps) {
   const collapsed = useUiStore((state) => state.sidebarCollapsed)
@@ -144,13 +149,16 @@ export function AuthenticatedLayout({
               !mobileOpen && 'invisible',
             )}
           >
-            <X aria-hidden className="size-4" />
+            <IconX aria-hidden className="size-4" />
           </button>
         </div>
       </div>
 
       {/* Content column */}
       <div className="flex min-w-0 flex-1 flex-col">
+        {impersonation ? (
+          <ImpersonationBanner owner={user.name} impersonation={impersonation} />
+        ) : null}
         <Topbar
           title={activeItem ? t(activeItem.labelKey) : t('app.dashboard')}
           subtitle={

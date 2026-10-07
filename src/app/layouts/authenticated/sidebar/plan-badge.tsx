@@ -1,4 +1,4 @@
-import { Lock } from 'lucide-react'
+import { IconLock } from '@tabler/icons-react'
 import { usePackageFor, type PackageFlag } from '@/features/package'
 import { usePreferencesStore } from '@/stores/preferences.store'
 
@@ -9,7 +9,7 @@ export function PlanBadge({ flag }: { flag: PackageFlag }) {
 
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-accent-wash px-2 py-0.5 text-[11px] font-medium text-accent">
-      <Lock aria-hidden className="size-3" />
+      <IconLock aria-hidden className="size-3" />
       {name}
     </span>
   )

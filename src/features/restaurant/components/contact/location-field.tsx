@@ -1,4 +1,4 @@
-import { ExternalLink, LocateFixed, MapPin } from 'lucide-react'
+import { IconExternalLink, IconCurrentLocation, IconMapPin } from '@tabler/icons-react'
 import type { Control, FieldValues, FieldPath } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { UrlField } from '@/shared/components/forms'
@@ -53,7 +53,7 @@ export function LocationField<T extends FieldValues>({
           variant="secondary"
           size="sm"
           loading={locating}
-          leadingIcon={<LocateFixed className="size-3.5" />}
+          leadingIcon={<IconCurrentLocation className="size-3.5" />}
           onClick={() => locate((point) => onPick(googleMapsUrlFor(point)))}
         >
           {locating ? t('location.finding') : t('location.useCurrent')}
@@ -71,7 +71,7 @@ export function LocationField<T extends FieldValues>({
             )}
           >
             {t('location.openInMaps')}
-            <ExternalLink aria-hidden className="size-3" />
+            <IconExternalLink aria-hidden className="size-3" />
           </a>
         ) : null}
       </div>
@@ -100,7 +100,7 @@ export function LocationField<T extends FieldValues>({
             className="h-[180px] w-full rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--field)]"
           />
           <figcaption className="force-ltr flex items-center gap-1.5 text-[12px] text-[var(--muted)]">
-            <MapPin aria-hidden className="size-3" />
+            <IconMapPin aria-hidden className="size-3" />
             {coordinates.lat.toFixed(5)}, {coordinates.lng.toFixed(5)}
           </figcaption>
         </figure>

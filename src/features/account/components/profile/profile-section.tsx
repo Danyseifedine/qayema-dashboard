@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Mail, UserRound } from 'lucide-react'
+import { IconMail, IconUserCircle } from '@tabler/icons-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -50,7 +50,7 @@ export function ProfileSection({ name, email }: ProfileSectionProps) {
           name="name"
           label={t('profile.nameLabel')}
           required
-          leadingIcon={<UserRound />}
+          leadingIcon={<IconUserCircle />}
           maxLength={100}
           hint={t('profile.nameHint')}
         />
@@ -58,7 +58,7 @@ export function ProfileSection({ name, email }: ProfileSectionProps) {
         <div className="flex flex-col gap-1.5">
           <span className="text-[13px] font-medium">{t('profile.emailLabel')}</span>
           <p className="force-ltr flex items-center gap-2 rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--field)] px-3.5 py-2.5 text-[14px] text-[var(--muted)]">
-            <Mail aria-hidden className="size-4 shrink-0" />
+            <IconMail aria-hidden className="size-4 shrink-0" />
             {email}
           </p>
           <p className="text-[12px] text-[var(--muted)]">{t('profile.emailHint')}</p>

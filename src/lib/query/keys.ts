@@ -16,4 +16,5 @@ export const QUERY_ROOTS = {
   package: 'package',
   qr: 'qr',
   socialLinks: 'social-links',
+  tables: 'tables',
 } as const

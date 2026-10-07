@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-react'
+import { IconMenu2 } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Locale } from '@/shared/constants/locales'
@@ -63,7 +63,7 @@ export function Topbar({
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
           )}
         >
-          <Menu aria-hidden className="size-5" />
+          <IconMenu2 aria-hidden className="size-5" />
         </button>
 
         <div className="me-auto min-w-0">

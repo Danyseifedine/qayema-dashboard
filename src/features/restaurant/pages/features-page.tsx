@@ -1,18 +1,19 @@
 import {
-  ChartNoAxesColumn,
-  CirclePlus,
-  Languages,
-  ListChecks,
-  Lock,
-  type LucideIcon,
-  QrCode,
-  ReceiptText,
-} from 'lucide-react'
+  IconChartHistogram,
+  IconCirclePlus,
+  IconLanguage,
+  IconListCheck,
+  IconLock,
+  type TablerIcon,
+  IconQrcode,
+  IconReceipt,
+  IconToolsKitchen2,
+} from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import type { AuthRestaurant, OrderMode, Plan } from '@/features/auth'
+import type { AuthRestaurant, OrderMode, OrderType, Plan } from '@/features/auth'
 import { usePackageFor, type PackageFlag } from '@/features/package'
 import { Field, FormSection } from '@/shared/components/forms'
-import { Combobox, Segmented, Switch } from '@/shared/components/ui'
+import { Button, Combobox, Segmented, Switch } from '@/shared/components/ui'
 import { MAIN_LANGUAGE, MENU_LANGUAGES, languageName } from '@/shared/constants/menu-languages'
 import { useSaveMenuLanguages } from '@/features/restaurant/hooks/use-menu-languages-save'
 import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
@@ -20,7 +21,7 @@ import { useSaveOrdering } from '@/features/restaurant/hooks/use-ordering-save'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { cn } from '@/shared/utils/dom/cn'
 
-type FeatureKey = 'orders' | 'variants' | 'addons' | 'qr' | 'analytics' | 'languages'
+type FeatureKey = 'orders' | 'dine_in' | 'variants' | 'addons' | 'qr' | 'analytics' | 'languages'
 
 export type FeaturesPageProps = {
   /** Features the owner switched off. */
@@ -35,15 +36,18 @@ export type FeaturesPageProps = {
   ordering: AuthRestaurant['ordering']
   /** Opens the Package page, from a feature the package does not include. */
   onOpenPackage: () => void
+  /** Opens the Tables page, from ordering at the table. */
+  onOpenTables: () => void
 }
 
-const ROWS: { key: FeatureKey; icon: LucideIcon; plan: PackageFlag }[] = [
-  { key: 'orders', icon: ReceiptText, plan: 'ordering' },
-  { key: 'variants', icon: ListChecks, plan: 'variants' },
-  { key: 'addons', icon: CirclePlus, plan: 'addons' },
-  { key: 'qr', icon: QrCode, plan: 'qr_studio' },
-  { key: 'analytics', icon: ChartNoAxesColumn, plan: 'analytics' },
-  { key: 'languages', icon: Languages, plan: 'multiple_languages' },
+const ROWS: { key: FeatureKey; icon: TablerIcon; plan: PackageFlag }[] = [
+  { key: 'orders', icon: IconReceipt, plan: 'ordering' },
+  { key: 'dine_in', icon: IconToolsKitchen2, plan: 'dine_in' },
+  { key: 'variants', icon: IconListCheck, plan: 'variants' },
+  { key: 'addons', icon: IconCirclePlus, plan: 'addons' },
+  { key: 'qr', icon: IconQrcode, plan: 'qr_studio' },
+  { key: 'analytics', icon: IconChartHistogram, plan: 'analytics' },
+  { key: 'languages', icon: IconLanguage, plan: 'multiple_languages' },
 ]
 
 /**
@@ -59,6 +63,7 @@ export function FeaturesPage({
   defaultLocale,
   ordering,
   onOpenPackage,
+  onOpenTables,
 }: FeaturesPageProps) {
   const { t } = useTranslation('features')
   const save = useSaveSwitchedOff()
@@ -114,6 +119,16 @@ export function FeaturesPage({
                       onOpenPackage={onOpenPackage}
                     />
                   ) : null}
+                  {key === 'dine_in' && on ? (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={onOpenTables}
+                      className="mt-1 h-auto px-0 text-[12.5px] font-medium"
+                    >
+                      {t('dine_in.openTables')}
+                    </Button>
+                  ) : null}
                   {key === 'languages' && on ? (
                     <LanguageChoice secondLocale={secondLocale} defaultLocale={defaultLocale} />
                   ) : null}
@@ -157,18 +172,20 @@ function PackageChip({ flag, onOpenPackage }: { flag: PackageFlag; onOpenPackage
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
       )}
     >
-      <Lock aria-hidden className="size-3" />
+      <IconLock aria-hidden className="size-3" />
       {name ?? t('notOnPackage')}
     </button>
   )
 }
 
-type TypesChoice = 'both' | 'delivery' | 'pickup'
+const ORDER_TYPES: readonly OrderType[] = ['delivery', 'pickup']
 
 /**
  * How guests send their orders: to WhatsApp, or in the menu (its own
  * package flag) with delivery, pickup or both. One way at a time, so the
- * owner never wonders where an order went. Saves on change.
+ * owner never wonders where an order went. At least one stays on, or
+ * nobody could order. Ordering at the table is a feature of its own, with
+ * its own row. Saves on change.
  */
 function OrderingChoice({
   ordering,
@@ -182,13 +199,14 @@ function OrderingChoice({
   const { t } = useTranslation('features')
   const save = useSaveOrdering()
   const { mode, types } = ordering
-  const choice: TypesChoice = types.length === 1 && types[0] ? types[0] : 'both'
 
   const setMode = (next: OrderMode) => {
     if (next !== mode) save.mutate({ mode: next, types })
   }
-  const setTypes = (next: TypesChoice) => {
-    save.mutate({ mode, types: next === 'both' ? ['delivery', 'pickup'] : [next] })
+  const setType = (type: OrderType, on: boolean) => {
+    const next = on ? [...types, type] : types.filter((current) => current !== type)
+    // Kept in the server's order, so the optimistic copy matches what comes back.
+    save.mutate({ mode, types: ORDER_TYPES.filter((current) => next.includes(current)) })
   }
 
   return (
@@ -210,7 +228,7 @@ function OrderingChoice({
                   value: 'menu',
                   label: t('orders.menu'),
                   disabled: !menuIncluded,
-                  icon: menuIncluded ? undefined : <Lock aria-hidden className="size-3" />,
+                  icon: menuIncluded ? undefined : <IconLock aria-hidden className="size-3" />,
                 },
               ]}
             />
@@ -222,19 +240,36 @@ function OrderingChoice({
       </Field>
 
       {mode === 'menu' ? (
-        <Field label={t('orders.typesLabel')} hint={t('orders.typesHint')} className="pt-0">
-          {() => (
-            <Segmented
-              aria-label={t('orders.typesLabel')}
-              value={choice}
-              onChange={setTypes}
-              options={(['both', 'delivery', 'pickup'] as const).map((value) => ({
-                value,
-                label: t(`orders.types.${value}`),
-              }))}
-            />
-          )}
-        </Field>
+        <fieldset className="grid gap-2.5">
+          <legend className="pb-2 text-[13px] font-medium text-[var(--text)]">
+            {t('orders.typesLabel')}
+          </legend>
+          {ORDER_TYPES.map((type) => {
+            const on = types.includes(type)
+            const labelId = `order-type-${type}`
+            const hintId = `order-type-${type}-hint`
+            return (
+              <div key={type} className="flex items-start justify-between gap-3.5">
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span id={labelId} className="text-[13.5px] text-[var(--text)]">
+                    {t(`orders.types.${type}`)}
+                  </span>
+                  <span id={hintId} className="text-[12px] leading-[1.45] text-[var(--muted)]">
+                    {t(`orders.typeHints.${type}`)}
+                  </span>
+                </div>
+                <Switch
+                  checked={on}
+                  // The last kind left on stays on.
+                  disabled={on && types.length === 1}
+                  onChange={(next) => setType(type, next)}
+                  aria-labelledby={labelId}
+                  aria-describedby={hintId}
+                />
+              </div>
+            )
+          })}
+        </fieldset>
       ) : null}
     </div>
   )

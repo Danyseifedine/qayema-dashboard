@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { analyticsKeys } from '@/features/analytics'
 import { sessionKeys } from '@/features/auth'
 import type { AuthUser } from '@/features/auth'
 import { orderKeys } from '@/features/orders'
@@ -41,6 +42,10 @@ export function useSaveOrdering() {
       )
       // The Orders page reads differently in each mode.
       void queryClient.invalidateQueries({ queryKey: orderKeys.all })
+      // So does analytics: in-menu orders have a section of their own, and
+      // each mode counts only its own orders. Reset, not invalidated, so the
+      // page opens on its skeleton rather than the old mode's numbers.
+      void queryClient.resetQueries({ queryKey: analyticsKeys.all })
     },
     onError: (error, _ordering, context) => {
       queryClient.setQueryData(sessionKeys.current(), context?.previous)

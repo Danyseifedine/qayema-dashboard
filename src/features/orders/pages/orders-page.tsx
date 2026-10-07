@@ -1,13 +1,17 @@
-import { MessageCircle, ReceiptText } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { IconMessageCircle, IconReceipt } from '@tabler/icons-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ConfirmDialog, EmptyState, ErrorState } from '@/shared/components/feedback'
+import { EmptyState, ErrorState } from '@/shared/components/feedback'
 import { useOrderingMode } from '@/features/auth'
 import { Alert, Button } from '@/shared/components/ui'
 import { StatusFilter } from '@/features/orders/components/filters/status-filter'
+import { EditOrderDialog } from '@/features/orders/components/edit/edit-order-dialog'
+import { CancelOrderDialog } from '@/features/orders/components/list/cancel-order-dialog'
+import { DeleteOrderDialog } from '@/features/orders/components/list/delete-order-dialog'
 import { OrderCard } from '@/features/orders/components/list/order-card'
-import { useOrders, useSetOrderStatus } from '@/features/orders/hooks/use-orders'
-import type { Order, OrderStatus } from '@/features/orders/schemas/order.schema'
+import { useOrderActions } from '@/features/orders/hooks/use-order-actions'
+import { useOrders } from '@/features/orders/hooks/use-orders'
+import type { OrderStatus } from '@/features/orders/schemas/order.schema'
 
 export type OrdersPageProps = {
   /** Opens the Features page, where the owner picks how orders come in. */
@@ -15,7 +19,8 @@ export type OrdersPageProps = {
 }
 
 /**
- * Orders guests placed in the menu, to call back, prepare and tick off. The
+ * Orders guests placed in the menu to be delivered or picked up, to call
+ * back, prepare and tick off; orders to a table have their own page. The
  * dashboard watches for new ones (useOrderPulse) and this page refreshes
  * itself while it is open.
  *
@@ -27,22 +32,9 @@ export function OrdersPage({ onOpenFeatures }: OrdersPageProps) {
   const { t } = useTranslation('orders')
   const onWhatsApp = useOrderingMode() === 'whatsapp'
   const [filter, setFilter] = useState<OrderStatus | null>(null)
-  const [pendingCancel, setPendingCancel] = useState<Order | null>(null)
 
-  const orders = useOrders(filter)
-  const setStatus = useSetOrderStatus()
-
-  const move = useCallback(
-    (order: Order, status: OrderStatus) =>
-      setStatus.mutate({
-        id: order.id,
-        status,
-        // Taking on a new order means the version on this card.
-        guestUpdates: order.status === 'placed' ? order.guest_updates : undefined,
-      }),
-    [setStatus],
-  )
-  const confirmCancel = useCallback((order: Order) => setPendingCancel(order), [])
+  const orders = useOrders('away', filter)
+  const actions = useOrderActions()
 
   const list = orders.data?.data ?? []
   const openCount = orders.data?.meta.open ?? 0
@@ -63,7 +55,7 @@ export function OrdersPage({ onOpenFeatures }: OrdersPageProps) {
         </div>
         <EmptyState
           fill
-          icon={MessageCircle}
+          icon={IconMessageCircle}
           title={t('whatsapp.title')}
           description={t('whatsapp.description')}
           action={openFeatures}
@@ -107,7 +99,7 @@ export function OrdersPage({ onOpenFeatures }: OrdersPageProps) {
       ) : list.length === 0 ? (
         <EmptyState
           fill
-          icon={ReceiptText}
+          icon={IconReceipt}
           title={filter === null ? t('empty.title') : t('empty.filteredTitle')}
           description={filter === null ? t('empty.description') : t('empty.filteredDescription')}
         />
@@ -122,31 +114,20 @@ export function OrdersPage({ onOpenFeatures }: OrdersPageProps) {
               <OrderCard
                 key={order.id}
                 order={order}
-                busy={setStatus.isPending && setStatus.variables?.id === order.id}
-                onMove={move}
-                onCancel={confirmCancel}
+                busy={actions.busy(order)}
+                onMove={actions.move}
+                onCancel={actions.askCancel}
+                onEdit={actions.startEdit}
+                onDelete={actions.askDelete}
               />
             ))}
           </div>
         </>
       )}
 
-      <ConfirmDialog
-        open={pendingCancel !== null}
-        loading={setStatus.isPending}
-        title={t('cancelDialog.title')}
-        description={t('cancelDialog.description')}
-        confirmLabel={t('cancelDialog.confirm')}
-        onConfirm={() => {
-          if (pendingCancel) {
-            setStatus.mutate(
-              { id: pendingCancel.id, status: 'cancelled' },
-              { onSuccess: () => setPendingCancel(null) },
-            )
-          }
-        }}
-        onCancel={() => setPendingCancel(null)}
-      />
+      <CancelOrderDialog {...actions.cancelDialog} />
+      <DeleteOrderDialog {...actions.deleteDialog} />
+      <EditOrderDialog {...actions.editDialog} />
     </div>
   )
 }

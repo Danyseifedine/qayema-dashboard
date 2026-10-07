@@ -75,6 +75,53 @@
     "ordered": "أرسلوا طلبًا",
     "sentToWhatsapp": "أرسلوا طلبهم إلى واتساب"
   },
+  "menuOrders": {
+    "title": "الطلبات من قائمتك",
+    "description": "ما طلبه الزبائن عبر قائمتك وكيف سارت تلك الطلبات. الطلبات الملغاة لا تُحسب في المبالغ.",
+    "sales": "المبيعات",
+    "average": "متوسط الطلب",
+    "returning": "زبائن عائدون",
+    "ofGuests_zero": "من {{count}} زبون",
+    "ofGuests_one": "من زبون واحد",
+    "ofGuests_two": "من زبونين",
+    "ofGuests_few": "من {{count}} زبائن",
+    "ofGuests_many": "من {{count}} زبونًا",
+    "ofGuests_other": "من {{count}} زبون",
+    "toAccept": "وقت القبول",
+    "toAcceptHint": "المدة المعتادة قبل أن تقبل الطلب",
+    "minutes_zero": "{{count}} دقيقة",
+    "minutes_one": "دقيقة واحدة",
+    "minutes_two": "دقيقتان",
+    "minutes_few": "{{count}} دقائق",
+    "minutes_many": "{{count}} دقيقة",
+    "minutes_other": "{{count}} دقيقة",
+    "hoursMinutes": "{{hours}} س {{minutes}} د",
+    "none": "لا شيء بعد",
+    "topOrdered": {
+      "title": "الأطباق الأكثر طلبًا",
+      "empty": "لم يُطلب أي طبق في هذه الفترة."
+    },
+    "outcomes": {
+      "title": "كيف انتهت الطلبات",
+      "empty": "لا طلبات في هذه الفترة.",
+      "done": "مكتملة",
+      "open": "ما زالت مفتوحة",
+      "cancelled": "ملغاة"
+    },
+    "fulfilment": {
+      "title": "كيف وصل الطلب",
+      "empty": "لا طلبات في هذه الفترة.",
+      "delivery": "توصيل",
+      "pickup": "استلام",
+      "dine_in": "على الطاولة"
+    },
+    "busiest": {
+      "title": "متى يطلب الزبائن",
+      "description": "الطلبات من قائمتك، بتوقيت مطعمك.",
+      "notEnough": "لا توجد طلبات كافية بعد.",
+      "orders": "الطلبات"
+    }
+  },
   "topAdded": {
     "title": "الأكثر إضافة إلى السلة",
     "empty": "لم يُضف شيء إلى السلة في هذه الفترة."

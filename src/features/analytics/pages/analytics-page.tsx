@@ -10,6 +10,7 @@ import { RangePicker } from '@/features/analytics/components/range/range-picker'
 import { AdvancedLocked } from '@/features/analytics/components/stats/advanced-locked'
 import { languageItems } from '@/features/analytics/components/stats/breakdown-labels'
 import { GuestActions } from '@/features/analytics/components/stats/guest-actions'
+import { MenuOrders } from '@/features/analytics/components/stats/menu-orders'
 import { OrderFunnel } from '@/features/analytics/components/stats/order-funnel'
 import { SummaryTiles } from '@/features/analytics/components/stats/summary-tiles'
 import { useAdvancedStats, useStatsSummary } from '@/features/analytics/hooks/use-analytics'
@@ -138,6 +139,9 @@ function Advanced({ insights, locale }: { insights: AdvancedStats; locale: Local
       <FormSection title={t('actions.title')} description={t('actions.description')}>
         <GuestActions actions={insights.actions} takesOrders={insights.funnel !== null} />
       </FormSection>
+
+      {/* Only for orders placed in the menu; WhatsApp ordering has no totals. */}
+      {insights.menu_orders ? <MenuOrders orders={insights.menu_orders} locale={locale} /> : null}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {insights.funnel ? (

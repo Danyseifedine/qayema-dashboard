@@ -76,7 +76,8 @@ function setup(enabled = true) {
       <Toaster />
     </QueryClientProvider>
   )
-  const hook = renderHook(({ on }: { on: boolean }) => useOrderPulse(on, 7), {
+  // The Orders page's count; orders to a table have a test of their own.
+  const hook = renderHook(({ on }: { on: boolean }) => useOrderPulse(on, 7).orders, {
     wrapper,
     initialProps: { on: enabled },
   })
@@ -113,6 +114,21 @@ describe('useOrderPulse', () => {
     await waitFor(() => expect(result.current).toBe(2))
     expect(play).not.toHaveBeenCalled()
     expect(document.title).toBe('(2) Qayema Dashboard')
+  })
+
+  it('counts orders to a table apart, and both in the tab title', async () => {
+    mock
+      .onGet('/api/orders/pulse')
+      .reply(200, { data: { open: 1, table_open: 2, latest: 40, changed: null } })
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const { result } = renderHook(() => useOrderPulse(true, 7), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      ),
+    })
+
+    await waitFor(() => expect(result.current).toEqual({ orders: 1, tables: 2 }))
+    expect(document.title).toBe('(3) Qayema Dashboard')
   })
 
   it('chimes and says so when a new order arrives', async () => {
@@ -161,6 +177,7 @@ describe('useOrderPulse', () => {
     await waitFor(() =>
       expect(queryClient.getQueryData(orderKeys.pulse())).toEqual({
         open: 0,
+        table_open: 0,
         latest: null,
         changed: null,
       }),

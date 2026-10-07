@@ -21,6 +21,8 @@ const orderItemSchema = z.object({
     })
     .nullable()
     .default(null),
+  /** What one cost, as it was sold: an edit keeps it. */
+  unit_price: z.string().default('0.00'),
   quantity: z.number().int(),
   line_total: z.string(),
 })
@@ -34,7 +36,9 @@ const orderSchema = z.object({
   total: z.string(),
   note: z.string().nullable(),
   /** How the guest gets it; null on an order sent to WhatsApp before. */
-  fulfilment: z.enum(['delivery', 'pickup']).nullable().default(null),
+  fulfilment: z.enum(['delivery', 'pickup', 'dine_in']).nullable().default(null),
+  /** The table it goes to, as it was named when ordered; null off a table. */
+  table: z.string().nullable().default(null),
   /** Who to ask for. */
   name: z.string().nullable().default(null),
   /** The guest's number, international ("+96170123456"). */
@@ -48,6 +52,8 @@ const orderSchema = z.object({
   /** The guest changed it after placing it: when last, and how many times. */
   guest_updated_at: z.string().nullable().default(null),
   guest_updates: z.number().int().default(0),
+  /** When the restaurant last changed what it holds. */
+  owner_updated_at: z.string().nullable().default(null),
   items: z.array(orderItemSchema).default([]),
 })
 
@@ -64,8 +70,10 @@ export const orderResponseSchema = z.object({ data: orderSchema })
 /** GET /api/orders/pulse: what the dashboard polls for new orders. */
 export const orderPulseSchema = z.object({
   data: z.object({
-    /** Orders still waiting. */
+    /** Orders still waiting, orders to a table apart. */
     open: z.number().int(),
+    /** Orders to a table still waiting (the Table orders page). */
+    table_open: z.number().int().default(0),
     /** The newest order's id; null before the first one. */
     latest: z.number().int().nullable(),
     /** When a guest last changed an order (ISO); null when none has. */
@@ -77,3 +85,9 @@ export type OrderStatus = z.infer<typeof orderStatusSchema>
 export type Order = z.infer<typeof orderSchema>
 export type OrderList = z.infer<typeof orderListSchema>
 export type OrderPulse = z.infer<typeof orderPulseSchema>['data']
+
+/**
+ * Which orders a page lists: those to a table (Table orders), or the rest
+ * (Orders), as `GET /api/orders?kind=` splits them.
+ */
+export type OrderKind = 'away' | 'table'

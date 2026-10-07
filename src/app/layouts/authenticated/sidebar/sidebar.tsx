@@ -1,4 +1,4 @@
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import qMark from '@/assets/images/brand/qayema-q.svg'
 import wordmark from '@/assets/images/brand/qayema-wordmark.png'
@@ -128,10 +128,16 @@ export function Sidebar({
           )}
         >
           {collapsed ? (
-            <PanelLeftOpen aria-hidden className="size-[18px] shrink-0 rtl:rotate-180" />
+            <IconLayoutSidebarLeftExpand
+              aria-hidden
+              className="size-[18px] shrink-0 rtl:rotate-180"
+            />
           ) : (
             <>
-              <PanelLeftClose aria-hidden className="size-[18px] shrink-0 rtl:rotate-180" />
+              <IconLayoutSidebarLeftCollapse
+                aria-hidden
+                className="size-[18px] shrink-0 rtl:rotate-180"
+              />
               <span>{t('sidebar.collapseShort')}</span>
             </>
           )}

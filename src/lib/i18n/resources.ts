@@ -11,6 +11,7 @@ import type pkg from '@/locales/en/package.json'
 import type qr from '@/locales/en/qr.json'
 import type restaurant from '@/locales/en/restaurant.json'
 import type socialLinks from '@/locales/en/social-links.json'
+import type tables from '@/locales/en/tables.json'
 
 /**
  * The English files are the source of truth for what keys exist, so a typo in
@@ -31,6 +32,7 @@ declare module 'i18next' {
       orders: typeof orders
       qr: typeof qr
       'social-links': typeof socialLinks
+      tables: typeof tables
       restaurant: typeof restaurant
       features: typeof features
       package: typeof pkg

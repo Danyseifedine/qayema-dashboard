@@ -153,7 +153,7 @@ describe('RestaurantPage', () => {
       // The languages themselves are set on the Features page, not here.
       expect(body).not.toHaveProperty('second_locale')
       expect(body.google_maps_url).toBeNull()
-      // The slug is immutable, and an untouched image sends no key at all.
+      // The slug has its own call, and an untouched image sends no key at all.
       expect(body).not.toHaveProperty('slug')
       expect(body).not.toHaveProperty('logo_key')
     })
@@ -260,18 +260,130 @@ describe('RestaurantPage', () => {
     vi.unstubAllGlobals()
   })
 
-  it('fills the opening hours, day by day', async () => {
+  it('fills the opening hours, day by day, as a clock reads them', async () => {
     stub()
     renderWithProviders(<RestaurantPage />)
 
-    expect(await screen.findByLabelText('Monday opens')).toHaveValue('07:30')
-    expect(screen.getByLabelText('Monday closes')).toHaveValue('22:00')
+    // 07:30 - 22:00 reads 7 : 30 AM, then 10 : 00 PM, with the part of the day.
+    expect(await screen.findByRole('combobox', { name: 'Monday opens: hour' })).toHaveValue('7')
+    expect(screen.getByRole('combobox', { name: 'Monday opens: minutes' })).toHaveValue('30')
+    expect(
+      within(screen.getByRole('tablist', { name: 'Monday opens: AM or PM' })).getByRole('tab', {
+        name: 'AM',
+      }),
+    ).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('combobox', { name: 'Monday closes: hour' })).toHaveValue('10')
+    expect(
+      within(screen.getByRole('tablist', { name: 'Monday closes: AM or PM' })).getByRole('tab', {
+        name: 'PM',
+      }),
+    ).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getAllByText(/· Morning/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/· Night/).length).toBeGreaterThan(0)
     expect(screen.getByRole('switch', { name: 'Monday is open' })).toBeChecked()
 
     // A day with no range is switched off, but keeps usable times in its
     // boxes so turning it on does not start from nothing.
     expect(screen.getByRole('switch', { name: 'Wednesday is open' })).not.toBeChecked()
-    expect(screen.getByLabelText('Wednesday opens')).toBeDisabled()
+    expect(screen.getByRole('combobox', { name: 'Wednesday opens: hour' })).toBeDisabled()
+  })
+
+  it('stores what was picked as HH:MM', async () => {
+    stub()
+    mock.onPatch('/api/restaurant').reply(200, { data: settings })
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantPage />)
+
+    // Monday closes at 11:15 PM instead of 10:00 PM.
+    await user.click(await screen.findByRole('combobox', { name: 'Monday closes: hour' }))
+    await user.click(screen.getByRole('option', { name: '11' }))
+    await user.click(screen.getByRole('combobox', { name: 'Monday closes: minutes' }))
+    await user.click(screen.getByRole('option', { name: '15' }))
+
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    await waitFor(() => {
+      const patch = mock.history.patch.find((r) => r.url === '/api/restaurant')
+      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual({
+        open: '07:30',
+        close: '23:15',
+      })
+    })
+  })
+
+  it('says when a day closes after midnight', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantPage />)
+
+    const closes = await screen.findByRole('tablist', { name: 'Monday closes: AM or PM' })
+    expect(screen.queryByText('Closes the next day, after midnight.')).not.toBeInTheDocument()
+
+    // Opens 7:30 AM, now closes 2:00 AM: the night runs into the next day.
+    await user.click(screen.getByRole('combobox', { name: 'Monday closes: hour' }))
+    await user.click(screen.getByRole('option', { name: '2' }))
+    await user.click(within(closes).getByRole('tab', { name: 'AM' }))
+
+    expect(screen.getByText('Closes the next day, after midnight.')).toBeInTheDocument()
+  })
+
+  describe('the menu link', () => {
+    it('changes the link after saying the old one keeps working', async () => {
+      stub()
+      mock
+        .onPut('/api/restaurant/slug')
+        .reply(200, { data: { ...settings, slug: 'cedar-and-salt' } })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      const link = await screen.findByRole('textbox', { name: 'Link' })
+      expect(link).toHaveValue('beit-qayema')
+      const change = screen.getByRole('button', { name: 'Change link' })
+      // Nothing to change until the link is different.
+      expect(change).toBeDisabled()
+
+      await user.clear(link)
+      await user.type(link, 'cedar-and-salt')
+      await user.click(change)
+
+      const dialog = await screen.findByRole('dialog')
+      expect(
+        within(dialog).getByText(/Your old link and the QR codes you already printed keep working/),
+      ).toBeInTheDocument()
+      expect(within(dialog).getByText(/\/cedar-and-salt/)).toBeInTheDocument()
+      await user.click(within(dialog).getByRole('button', { name: 'Change link' }))
+
+      await waitFor(() => {
+        const put = mock.history.put.find((r) => r.url === '/api/restaurant/slug')
+        expect(JSON.parse(put!.data as string)).toEqual({ slug: 'cedar-and-salt' })
+      })
+      expect(await screen.findByText('Link changed')).toBeInTheDocument()
+      await waitFor(() =>
+        expect(screen.getByRole('textbox', { name: 'Link' })).toHaveValue('cedar-and-salt'),
+      )
+    })
+
+    it('says so when the link is taken', async () => {
+      stub()
+      mock.onPut('/api/restaurant/slug').reply(422, {
+        message: 'That link is already taken. Try another one.',
+        code: 'validation_failed',
+        errors: { slug: ['That link is already taken. Try another one.'] },
+      })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      const link = await screen.findByRole('textbox', { name: 'Link' })
+      await user.clear(link)
+      await user.type(link, 'olive')
+      await user.click(screen.getByRole('button', { name: 'Change link' }))
+      await user.click(
+        within(await screen.findByRole('dialog')).getByRole('button', { name: 'Change link' }),
+      )
+
+      expect(
+        await screen.findAllByText('That link is already taken. Try another one.'),
+      ).not.toHaveLength(0)
+    })
   })
 
   it('sends a closed day as null and an open one as a range', async () => {

@@ -1,4 +1,4 @@
-import { Link2 } from 'lucide-react'
+import { IconLink } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import type { Control, FieldPath, FieldValues } from 'react-hook-form'
 import { TextField } from '@/shared/components/forms/fields/text-field'
@@ -39,7 +39,7 @@ export function UrlField<T extends FieldValues>({
       inputMode="url"
       autoComplete="url"
       forceLtr
-      leadingIcon={<Link2 />}
+      leadingIcon={<IconLink />}
     />
   )
 }

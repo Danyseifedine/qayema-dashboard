@@ -1,6 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { TFunction } from 'i18next'
-import { Copy, Download, ExternalLink, Palette, RotateCcw } from 'lucide-react'
+import {
+  IconCopy,
+  IconDownload,
+  IconExternalLink,
+  IconPalette,
+  IconRotate,
+} from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -153,7 +159,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
 
         <div className="grid grid-cols-2 gap-2">
           <Button
-            leadingIcon={<Download aria-hidden className="size-4" />}
+            leadingIcon={<IconDownload aria-hidden className="size-4" />}
             loading={downloading === 'png'}
             disabled={downloading !== null}
             onClick={() => void download('png')}
@@ -162,7 +168,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
           </Button>
           <Button
             variant="secondary"
-            leadingIcon={<Download aria-hidden className="size-4" />}
+            leadingIcon={<IconDownload aria-hidden className="size-4" />}
             loading={downloading === 'svg'}
             disabled={downloading !== null}
             onClick={() => void download('svg')}
@@ -179,7 +185,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
           <Button
             variant="ghost"
             size="sm"
-            leadingIcon={<Copy aria-hidden className="size-4" />}
+            leadingIcon={<IconCopy aria-hidden className="size-4" />}
             onClick={() => void copyLink()}
           >
             {t('page.copyLink')}
@@ -193,7 +199,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-accent underline-offset-4 hover:underline"
           >
-            <ExternalLink aria-hidden className="size-4" />
+            <IconExternalLink aria-hidden className="size-4" />
             {t('page.openCard')}
           </a>
         ) : null}
@@ -227,7 +233,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
             <FormActions align="between">
               <Button
                 variant="ghost"
-                leadingIcon={<RotateCcw aria-hidden className="size-4" />}
+                leadingIcon={<IconRotate aria-hidden className="size-4" />}
                 onClick={resetToSimple}
                 disabled={save.isPending}
               >
@@ -279,7 +285,7 @@ function StudioLocked({ locale, onOpenPackage }: { locale: Locale; onOpenPackage
 
   return (
     <LockedState
-      icon={Palette}
+      icon={IconPalette}
       title={t('page.lockedTitle')}
       description={t('page.lockedDescription')}
       includes={(['colors', 'shapes', 'logo', 'card'] as const).map((line) =>

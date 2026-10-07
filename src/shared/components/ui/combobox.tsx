@@ -1,6 +1,14 @@
 import { useCombobox } from 'downshift'
-import { Check, ChevronDown } from 'lucide-react'
-import { useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
+import { IconCheck, IconChevronDown } from '@tabler/icons-react'
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type Ref,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 import { controlClass } from '@/shared/components/ui/control-class'
@@ -26,6 +34,8 @@ export type ComboboxProps = {
   emptyText?: string
   disabled?: boolean
   tone?: FieldTone
+  /** `sm`: a shorter box, for several small pickers on one line (a time). */
+  size?: 'md' | 'sm'
   /**
    * Render without a `FieldShell` of its own, for a control that already
    * sits inside one. The parent must be positioned.
@@ -43,14 +53,18 @@ export type ComboboxProps = {
 
 /** Roughly the panel height plus its offset, used to decide which way to open. */
 const PANEL_SPACE = 292
+/** The widest the panel grows to fit its options (a time and its part of the day). */
+const PANEL_WIDTH = 320
 
 /**
  * A searchable select.
  *
  * The list is rendered inline rather than in a portal, because every modal in
  * this app is a native `<dialog>` living in the browser's top layer: anything
- * appended to `<body>` would be painted behind it. Keyboard behaviour comes
- * from downshift, which supplies the ARIA combobox contract.
+ * appended to `<body>` would be painted behind it. While open it is `fixed`
+ * at the field's place on screen (followed on scroll and resize), so a
+ * scrolling parent, such as a dialog's body, cannot clip it. Keyboard
+ * behaviour comes from downshift, which supplies the ARIA combobox contract.
  */
 export function Combobox({
   options,
@@ -62,6 +76,7 @@ export function Combobox({
   disabled = false,
   tone = 'default',
   embedded = false,
+  size = 'md',
   id,
   name,
   onBlur,
@@ -71,7 +86,8 @@ export function Combobox({
 }: ComboboxProps) {
   const { t } = useTranslation()
   const shellRef = useRef<HTMLDivElement>(null)
-  const [flipUp, setFlipUp] = useState(false)
+  // Where the open list sits on screen, measured from the field.
+  const [place, setPlace] = useState<CSSProperties>({})
   // `null` means "not filtering": the input mirrors the selected label.
   // Any string, including an empty one, is an active filter, which is what
   // lets the owner clear the field and search from scratch.
@@ -120,15 +136,33 @@ export function Combobox({
       onChange(selectedItem?.value ?? null)
       setQuery(null)
     },
-    onIsOpenChange: ({ isOpen: open }) => {
+    onIsOpenChange: ({ isOpen: open, type }) => {
       if (!open) return
-      setFlipUp(shouldFlipUp(shellRef.current))
+      setPlace(placeFor(shellRef.current, embedded))
+      // Opened without typing: on the current choice, so a time sits where
+      // it is in the day rather than the list starting at midnight.
+      if (selected && type !== useCombobox.stateChangeTypes.InputChange) {
+        setHighlightedIndex(options.indexOf(selected))
+      }
       // Opening a searchable list empties the box so the owner types a filter
       // rather than editing the selected label. Guarded on `null` so the
       // keystroke that opens the menu is not wiped by the same state change.
       if (searchable && query === null) setQuery('')
     },
   })
+
+  // The field moves under a fixed list when its dialog or page scrolls, or
+  // the window changes size: the list follows it while open.
+  useLayoutEffect(() => {
+    if (!isOpen) return
+    const follow = () => setPlace(placeFor(shellRef.current, embedded))
+    window.addEventListener('scroll', follow, true)
+    window.addEventListener('resize', follow)
+    return () => {
+      window.removeEventListener('scroll', follow, true)
+      window.removeEventListener('resize', follow)
+    }
+  }, [isOpen, embedded])
 
   // Typeahead for the non-searchable variant: the input is read-only, so the
   // usual filtering is unavailable and letters jump the highlight instead.
@@ -174,11 +208,15 @@ export function Combobox({
     <ul
       {...getMenuProps()}
       hidden={!isOpen}
+      // At least as wide as the field, wider to fit its options; near the
+      // screen's edge it grows the other way so it never runs off it.
+      style={place}
       className={cn(
-        'absolute z-50 flex max-h-[280px] flex-col gap-0.5 overflow-y-auto',
+        'fixed z-50 flex max-h-[280px] flex-col gap-0.5 overflow-y-auto',
         'rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-1.5 shadow-pop',
-        embedded ? 'start-0 w-[min(320px,calc(100vw-32px))]' : 'inset-x-0',
-        flipUp ? 'bottom-[calc(100%+6px)]' : 'top-[calc(100%+6px)]',
+        embedded
+          ? 'w-[min(320px,calc(100vw-32px))]'
+          : 'w-max max-w-[min(320px,calc(100vw-32px))]',
       )}
     >
       {isOpen && filtered.length === 0 ? (
@@ -208,7 +246,7 @@ export function Combobox({
                   </span>
                 ) : null}
                 {active ? (
-                  <Check
+                  <IconCheck
                     aria-hidden
                     className={cn('size-3.5 shrink-0', option.description ? 'ms-1' : 'ms-auto')}
                   />
@@ -234,7 +272,7 @@ export function Combobox({
         {...inputProps}
         className={cn(
           controlClass,
-          'pe-10',
+          size === 'sm' ? 'py-2 ps-2.5 pe-7 text-[14px]' : 'pe-10',
           selected?.leading && 'ps-2',
           searchable ? 'cursor-text' : 'cursor-pointer',
         )}
@@ -246,13 +284,16 @@ export function Combobox({
         disabled={disabled}
         {...getToggleButtonProps()}
         className={cn(
-          'absolute end-2.5 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md',
+          'absolute top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md',
+          // In a small box the arrow covers much of it; clicks pass to the
+          // field, which opens the list just the same.
+          size === 'sm' ? 'pointer-events-none end-0.5' : 'end-2.5',
           'text-[var(--muted)] transition-transform',
           disabled ? 'cursor-not-allowed' : 'cursor-pointer',
           isOpen && 'rotate-180',
         )}
       >
-        <ChevronDown aria-hidden className="size-3.5" />
+        <IconChevronDown aria-hidden className="size-3.5" />
       </button>
     </>
   )
@@ -274,6 +315,40 @@ export function Combobox({
       {list}
     </div>
   )
+}
+
+/** The gap between the field and its list. */
+const GAP = 6
+
+/**
+ * Where the open list goes on screen: under the field (over it when there is
+ * not enough room below but more above), from the field's start edge (from
+ * its end edge near the screen's side), and at least as wide as the field.
+ */
+function placeFor(element: HTMLElement | null, embedded: boolean): CSSProperties {
+  if (!element || typeof window === 'undefined') return {}
+  const rect = element.getBoundingClientRect()
+  const rtl = getComputedStyle(element).direction === 'rtl'
+  const fromEnd = !embedded && shouldAlignEnd(element)
+  // In Arabic the start edge is the right one.
+  const fromLeft = rtl ? fromEnd : !fromEnd
+
+  return {
+    ...(shouldFlipUp(element)
+      ? { bottom: window.innerHeight - rect.top + GAP }
+      : { top: rect.bottom + GAP }),
+    ...(fromLeft ? { left: rect.left } : { right: window.innerWidth - rect.right }),
+    ...(embedded ? {} : { minWidth: rect.width }),
+  }
+}
+
+/** Grow toward the start edge when there is not enough room toward the end. */
+function shouldAlignEnd(element: HTMLElement | null): boolean {
+  if (!element || typeof window === 'undefined') return false
+  const rect = element.getBoundingClientRect()
+  const rtl = getComputedStyle(element).direction === 'rtl'
+  const towardEnd = rtl ? rect.right : window.innerWidth - rect.left
+  return towardEnd < Math.min(PANEL_WIDTH, window.innerWidth - 32)
 }
 
 /** Open upward when there is not enough room below but more above. */

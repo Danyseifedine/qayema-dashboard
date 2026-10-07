@@ -1,4 +1,4 @@
-import { Check, Sparkles } from 'lucide-react'
+import { IconCheck, IconSparkles } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
 import { Button } from '@/shared/components/ui'
@@ -51,7 +51,7 @@ export function PackageCard({ pkg, previous, current, locale, onRequest }: Packa
     >
       {pkg.is_featured ? (
         <span className="absolute -top-2.5 start-4 inline-flex items-center gap-1 rounded-full bg-gold px-2.5 py-0.5 text-[11px] font-medium text-ink">
-          <Sparkles aria-hidden className="size-3" />
+          <IconSparkles aria-hidden className="size-3" />
           {t('card.popular')}
         </span>
       ) : null}
@@ -97,7 +97,7 @@ export function PackageCard({ pkg, previous, current, locale, onRequest }: Packa
           : rows.map((row) => ({ key: row.key, text: rowText(row, pkg) }))
         ).map((line) => (
           <li key={line.key} className="flex items-start gap-2 text-[13px]">
-            <Check aria-hidden className="mt-0.5 size-3.5 shrink-0 text-accent" />
+            <IconCheck aria-hidden className="mt-0.5 size-3.5 shrink-0 text-accent" />
             <span>{line.text}</span>
           </li>
         ))}

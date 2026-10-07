@@ -6,7 +6,7 @@ import { LockedState } from '@/shared/components/feedback'
 import type { Locale } from '@/shared/constants/locales'
 
 /** The sections a package can close, each with its own copy in common.json. */
-const LOCKABLE = ['analytics', 'appearance', 'orders'] as const
+const LOCKABLE = ['analytics', 'appearance', 'orders', 'table-orders', 'tables'] as const
 type LockableKey = (typeof LOCKABLE)[number]
 
 const INCLUDES = ['one', 'two', 'three'] as const

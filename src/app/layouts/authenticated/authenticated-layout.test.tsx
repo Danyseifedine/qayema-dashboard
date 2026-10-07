@@ -22,6 +22,7 @@ function Harness({
   initialKey = 'overview',
   publicUrl = 'https://qayema.test/beit-qayema',
   counts,
+  impersonation = null,
 }: {
   hasTemplate?: boolean
   /** Every plan flag on, or every one off (the Free package). */
@@ -31,6 +32,7 @@ function Harness({
   initialKey?: string
   publicUrl?: string | null
   counts?: Partial<Record<string, number>>
+  impersonation?: { admin: string | null; leave_url: string } | null
 }) {
   const [activeKey, setActiveKey] = useState(initialKey)
   // The document direction is owned by the preferences store now, so the
@@ -52,6 +54,7 @@ function Harness({
       locale={locale}
       onLocaleChange={setLocale}
       onLogout={onLogout}
+      impersonation={impersonation}
     >
       <p>Page content</p>
     </AuthenticatedLayout>
@@ -218,7 +221,7 @@ describe('AuthenticatedLayout', () => {
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     expect(within(nav).queryByRole('button', { name: 'Account' })).not.toBeInTheDocument()
-    for (const heading of ['Menu', 'Guests', 'Settings']) {
+    for (const heading of ['Menu', 'Look', 'Sharing', 'Settings']) {
       expect(within(nav).getByText(heading)).toBeInTheDocument()
     }
 
@@ -226,6 +229,67 @@ describe('AuthenticatedLayout', () => {
     await user.click(screen.getByRole('menuitem', { name: /Account/ }))
 
     expect(screen.getByRole('heading', { name: 'Account' })).toBeInTheDocument()
+  })
+
+  it('puts the pages opened all day first and setup last', () => {
+    renderWithProviders(<Harness />)
+
+    const nav = screen.getByRole('navigation', { name: 'Dashboard' })
+    const items = [
+      'Overview',
+      'Analytics',
+      'Orders',
+      'Table orders',
+      'Categories',
+      'Dishes',
+      'Design',
+      'Appearance',
+      'QR code',
+      'Tables',
+      'Social links',
+      'Restaurant',
+      'Features',
+      'Package',
+    ].map((name) => within(nav).getByRole('button', { name: new RegExp(`^${name}`) }))
+
+    items.slice(1).forEach((item, index) => {
+      // Each one comes after the one before it in the sidebar.
+      expect(
+        items[index]!.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+    })
+  })
+
+  it('drops the Orders heading when both kinds of order are switched off', () => {
+    renderWithProviders(<Harness hidden={['orders', 'dine_in']} />)
+
+    const nav = screen.getByRole('navigation', { name: 'Dashboard' })
+    expect(within(nav).queryByText('Orders')).not.toBeInTheDocument()
+    expect(within(nav).queryByRole('button', { name: /Table orders/ })).not.toBeInTheDocument()
+    expect(within(nav).queryByRole('button', { name: /Tables/ })).not.toBeInTheDocument()
+  })
+
+  it('shows an admin viewing as the owner the way back to the admin', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+    const user = userEvent.setup()
+    renderWithProviders(
+      <Harness
+        impersonation={{ admin: 'Dani', leave_url: 'http://localhost:8000/impersonate/leave' }}
+      />,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent(/signed in as Dani/)
+    await user.click(screen.getByRole('button', { name: 'Back to admin' }))
+
+    expect(assign).toHaveBeenCalledWith('http://localhost:8000/impersonate/leave')
+    vi.unstubAllGlobals()
+  })
+
+  it('shows no banner to the owner themself', () => {
+    renderWithProviders(<Harness />)
+
+    expect(screen.queryByRole('button', { name: 'Back to admin' })).not.toBeInTheDocument()
   })
 
   it('leaves switched-off sections out of the sidebar', () => {

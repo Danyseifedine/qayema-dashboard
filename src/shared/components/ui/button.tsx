@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from 'class-variance-authority'
-import { Loader2 } from 'lucide-react'
+import { IconLoader2 } from '@tabler/icons-react'
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -78,7 +78,7 @@ export function Button({
       aria-busy={loading || undefined}
       {...props}
     >
-      {loading ? <Loader2 aria-hidden className="size-4 animate-spin" /> : leadingIcon}
+      {loading ? <IconLoader2 aria-hidden className="size-4 animate-spin" /> : leadingIcon}
       {children}
     </button>
   )

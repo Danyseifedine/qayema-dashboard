@@ -1,4 +1,4 @@
-import { Check, Crown, ImageOff, Lock } from 'lucide-react'
+import { IconCheck, IconCrown, IconPhotoOff, IconLock } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
@@ -55,13 +55,13 @@ export function DesignCard({
           />
         ) : (
           <div className="grid aspect-[4/3] w-full place-items-center bg-[var(--hover-wash)] text-[var(--faint)]">
-            <ImageOff aria-hidden className="size-6" />
+            <IconPhotoOff aria-hidden className="size-6" />
           </div>
         )}
 
         {template.is_premium ? (
           <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-[var(--surface)] px-2.5 py-1 text-[11px] font-medium text-accent shadow-sm">
-            <Crown aria-hidden className="size-3" />
+            <IconCrown aria-hidden className="size-3" />
             {t('card.premium')}
           </span>
         ) : null}
@@ -69,7 +69,7 @@ export function DesignCard({
         {active ? (
           <div className="absolute end-2 top-2 flex gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-full bg-gold px-2.5 py-1 text-[11px] font-medium text-ink">
-              <Check aria-hidden className="size-3" />
+              <IconCheck aria-hidden className="size-3" />
               {t('card.inUse')}
             </span>
           </div>
@@ -95,7 +95,7 @@ export function DesignCard({
             <Button
               variant="secondary"
               block
-              leadingIcon={<Lock aria-hidden className="size-4" />}
+              leadingIcon={<IconLock aria-hidden className="size-4" />}
               onClick={onOpenPackage}
             >
               {unlockedBy ? t('card.comesWith', { name: unlockedBy }) : t('card.seePackages')}

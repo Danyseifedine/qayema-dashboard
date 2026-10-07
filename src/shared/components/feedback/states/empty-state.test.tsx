@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { UtensilsCrossed } from 'lucide-react'
+import { IconToolsKitchen2 } from '@tabler/icons-react'
 import { describe, expect, it } from 'vitest'
 import { EmptyState } from '@/shared/components/feedback/states/empty-state'
 
@@ -7,7 +7,7 @@ describe('EmptyState', () => {
   it('shows an icon, a title and a description', () => {
     const { container } = render(
       <EmptyState
-        icon={UtensilsCrossed}
+        icon={IconToolsKitchen2}
         title="No dishes yet"
         description="Add your first dish."
       />,
@@ -22,7 +22,7 @@ describe('EmptyState', () => {
   it('shows an action', () => {
     render(
       <EmptyState
-        icon={UtensilsCrossed}
+        icon={IconToolsKitchen2}
         title="No dishes yet"
         description="Add your first dish."
         action={<button type="button">Add dish</button>}
@@ -34,7 +34,7 @@ describe('EmptyState', () => {
 
   it('grows into the space left when asked to fill', () => {
     const { container } = render(
-      <EmptyState icon={UtensilsCrossed} title="Nothing" description="Nothing here." fill />,
+      <EmptyState icon={IconToolsKitchen2} title="Nothing" description="Nothing here." fill />,
     )
 
     expect(container.firstElementChild).toHaveClass('flex-1', 'justify-center')

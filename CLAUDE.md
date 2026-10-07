@@ -35,7 +35,10 @@
 React 19, Vite, TypeScript (strict), TanStack Query, Zustand, React Hook Form
 
 - Zod v4, Tailwind v4 with our own primitives in `shared/components/ui`,
-  i18next (en/ar, RTL), axios, dnd-kit, recharts, qr-code-styling.
+  i18next (en/ar, RTL), axios, dnd-kit, recharts, qr-code-styling. Every
+  icon is Tabler (`@tabler/icons-react`, `IconX` components, `TablerIcon` for
+  a prop that takes one), the social platforms' brand marks included
+  (`platform-icon.tsx`); no other icon set.
   Tests: Vitest + Testing Library + axios-mock-adapter; end-to-end Playwright +
   axe (`e2e/`, see ARCHITECTURE §7). Lint: oxlint. Format:
   Prettier. Hooks: Husky + lint-staged. No router library: the open page is its
@@ -47,15 +50,19 @@ No third-party error telemetry.
 
 - **One name per thing.** Sidebar label = page heading = feature folder =
   nav key = i18n namespace = query root: `overview`, `analytics`, `menu`
-  (categories, dishes), `design`, `orders`, `qr`, `social-links`,
+  (categories, dishes), `design`, `orders` (+ its `table-orders` page),
+  `tables`, `qr`, `social-links`,
   `restaurant` (+ its `features` page), `package`, `account`. The sidebar
-  groups them as MENU / GUESTS / SETTINGS; Account opens from the avatar menu.
+  goes by how often a page is opened: Overview and Analytics, then ORDERS
+  (Orders, Table orders), MENU (Categories, Dishes), LOOK (Design,
+  Appearance), SHARING (QR code, Tables, Social links), SETTINGS
+  (Restaurant, Features, Package); Account opens from the avatar menu.
   The vocabulary table is §2 of docs/ARCHITECTURE.md; the backend's CLAUDE.md
   carries the same names.
 - Three words never swapped: **plan** = what the restaurant may use
   (`restaurant.plan`, one boolean per backend `Feature` flag:
   `multiple_languages`, `variants`, `addons`, `appearance`, `premium_designs`,
-  `qr_studio`, `ordering`, `menu_ordering`, `analytics`, `advanced_analytics`; `requiresPlan`
+  `qr_studio`, `ordering`, `menu_ordering`, `dine_in`, `analytics`, `advanced_analytics`; `requiresPlan`
   in nav-items); **switched off** = what the owner turned off on the Features
   page (`restaurant.switched_off`, `hideable` in nav-items); **grant** is a
   backend word (an admin giving one restaurant more than its package).
@@ -75,8 +82,8 @@ No third-party error telemetry.
   overrides.
 - **Translations:** `src/locales/<code>/` holds `meta.json` (name, short
   label, `ltr`/`rtl`) and one JSON per namespace, named after the feature
-  (`common`, `overview`, `analytics`, `menu`, `design`, `appearance`, `orders`, `qr`,
-  `social-links`, `restaurant`, `features`, `package`, `account`).
+  (`common`, `overview`, `analytics`, `menu`, `design`, `appearance`, `orders`, `tables`,
+  `qr`, `social-links`, `restaurant`, `features`, `package`, `account`).
   **To add a language, copy `src/locales/en/` to `src/locales/<code>/` and
   translate it**: it is found at build time and appears in the switcher;
   nothing else changes. `translations.test.ts` fails on any missing line or
@@ -147,9 +154,15 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   with `PUT /api/menu-languages`; the Restaurant page's text fields just
   follow `useMenuLanguages()` (from `features/auth`, it reads the session).
   Orders carries how guests send them (`OrderingChoice`): "On WhatsApp" or
-  "In your menu" (locked without `plan.menu_ordering`), and in the menu
-  delivery, pickup or both; `PUT /api/features/ordering`, optimistic into
-  `restaurant.ordering` (`useSaveOrdering`).
+  "In your menu" (locked without `plan.menu_ordering`), and in the menu one
+  switch each for Delivery and Pickup, the last one on staying on;
+  `PUT /api/features/ordering`, optimistic into
+  `restaurant.ordering` (`useSaveOrdering`). **Ordering at the table** is a
+  row of its own (switch `dine_in`, flag `plan.dine_in`), independent of
+  Orders: its orders are placed in the menu even while delivery and pickup
+  go to WhatsApp or are off. It hides both Tables and Table orders
+  (`switchKey: 'dine_in'` on their nav items; `isNavItemHidden` reads
+  `switchKey ?? key`).
 - **Design page** (`features/design`): picking a design (backend `Template`
   rows, `/api/templates`). Switching invalidates Appearance and the QR
   studio, since both follow the design. A design with `is_premium` shows a
@@ -167,18 +180,27 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   writing system the menu uses (English + Spanish = one), options and a
   sample line from the API, saved on tap (optimistic). The Features page and
   the menu-languages save invalidate it.
-- An order is written once by the guest who placed it. The dashboard may change
-  its `status` and nothing else. A line's `options` (the guest's variants and
-  add-ons, as named then) show under the dish on its card.
+- An order is written by the guest who placed it. The dashboard moves its
+  `status`, and may also **edit** what it holds (`EditOrderDialog`,
+  `PUT /api/orders/{id}/items`: quantities, a line off, dishes added with
+  their choices; kept lines keep the price they were sold at, added ones are
+  priced by the server, dishes hidden from guests included; saving a new
+  order accepts it; not for a cancelled one) or **delete** it for good
+  (`DeleteOrderDialog`, `DELETE /api/orders/{id}`: its lines, its place in
+  the analytics, and the guest's tracking go). A line's `options` (the
+  guest's variants and add-ons, as named then) show under the dish on its
+  card; "Changed by you at …" shows after an edit.
 - **Orders come one way at a time** (`useOrderingMode()` from `features/auth`:
   `whatsapp`, `menu`, or null without ordering). On WhatsApp the Orders page
   says the orders are handled there (we never learn if one was sent) and
   lists only orders placed in the menu before a switch. In the menu, each
-  card shows the guest's name, Delivery/Pickup, their phone (call and WhatsApp links),
+  card shows the guest's name, Delivery/Pickup/At the table (with the table's
+  name as a badge by the reference), their phone (call and WhatsApp links),
   the address and a map link. One button moves it on (`nextStep()` in the
   card): **Accept** (`accepted`, which the guest sees on their tracking page),
   then **On its way** (delivery) or **Ready** (pickup), both `ready`, then
-  **Done**. A guest may change an order (or add dishes to it) only until it
+  **Done**. At a table it is shorter: **Start preparing** (`accepted`, read
+  "Preparing"), then **Served** (`done`). A guest may change an order (or add dishes to it) only until it
   is accepted: the card then says "Changed by the guest at …" (amber while
   it waits to be accepted), and the pulse's
   `changed` chimes like a new order. Taking on a new order sends the card's
@@ -209,6 +231,22 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   id as `savedId` (RHF field arrays own `id`) and send it back as `id`. A
   list that is off is left out of the form and of the save, so the server
   keeps it. Limits mirror `../qayema/config/menu.php`.
+- **Table orders** (`table-orders` page inside `features/orders`,
+  `GET /api/orders?kind=table`): orders to a table, grouped by table, the
+  one waiting longest first, with the same cards and actions as Orders
+  (`useOrderActions`, `CancelOrderDialog`). The Orders page asks
+  `kind=away`. The pulse runs while orders are taken in the menu or at the
+  table, and returns `{orders, tables}`: one sidebar count each, both in
+  the tab title.
+- **Tables** (`features/tables`, `/api/tables`, needs `plan.dine_in`):
+  each table has a name and a random `code`; its QR code opens the menu at
+  `?table=<code>&qr=1`, and an order "at my table" (`dine_in`) goes to it.
+  Codes are drawn with the QR page's design (`useQr`, `qrOptions` from the
+  qr barrel). Add a numbered run or one by name, rename (the code stays),
+  give a new code (the printed card stops working), remove (orders keep the
+  table's name). Print uses a portal sheet (`components/print/print-sheet.tsx`)
+  that `globals.css` shows only on paper. `meta.takes_orders` is false while
+  ordering at the table is switched off, with a way to Features.
 - The QR preview mirrors the printable card: `features/qr/utils/qr-options.ts`
   is the twin of `QrStyle::options()` in `../qayema`, tested against the same
   cases. Change one, change both. `qr-code-styling` needs a real canvas, so
@@ -224,12 +262,32 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `TranslatableTextField` takes `languages` and shows no tabs for an
   English-only menu. Send every active language (blank clears it); never send
   a hidden one (the server keeps it for when the owner switches back).
+- **Menu link** (`features/restaurant/components/identity/link-section.tsx`):
+  the slug, changed on its own (not with the page's save), after a
+  `ConfirmDialog` saying the old link and printed QR codes keep forwarding;
+  `useChangeSlug` (`PUT /api/restaurant/slug`) refreshes the session and the
+  QR page. The server writes the link cleanly ("My Place" → my-place).
+- **Opening hours** (`features/restaurant/components/hours/`): each day is
+  its name and switch, then an Opens and a Closes line. A time is picked the
+  way a clock reads (`TimePicker`): the hour (1 to 12), the minutes (00, 15,
+  30, 45; a saved 07:20 keeps its 20) and AM | PM, with its part of the day
+  beside it (Morning 05:00, Afternoon 12:00, Evening 17:00, Night 21:00),
+  and stored as "HH:MM" as before (`splitTime` / `joinTime` in
+  `time-options.ts`). A day whose close comes before its open says it runs
+  past midnight. The shared `Combobox` has a `size="sm"` for small pickers on
+  one line, opens on the current choice, and grows to fit its options (up to
+  320px) toward the side with room.
 - Card text on the QR form is `''` in the form and `null` on the wire;
   `toFormValues` / `toDesign` convert, so blank text never saves as `""`.
-- **Overview** (`features/overview`) is the menu at a glance: dish, category
-  and social-link counts from the session's `limits`, and a "Finish your menu"
-  checklist built from the restaurant + dishes by `menuChecklist()` (a pure
-  function, unit tested). Each item's action is a nav key.
+- **Overview** (`features/overview`): the menu's link first
+  (`components/link/menu-link-card.tsx`: copy, open, QR code), then setting
+  it up in three steps (`components/checklist/setup-stepper.tsx`: your
+  restaurant, your dishes, sharing it; built from `menuChecklist()` and
+  `setupSteps()`, pure and unit tested; the first step not done is open)
+  beside "How it works" (`components/guide/how-it-works.tsx`, hidden on the
+  owner's request and remembered in `ui.store`), then the dish, category and
+  social-link counts from the session's `limits`. Each item's action is a nav
+  key.
 - **Analytics** (`features/analytics`): the page needs `plan.analytics` (the
   nav locks it otherwise, with `AnalyticsTeaser`: this week's views from
   `GET /api/analytics/teaser`); `GET /api/analytics/advanced` only when

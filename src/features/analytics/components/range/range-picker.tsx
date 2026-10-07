@@ -1,4 +1,4 @@
-import { Lock } from 'lucide-react'
+import { IconLock } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { Segmented } from '@/shared/components/ui'
 import {
@@ -30,7 +30,7 @@ export function RangePicker({ value, onChange, advanced }: RangePickerProps) {
           value: range,
           label: t(`range.options.${range}`),
           disabled: locked,
-          icon: locked ? <Lock aria-hidden className="size-3" /> : undefined,
+          icon: locked ? <IconLock aria-hidden className="size-3" /> : undefined,
           title: locked ? t('range.locked') : undefined,
         }
       })}

@@ -355,4 +355,42 @@ describe('AnalyticsPage', () => {
       expect(tile('QR scans')).toHaveTextContent('Nothing to compare yet')
     })
   })
+
+  describe('orders placed in the menu', () => {
+    const menuOrders = {
+      currency: 'USD',
+      sales: 120,
+      average: 10,
+      previous_sales: 100,
+      statuses: { placed: 0, accepted: 0, ready: 0, done: 12, cancelled: 0 },
+      fulfilment: [{ key: 'pickup', count: 12 }],
+      guests: 10,
+      returning_guests: 2,
+      minutes_to_accept: 5,
+      hours: Array.from({ length: 24 }, () => 0),
+      weekdays: [0, 0, 0, 0, 0, 0, 0],
+      top_ordered: [],
+    }
+
+    it('shows their own section when the menu takes orders', async () => {
+      stubSummary()
+      stubAdvanced('30d', { menu_orders: menuOrders })
+      renderWithProviders(<AnalyticsPage locale="en" advanced onOpenPackage={vi.fn()} />)
+
+      expect(await screen.findByText('Orders placed in your menu')).toBeInTheDocument()
+      expect(tile('Sales')).toHaveTextContent('$120')
+    })
+
+    it('leaves the section out when orders go to WhatsApp or are not taken', async () => {
+      stubSummary()
+      stubAdvanced('30d', {
+        menu_orders: null,
+        funnel: { visitors: 80, carted: 20, ordered: 12, channel: 'whatsapp' },
+      })
+      renderWithProviders(<AnalyticsPage locale="en" advanced onOpenPackage={vi.fn()} />)
+
+      await screen.findByText('From visit to order')
+      expect(screen.queryByText('Orders placed in your menu')).not.toBeInTheDocument()
+    })
+  })
 })

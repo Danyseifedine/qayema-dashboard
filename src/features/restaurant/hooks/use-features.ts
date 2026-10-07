@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { analyticsKeys } from '@/features/analytics'
 import { sessionKeys } from '@/features/auth'
 import { appearanceKeys } from '@/features/appearance'
 import { categoryKeys, dishKeys } from '@/features/menu'
@@ -61,10 +62,12 @@ export function useSaveSwitchedOff() {
       void queryClient.invalidateQueries({ queryKey: sessionKeys.current() })
       // "QR Studio" decides what the QR page shows; "Multiple languages"
       // decides which languages menu text comes back in and which scripts get
-      // a font picker. Reset rather than invalidated: an invalidated page
+      // a font picker; "Ordering" decides whether analytics count orders. Reset
+      // rather than invalidated: an invalidated page
       // opens on its old copy (still "switched off") until the refetch lands;
       // a reset one opens on its skeleton, then the fresh answer.
       for (const key of [
+        analyticsKeys.all,
         qrKeys.all,
         restaurantKeys.all,
         categoryKeys.all,

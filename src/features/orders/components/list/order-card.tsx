@@ -1,15 +1,17 @@
 import {
-  Bike,
-  Check,
-  type LucideIcon,
-  MapPin,
-  MessageCircle,
-  Pencil,
-  Phone,
-  ShoppingBag,
-  User,
-  X,
-} from 'lucide-react'
+  IconBike,
+  IconCheck,
+  type TablerIcon,
+  IconMapPin,
+  IconMessageCircle,
+  IconPencil,
+  IconPhone,
+  IconTrash,
+  IconShoppingBag,
+  IconToolsKitchen2,
+  IconUser,
+  IconX,
+} from '@tabler/icons-react'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
@@ -25,6 +27,8 @@ export type OrderCardProps = {
   /** These take the order back, so the page can pass stable callbacks. */
   onMove: (order: Order, status: OrderStatus) => void
   onCancel: (order: Order) => void
+  onEdit: (order: Order) => void
+  onDelete: (order: Order) => void
 }
 
 const TONE: Record<Order['status'], string> = {
@@ -44,6 +48,8 @@ export const OrderCard = memo(function OrderCard({
   busy = false,
   onMove,
   onCancel,
+  onEdit,
+  onDelete,
 }: OrderCardProps) {
   const { t } = useTranslation('orders')
   const locale = usePreferencesStore((state) => state.locale)
@@ -59,7 +65,18 @@ export const OrderCard = memo(function OrderCard({
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="force-ltr font-display text-[17px] leading-tight">{order.reference}</p>
+          <p className="flex flex-wrap items-center gap-2">
+            <span className="force-ltr font-display text-[17px] leading-tight">
+              {order.reference}
+            </span>
+            {order.table !== null ? (
+              // The first thing the floor needs: which table it goes to.
+              <span className="inline-flex items-center gap-1 rounded-full bg-gold px-2.5 py-0.5 text-[12px] font-semibold text-ink">
+                <IconToolsKitchen2 aria-hidden className="size-3.5" />
+                {order.table}
+              </span>
+            ) : null}
+          </p>
           {order.placed_at !== null ? (
             <p className="mt-0.5 text-[12px] text-[var(--muted)]">
               {formatDateTime(order.placed_at, locale)}
@@ -87,11 +104,18 @@ export const OrderCard = memo(function OrderCard({
               : 'text-[var(--muted)]',
           )}
         >
-          <Pencil aria-hidden className="size-3.5 shrink-0" />
+          <IconPencil aria-hidden className="size-3.5 shrink-0" />
           {t('card.changed', {
             count: order.guest_updates,
             time: formatTime(order.guest_updated_at, locale),
           })}
+        </p>
+      ) : null}
+
+      {order.owner_updated_at !== null ? (
+        <p className="flex items-center gap-1.5 text-[12.5px] text-[var(--muted)]">
+          <IconPencil aria-hidden className="size-3.5 shrink-0" />
+          {t('card.ownerChanged', { time: formatTime(order.owner_updated_at, locale) })}
         </p>
       ) : null}
 
@@ -134,29 +158,58 @@ export const OrderCard = memo(function OrderCard({
           className="text-[15px] font-medium text-accent"
         />
 
-        {next !== null ? (
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {next !== null ? (
+            <>
+              <Button
+                size="sm"
+                variant={next.status === 'done' ? 'secondary' : 'primary'}
+                loading={busy}
+                leadingIcon={<next.icon className="size-3.5" />}
+                onClick={() => onMove(order, next.status)}
+              >
+                {t(next.label)}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                leadingIcon={<IconX className="size-3.5" />}
+                onClick={() => onCancel(order)}
+                className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
+              >
+                {t('card.cancel')}
+              </Button>
+            </>
+          ) : null}
+          <div className="flex items-center">
+            {/* A cancelled order is no longer anyone's to change. */}
+            {order.status !== 'cancelled' ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-[var(--muted)] hover:text-[var(--text)]"
+                aria-label={t('card.edit', { reference: order.reference })}
+                title={t('card.editShort')}
+                disabled={busy}
+                onClick={() => onEdit(order)}
+              >
+                <IconPencil aria-hidden className="size-4" />
+              </Button>
+            ) : null}
             <Button
-              size="sm"
-              variant={next.status === 'done' ? 'secondary' : 'primary'}
-              loading={busy}
-              leadingIcon={<next.icon className="size-3.5" />}
-              onClick={() => onMove(order, next.status)}
-            >
-              {t(next.label)}
-            </Button>
-            <Button
-              size="sm"
               variant="ghost"
+              size="icon"
+              className="size-8 text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
+              aria-label={t('card.delete', { reference: order.reference })}
+              title={t('card.deleteShort')}
               disabled={busy}
-              leadingIcon={<X className="size-3.5" />}
-              onClick={() => onCancel(order)}
-              className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
+              onClick={() => onDelete(order)}
             >
-              {t('card.cancel')}
+              <IconTrash aria-hidden className="size-4" />
             </Button>
           </div>
-        ) : null}
+        </div>
       </div>
     </article>
   )
@@ -164,8 +217,14 @@ export const OrderCard = memo(function OrderCard({
 
 type NextStep = {
   status: OrderStatus
-  label: 'card.accept' | 'card.onItsWay' | 'card.ready' | 'card.markDone'
-  icon: LucideIcon
+  label:
+    | 'card.accept'
+    | 'card.startPreparing'
+    | 'card.onItsWay'
+    | 'card.ready'
+    | 'card.served'
+    | 'card.markDone'
+  icon: TablerIcon
 }
 
 /**
@@ -179,25 +238,43 @@ function nextStep(order: Order): NextStep | null {
 
   switch (order.status) {
     case 'placed':
+      if (order.fulfilment === 'dine_in') {
+        return { status: 'accepted', label: 'card.startPreparing', icon: IconCheck }
+      }
       return order.fulfilment === null
-        ? { status: 'done', label: 'card.markDone', icon: Check }
-        : { status: 'accepted', label: 'card.accept', icon: Check }
+        ? { status: 'done', label: 'card.markDone', icon: IconCheck }
+        : { status: 'accepted', label: 'card.accept', icon: IconCheck }
     case 'accepted':
+      // At a table there is no "ready" for the guest to hear: served is next.
+      if (order.fulfilment === 'dine_in') {
+        return { status: 'done', label: 'card.served', icon: IconToolsKitchen2 }
+      }
       return delivery
-        ? { status: 'ready', label: 'card.onItsWay', icon: Bike }
-        : { status: 'ready', label: 'card.ready', icon: ShoppingBag }
+        ? { status: 'ready', label: 'card.onItsWay', icon: IconBike }
+        : { status: 'ready', label: 'card.ready', icon: IconShoppingBag }
     case 'ready':
-      return { status: 'done', label: 'card.markDone', icon: Check }
+      return order.fulfilment === 'dine_in'
+        ? { status: 'done', label: 'card.served', icon: IconToolsKitchen2 }
+        : { status: 'done', label: 'card.markDone', icon: IconCheck }
     default:
       return null
   }
 }
 
-/** "Ready" is "On its way" for a delivery. */
-function statusLabel(order: Order): `status.${OrderStatus}` | 'status.onItsWay' {
-  return order.status === 'ready' && order.fulfilment === 'delivery'
-    ? 'status.onItsWay'
-    : `status.${order.status}`
+/**
+ * "Ready" is "On its way" for a delivery. At a table an order goes new,
+ * preparing, served: "Accepted" reads "Preparing" and "Done" reads "Served"
+ * (one moved to ready before reads as preparing still).
+ */
+function statusLabel(
+  order: Order,
+): `status.${OrderStatus}` | 'status.onItsWay' | 'status.preparing' | 'status.served' {
+  if (order.fulfilment === 'dine_in') {
+    if (order.status === 'accepted' || order.status === 'ready') return 'status.preparing'
+    if (order.status === 'done') return 'status.served'
+  }
+  if (order.status === 'ready' && order.fulfilment === 'delivery') return 'status.onItsWay'
+  return `status.${order.status}`
 }
 
 /**
@@ -207,7 +284,12 @@ function statusLabel(order: Order): `status.${OrderStatus}` | 'status.onItsWay' 
  */
 function GuestDetails({ order }: { order: Order }) {
   const { t } = useTranslation('orders')
-  const Icon = order.fulfilment === 'delivery' ? Bike : ShoppingBag
+  const Icon =
+    order.fulfilment === 'delivery'
+      ? IconBike
+      : order.fulfilment === 'dine_in'
+        ? IconToolsKitchen2
+        : IconShoppingBag
   const link = 'inline-flex items-center gap-1.5 text-accent hover:underline'
 
   return (
@@ -215,7 +297,7 @@ function GuestDetails({ order }: { order: Order }) {
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         {order.name !== null ? (
           <span className="inline-flex min-w-0 items-center gap-1.5 font-medium">
-            <User aria-hidden className="size-3.5 shrink-0" />
+            <IconUser aria-hidden className="size-3.5 shrink-0" />
             <span className="break-words">{order.name}</span>
           </span>
         ) : null}
@@ -227,7 +309,7 @@ function GuestDetails({ order }: { order: Order }) {
       {order.phone !== null ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <a href={`tel:${order.phone}`} className={cn(link, 'force-ltr tabular-nums')}>
-            <Phone aria-hidden className="size-3.5" />
+            <IconPhone aria-hidden className="size-3.5" />
             {order.phone}
           </a>
           <a
@@ -236,14 +318,14 @@ function GuestDetails({ order }: { order: Order }) {
             rel="noreferrer"
             className={link}
           >
-            <MessageCircle aria-hidden className="size-3.5" />
+            <IconMessageCircle aria-hidden className="size-3.5" />
             {t('card.whatsapp')}
           </a>
         </div>
       ) : null}
       {order.address !== null ? (
         <p className="flex items-start gap-1.5 leading-snug text-[var(--muted)]">
-          <MapPin aria-hidden className="mt-0.5 size-3.5 shrink-0" />
+          <IconMapPin aria-hidden className="mt-0.5 size-3.5 shrink-0" />
           <span className="min-w-0 break-words">{order.address}</span>
         </p>
       ) : null}

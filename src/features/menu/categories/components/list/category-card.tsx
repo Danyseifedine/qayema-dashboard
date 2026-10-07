@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import { IconPencil, IconTrash } from '@tabler/icons-react'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
@@ -87,7 +87,7 @@ export const CategoryCard = memo(function CategoryCard({
           name.text ? t('categoryCard.edit', { name: name.text }) : t('categoryCard.editUnnamed')
         }
       >
-        <Pencil aria-hidden className="size-4" />
+        <IconPencil aria-hidden className="size-4" />
       </Button>
       <Button
         variant="ghost"
@@ -100,7 +100,7 @@ export const CategoryCard = memo(function CategoryCard({
         }
         className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
       >
-        <Trash2 aria-hidden className="size-4" />
+        <IconTrash aria-hidden className="size-4" />
       </Button>
     </div>
   )

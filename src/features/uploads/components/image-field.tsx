@@ -1,4 +1,4 @@
-import { ImagePlus, Trash2, UploadCloud } from 'lucide-react'
+import { IconPhotoPlus, IconTrash, IconCloudUpload } from '@tabler/icons-react'
 import { useCallback, useId, useRef, useState, type DragEvent, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import {
@@ -199,7 +199,7 @@ export function ImageField<T extends FieldValues>({
                 block
                 onClick={clear}
                 disabled={uploading}
-                leadingIcon={<Trash2 className="size-3.5" />}
+                leadingIcon={<IconTrash className="size-3.5" />}
                 className="text-status-danger hover:bg-status-danger-wash"
               >
                 {t('imageField.remove')}
@@ -259,9 +259,9 @@ export function ImageField<T extends FieldValues>({
           ) : (
             <span className="grid size-11 place-items-center rounded-xl bg-ink text-[var(--color-paper)]">
               {dragging ? (
-                <UploadCloud aria-hidden className="size-[18px]" />
+                <IconCloudUpload aria-hidden className="size-[18px]" />
               ) : (
-                <ImagePlus aria-hidden className="size-[18px]" />
+                <IconPhotoPlus aria-hidden className="size-[18px]" />
               )}
             </span>
           )}

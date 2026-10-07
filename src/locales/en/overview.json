@@ -11,12 +11,6 @@
     "onYourPackage": "on your package"
   },
   "checklist": {
-    "title": "Finish your menu",
-    "complete": "Everything guests look for is on your menu.",
-    "incomplete": "Each of these makes your menu more useful to guests.",
-    "progressLabel": "Menu checklist",
-    "progress": "{{done}} of {{total}} done",
-    "listLabel": "To do",
     "stateDone": "(done)",
     "stateToDo": "(to do)",
     "actionLabel": "{{action}}: {{item}}",
@@ -67,6 +61,60 @@
       "social": {
         "label": "A social link",
         "hint": "Guests can follow you from the menu."
+      }
+    }
+  },
+  "link": {
+    "label": "Your menu link",
+    "live": "Your menu is live at",
+    "copy": "Copy link",
+    "open": "Open menu",
+    "qr": "QR code",
+    "copied": "Link copied",
+    "copyFailed": "Could not copy the link"
+  },
+  "setup": {
+    "title": "Set up your menu",
+    "complete": "Your menu is ready: everything guests look for is on it.",
+    "incomplete": "Three steps, each with what is still missing.",
+    "progressLabel": "Menu set-up",
+    "progress": "{{done}} of {{total}} done",
+    "stepDone": "Done",
+    "stepLeft_one": "{{count}} thing left",
+    "stepLeft_other": "{{count}} things left",
+    "getQr": "Get your QR code",
+    "steps": {
+      "restaurant": {
+        "title": "Your restaurant",
+        "description": "Who you are and how guests reach you: shown at the top of your menu."
+      },
+      "menu": {
+        "title": "Your dishes",
+        "description": "What you serve, in categories guests move between."
+      },
+      "share": {
+        "title": "Share your menu",
+        "description": "Put the QR code on your tables, and link the places guests follow you."
+      }
+    }
+  },
+  "guide": {
+    "title": "How it works",
+    "description": "Your menu, on every guest's phone.",
+    "hide": "Hide the guide",
+    "show": "How it works",
+    "steps": {
+      "fill": {
+        "title": "Fill in your menu",
+        "body": "Add your dishes, prices and photos here. They show on your menu link."
+      },
+      "share": {
+        "title": "Put the QR code on your tables",
+        "body": "Guests scan it with their phone camera. No app to download."
+      },
+      "change": {
+        "title": "Change it any time",
+        "body": "A new price or a dish sold out is live at once. Nothing to reprint."
       }
     }
   }

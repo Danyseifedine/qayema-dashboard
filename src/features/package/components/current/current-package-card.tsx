@@ -1,4 +1,4 @@
-import { Check, Crown, Lock } from 'lucide-react'
+import { IconCheck, IconCrown, IconLock } from '@tabler/icons-react'
 import { Trans, useTranslation } from 'react-i18next'
 import type { AuthRestaurant } from '@/features/auth'
 import { LimitBadge } from '@/shared/components/data-display'
@@ -57,7 +57,7 @@ export function CurrentPackageCard({
             {t('current.eyebrow')}
           </p>
           <h2 className="mt-1 flex items-center gap-2 font-display text-[22px] leading-tight text-accent">
-            <Crown aria-hidden className="size-5" />
+            <IconCrown aria-hidden className="size-5" />
             {name}
           </h2>
         </div>
@@ -175,9 +175,9 @@ export function CurrentPackageCard({
                     )}
                   >
                     {plan[row.key] ? (
-                      <Check aria-hidden className="size-3.5 text-accent" />
+                      <IconCheck aria-hidden className="size-3.5 text-accent" />
                     ) : (
-                      <Lock aria-hidden className="size-3" />
+                      <IconLock aria-hidden className="size-3" />
                     )}
                     {t(`rows.${row.key}`)}
                     <span className="sr-only">

@@ -96,6 +96,24 @@ describe('Combobox', () => {
     await waitFor(() => expect(input()).toHaveValue('EG +20'))
   })
 
+  it('opens on the current choice, and on the top match once something is typed', async () => {
+    const user = userEvent.setup()
+    render(<Harness value="EG" />)
+
+    await user.click(input())
+    expect(screen.getByRole('option', { name: /Egypt/ })).toHaveAttribute('aria-selected', 'true')
+    expect(input()).toHaveAttribute(
+      'aria-activedescendant',
+      screen.getByRole('option', { name: /Egypt/ }).id,
+    )
+
+    await user.type(input(), 'a')
+    expect(input()).toHaveAttribute(
+      'aria-activedescendant',
+      screen.getAllByRole('option')[0]!.id,
+    )
+  })
+
   it('marks the selected option and gives it a tick', async () => {
     const user = userEvent.setup()
     render(<Harness value="AE" />)
@@ -349,7 +367,9 @@ describe('Combobox', () => {
 
       await user.click(input())
 
-      expect(screen.getByRole('listbox')).toHaveClass('bottom-[calc(100%+6px)]')
+      // Its bottom 6px above the field's top.
+      expect(screen.getByRole('listbox').style.bottom).toBe('66px')
+      expect(screen.getByRole('listbox').style.top).toBe('')
     })
 
     it('opens downward when there is even less room above', async () => {
@@ -359,7 +379,20 @@ describe('Combobox', () => {
 
       await user.click(input())
 
-      expect(screen.getByRole('listbox')).toHaveClass('top-[calc(100%+6px)]')
+      expect(screen.getByRole('listbox').style.top).toBe(`${window.innerHeight - 14}px`)
+    })
+
+    it('sits fixed at the field, so a scrolling dialog body cannot clip it', async () => {
+      placeAt(100, 140)
+      const user = userEvent.setup()
+      render(<Harness />)
+
+      await user.click(input())
+
+      const list = screen.getByRole('listbox')
+      expect(list).toHaveClass('fixed')
+      expect(list.style.top).toBe('146px')
+      expect(list.style.left).toBe('0px')
     })
   })
 })

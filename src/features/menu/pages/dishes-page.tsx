@@ -1,4 +1,4 @@
-import { LayoutList, Plus, UtensilsCrossed } from 'lucide-react'
+import { IconLayoutList, IconPlus, IconToolsKitchen2 } from '@tabler/icons-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCategories } from '@/features/menu/categories/hooks/use-categories'
@@ -105,7 +105,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
         />
         <Button
           size="sm"
-          leadingIcon={<Plus className="size-4" />}
+          leadingIcon={<IconPlus className="size-4" />}
           disabled={atLimit || noCategories}
           onClick={() => setDialog({ open: true, dish: null })}
         >
@@ -118,7 +118,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
       {noCategories && dishList.length === 0 ? (
         <EmptyState
           fill
-          icon={LayoutList}
+          icon={IconLayoutList}
           title={t('shared.addCategoryFirst')}
           description={t('dishesPage.noCategoriesDescription')}
           action={<Button onClick={onOpenCategories}>{t('shared.goToCategories')}</Button>}
@@ -156,7 +156,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
           ) : visible.length === 0 ? (
             <EmptyState
               fill
-              icon={UtensilsCrossed}
+              icon={IconToolsKitchen2}
               title={
                 dishList.length === 0
                   ? t('dishesPage.emptyTitle')

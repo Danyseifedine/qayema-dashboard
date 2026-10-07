@@ -64,9 +64,12 @@
       display 200ms allow-discrete;
   }
 
+  /* `none`, not an identity transform: a transformed dialog would become
+     the containing block of anything fixed inside it, and a dropdown's
+     list (Combobox) is fixed so the dialog's scrolling body cannot clip it. */
   dialog[open] {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: none;
   }
 
   /* The state the dialog animates *from* on open. */
@@ -175,4 +178,26 @@
   font-size: 11.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+/* Table cards (features/tables/components/print/print-sheet.tsx): on paper only,
+   and on paper nothing else. */
+.qy-print-sheet {
+  display: none;
+}
+
+@media print {
+  body > :not(.qy-print-sheet) {
+    display: none !important;
+  }
+
+  .qy-print-sheet {
+    display: block;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page {
+    margin: 12mm;
+  }
 }

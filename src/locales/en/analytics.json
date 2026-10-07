@@ -67,6 +67,45 @@
     "ordered": "Placed an order",
     "sentToWhatsapp": "Sent their order to WhatsApp"
   },
+  "menuOrders": {
+    "title": "Orders placed in your menu",
+    "description": "What guests ordered through your menu and how those orders went. Cancelled orders are left out of the money.",
+    "sales": "Sales",
+    "average": "Average order",
+    "returning": "Returning guests",
+    "ofGuests_one": "of {{count}} guest",
+    "ofGuests_other": "of {{count}} guests",
+    "toAccept": "Time to accept",
+    "toAcceptHint": "Typical wait before you take an order on",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "hoursMinutes": "{{hours}} h {{minutes}} min",
+    "none": "None yet",
+    "topOrdered": {
+      "title": "Most ordered dishes",
+      "empty": "No dish ordered in this range."
+    },
+    "outcomes": {
+      "title": "How orders ended",
+      "empty": "No orders in this range.",
+      "done": "Done",
+      "open": "Still open",
+      "cancelled": "Cancelled"
+    },
+    "fulfilment": {
+      "title": "How guests got their order",
+      "empty": "No orders in this range.",
+      "delivery": "Delivery",
+      "pickup": "Pickup",
+      "dine_in": "At the table"
+    },
+    "busiest": {
+      "title": "When guests order",
+      "description": "Orders placed in your menu, in your restaurant's time.",
+      "notEnough": "Not enough orders yet.",
+      "orders": "Orders"
+    }
+  },
   "topAdded": {
     "title": "Most added to the cart",
     "empty": "Nothing added to a cart in this range."

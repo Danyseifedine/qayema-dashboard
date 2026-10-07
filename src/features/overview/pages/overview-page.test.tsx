@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { makeDish } from '@/test/factories/menu'
+import { makeSessionUser } from '@/test/factories/session'
+import { useUiStore } from '@/stores/ui.store'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { OverviewPage } from '@/features/overview/pages/overview-page'
 
@@ -55,6 +57,7 @@ describe('OverviewPage', () => {
   })
 
   afterEach(() => {
+    useUiStore.getState().setGuideHidden(false)
     mock.restore()
     api.interceptors.request.clear()
     api.interceptors.response.clear()
@@ -93,7 +96,7 @@ describe('OverviewPage', () => {
     // Done: logo, description, hours, phone, categories, dishes, social.
     // To do: cover, location, the one dish's photo.
     expect(await screen.findByText('7 of 10 done')).toBeInTheDocument()
-    expect(screen.getByRole('progressbar', { name: 'Menu checklist' })).toHaveAttribute(
+    expect(screen.getByRole('progressbar', { name: 'Menu set-up' })).toHaveAttribute(
       'aria-valuenow',
       '7',
     )
@@ -108,20 +111,82 @@ describe('OverviewPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Add: A cover photo' }))
     expect(onOpen).toHaveBeenLastCalledWith('restaurant')
 
+    // The dishes are the next step: opened with a tap.
+    await user.click(screen.getByRole('button', { name: /Your dishes/ }))
     await user.click(screen.getByRole('button', { name: 'Fix: 2 dishes have no photo' }))
     expect(onOpen).toHaveBeenLastCalledWith('dishes')
   })
 
-  it('lists what is left before what is done', async () => {
+  it('opens on the first step not done, what is left before what is done', async () => {
     stub()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
-    const rows = within(await screen.findByRole('list', { name: 'To do' })).getAllByRole('listitem')
-    expect(rows.slice(0, 3).map((row) => row.textContent)).toEqual([
+    const step = await screen.findByRole('list', { name: 'Your restaurant' })
+    const rows = within(step).getAllByRole('listitem')
+    expect(rows.slice(0, 2).map((row) => row.textContent)).toEqual([
       expect.stringContaining('A cover photo'),
       expect.stringContaining('Your location'),
-      expect.stringContaining('1 dish has no photo'),
     ])
+    expect(screen.getByRole('button', { name: /Your restaurant/ })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: /Your dishes/ })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
+    expect(screen.getByRole('button', { name: /Your restaurant/ })).toHaveTextContent(
+      '2 things left',
+    )
+    // Sharing has its social link: done.
+    expect(screen.getByRole('button', { name: /Share your menu/ })).toHaveTextContent('Done')
+  })
+
+  it('sends the sharing step to the QR code', async () => {
+    stub()
+    const onOpen = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
+
+    await user.click(await screen.findByRole('button', { name: /Share your menu/ }))
+    await user.click(screen.getByRole('button', { name: 'Get your QR code' }))
+    expect(onOpen).toHaveBeenLastCalledWith('qr')
+  })
+
+  it('puts the menu link first, to copy, open or turn into a QR code', async () => {
+    stub()
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
+    const onOpen = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
+
+    const card = await screen.findByRole('region', { name: 'Your menu link' })
+    expect(within(card).getByRole('link', { name: 'qayema.test/beit-qayema' })).toHaveAttribute(
+      'href',
+      'https://qayema.test/beit-qayema',
+    )
+
+    await user.click(within(card).getByRole('button', { name: 'Copy link' }))
+    // user-event stands in a clipboard of its own.
+    expect(await navigator.clipboard.readText()).toBe('https://qayema.test/beit-qayema')
+    expect(await screen.findByText('Link copied')).toBeInTheDocument()
+
+    await user.click(within(card).getByRole('button', { name: 'QR code' }))
+    expect(onOpen).toHaveBeenLastCalledWith('qr')
+  })
+
+  it('shows how it works until put away, and offers it back', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+
+    expect(screen.getByText('Put the QR code on your tables')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Hide the guide' }))
+
+    expect(screen.queryByText('Put the QR code on your tables')).not.toBeInTheDocument()
+    expect(useUiStore.getState().guideHidden).toBe(true)
+    await user.click(screen.getByRole('button', { name: 'How it works' }))
+    expect(screen.getByText('Put the QR code on your tables')).toBeInTheDocument()
   })
 
   it('offers no button for what is already done', async () => {
@@ -144,7 +209,9 @@ describe('OverviewPage', () => {
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     expect(await screen.findByText('10 of 10 done')).toBeInTheDocument()
-    expect(screen.getByText('Everything guests look for is on your menu.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Your menu is ready: everything guests look for is on it.'),
+    ).toBeInTheDocument()
   })
 
   it('shows an error with a retry when the checklist cannot load', async () => {

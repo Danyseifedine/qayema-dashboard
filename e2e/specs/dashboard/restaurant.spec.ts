@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test'
 import { either, expect, test } from '../../support/fixtures'
 import { guestMenu, fixtureFile } from '../../support/helpers'
+import { API_URL } from '../../support/urls'
 
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 const DAY_NAMES = {
@@ -76,6 +77,20 @@ function yesterdayOf(day: Weekday): Weekday {
 
 const hhmm = (hour: number, minute: number) =>
   `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+
+/** Picks "HH:MM" (on a quarter hour) the way the picker reads: hour, minutes, AM or PM. */
+async function pickTime(page: Page, what: string, time: string) {
+  const [hour24, minute] = time.split(':').map(Number) as [number, number]
+  const hour = String(hour24 % 12 === 0 ? 12 : hour24 % 12)
+  await page.getByRole('combobox', { name: `${what}: hour` }).click()
+  await page.getByRole('option', { name: hour, exact: true }).click()
+  await page.getByRole('combobox', { name: `${what}: minutes` }).click()
+  await page.getByRole('option', { name: String(minute).padStart(2, '0'), exact: true }).click()
+  await page
+    .getByRole('tablist', { name: `${what}: AM or PM` })
+    .getByRole('tab', { name: hour24 < 12 ? 'AM' : 'PM' })
+    .click()
+}
 
 /** Saves the form and waits for the server's answer. */
 async function save(page: Page) {
@@ -269,7 +284,7 @@ test.describe('restaurant', () => {
     owner,
   }) => {
     const restaurant = await owner()
-    const { zone, hour, minute, day } = earlyMorningZone()
+    const { zone, hour, day } = earlyMorningZone()
     const yesterday = yesterdayOf(day)
     await page.goto('/restaurant')
 
@@ -282,18 +297,13 @@ test.describe('restaurant', () => {
     const lastNight = DAY_NAMES[yesterday]
     const lastNightOpen = page.getByRole('switch', { name: `${lastNight} is open` })
     await expect(lastNightOpen).toHaveAttribute('aria-checked', 'false')
-    await expect(page.getByRole('textbox', { name: `${lastNight} opens` })).toBeDisabled()
+    await expect(page.getByRole('combobox', { name: `${lastNight} opens: hour` })).toBeDisabled()
     await lastNightOpen.click()
-    await page.getByRole('textbox', { name: `${lastNight} opens` }).fill('20:00')
-    await page.getByRole('textbox', { name: `${lastNight} closes` }).fill(hhmm(hour + 2, minute))
-
-    // A time that is no time is caught before saving.
-    await page.getByRole('switch', { name: `${DAY_NAMES[day]} is open` }).click()
-    await page.getByRole('textbox', { name: `${DAY_NAMES[day]} opens` }).fill('25:00')
-    await page.getByRole('button', { name: 'Save changes' }).click()
-    await expect(page.getByText('Use a time like 09:00.')).toBeVisible()
-    // Today stays closed.
-    await page.getByRole('switch', { name: `${DAY_NAMES[day]} is open` }).click()
+    await pickTime(page, `${lastNight} opens`, '20:00')
+    await expect(page.getByRole('combobox', { name: `${lastNight} opens: hour` })).toHaveValue('8')
+    await pickTime(page, `${lastNight} closes`, hhmm(hour + 2, 0))
+    // Closing before it opens: the picker says it runs past midnight.
+    await expect(page.getByText('Closes the next day, after midnight.')).toBeVisible()
     expect((await save(page)).ok()).toBeTruthy()
 
     const guest = await guestMenu(browser, restaurant)
@@ -304,7 +314,7 @@ test.describe('restaurant', () => {
 
     // Closing an hour ago means closed now.
     await page.reload()
-    await page.getByRole('textbox', { name: `${lastNight} closes` }).fill(hhmm(hour - 1, minute))
+    await pickTime(page, `${lastNight} closes`, hhmm(hour - 1, 0))
     expect((await save(page)).ok()).toBeTruthy()
     await guest.reload()
     await expect(facts).toContainText('Closed now')
@@ -354,6 +364,35 @@ test.describe('restaurant', () => {
     await page.getByLabel(/^Cover image/).setInputFiles(fixtureFile('not-an-image.txt'))
     await expect(page.getByText(/JPEG, PNG or WebP/).first()).toBeVisible()
     await expect(page.getByRole('button', { name: 'Save changes' })).toBeDisabled()
+  })
+
+  test('a new menu link, with the old one and its QR codes still leading there', async ({
+    page,
+    browser,
+    owner,
+  }) => {
+    const restaurant = await owner()
+    const old = restaurant.restaurant.slug
+    const fresh = `${old}-new`
+    await page.goto('/restaurant')
+
+    const link = page.getByRole('textbox', { name: 'Link' })
+    await link.fill(`${fresh.toUpperCase().replace(/-/g, ' ')}`)
+    await page.getByRole('button', { name: 'Change link' }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toContainText('keep working')
+    await dialog.getByRole('button', { name: 'Change link' }).click()
+    await expect(page.getByText('Link changed')).toBeVisible()
+    // Written cleanly by the server, and the page's own link follows.
+    await expect(link).toHaveValue(fresh)
+    await expect(page.getByRole('link', { name: `/${fresh}`, exact: true })).toBeVisible()
+
+    // A printed QR code (the old link, ?qr=1) lands on the menu at its new link.
+    const guest = await browser.newPage()
+    await guest.goto(`${API_URL}/${old}?qr=1`)
+    await expect(guest).toHaveURL(`${API_URL}/${fresh}?qr=1`)
+    await expect(guest.getByRole('heading', { level: 1 })).toHaveText('E2E Kitchen')
+    await guest.close()
   })
 
   test('the address link opens the public menu', async ({ page, owner, expectAccessible }) => {

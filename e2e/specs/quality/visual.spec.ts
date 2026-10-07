@@ -104,6 +104,8 @@ function dashboardMasks(page: Page, restaurantSlug: string): Locator[] {
     page.getByText(restaurantSlug),
     page.getByText(/owner-[a-z0-9]+@e2e\.test/),
     page.locator('input[type="email"]'),
+    // The menu link's box holds the run's own slug.
+    page.getByRole('textbox', { name: 'Link' }),
     page.locator('.recharts-wrapper'),
     page.locator('canvas'),
     page.getByRole('img', { name: "Your menu's QR code" }),

@@ -1,4 +1,4 @@
-import { Eye, EyeOff } from 'lucide-react'
+import { IconEye, IconEyeOff } from '@tabler/icons-react'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
@@ -68,7 +68,7 @@ export function TextField<T extends FieldValues>({
       label={revealed ? t('textField.hidePassword') : t('textField.showPassword')}
       onClick={() => setRevealed((open) => !open)}
     >
-      {revealed ? <EyeOff /> : <Eye />}
+      {revealed ? <IconEyeOff /> : <IconEye />}
     </FieldTrailingButton>
   ) : null
 

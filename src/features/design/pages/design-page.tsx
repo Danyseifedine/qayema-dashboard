@@ -1,4 +1,4 @@
-import { Palette } from 'lucide-react'
+import { IconPalette } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { CardGridSkeleton, EmptyState, ErrorState } from '@/shared/components/feedback'
 import { Alert } from '@/shared/components/ui'
@@ -73,7 +73,11 @@ export function DesignPage({ locale, onOpenPackage }: DesignPageProps) {
       ) : designs.isError ? (
         <ErrorState description={designs.error.message} onRetry={() => void designs.refetch()} />
       ) : list.length === 0 ? (
-        <EmptyState icon={Palette} title={t('empty.title')} description={t('empty.description')} />
+        <EmptyState
+          icon={IconPalette}
+          title={t('empty.title')}
+          description={t('empty.description')}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {list.map((template) => (

@@ -1,4 +1,4 @@
-import { ChartNoAxesColumn } from 'lucide-react'
+import { IconChartHistogram } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { usePackageFor } from '@/features/package'
 import { LockedState } from '@/shared/components/feedback'
@@ -18,7 +18,7 @@ export function AdvancedLocked({ locale, onOpenPackage }: AdvancedLockedProps) {
 
   return (
     <LockedState
-      icon={ChartNoAxesColumn}
+      icon={IconChartHistogram}
       title={t('locked.title')}
       description={t('locked.description')}
       includes={INCLUDES.map((line) => t(`locked.includes.${line}`))}

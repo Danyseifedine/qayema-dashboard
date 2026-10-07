@@ -24,6 +24,7 @@ function page(props: Partial<FeaturesPageProps> = {}) {
       defaultLocale="en"
       ordering={{ mode: 'whatsapp', types: ['delivery', 'pickup'] }}
       onOpenPackage={() => {}}
+      onOpenTables={() => {}}
       {...props}
     />
   )
@@ -41,6 +42,7 @@ function FromSession() {
       defaultLocale={restaurant.default_locale}
       ordering={restaurant.ordering}
       onOpenPackage={() => {}}
+      onOpenTables={() => {}}
     />
   )
 }
@@ -70,7 +72,7 @@ describe('FeaturesPage', () => {
     resetCsrfToken(api)
   })
 
-  it('has a switch for orders, variants, add-ons, the QR studio, analytics and languages', () => {
+  it('has a switch for orders, ordering at the table, variants, add-ons, the QR studio, analytics and languages', () => {
     renderWithProviders(page({ off: ['orders'] }))
 
     const switches = screen
@@ -78,6 +80,7 @@ describe('FeaturesPage', () => {
       .map((element) => element.getAttribute('aria-label'))
     expect(switches).toEqual([
       'Orders on',
+      'Ordering at the table on',
       'Variants on',
       'Add-ons on',
       'QR Studio on',
@@ -344,8 +347,11 @@ describe('FeaturesPage', () => {
       renderWithProviders(page({ ordering: { mode: 'menu', types: ['delivery', 'pickup'] } }))
 
       expect(screen.getByText(/Orders arrive on your Orders page with a sound/)).toBeInTheDocument()
-      expect(screen.getByRole('tab', { name: 'Both' })).toHaveAttribute('aria-selected', 'true')
-      await user.click(screen.getByRole('tab', { name: 'Pickup' }))
+      expect(screen.getByRole('switch', { name: 'Delivery' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      )
+      await user.click(screen.getByRole('switch', { name: 'Delivery' }))
 
       await waitFor(() => expect(mock.history.put).toHaveLength(1))
       expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
@@ -354,11 +360,20 @@ describe('FeaturesPage', () => {
       })
     })
 
+    it('keeps the last kind of order on, so guests can always order', () => {
+      renderWithProviders(page({ ordering: { mode: 'menu', types: ['pickup'] } }))
+
+      expect(screen.getByRole('switch', { name: 'Pickup' })).toBeDisabled()
+      expect(screen.getByRole('switch', { name: 'Delivery' })).toBeEnabled()
+      // Ordering at the table is its own feature, not one of these.
+      expect(screen.queryByRole('switch', { name: 'At the table' })).not.toBeInTheDocument()
+    })
+
     it('asks nothing about delivery while orders go to WhatsApp', () => {
       renderWithProviders(page())
 
       expect(screen.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute('aria-selected', 'true')
-      expect(screen.queryByRole('tablist', { name: 'You take' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('group', { name: 'You take' })).not.toBeInTheDocument()
     })
 
     it('locks ordering in the menu without the package and names the one that has it', async () => {
@@ -409,6 +424,38 @@ describe('FeaturesPage', () => {
         0,
       )
       expect(mock.history.put).toHaveLength(1)
+    })
+  })
+
+  describe('ordering at the table', () => {
+    it('is a feature of its own, switched off like any other', async () => {
+      mock.onPut('/api/features').reply(200, { data: { off: ['dine_in'] } })
+      const user = userEvent.setup()
+      renderWithProviders(page({ ordering: { mode: 'whatsapp', types: ['delivery', 'pickup'] } }))
+
+      await user.click(screen.getByRole('switch', { name: 'Ordering at the table on' }))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(1))
+      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({ off: ['dine_in'] })
+    })
+
+    it('opens the Tables page while it is on', async () => {
+      const onOpenTables = vi.fn()
+      const user = userEvent.setup()
+      renderWithProviders(page({ onOpenTables }))
+
+      await user.click(screen.getByRole('button', { name: 'Set up your tables' }))
+
+      expect(onOpenTables).toHaveBeenCalledOnce()
+    })
+
+    it('says what switching it off means', () => {
+      renderWithProviders(page({ off: ['dine_in'] }))
+
+      expect(
+        screen.getByText(/guests can't order to their table while this is off/),
+      ).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Set up your tables' })).not.toBeInTheDocument()
     })
   })
 })

@@ -20,10 +20,11 @@ export const FALLBACK_INTERVAL = 60_000
  * the Orders page, and the number still waiting goes into the tab's title,
  * so a dashboard left in a background tab still shows it.
  *
- * Off (`enabled` false) while orders go to WhatsApp: they never arrive here.
- * Returns how many orders are waiting.
+ * Off (`enabled` false) while nothing is ordered in the menu: orders going
+ * to WhatsApp never arrive here, while orders at the table always do.
+ * Returns how many wait on each page.
  */
-export function useOrderPulse(enabled: boolean, restaurantId: number): number {
+export function useOrderPulse(enabled: boolean, restaurantId: number): OrdersWaiting {
   const queryClient = useQueryClient()
   const [live, setLive] = useState(false)
 
@@ -117,16 +118,21 @@ export function useOrderPulse(enabled: boolean, restaurantId: number): number {
   }, [latest, changed, queryClient])
 
   const open = enabled ? (pulse.data?.open ?? 0) : 0
+  const atTables = enabled ? (pulse.data?.table_open ?? 0) : 0
+  const waiting = open + atTables
 
   useEffect(() => {
     const plain = () => document.title.replace(/^\(\d+\) /, '')
     const title = plain()
-    document.title = open > 0 ? `(${open}) ${title}` : title
+    document.title = waiting > 0 ? `(${waiting}) ${title}` : title
     // Signed out, or orders moved to WhatsApp: the count leaves with it.
     return () => {
       document.title = plain()
     }
-  }, [open])
+  }, [waiting])
 
-  return open
+  return { orders: open, tables: atTables }
 }
+
+/** Orders waiting to be accepted: on the Orders page, and on Table orders. */
+export type OrdersWaiting = { orders: number; tables: number }

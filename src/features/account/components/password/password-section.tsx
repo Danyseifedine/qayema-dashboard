@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { KeyRound } from 'lucide-react'
+import { IconKey } from '@tabler/icons-react'
 import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -69,7 +69,7 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
             required
             password
             autoComplete="current-password"
-            leadingIcon={<KeyRound />}
+            leadingIcon={<IconKey />}
           />
         ) : null}
 

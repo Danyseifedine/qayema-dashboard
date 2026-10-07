@@ -8,7 +8,9 @@
     "accepted": "مقبول",
     "ready": "جاهز",
     "onItsWay": "في الطريق",
+    "preparing": "قيد التحضير",
     "done": "منجز",
+    "served": "قُدِّم",
     "cancelled": "ملغى"
   },
   "filter": {
@@ -34,24 +36,36 @@
   },
   "card": {
     "accept": "اقبل",
+    "startPreparing": "ابدأ التحضير",
     "markDone": "منجز",
     "cancel": "إلغاء",
     "delivery": "توصيل",
     "pickup": "استلام",
+    "dine_in": "على الطاولة",
     "whatsapp": "واتساب",
     "openMap": "افتح موقعه على الخريطة",
     "onItsWay": "في الطريق",
     "ready": "جاهز",
+    "served": "قُدِّم",
     "changed_zero": "عدّله الضيف الساعة {{time}}",
     "changed_one": "عدّله الضيف الساعة {{time}}",
     "changed_two": "عدّله الضيف مرتين، آخرها الساعة {{time}}",
     "changed_few": "عدّله الضيف {{count}} مرات، آخرها الساعة {{time}}",
     "changed_many": "عدّله الضيف {{count}} مرة، آخرها الساعة {{time}}",
-    "changed_other": "عدّله الضيف {{count}} مرة، آخرها الساعة {{time}}"
+    "changed_other": "عدّله الضيف {{count}} مرة، آخرها الساعة {{time}}",
+    "edit": "تعديل الطلب {{reference}}",
+    "editShort": "تعديل",
+    "delete": "حذف الطلب {{reference}}",
+    "deleteShort": "حذف",
+    "ownerChanged": "عدّلته في {{time}}"
   },
   "toast": {
     "updated": "تم تحديث الطلب {{reference}} إلى «{{status}}»",
-    "updateFailed": "تعذّر تحديث هذا الطلب"
+    "updateFailed": "تعذّر تحديث هذا الطلب",
+    "edited": "حُدِّث الطلب {{reference}}",
+    "editFailed": "تعذّر تحديث هذا الطلب",
+    "deleted": "حُذف الطلب {{reference}}",
+    "deleteFailed": "تعذّر حذف هذا الطلب"
   },
   "whatsapp": {
     "title": "طلباتك تصل عبر واتساب",
@@ -64,5 +78,42 @@
     "description": "أرسل ضيف طلبًا للتو من قائمتك.",
     "changedTitle": "تم تعديل طلب",
     "changedDescription": "عدّل ضيف طلبًا أرسله. راجعه قبل أن تقبله."
+  },
+  "tables": {
+    "title": "طلبات الطاولات",
+    "description": "الطلبات التي أرسلها الزبائن من رمز QR على طاولتهم، مجمّعة حسب الطاولة، والأطول انتظارًا أولًا.",
+    "emptyTitle": "لا طلبات من الطاولات بعد",
+    "emptyDescription": "عندما يمسح الزبون رمز QR على طاولته ويطلب، يظهر الطلب هنا مع اسم الطاولة وتنبيه صوتي.",
+    "openTables": "جهّز طاولاتك",
+    "count_zero": "لا طلبات",
+    "count_one": "طلب واحد",
+    "count_two": "طلبان",
+    "count_few": "{{count}} طلبات",
+    "count_many": "{{count}} طلبًا",
+    "count_other": "{{count}} طلب"
+  },
+  "deleteDialog": {
+    "title": "حذف الطلب {{reference}}؟",
+    "description": "يُحذف الطلب وكل ما فيه نهائيًا. يخرج من إحصائياتك، ولا يعود بإمكان الزبون متابعته. للاحتفاظ بسجل له، ألغِه بدلًا من ذلك.",
+    "confirm": "حذف نهائي"
+  },
+  "edit": {
+    "title": "تعديل الطلب {{reference}}",
+    "description": "غيّر عدد كل طبق، أو احذف طبقًا، أو أضف أطباقًا. تحتفظ الأطباق الموجودة بالسعر الذي طُلبت به.",
+    "descriptionNew": "غيّر عدد كل طبق، أو احذف طبقًا، أو أضف أطباقًا. الحفظ يقبل الطلب، فلا يعود بإمكان الزبون تعديله.",
+    "each": "{{price}} للواحد",
+    "new": "مضاف",
+    "removeAdded": "إزالة {{name}}",
+    "addTitle": "إضافة طبق",
+    "dish": "الطبق",
+    "dishPlaceholder": "اختر طبقًا من قائمتك",
+    "noDish": "لا يوجد طبق مطابق.",
+    "hidden": "مخفي عن الزبائن",
+    "quantity": "الكمية",
+    "addDish": "إضافة",
+    "total": "المجموع",
+    "save": "حفظ التعديلات",
+    "cancel": "إلغاء",
+    "empty": "يجب أن يحتوي الطلب على طبق واحد على الأقل. لإيقافه، ألغِه."
   }
 }

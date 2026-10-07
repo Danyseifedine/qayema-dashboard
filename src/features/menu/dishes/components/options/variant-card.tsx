@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { IconPlus, IconTrash } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { useFieldArray, useWatch, type Control } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -68,7 +68,7 @@ export function VariantCard({
           onClick={onRemove}
           className="col-start-2 row-start-1 sm:col-start-3"
         >
-          <Trash2 aria-hidden className="size-4" />
+          <IconTrash aria-hidden className="size-4" />
         </Button>
       </div>
       <div className="sm:ps-12">
@@ -117,7 +117,7 @@ export function VariantCard({
             <Button
               variant="ghost"
               size="sm"
-              leadingIcon={<Plus aria-hidden className="size-4" />}
+              leadingIcon={<IconPlus aria-hidden className="size-4" />}
               onClick={() => options.append(blankChoice(languages))}
             >
               {t('choices.addOption')}

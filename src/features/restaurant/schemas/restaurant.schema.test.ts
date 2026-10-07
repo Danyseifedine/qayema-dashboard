@@ -60,8 +60,8 @@ describe('restaurantFormSchema', () => {
     values.opening_hours.mon = { closed: false, open: '9am', close: '24:00' }
 
     expect(problems(values)).toEqual({
-      'opening_hours.mon.open': 'Use a time like 09:00.',
-      'opening_hours.mon.close': 'Use a time like 09:00.',
+      'opening_hours.mon.open': 'Pick a time.',
+      'opening_hours.mon.close': 'Pick a time.',
     })
   })
 

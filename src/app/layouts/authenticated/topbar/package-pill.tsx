@@ -1,4 +1,4 @@
-import { Crown } from 'lucide-react'
+import { IconCrown } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -33,7 +33,7 @@ export function PackagePill({ label, endingSoon = false, onClick }: PackagePillP
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
       )}
     >
-      <Crown aria-hidden className="size-3.5" />
+      <IconCrown aria-hidden className="size-3.5" />
       <span>{label}</span>
       {endingSoon ? (
         <span aria-hidden className="size-1.5 rounded-full bg-[var(--status-warn)]" />

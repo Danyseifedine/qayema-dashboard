@@ -10,26 +10,39 @@ import { formatHour, weekdayNames } from '@/shared/utils/format/date'
 import { formatNumber } from '@/shared/utils/format/number'
 
 export type BusyTimesChartProps = {
-  /** Views by hour, 0 to 23, in the restaurant's timezone. */
+  /** Counts by hour, 0 to 23, in the restaurant's timezone. */
   hours: number[]
-  /** Views by weekday, Monday first. */
+  /** Counts by weekday, Monday first. */
   weekdays: number[]
   locale: Locale
+  /** What is counted, for the tooltip. Views unless said. */
+  valueLabel?: string
+  /** Said when every count is zero. */
+  notEnough?: string
 }
 
 /**
- * When guests open the menu: by hour of the day and by day of the week, with
- * the busiest of each picked out and said in words.
+ * When guests open the menu (or order from it): by hour of the day and by day
+ * of the week, with the busiest of each picked out and said in words.
  */
-export function BusyTimesChart({ hours, weekdays, locale }: BusyTimesChartProps) {
+export function BusyTimesChart({
+  hours,
+  weekdays,
+  locale,
+  valueLabel,
+  notEnough,
+}: BusyTimesChartProps) {
   const { t } = useTranslation('analytics')
+  const label = valueLabel ?? t('busiest.views')
   const days = weekdayNames(locale)
   const longDays = weekdayNames(locale, 'long')
   const peakHour = indexOfMax(hours)
   const peakDay = indexOfMax(weekdays)
 
   if (peakHour === null || peakDay === null) {
-    return <p className="py-6 text-[13px] text-[var(--muted)]">{t('busiest.notEnough')}</p>
+    return (
+      <p className="py-6 text-[13px] text-[var(--muted)]">{notEnough ?? t('busiest.notEnough')}</p>
+    )
   }
 
   return (
@@ -48,6 +61,7 @@ export function BusyTimesChart({ hours, weekdays, locale }: BusyTimesChartProps)
           data={hours.map((views, hour) => ({ name: formatHour(hour), views }))}
           peak={peakHour}
           tickInterval={5}
+          valueLabel={label}
           locale={locale}
         />
         <Bars
@@ -55,6 +69,7 @@ export function BusyTimesChart({ hours, weekdays, locale }: BusyTimesChartProps)
           data={weekdays.map((views, day) => ({ name: days[day]!, views }))}
           peak={peakDay}
           tickInterval={0}
+          valueLabel={label}
           locale={locale}
         />
       </div>
@@ -67,16 +82,16 @@ function Bars({
   data,
   peak,
   tickInterval,
+  valueLabel,
   locale,
 }: {
   label: string
   data: { name: string; views: number }[]
   peak: number
   tickInterval: number
+  valueLabel: string
   locale: Locale
 }) {
-  const { t } = useTranslation('analytics')
-
   return (
     <figure className="m-0" aria-label={label}>
       <figcaption className="pb-1 text-[12px] text-[var(--muted)]">{label}</figcaption>
@@ -97,7 +112,7 @@ function Bars({
           <Tooltip
             cursor={{ fill: 'var(--hover-wash)' }}
             contentStyle={TOOLTIP_STYLE}
-            formatter={(value) => [formatNumber(Number(value), locale), t('busiest.views')]}
+            formatter={(value) => [formatNumber(Number(value), locale), valueLabel]}
           />
           <Bar dataKey="views" radius={[4, 4, 0, 0]}>
             {data.map((entry, index) => (

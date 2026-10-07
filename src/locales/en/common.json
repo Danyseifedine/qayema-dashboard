@@ -12,13 +12,17 @@
   "nav": {
     "overview": "Overview",
     "analytics": "Analytics",
+    "ordersGroup": "Orders",
     "menu": "Menu",
     "categories": "Categories",
     "dishes": "Dishes",
+    "look": "Look",
     "design": "Design",
     "appearance": "Appearance",
-    "guests": "Guests",
     "orders": "Orders",
+    "tableOrders": "Table orders",
+    "sharing": "Sharing",
+    "tables": "Tables",
     "qr": "QR code",
     "socialLinks": "Social links",
     "settings": "Settings",
@@ -30,6 +34,11 @@
   "layout": {
     "openNavigation": "Open navigation",
     "closeNavigation": "Close navigation"
+  },
+  "impersonation": {
+    "viewingAs": "You are viewing {{owner}}'s dashboard, signed in as {{admin}}.",
+    "viewing": "You are viewing {{owner}}'s dashboard from the admin.",
+    "back": "Back to admin"
   },
   "sidebar": {
     "expand": "Expand sidebar",
@@ -199,6 +208,22 @@
         "one": "Guests build a cart on your menu",
         "two": "Each order reaches you on WhatsApp",
         "three": "Follow and close orders here"
+      }
+    },
+    "tables": {
+      "title": "Orders at the table",
+      "includes": {
+        "one": "A QR code for every table, printed as cards in your QR design",
+        "two": "Guests order straight to their table, no phone number needed",
+        "three": "Works whether your other orders go to WhatsApp or your menu"
+      }
+    },
+    "table-orders": {
+      "title": "Orders at the table",
+      "includes": {
+        "one": "Guests order from the QR code on their table, no phone number needed",
+        "two": "Orders arrive grouped by table, with a sound",
+        "three": "Works whether your other orders go to WhatsApp or your menu"
       }
     }
   }

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { BarChart3 } from 'lucide-react'
+import { IconChartBar } from '@tabler/icons-react'
 import { describe, expect, it, vi } from 'vitest'
 import { LockedState } from '@/shared/components/feedback/states/locked-state'
 
@@ -10,7 +10,7 @@ describe('LockedState', () => {
     const user = userEvent.setup()
     render(
       <LockedState
-        icon={BarChart3}
+        icon={IconChartBar}
         title="Analytics"
         description="See how guests use your menu."
         includes={['Views per day', 'Top dishes']}
@@ -36,7 +36,7 @@ describe('LockedState', () => {
   it('shows no list or chip without them', () => {
     render(
       <LockedState
-        icon={BarChart3}
+        icon={IconChartBar}
         title="Analytics"
         description="x"
         includes={[]}

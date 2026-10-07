@@ -1,9 +1,9 @@
-import type { LucideIcon } from 'lucide-react'
+import type { TablerIcon } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type EmptyStateProps = {
-  icon: LucideIcon
+  icon: TablerIcon
   title: ReactNode
   description: ReactNode
   /** Usually the button that fills the emptiness. */

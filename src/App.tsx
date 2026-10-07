@@ -12,7 +12,7 @@ import { usePageKey } from '@/app/layouts/authenticated/use-page-key'
 import { SessionGate } from '@/features/auth'
 import { useLogout, useOrderingMode } from '@/features/auth'
 import type { AuthUser } from '@/features/auth'
-import { OrdersPage, useOrderPulse } from '@/features/orders'
+import { OrdersPage, TableOrdersPage, useOrderPulse } from '@/features/orders'
 import { PageSkeleton } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
 import { translated } from '@/shared/utils/string/translated'
@@ -38,6 +38,7 @@ const PAGES = {
   restaurant: () => import('@/features/restaurant'),
   appearance: () => import('@/features/appearance'),
   design: () => import('@/features/design'),
+  tables: () => import('@/features/tables'),
 }
 
 const OverviewPage = lazy(() => PAGES.overview().then((m) => ({ default: m.OverviewPage })))
@@ -55,6 +56,7 @@ const RestaurantPage = lazy(() => PAGES.restaurant().then((m) => ({ default: m.R
 const FeaturesPage = lazy(() => PAGES.restaurant().then((m) => ({ default: m.FeaturesPage })))
 const AppearancePage = lazy(() => PAGES.appearance().then((m) => ({ default: m.AppearancePage })))
 const DesignPage = lazy(() => PAGES.design().then((m) => ({ default: m.DesignPage })))
+const TablesPage = lazy(() => PAGES.tables().then((m) => ({ default: m.TablesPage })))
 
 /**
  * Once the first page is up and the browser has nothing better to do, the
@@ -94,8 +96,13 @@ function Dashboard({ user }: { user: AuthUser }) {
   const locale = usePreferencesStore((state) => state.locale)
   const setLocale = usePreferencesStore((state) => state.setLocale)
   const { t } = useTranslation()
-  // Orders placed in the menu are watched for wherever the owner is.
-  const ordersWaiting = useOrderPulse(useOrderingMode() === 'menu', restaurant.id)
+  // Orders placed in the menu are watched for wherever the owner is: those
+  // to a table come in the menu whichever way the rest go.
+  const takesTableOrders = plan.dine_in && !switchedOff.includes('dine_in')
+  const ordersWaiting = useOrderPulse(
+    useOrderingMode() === 'menu' || takesTableOrders,
+    restaurant.id,
+  )
   usePrefetchPages()
 
   const lock = navLock(activeKey, { hasTemplate, plan })
@@ -124,10 +131,11 @@ function Dashboard({ user }: { user: AuthUser }) {
       hasTemplate={hasTemplate}
       plan={plan}
       switchedOff={switchedOff}
-      counts={{ orders: ordersWaiting }}
+      counts={{ orders: ordersWaiting.orders, 'table-orders': ordersWaiting.tables }}
       locale={locale}
       onLocaleChange={setLocale}
       onLogout={() => logout.mutate()}
+      impersonation={user.impersonation}
     >
       {logout.isError ? (
         <Alert variant="error" title={t('app.logoutFailed')} className="mb-4">
@@ -175,6 +183,10 @@ function Dashboard({ user }: { user: AuthUser }) {
           <DishesPage locale={contentLocale} onOpenCategories={() => setActiveKey('categories')} />
         ) : activeKey === 'orders' ? (
           <OrdersPage onOpenFeatures={() => setActiveKey('features')} />
+        ) : activeKey === 'table-orders' ? (
+          <TableOrdersPage onOpenTables={() => setActiveKey('tables')} />
+        ) : activeKey === 'tables' ? (
+          <TablesPage onOpenFeatures={() => setActiveKey('features')} />
         ) : activeKey === 'qr' ? (
           <QrPage
             locale={locale}
@@ -195,6 +207,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             defaultLocale={restaurant.default_locale}
             ordering={restaurant.ordering}
             onOpenPackage={() => setActiveKey('package')}
+            onOpenTables={() => setActiveKey('tables')}
           />
         ) : activeKey === 'account' ? (
           <AccountPage onOpenRestaurant={() => setActiveKey('restaurant')} />

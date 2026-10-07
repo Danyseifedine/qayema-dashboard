@@ -54,11 +54,13 @@ explained in §2 of the backend `CLAUDE.md`.
 | Overview                  | `overview`                                             | `/api/user`, `/api/restaurant`, dishes            |
 | Analytics                 | `analytics`                                            | `/api/analytics[/advanced,/teaser]`               |
 | Categories, Dishes (MENU) | `menu` (sub-features `categories`, `dishes`)           | `/api/categories`, `/api/dishes`                  |
-| Design (MENU)             | `design`                                               | `/api/templates` (a design is a `Template` row)   |
-| Appearance (MENU)         | `appearance`                                           | `/api/appearance`                                 |
-| Orders (GUESTS)           | `orders`                                               | `/api/orders[/pulse]`                             |
-| QR code (GUESTS)          | `qr`                                                   | `/api/qr`                                         |
-| Social links (GUESTS)     | `social-links`                                         | `/api/social-links`                               |
+| Design (LOOK)             | `design`                                               | `/api/templates` (a design is a `Template` row)   |
+| Appearance (LOOK)         | `appearance`                                           | `/api/appearance`                                 |
+| Orders (ORDERS)           | `orders`                                               | `/api/orders[/pulse]` (`?kind=away`)              |
+| Table orders (ORDERS)     | `table-orders` page inside `orders`                    | `/api/orders?kind=table`                          |
+| Tables (SHARING)          | `tables`                                               | `/api/tables[/{id}/new-code]`                     |
+| QR code (SHARING)         | `qr`                                                   | `/api/qr`                                         |
+| Social links (SHARING)    | `social-links`                                         | `/api/social-links`                               |
 | Restaurant (SETTINGS)     | `restaurant`                                           | `/api/restaurant`                                 |
 | Features (SETTINGS)       | `features` page inside `restaurant`                    | `/api/features[/ordering]`, `/api/menu-languages` |
 | Package (SETTINGS)        | `package`                                              | `/api/packages`                                   |
@@ -313,7 +315,7 @@ test:coverage && build && e2e`.
 | `react-hook-form`, `@hookform/resolvers`                                         | Forms bound to Zod schemas                    |
 | `i18next`, `react-i18next`                                                       | Bilingual EN/AR                               |
 | `tailwindcss`, `@tailwindcss/vite` (v4)                                          | Styling with logical properties for RTL       |
-| `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`             | Primitives in `shared/components/ui`          |
+| `class-variance-authority`, `clsx`, `tailwind-merge`, `@tabler/icons-react`      | Primitives in `shared/components/ui`          |
 | `downshift`                                                                      | The combobox                                  |
 | `sonner`                                                                         | Toasts                                        |
 | `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`, `@dnd-kit/modifiers` | Reordering categories and dishes              |

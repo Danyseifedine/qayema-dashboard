@@ -8,13 +8,29 @@ export type StatusFilterProps = {
   onChange: (value: OrderStatus | null) => void
   /** How many are still waiting, shown on the New chip. */
   openCount: number
+  /**
+   * `table`: an order at a table goes new, preparing, served, so only those
+   * steps are offered, named as the table cards name them.
+   */
+  kind?: 'away' | 'table'
 }
+
+/** At a table there is no "ready": accepted reads "Preparing", done "Served". */
+const TABLE_STEPS: {
+  status: OrderStatus
+  label: 'status.placed' | 'status.preparing' | 'status.served' | 'status.cancelled'
+}[] = [
+  { status: 'placed', label: 'status.placed' },
+  { status: 'accepted', label: 'status.preparing' },
+  { status: 'done', label: 'status.served' },
+  { status: 'cancelled', label: 'status.cancelled' },
+]
 
 /**
  * Chips rather than a dropdown, matching the category filter on the menu
  * pages: on a phone a dropdown hides every option behind a tap.
  */
-export function StatusFilter({ value, onChange, openCount }: StatusFilterProps) {
+export function StatusFilter({ value, onChange, openCount, kind = 'away' }: StatusFilterProps) {
   const { t } = useTranslation('orders')
   const chip = (active: boolean) =>
     cn(
@@ -41,7 +57,10 @@ export function StatusFilter({ value, onChange, openCount }: StatusFilterProps) 
         {t('filter.all')}
       </button>
 
-      {ORDER_STATUSES.map((status) => (
+      {(kind === 'table'
+        ? TABLE_STEPS
+        : ORDER_STATUSES.map((status) => ({ status, label: `status.${status}` as const }))
+      ).map(({ status, label }) => (
         <button
           key={status}
           type="button"
@@ -50,7 +69,7 @@ export function StatusFilter({ value, onChange, openCount }: StatusFilterProps) 
           onClick={() => onChange(status)}
           className={chip(value === status)}
         >
-          {t(`status.${status}`)}
+          {t(label)}
           {status === 'placed' && openCount > 0 ? (
             <span className="rounded-full bg-accent-wash px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-accent">
               {openCount}

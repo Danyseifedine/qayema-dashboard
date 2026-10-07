@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { IconX } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import type { Control } from 'react-hook-form'
 import { Button } from '@/shared/components/ui'
@@ -72,7 +72,7 @@ export function ChoiceRow({
           onClick={onRemove}
           className="col-start-2 row-start-1 sm:col-start-4"
         >
-          <X aria-hidden className="size-4" />
+          <IconX aria-hidden className="size-4" />
         </Button>
       </div>
       <div className="sm:ps-12">

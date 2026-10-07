@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { IconPlus } from '@tabler/icons-react'
 import { useState } from 'react'
 import {
   useFieldArray,
@@ -187,7 +187,7 @@ export function DishChoicesSection({
               <Button
                 variant="secondary"
                 size="sm"
-                leadingIcon={<Plus aria-hidden className="size-4" />}
+                leadingIcon={<IconPlus aria-hidden className="size-4" />}
                 onClick={() => variants.append(blankVariant(languages))}
               >
                 {t('choices.addVariant')}
@@ -249,7 +249,7 @@ export function DishChoicesSection({
               <Button
                 variant="secondary"
                 size="sm"
-                leadingIcon={<Plus aria-hidden className="size-4" />}
+                leadingIcon={<IconPlus aria-hidden className="size-4" />}
                 onClick={() => addons.append(blankChoice(languages))}
               >
                 {t('choices.addAddon')}

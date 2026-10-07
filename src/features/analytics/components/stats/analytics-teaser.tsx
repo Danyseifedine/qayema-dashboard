@@ -1,4 +1,4 @@
-import { Eye } from 'lucide-react'
+import { IconEye } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { useStatsTeaser } from '@/features/analytics/hooks/use-analytics'
 import type { Locale } from '@/shared/constants/locales'
@@ -22,7 +22,7 @@ export function AnalyticsTeaser({ locale }: AnalyticsTeaserProps) {
 
   return (
     <p className="flex items-center gap-2.5 rounded-[10px] bg-[var(--surface)] px-3.5 py-3 text-[13.5px]">
-      <Eye aria-hidden className="size-4 shrink-0 text-accent" />
+      <IconEye aria-hidden className="size-4 shrink-0 text-accent" />
       <span>{t('teaser.views', { count: views, number: formatNumber(views, locale) })}</span>
     </p>
   )

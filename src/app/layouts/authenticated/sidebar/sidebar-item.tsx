@@ -1,9 +1,9 @@
-import type { LucideIcon } from 'lucide-react'
+import type { TablerIcon } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type SidebarItemProps = {
-  icon: LucideIcon
+  icon: TablerIcon
   label: string
   active?: boolean
   collapsed?: boolean

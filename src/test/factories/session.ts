@@ -10,6 +10,7 @@ export const FULL_PLAN: Plan = {
   qr_studio: true,
   ordering: true,
   menu_ordering: true,
+  dine_in: true,
   analytics: true,
   advanced_analytics: true,
 }
@@ -24,6 +25,7 @@ export const EMPTY_PLAN: Plan = {
   qr_studio: false,
   ordering: false,
   menu_ordering: false,
+  dine_in: false,
   analytics: false,
   advanced_analytics: false,
 }
@@ -40,6 +42,7 @@ export function makeSessionUser(
     email: 'owner@example.com',
     has_completed_onboarding: true,
     has_password: true,
+    impersonation: null,
     restaurant: {
       id: 7,
       languages: ['en', 'ar'],

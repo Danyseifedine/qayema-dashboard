@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { RotateCcw } from 'lucide-react'
+import { IconRotate } from '@tabler/icons-react'
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { useForm, useWatch, type UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -266,7 +266,7 @@ function ColorSetting({
                 })
               }
             >
-              <RotateCcw aria-hidden className="size-3" />
+              <IconRotate aria-hidden className="size-3" />
               {t('settings.reset')}
             </Button>
           ) : null
