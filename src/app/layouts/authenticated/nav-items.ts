@@ -187,6 +187,11 @@ export function isNavItemHidden(key: string, off: readonly string[]): boolean {
   return item !== undefined && off.includes(item.switchKey ?? item.key)
 }
 
+/** Whether the package includes this section. A section without a flag always is. */
+export function isOnPlan(item: NavItem, plan: Plan): boolean {
+  return item.requiresPlan === undefined || plan[item.requiresPlan]
+}
+
 export type NavAccess = {
   hasTemplate: boolean
   plan: Plan
@@ -196,8 +201,9 @@ export type NavAccess = {
  * Why a section is closed to this owner, or null when it is open.
  *
  * `template`: nothing to work on until a design is chosen, so the row is
- * disabled. `plan`: the package does not include it, so the row stays open and
- * the page shows what it would give and which package has it.
+ * disabled. `plan`: the package does not include it, so the sidebar leaves it
+ * out (`isOnPlan`); opened by a link, the page shows what it would give and
+ * which package has it.
  *
  * The sidebar and the page body both read this, so a locked row can never sit
  * next to a rendered page, which is exactly the mismatch that let the app open

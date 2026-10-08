@@ -83,7 +83,12 @@ const restaurantSchema = z.object({
 
 const userSchema = z.object({
   name: z.string(),
-  email: z.email(),
+  /**
+   * How the account signs in: an account made with a username has no email,
+   * one made with Google no username. At least one is always set.
+   */
+  username: z.string().nullable().default(null),
+  email: z.email().nullable(),
   has_completed_onboarding: z.boolean(),
   has_password: z.boolean(),
   /**

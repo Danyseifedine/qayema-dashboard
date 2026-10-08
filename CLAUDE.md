@@ -125,9 +125,9 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   against `restaurant.plan` by key. Adding a gated section is one line in
   `app/layouts/authenticated/nav-items.ts`, not another branch in `navLock`
   (plus its copy under `planLocked.<key>` in `common.json`). A section the
-  **package** lacks stays open and shows `PlanLockedPage` (what it gives, the
-  package that has it, "See packages"); one waiting for a **design** is
-  disabled. Anything locked inside a page uses `LockedState`
+  **package** lacks is left out of the sidebar (`isOnPlan`); opened by a
+  link it shows `PlanLockedPage` (what it gives, the package that has it,
+  "See packages"). One waiting for a **design** is disabled. Anything locked inside a page uses `LockedState`
   (`shared/components/feedback`) and names its package with
   `usePackageFor(flag, locale)` from the package barrel, never a hard-coded
   "Pro".

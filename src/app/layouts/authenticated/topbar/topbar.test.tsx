@@ -15,7 +15,7 @@ function renderTopbar(props: Partial<TopbarProps> = {}) {
   render(
     <Topbar
       title="Overview"
-      user={{ name: 'Dany', email: 'owner@example.com' }}
+      user={{ name: 'Dany', login: 'owner@example.com' }}
       packageName="Pro"
       packageEndingSoon={false}
       locale="en"

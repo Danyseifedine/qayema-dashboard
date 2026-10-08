@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { request } from '@/lib/api'
 import { userResponseSchema, type AuthUser } from '@/features/auth'
 
-/** The email is not here on purpose: accounts come from Google, so it is the identity. */
+/** The email and the username are not here on purpose: each is how the account signs in. */
 export async function updateProfile(name: string): Promise<AuthUser> {
   const { data } = await request(userResponseSchema, {
     method: 'PATCH',

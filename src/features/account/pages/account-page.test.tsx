@@ -9,11 +9,17 @@ import { AccountPage } from '@/features/account/pages/account-page'
 
 let mock: MockAdapter
 
-function user(hasPassword: boolean) {
+function user(
+  hasPassword: boolean,
+  signIn: { email: string | null; username: string | null } = {
+    email: 'owner@example.com',
+    username: null,
+  },
+) {
   return {
     id: 1,
     name: 'Dany',
-    email: 'owner@example.com',
+    ...signIn,
     role: 'menu_owner',
     has_completed_onboarding: true,
     has_password: hasPassword,
@@ -21,8 +27,8 @@ function user(hasPassword: boolean) {
   }
 }
 
-function stub(hasPassword = true) {
-  mock.onGet('/api/user').reply(200, { data: user(hasPassword) })
+function stub(hasPassword = true, signIn?: Parameters<typeof user>[1]) {
+  mock.onGet('/api/user').reply(200, { data: user(hasPassword, signIn) })
 }
 
 describe('AccountPage', () => {
@@ -48,6 +54,15 @@ describe('AccountPage', () => {
     // The email is the identity, so it is text rather than an input.
     expect(screen.getByText('owner@example.com')).toBeInTheDocument()
     expect(screen.queryByLabelText(/^Email/)).not.toBeInTheDocument()
+  })
+
+  it('shows an account made with a username its username, and no email', async () => {
+    stub(true, { email: null, username: 'beit.rami' })
+    renderWithProviders(<AccountPage onOpenRestaurant={vi.fn()} />)
+
+    expect(await screen.findByText('beit.rami')).toBeInTheDocument()
+    expect(screen.getByText('Username')).toBeInTheDocument()
+    expect(screen.queryByText('Email')).not.toBeInTheDocument()
   })
 
   it('offers a way across when the owner wanted the restaurant name', async () => {

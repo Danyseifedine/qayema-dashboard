@@ -12,6 +12,8 @@
     "nameHint": "Shown in the dashboard and on emails we send you. Guests never see it.",
     "emailLabel": "Email",
     "emailHint": "You sign in with this address, so it cannot be changed here.",
+    "usernameLabel": "Username",
+    "usernameHint": "You sign in with this username, so it cannot be changed here.",
     "save": "Save"
   },
   "password": {

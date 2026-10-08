@@ -204,10 +204,10 @@ test.describe('packages: the Package page', () => {
     await expect(dialog.getByRole('heading', { name: 'Ask about Pro' })).toBeVisible()
     await dialog.getByRole('button', { name: 'Cancel' }).click()
 
-    // Pro's sections are locked again.
+    // Pro's sections leave the sidebar again.
     const nav = await sidebar(page)
-    await expect(row(nav, 'Analytics', 'الإحصاءات')).toContainText('Pro')
-    await expect(row(nav, 'Appearance', 'المظهر')).toContainText('Pro')
+    await expect(row(nav, 'Analytics', 'الإحصاءات')).toHaveCount(0)
+    await expect(row(nav, 'Appearance', 'المظهر')).toHaveCount(0)
     await page.goto('/analytics')
     await expect(page.getByRole('button', { name: 'See packages' })).toBeVisible()
   })
@@ -222,7 +222,7 @@ test.describe('packages: the Package page', () => {
       page.getByRole('button', { name: 'Free package. Open your package.' }),
     ).toBeVisible()
     const nav = await sidebar(page)
-    await expect(row(nav, 'Orders', 'الطلبات')).toContainText('Premium')
+    await expect(row(nav, 'Orders', 'الطلبات')).toHaveCount(0)
   })
 
   test('the cards: popular, what each adds, and who can ask', async ({ page, owner }) => {
@@ -402,9 +402,10 @@ test.describe('packages: moving down and back up', () => {
     await page.reload()
 
     const nav = await sidebar(page)
-    await expect(row(nav, 'Analytics', 'الإحصاءات')).toContainText('Pro')
-    await expect(row(nav, 'Appearance', 'المظهر')).toContainText('Pro')
-    await expect(row(nav, 'Orders', 'الطلبات')).toContainText('Premium')
+    // The sections Free lacks leave the sidebar; a link still opens their page.
+    await expect(row(nav, 'Analytics', 'الإحصاءات')).toHaveCount(0)
+    await expect(row(nav, 'Appearance', 'المظهر')).toHaveCount(0)
+    await expect(row(nav, 'Orders', 'الطلبات')).toHaveCount(0)
     await inOrder(SECTIONS, async (section) => {
       await page.goto(`/${section.key}`)
       await expect(page.getByRole('heading', { name: section.locked })).toBeVisible()

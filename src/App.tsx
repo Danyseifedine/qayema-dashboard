@@ -120,7 +120,7 @@ function Dashboard({ user }: { user: AuthUser }) {
     <AuthenticatedLayout
       activeKey={activeKey}
       onNavigate={(item: NavItem) => setActiveKey(item.key)}
-      user={{ name: user.name, email: user.email }}
+      user={{ name: user.name, login: user.email ?? user.username ?? '' }}
       packageEndingSoon={
         restaurant.package.days_left !== null && restaurant.package.days_left <= ENDING_SOON_DAYS
       }

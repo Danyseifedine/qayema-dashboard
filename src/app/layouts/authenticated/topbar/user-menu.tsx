@@ -15,7 +15,8 @@ import { LanguageSwitcher } from '@/app/layouts/authenticated/topbar/language-sw
 
 export type UserMenuProps = {
   name: string
-  email: string
+  /** The email, or the username of an account made without one. */
+  login: string
   /** Public menu URL, so the owner can see what guests see. */
   publicUrl?: string | null
   locale: Locale
@@ -32,7 +33,7 @@ export type UserMenuProps = {
  */
 export function UserMenu({
   name,
-  email,
+  login,
   publicUrl,
   locale,
   onLocaleChange,
@@ -99,7 +100,7 @@ export function UserMenu({
         >
           <div className="border-b-[0.5px] border-[var(--line)] px-2.5 pt-1.5 pb-2.5">
             <p className="truncate text-[14px] font-medium">{name}</p>
-            <p className="truncate text-[12px] text-[var(--muted)]">{email}</p>
+            <p className="truncate text-[12px] text-[var(--muted)]">{login}</p>
           </div>
 
           <div className="pt-1.5">

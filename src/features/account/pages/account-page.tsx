@@ -55,7 +55,7 @@ export function AccountPage({ onOpenRestaurant }: AccountPageProps) {
         />
       ) : (
         <div className="grid items-start gap-4 xl:grid-cols-2">
-          <ProfileSection name={user.name} email={user.email} />
+          <ProfileSection name={user.name} email={user.email} username={user.username} />
           <PasswordSection hasPassword={user.has_password} />
         </div>
       )}

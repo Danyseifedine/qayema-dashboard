@@ -5,13 +5,13 @@ import wordmark from '@/assets/images/brand/qayema-wordmark.png'
 import {
   NAV_GROUPS,
   isNavItemHidden,
+  isOnPlan,
   navLock,
   type NavAccess,
   type NavItem,
 } from '@/app/layouts/authenticated/nav-items'
 import { cn } from '@/shared/utils/dom/cn'
 import { SidebarGroup } from '@/app/layouts/authenticated/sidebar/sidebar-group'
-import { PlanBadge } from '@/app/layouts/authenticated/sidebar/plan-badge'
 import { SidebarItem } from '@/app/layouts/authenticated/sidebar/sidebar-item'
 
 export type SidebarProps = {
@@ -23,7 +23,10 @@ export type SidebarProps = {
   hasTemplate: boolean
   /** What the restaurant's plan allows, from the session payload. */
   plan: NavAccess['plan']
-  /** Sections the owner switched off on the Features page; left out entirely. */
+  /**
+   * Sections the owner switched off on the Features page; left out entirely,
+   * like the ones the package does not include.
+   */
   off: readonly string[]
   /** A count to wear beside a section, by nav key: orders waiting. */
   counts?: Partial<Record<string, number>>
@@ -72,8 +75,13 @@ export function Sidebar({
 
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {NAV_GROUPS.map((group) => {
-          const items = group.items.filter((item) => !isNavItemHidden(item.key, off))
-          // A group whose every section is switched off loses its heading too.
+          // A section the package does not include is left out, not shown
+          // locked: the Package page is where the owner sees what more
+          // packages bring.
+          const items = group.items.filter(
+            (item) => !isNavItemHidden(item.key, off) && isOnPlan(item, plan),
+          )
+          // A group whose every section is left out loses its heading too.
           if (items.length === 0) return null
           return (
             <SidebarGroup
@@ -91,12 +99,8 @@ export function Sidebar({
                     active={item.key === activeKey}
                     collapsed={collapsed}
                     locked={lock === 'template'}
-                    // A section the package lacks still opens, to show what
-                    // it would give; the chip names the package that has it.
                     badge={
-                      lock === 'plan' && item.requiresPlan ? (
-                        <PlanBadge flag={item.requiresPlan} />
-                      ) : (counts[item.key] ?? 0) > 0 ? (
+                      (counts[item.key] ?? 0) > 0 ? (
                         <span
                           aria-label={t('sidebar.waiting', { count: counts[item.key] })}
                           className="rounded-full bg-accent-wash px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-accent"

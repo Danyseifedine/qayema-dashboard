@@ -103,7 +103,7 @@ qayema-dashboard/
     │   ├── providers/               app-providers, query-provider, toast-provider
     │   └── layouts/authenticated/   authenticated-layout, nav-items (the sidebar table), use-page-key (the URL),
     │       │                        plan-locked-page (a section the package lacks)
-    │       ├── sidebar/             sidebar, sidebar-group, sidebar-item, plan-badge
+    │       ├── sidebar/             sidebar, sidebar-group, sidebar-item
     │       └── topbar/              topbar, user-menu, package-pill, language-switcher
     ├── shared/                      Used by more than one feature; knows nothing about features
     │   ├── components/ui/           Primitives: button, input, switch, combobox, segmented, alert…
@@ -186,11 +186,11 @@ different on purpose:
 
 - `'template'`: the row is disabled and the page says "Choose a menu design
   first"; there is nothing to work on yet.
-- `'plan'`: the row stays open with a chip naming the package that has it
-  (`PlanBadge`), and the page is `PlanLockedPage`: what the section gives, that
-  package, and "See packages". Analytics adds this week's views
-  (`AnalyticsTeaser`, `GET /api/analytics/teaser`). The owner always sees what
-  they are missing.
+- `'plan'`: the sidebar leaves the row out (`isOnPlan`), heading too when a
+  group is left empty; the Package page is where an owner sees what more
+  packages bring. Opened by a link, the page is `PlanLockedPage`: what the
+  section gives, the package that has it, and "See packages". Analytics adds
+  this week's views (`AnalyticsTeaser`, `GET /api/analytics/teaser`).
 
 "The package that has it" is `usePackageFor(flag, locale)` from the package
 barrel: the first package in the catalogue's order with the flag on. In-page

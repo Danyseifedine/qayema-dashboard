@@ -39,6 +39,7 @@ export function makeSessionUser(
 ): AuthUser {
   return {
     name: 'Dany',
+    username: null,
     email: 'owner@example.com',
     has_completed_onboarding: true,
     has_password: true,

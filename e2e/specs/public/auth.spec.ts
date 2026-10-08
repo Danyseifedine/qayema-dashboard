@@ -2,22 +2,22 @@ import type { Page } from '@playwright/test'
 import { either, expect, test } from '../../support/fixtures'
 import { API_URL, DASHBOARD_URL, LOGIN_URL } from '../../support/urls'
 
-const FAILED = 'The email or password is not correct.'
+const FAILED = 'The email, username or password is not correct.'
 
 /** The login form at LOGIN_URL, filled and sent the way a person would. */
-async function signInWithForm(page: Page, email: string, password: string) {
+async function signInWithForm(page: Page, login: string, password: string) {
   await page.goto(LOGIN_URL)
-  await page.getByLabel('Email').fill(email)
+  await page.getByLabel('Email or username').fill(login)
   // The label also holds the "Forgot password?" link, so the input is found by id.
   await page.locator('#password').fill(password)
   await page.getByRole('button', { name: 'Sign in' }).click()
 }
 
-/** The message under the email field (the page repeats it in a banner too). */
-function emailError(page: Page) {
+/** The message under the email or username field (the page repeats it in a banner too). */
+function loginError(page: Page) {
   return page
     .locator('.ui-field')
-    .filter({ has: page.locator('#email') })
+    .filter({ has: page.locator('#login') })
     .locator('.ui-help.error:visible')
 }
 
@@ -51,8 +51,8 @@ test.describe('sign in', () => {
     await signInWithForm(page, owner.user.email, 'not-the-password')
 
     await expect(page).toHaveURL(LOGIN_URL)
-    await expect(emailError(page)).toHaveText(FAILED)
-    await expect(page.getByLabel('Email')).toHaveValue(owner.user.email)
+    await expect(loginError(page)).toHaveText(FAILED)
+    await expect(page.getByLabel('Email or username')).toHaveValue(owner.user.email)
     await expect(page.locator('#password')).toHaveValue('')
   })
 
@@ -60,7 +60,7 @@ test.describe('sign in', () => {
     await signInWithForm(page, `nobody-${Date.now()}@e2e.test`, 'whatever-password')
 
     await expect(page).toHaveURL(LOGIN_URL)
-    await expect(emailError(page)).toHaveText(FAILED)
+    await expect(loginError(page)).toHaveText(FAILED)
   })
 
   test('empty fields are caught before anything is sent', async ({ page }) => {
@@ -73,10 +73,10 @@ test.describe('sign in', () => {
 
     await page.getByRole('button', { name: 'Sign in' }).click()
 
-    await expect(emailError(page)).not.toHaveText('')
-    await expect(page.getByLabel('Email')).toBeFocused()
+    await expect(loginError(page)).not.toHaveText('')
+    await expect(page.getByLabel('Email or username')).toBeFocused()
 
-    await page.getByLabel('Email').fill('owner@e2e.test')
+    await page.getByLabel('Email or username').fill('owner@e2e.test')
     await page.getByRole('button', { name: 'Sign in' }).click()
 
     const passwordError = page
@@ -96,7 +96,7 @@ test.describe('sign in', () => {
 
     await signInWithForm(page, owner.user.email, 'any-password-at-all')
 
-    await expect(emailError(page)).toHaveText(
+    await expect(loginError(page)).toHaveText(
       'This account uses Google sign-in. Please use the "Continue with Google" button above.',
     )
   })
@@ -113,11 +113,32 @@ test.describe('sign in', () => {
     // One attempt after another, as a person (or a script) would make them.
     for (let attempt = 0; attempt < 6; attempt++) {
       await signInWithForm(page, owner.user.email, `wrong-${attempt}`)
-      await expect(emailError(page)).toHaveText(FAILED)
+      await expect(loginError(page)).toHaveText(FAILED)
     }
 
     await signInWithForm(page, owner.user.email, owner.user.password)
     await expect(page).toHaveURL(`${DASHBOARD_URL}/overview`)
+  })
+
+  test('an owner creates an account with a username and signs in with it', async ({ page }) => {
+    const username = `e2e.${Date.now()}`
+    const password = 'a-username-e2e-password'
+
+    await page.goto(LOGIN_URL)
+    await page.getByRole('link', { name: 'Create one with a username' }).click()
+    await expect(page).toHaveURL(`${API_URL}/create-account`)
+
+    await page.getByLabel('Your name').fill('Rami')
+    await page.getByLabel('Username').fill(username)
+    await page.locator('#password').fill(password)
+    await page.locator('#password_confirmation').fill(password)
+    await page.getByRole('button', { name: 'Create account' }).click()
+
+    await expect(page).toHaveURL(`${API_URL}/onboarding`)
+
+    await page.context().clearCookies()
+    await signInWithForm(page, username.toUpperCase(), password)
+    await expect(page).toHaveURL(`${API_URL}/onboarding`)
   })
 
   test('the Google button points at the Google sign-in route', async ({ page }) => {
@@ -251,7 +272,7 @@ test.describe('password reset', () => {
     ).toBeVisible()
 
     await signInWithForm(page, owner.user.email, owner.user.password)
-    await expect(emailError(page)).toHaveText(FAILED)
+    await expect(loginError(page)).toHaveText(FAILED)
 
     await signInWithForm(page, owner.user.email, newPassword)
     await expect(page).toHaveURL(`${DASHBOARD_URL}/overview`)
@@ -267,7 +288,7 @@ test.describe('password reset', () => {
     await page.locator('#password_confirmation').fill('another-e2e-password')
     await page.getByRole('button', { name: 'Save new password' }).click()
 
-    await expect(emailError(page)).toHaveText(
+    await expect(loginError(page)).toHaveText(
       'This reset link is invalid or has expired. Please request a new one.',
     )
 

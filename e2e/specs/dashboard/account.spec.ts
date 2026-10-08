@@ -7,7 +7,7 @@ async function logInThroughForm(browser: Browser, email: string, password: strin
   const context = await browser.newContext()
   const page = await context.newPage()
   await page.goto(LOGIN_URL)
-  await page.locator('#email').fill(email)
+  await page.locator('#login').fill(email)
   await page.locator('#password').fill(password)
   await page.locator('form button[type="submit"]').click()
   return { page, context }

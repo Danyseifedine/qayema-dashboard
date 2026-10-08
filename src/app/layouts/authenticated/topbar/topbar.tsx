@@ -10,7 +10,7 @@ export type TopbarProps = {
   title: string
   /** Optional line under the title, e.g. the public menu link. */
   subtitle?: ReactNode
-  user: { name: string; email: string }
+  user: { name: string; login: string }
   /** The package the restaurant is on, in the current language. */
   packageName: string
   packageEndingSoon: boolean
@@ -76,7 +76,7 @@ export function Topbar({
         <PackagePill label={packageName} endingSoon={packageEndingSoon} onClick={onOpenPackage} />
         <UserMenu
           name={user.name}
-          email={user.email}
+          login={user.login}
           publicUrl={publicUrl}
           locale={locale}
           onLocaleChange={onLocaleChange}

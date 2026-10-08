@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NAV_ITEMS, navLock } from '@/app/layouts/authenticated/nav-items'
+import { NAV_ITEMS, isOnPlan, navLock } from '@/app/layouts/authenticated/nav-items'
 import { EMPTY_PLAN, FULL_PLAN } from '@/test/factories/session'
 
 const NO_TEMPLATE = { hasTemplate: false, plan: FULL_PLAN }
@@ -52,6 +52,20 @@ describe('navLock', () => {
 
   it('treats an unknown key as open rather than silently locking it', () => {
     expect(navLock('does-not-exist', NO_TEMPLATE)).toBeNull()
+  })
+})
+
+describe('isOnPlan', () => {
+  const item = (key: string) => NAV_ITEMS.find((candidate) => candidate.key === key)!
+
+  it('is false for a section whose flag the package lacks', () => {
+    expect(isOnPlan(item('orders'), EMPTY_PLAN)).toBe(false)
+    expect(isOnPlan(item('appearance'), EMPTY_PLAN)).toBe(false)
+  })
+
+  it('is true for a section without a flag, and for one the package has', () => {
+    expect(isOnPlan(item('dishes'), EMPTY_PLAN)).toBe(true)
+    expect(isOnPlan(item('orders'), FULL_PLAN)).toBe(true)
   })
 })
 

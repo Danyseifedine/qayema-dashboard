@@ -5,7 +5,6 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { renderWithProviders } from '@/test/render-with-providers'
-import { PACKAGE_CATALOGUE } from '@/test/factories/packages'
 import { EMPTY_PLAN, FULL_PLAN } from '@/test/factories/session'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { useUiStore } from '@/stores/ui.store'
@@ -44,7 +43,7 @@ function Harness({
     <AuthenticatedLayout
       activeKey={activeKey}
       onNavigate={(item: NavItem) => setActiveKey(item.key)}
-      user={{ name: 'Dany', email: 'owner@example.com' }}
+      user={{ name: 'Dany', login: 'owner@example.com' }}
       packageName="Free"
       publicUrl={publicUrl}
       hasTemplate={hasTemplate}
@@ -67,12 +66,7 @@ describe('AuthenticatedLayout', () => {
   afterEach(() => mock.restore())
 
   beforeEach(() => {
-    // The sidebar names the package that unlocks a locked section.
     mock = new MockAdapter(api)
-    mock.onGet('/api/packages').reply(200, {
-      data: PACKAGE_CATALOGUE,
-      meta: { current: 'free', ends_at: null },
-    })
     useUiStore.setState({ sidebarCollapsed: false, mobileNavOpen: false })
     usePreferencesStore.getState().setTheme('light')
     usePreferencesStore.getState().setLocale('en')
@@ -119,7 +113,7 @@ describe('AuthenticatedLayout', () => {
   })
 
   it('locks the sections that need a template', () => {
-    renderWithProviders(<Harness hasTemplate={false} full={false} />)
+    renderWithProviders(<Harness hasTemplate={false} />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
     expect(within(nav).getByRole('button', { name: 'Categories' })).toBeDisabled()
@@ -130,16 +124,27 @@ describe('AuthenticatedLayout', () => {
     expect(within(nav).getByRole('button', { name: 'Design' })).toBeEnabled()
   })
 
-  it('keeps a section the package lacks open, naming the package that has it', async () => {
+  it('leaves out every section the package does not include, with its heading', () => {
     renderWithProviders(<Harness full={false} />)
 
     const nav = screen.getByRole('navigation', { name: 'Dashboard' })
-    const analytics = within(nav).getByRole('button', { name: /Analytics/ })
-    expect(analytics).toBeEnabled()
-    await waitFor(() => expect(analytics).toHaveTextContent('Pro'))
-    await waitFor(() =>
-      expect(within(nav).getByRole('button', { name: /Orders/ })).toHaveTextContent('Premium'),
-    )
+    for (const name of ['Analytics', 'Orders', 'Table orders', 'Tables', 'Appearance']) {
+      expect(within(nav).queryByRole('button', { name: new RegExp(`^${name}`) })).toBeNull()
+    }
+    // The Orders group has nothing left, so its heading goes too.
+    expect(within(nav).queryByText('Orders')).not.toBeInTheDocument()
+    // What every package has stays, the plain QR code included.
+    for (const name of ['Overview', 'Dishes', 'Design', 'QR code', 'Package']) {
+      expect(within(nav).getByRole('button', { name })).toBeInTheDocument()
+    }
+  })
+
+  it('leaves a design-locked section out too when the package lacks it', () => {
+    renderWithProviders(<Harness hasTemplate={false} full={false} />)
+
+    const nav = screen.getByRole('navigation', { name: 'Dashboard' })
+    expect(within(nav).queryByRole('button', { name: 'Appearance' })).toBeNull()
+    expect(within(nav).getByRole('button', { name: 'Dishes' })).toBeDisabled()
   })
 
   it('collapses the sidebar to an icon rail and remembers it', async () => {

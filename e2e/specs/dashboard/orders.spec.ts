@@ -522,7 +522,7 @@ test.describe('orders', () => {
   })
 
   for (const pkg of ['free', 'pro'] as const) {
-    test(`a ${pkg} owner finds Orders locked, naming Premium`, async ({
+    test(`a ${pkg} owner has no Orders in the sidebar; a link names Premium`, async ({
       page,
       owner,
       expectAccessible,
@@ -531,10 +531,8 @@ test.describe('orders', () => {
       await page.goto('/overview')
 
       const nav = await openSidebar(page)
-      const row = nav.getByRole('button', { name: /Orders/ })
-      await expect(row).toContainText('Premium')
-      await row.click()
-      await expect(page).toHaveURL(/\/orders$/)
+      await expect(nav.getByRole('button', { name: /Orders/ })).toHaveCount(0)
+      await page.goto('/orders')
 
       await expect(page.getByRole('heading', { name: /Take orders from the menu/ })).toBeVisible()
       await expect(

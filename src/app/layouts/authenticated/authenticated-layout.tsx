@@ -13,7 +13,8 @@ import { NAV_ITEMS, type NavAccess, type NavItem } from '@/app/layouts/authentic
 export type AuthenticatedLayoutProps = {
   activeKey: string
   onNavigate: (item: NavItem) => void
-  user: { name: string; email: string }
+  /** `login` is the email, or the username of an account made without one. */
+  user: { name: string; login: string }
   /** The package the restaurant is on, in the current language. */
   packageName: string
   /** The package ends within a week. */

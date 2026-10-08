@@ -15,7 +15,7 @@ function renderMenu(props: Partial<UserMenuProps> = {}) {
       <p>Outside</p>
       <UserMenu
         name="Dany"
-        email="owner@example.com"
+        login="owner@example.com"
         publicUrl="https://qayema.test/beit-qayema"
         locale="en"
         {...handlers}

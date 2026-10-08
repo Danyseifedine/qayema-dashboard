@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconMail, IconUserCircle } from '@tabler/icons-react'
-import { useEffect } from 'react'
+import { IconAt, IconMail, IconUserCircle } from '@tabler/icons-react'
+import { useEffect, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Form, FormActions, FormSection, TextField } from '@/shared/components/forms'
@@ -14,11 +14,17 @@ import {
 
 export type ProfileSectionProps = {
   name: string
-  email: string
+  /** Null on an account made with a username. */
+  email: string | null
+  /** Null on an account made with Google. */
+  username: string | null
 }
 
-/** The owner's own name. The email is their identity, so it is read-only. */
-export function ProfileSection({ name, email }: ProfileSectionProps) {
+/**
+ * The owner's own name. What they sign in with (the username, the email, or
+ * both) is their identity, so it is read-only.
+ */
+export function ProfileSection({ name, email, username }: ProfileSectionProps) {
   const { t } = useTranslation('account')
   const save = useSaveProfile()
 
@@ -55,14 +61,22 @@ export function ProfileSection({ name, email }: ProfileSectionProps) {
           hint={t('profile.nameHint')}
         />
 
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[13px] font-medium">{t('profile.emailLabel')}</span>
-          <p className="force-ltr flex items-center gap-2 rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--field)] px-3.5 py-2.5 text-[14px] text-[var(--muted)]">
-            <IconMail aria-hidden className="size-4 shrink-0" />
-            {email}
-          </p>
-          <p className="text-[12px] text-[var(--muted)]">{t('profile.emailHint')}</p>
-        </div>
+        {username ? (
+          <SignInName
+            label={t('profile.usernameLabel')}
+            hint={t('profile.usernameHint')}
+            icon={<IconAt aria-hidden className="size-4 shrink-0" />}
+            value={username}
+          />
+        ) : null}
+        {email ? (
+          <SignInName
+            label={t('profile.emailLabel')}
+            hint={t('profile.emailHint')}
+            icon={<IconMail aria-hidden className="size-4 shrink-0" />}
+            value={email}
+          />
+        ) : null}
 
         <FormActions>
           <Button type="submit" loading={save.isPending} disabled={!form.formState.isDirty}>
@@ -71,5 +85,29 @@ export function ProfileSection({ name, email }: ProfileSectionProps) {
         </FormActions>
       </FormSection>
     </Form>
+  )
+}
+
+/** A name the owner signs in with, shown as text: it cannot be changed here. */
+function SignInName({
+  label,
+  hint,
+  icon,
+  value,
+}: {
+  label: string
+  hint: string
+  icon: ReactNode
+  value: string
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[13px] font-medium">{label}</span>
+      <p className="force-ltr flex items-center gap-2 rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--field)] px-3.5 py-2.5 text-[14px] text-[var(--muted)]">
+        {icon}
+        {value}
+      </p>
+      <p className="text-[12px] text-[var(--muted)]">{hint}</p>
+    </div>
   )
 }
