@@ -20,6 +20,7 @@ describe('realtime', () => {
 
   afterEach(() => {
     vi.doUnmock('@/config/env')
+    vi.doUnmock('pusher-js')
   })
 
   it('is off without a Pusher key, and the caller checks on a timer', async () => {
@@ -82,5 +83,33 @@ describe('realtime', () => {
     expect(refused[0]).toBeInstanceOf(Error)
     expect(refused[1]).toBeNull()
     mock.restore()
+  })
+
+  it('is off while the library cannot be downloaded, and tries again on the next ask', async () => {
+    vi.doMock('@/config/env', () => ({
+      env: {
+        VITE_API_URL: 'https://qayema.test',
+        VITE_PUSHER_KEY: 'public-key',
+        VITE_PUSHER_CLUSTER: 'eu',
+      },
+    }))
+    // The first download fails, as on a network that drops; the next one works.
+    let downloads = 0
+    vi.doMock('pusher-js', () => {
+      downloads += 1
+      if (downloads === 1) throw new Error('Failed to fetch dynamically imported module')
+      return { default: vi.fn() }
+    })
+    const { realtime } = await import('@/lib/realtime/echo')
+
+    expect(await realtime()).toBeNull()
+    expect(made.options).toBeNull()
+
+    const echo = await realtime()
+    expect(echo).not.toBeNull()
+    expect(made.options).toMatchObject({ key: 'public-key', cluster: 'eu' })
+    expect(downloads).toBe(2)
+    // Connected now, and remembered.
+    expect(await realtime()).toBe(echo)
   })
 })

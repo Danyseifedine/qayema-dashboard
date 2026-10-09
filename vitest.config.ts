@@ -13,6 +13,10 @@ export default defineConfig({
       VITE_LOGIN_URL: 'https://qayema.test/get-started',
     },
     setupFiles: ['./src/test/setup.ts'],
+    // The longest form tests take under 2s alone, but the full run puts 135
+    // files on every core at once (more again with coverage), and 5s was
+    // tripped by load alone. A stuck test still fails.
+    testTimeout: 15000,
     css: false,
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {

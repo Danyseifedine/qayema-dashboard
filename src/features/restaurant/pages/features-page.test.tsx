@@ -410,6 +410,53 @@ describe('FeaturesPage', () => {
     expect(onOpenDishes).toHaveBeenCalledOnce()
   })
 
+  it('keeps the menu opening in the second language when a new main one arrives', async () => {
+    mock
+      .onPut('/api/menu-languages')
+      .reply(200, languages({ languages: ['de', 'ar'], second_locale: 'ar', default_locale: 'ar' }))
+    const user = userEvent.setup()
+    renderWithProviders(page({ defaultLocale: 'ar' }))
+
+    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
+    await user.click(await screen.findByRole('option', { name: /German/ }))
+    await user.click(await screen.findByRole('button', { name: 'Switch to German' }))
+
+    await waitFor(() => expect(mock.history.put).toHaveLength(1))
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      main_locale: 'de',
+      second_locale: 'ar',
+      default_locale: 'ar',
+    })
+  })
+
+  it('saves nothing when the main language box is cleared', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(page())
+
+    const box = screen.getByRole('combobox', { name: /Your menu is written in/ })
+    box.focus()
+    await user.keyboard('{Escape}')
+
+    // Nothing to switch to: the box keeps English, no question, nothing sent.
+    await waitFor(() => expect(box).toHaveDisplayValue(/English/))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(mock.history.put).toHaveLength(0)
+  })
+
+  it('saves nothing when the second language box is cleared', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(page())
+
+    const box = screen.getByRole('combobox', { name: /Second language/ })
+    box.focus()
+    await user.keyboard('{Escape}')
+
+    // An empty choice is no language: the menu keeps Arabic and nothing is sent.
+    await waitFor(() => expect(box).toHaveDisplayValue(/Arabic/))
+    expect(screen.getByRole('tab', { name: 'Arabic' })).toBeInTheDocument()
+    expect(mock.history.put).toHaveLength(0)
+  })
+
   it('never offers the main language as the second one', async () => {
     const user = userEvent.setup()
     renderWithProviders(page({ mainLocale: 'ar', secondLocale: 'en', defaultLocale: 'ar' }))
@@ -473,6 +520,36 @@ describe('FeaturesPage', () => {
         mode: 'menu',
         types: ['pickup'],
       })
+    })
+
+    it('takes pickup again next to delivery, in the order the server keeps', async () => {
+      mock.onPut('/api/features/ordering').reply(200, {
+        data: { mode: 'menu', types: ['delivery', 'pickup'] },
+      })
+      const user = userEvent.setup()
+      renderWithProviders(page({ ordering: { mode: 'menu', types: ['delivery'] } }))
+
+      expect(screen.getByRole('switch', { name: 'Pickup' })).toHaveAttribute(
+        'aria-checked',
+        'false',
+      )
+      await user.click(screen.getByRole('switch', { name: 'Pickup' }))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(1))
+      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+        mode: 'menu',
+        types: ['delivery', 'pickup'],
+      })
+    })
+
+    it('saves nothing when the way already chosen is picked again', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(page())
+
+      await user.click(screen.getByRole('tab', { name: 'WhatsApp' }))
+
+      expect(screen.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute('aria-selected', 'true')
+      expect(mock.history.put).toHaveLength(0)
     })
 
     it('keeps the last kind of order on, so guests can always order', () => {

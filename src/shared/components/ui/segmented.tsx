@@ -52,7 +52,7 @@ export function Segmented<T extends string>({
             title={option.title}
             onClick={() => onChange(option.value)}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-[8px] font-medium',
+              'inline-flex items-center gap-1.5 whitespace-nowrap rounded-[8px] font-medium',
               'transition-[background-color,color,border-color] duration-200',
               'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--gold-on)]',
               size === 'sm' ? 'px-3 py-1 text-[12px]' : 'px-4 py-2 text-[13px]',

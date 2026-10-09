@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -56,7 +56,7 @@ function table(id: number, name: string) {
   return { id, name, code: `code${id}`, url: `http://localhost:8000/olive?table=code${id}&qr=1` }
 }
 
-function stub(tables = [table(1, 'Table 1'), table(2, 'Table 2')], meta = {}) {
+function stub(tables = [table(1, 'Table 1'), table(2, 'Table 2')], meta = {}, qr = {}) {
   mock
     .onGet('/api/tables')
     .reply(200, { data: tables, meta: { limit: 300, takes_orders: true, ...meta } })
@@ -72,8 +72,19 @@ function stub(tables = [table(1, 'Table 1'), table(2, 'Table 2')], meta = {}) {
       settings: DESIGN,
       defaults: { ...DESIGN, dot_style: 'square', dot_color: '#000000' },
       stats: null,
+      ...qr,
     },
   })
+}
+
+/** The print sheet goes straight into the page body; null while nothing prints. */
+function printSheet(): HTMLElement | null {
+  return document.body.querySelector<HTMLElement>('.qy-print-sheet')
+}
+
+/** A card on the page, found by the table's name. */
+async function findCard(name: string): Promise<HTMLElement> {
+  return (await screen.findByRole('heading', { name })).closest('article')!
 }
 
 describe('TablesPage', () => {
@@ -97,7 +108,10 @@ describe('TablesPage', () => {
     stub()
     renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
 
-    expect(await screen.findByRole('heading', { name: 'Table 2' })).toBeInTheDocument()
+    // The file's first wait also loads the page's code, slow under a full run.
+    expect(
+      await screen.findByRole('heading', { name: 'Table 2' }, { timeout: 4000 }),
+    ).toBeInTheDocument()
     await waitFor(() =>
       expect(drawn.created).toContainEqual(
         expect.objectContaining({
@@ -239,9 +253,247 @@ describe('TablesPage', () => {
 
   it('starts from an empty room', async () => {
     stub([])
+    const user = userEvent.setup()
     renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
 
     expect(await screen.findByText('No tables yet')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Print all cards' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Add your tables' }))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('heading', { name: 'Add tables' })).toBeInTheDocument()
+    await waitFor(() => expect(within(dialog).getByLabelText('From')).toHaveValue('1'))
+  })
+
+  it('stops adding at the limit and says why', async () => {
+    stub(undefined, { limit: 2 })
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    expect(
+      await screen.findByText('You have 2 tables, the most a restaurant can have.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add tables' })).toBeDisabled()
+  })
+
+  it('says when the tables cannot load, and tries again', async () => {
+    mock.onGet('/api/tables').replyOnce(500, { message: 'Server down', code: 'server_error' })
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Server down')
+    expect(screen.getByRole('button', { name: 'Add tables' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByRole('heading', { name: 'Table 1' })).toBeInTheDocument()
+  })
+
+  it('renames a table and closes the dialog', async () => {
+    stub()
+    mock.onPatch('/api/tables/1').reply(200, { data: table(1, 'Window') })
+    const user = userEvent.setup()
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    await user.click(within(await findCard('Table 1')).getByRole('button', { name: 'Rename' }))
+    const dialog = screen.getByRole('dialog')
+    const name = within(dialog).getByLabelText(/Table name/)
+    await waitFor(() => expect(name).toHaveValue('Table 1'))
+    await user.clear(name)
+    await user.type(name, 'Window')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Table renamed')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(mock.history.patch[0]!.url).toBe('/api/tables/1')
+    expect(JSON.parse(mock.history.patch[0]!.data as string)).toEqual({ name: 'Window' })
+  })
+
+  it('removes a table once the owner confirms', async () => {
+    stub()
+    mock.onDelete('/api/tables/2').reply(204)
+    const user = userEvent.setup()
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    await user.click(within(await findCard('Table 2')).getByRole('button', { name: 'Remove' }))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('heading', { name: 'Remove Table 2?' })).toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Remove table' }))
+
+    expect(await screen.findByText('Table removed')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(mock.history.delete.map((request) => request.url)).toEqual(['/api/tables/2'])
+  })
+
+  it('keeps the table and says so when removing it fails', async () => {
+    stub()
+    mock.onDelete('/api/tables/2').reply(500, { message: 'Server down', code: 'server_error' })
+    const user = userEvent.setup()
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    await user.click(within(await findCard('Table 2')).getByRole('button', { name: 'Remove' }))
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove table' }),
+    )
+
+    expect(await screen.findByText('Could not remove that table')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Table 2' })).toBeInTheDocument()
+  })
+
+  it('sends nothing when a removal or a new code is cancelled', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    await user.click(within(await findCard('Table 1')).getByRole('button', { name: 'Remove' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    await user.click(within(await findCard('Table 1')).getByRole('button', { name: 'New code' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    expect(mock.history.delete).toHaveLength(0)
+    expect(mock.history.post).toHaveLength(0)
+  })
+
+  it('says when a new code could not be made', async () => {
+    stub()
+    mock.onPost('/api/tables/1/new-code').reply(500, { message: 'Server down', code: 'x' })
+    const user = userEvent.setup()
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    await user.click(within(await findCard('Table 1')).getByRole('button', { name: 'New code' }))
+    await user.click(screen.getByRole('button', { name: 'Make a new code' }))
+
+    expect(await screen.findByText('Could not make a new code')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('names a download after the table in any script, or "table" when nothing is left', async () => {
+    stub([table(1, 'طاولة 1'), table(2, '★')])
+    const user = userEvent.setup()
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    await user.click(
+      within(await findCard('طاولة 1')).getByRole('button', { name: 'Download QR code' }),
+    )
+    await user.click(within(await findCard('★')).getByRole('button', { name: 'Download QR code' }))
+
+    await waitFor(() =>
+      expect(drawn.downloads.map((download) => download.name)).toEqual(['qr-طاولة-1', 'qr-table']),
+    )
+  })
+
+  it('prints every card with the design heading, then lets go of the sheet', async () => {
+    stub()
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {})
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    await screen.findByRole('heading', { name: 'Table 2' })
+    // Print only once the QR page's design has arrived.
+    await waitFor(() =>
+      expect(drawn.created).toContainEqual(
+        expect.objectContaining({ dotsOptions: expect.objectContaining({ type: 'rounded' }) }),
+      ),
+    )
+    vi.useFakeTimers()
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Print all cards' }))
+
+      const sheet = printSheet()!
+      expect(within(sheet).getAllByText('Olive')).toHaveLength(2)
+      expect(within(sheet).getByText('Table 1')).toBeInTheDocument()
+      expect(within(sheet).getByText('Table 2')).toBeInTheDocument()
+      expect(within(sheet).getAllByText('Scan to see the menu and order')).toHaveLength(2)
+
+      // A moment for the codes to draw before the print dialog opens.
+      act(() => vi.advanceTimersByTime(149))
+      expect(print).not.toHaveBeenCalled()
+      act(() => vi.advanceTimersByTime(1))
+      expect(print).toHaveBeenCalledOnce()
+    } finally {
+      vi.useRealTimers()
+    }
+
+    act(() => {
+      window.dispatchEvent(new Event('afterprint'))
+    })
+    expect(printSheet()).toBeNull()
+    print.mockRestore()
+  })
+
+  it('prints one card, and prints it again on a second click', async () => {
+    stub(undefined, { takes_orders: false })
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {})
+    const user = userEvent.setup()
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    const second = await findCard('Table 2')
+    await user.click(within(second).getByRole('button', { name: 'Print card' }))
+
+    const sheet = printSheet()!
+    expect(within(sheet).getByText('Table 2')).toBeInTheDocument()
+    expect(within(sheet).queryByText('Table 1')).not.toBeInTheDocument()
+    expect(within(sheet).getByText('Scan to see the menu')).toBeInTheDocument()
+    await waitFor(() => expect(print).toHaveBeenCalledOnce())
+
+    await user.click(within(second).getByRole('button', { name: 'Print card' }))
+    await waitFor(() => expect(print).toHaveBeenCalledTimes(2))
+    print.mockRestore()
+  })
+
+  it('waits longer before printing a design with a logo', async () => {
+    stub(
+      undefined,
+      {},
+      {
+        logo_data_url: 'data:image/png;base64,AAAA',
+        settings: { ...DESIGN, logo: true },
+      },
+    )
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {})
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    await screen.findByRole('heading', { name: 'Table 1' })
+    await waitFor(() =>
+      expect(drawn.created).toContainEqual(
+        expect.objectContaining({ image: 'data:image/png;base64,AAAA' }),
+      ),
+    )
+    vi.useFakeTimers()
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Print all cards' }))
+      act(() => vi.advanceTimersByTime(699))
+      expect(print).not.toHaveBeenCalled()
+      act(() => vi.advanceTimersByTime(1))
+      expect(print).toHaveBeenCalledOnce()
+    } finally {
+      vi.useRealTimers()
+    }
+    print.mockRestore()
+  })
+
+  it('draws the plain design, with no heading on paper, when the QR studio is locked', async () => {
+    stub(undefined, {}, { unlocked: false, logo_data_url: 'data:image/png;base64,AAAA' })
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {})
+    const user = userEvent.setup()
+    renderWithProviders(<TablesPage onOpenFeatures={() => {}} />)
+
+    await screen.findByRole('heading', { name: 'Table 1' })
+    await waitFor(() =>
+      expect(drawn.created).toContainEqual(
+        expect.objectContaining({
+          data: 'http://localhost:8000/olive?table=code1&qr=1',
+          dotsOptions: expect.objectContaining({ type: 'square', color: '#000000' }),
+        }),
+      ),
+    )
+    expect(drawn.created).not.toContainEqual(expect.objectContaining({ image: expect.anything() }))
+
+    await user.click(screen.getByRole('button', { name: 'Print all cards' }))
+    expect(within(printSheet()!).queryByText('Olive')).not.toBeInTheDocument()
+    await waitFor(() => expect(print).toHaveBeenCalledOnce())
+    print.mockRestore()
   })
 })

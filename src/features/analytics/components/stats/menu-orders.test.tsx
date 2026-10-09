@@ -75,6 +75,24 @@ describe('MenuOrders', () => {
     expect(within(fulfilment).getByText('Delivery').closest('li')).toHaveTextContent('70%')
   })
 
+  it('names orders at the table, and shows a way it does not know as the server sent it', () => {
+    renderWithProviders(
+      <MenuOrders
+        orders={orders({
+          fulfilment: [
+            { key: 'dine_in', count: 6 },
+            { key: 'curbside', count: 2 },
+          ],
+        })}
+        locale="en"
+      />,
+    )
+
+    const fulfilment = screen.getByRole('list', { name: 'How guests got their order' })
+    expect(within(fulfilment).getByText('At the table').closest('li')).toHaveTextContent('6')
+    expect(within(fulfilment).getByText('curbside').closest('li')).toHaveTextContent('2')
+  })
+
   it('has nothing to average, compare or time with no orders yet', () => {
     renderWithProviders(
       <MenuOrders

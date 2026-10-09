@@ -171,6 +171,20 @@ describe('useOrderPulse', () => {
     expect(document.title).toBe('(1) Qayema Dashboard')
   })
 
+  it('stays quiet when the newest order is deleted', async () => {
+    answer(2, 41)
+    const { result, poll, queryClient } = setup()
+    await waitFor(() => expect(result.current).toBe(2))
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+
+    answer(1, 40)
+    await poll()
+
+    await waitFor(() => expect(result.current).toBe(1))
+    expect(play).not.toHaveBeenCalled()
+    expect(invalidate).not.toHaveBeenCalledWith({ queryKey: orderKeys.lists() })
+  })
+
   it('chimes for the very first order', async () => {
     answer(0, null)
     const { result, poll, queryClient } = setup()
@@ -256,6 +270,18 @@ describe('useOrderPulse', () => {
 
       // The app refused the sign-in (an expired session): deaf again.
       act(() => pusher.refuse())
+      await waitFor(() => expect(interval(queryClient)).toBe(FALLBACK_INTERVAL))
+    })
+
+    it('goes back to checking every minute when the connection drops', async () => {
+      const pusher = fakeEcho()
+      answer(1, 40)
+      const { result, queryClient } = setup()
+      await waitFor(() => expect(result.current).toBe(1))
+      await waitFor(() => expect(interval(queryClient)).toBe(false))
+
+      act(() => pusher.become('unavailable'))
+
       await waitFor(() => expect(interval(queryClient)).toBe(FALLBACK_INTERVAL))
     })
 

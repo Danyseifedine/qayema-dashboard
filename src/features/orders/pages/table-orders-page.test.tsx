@@ -9,7 +9,7 @@ import { TableOrdersPage } from '@/features/orders/pages/table-orders-page'
 
 let mock: MockAdapter
 
-function order(id: number, table: string, overrides: Record<string, unknown> = {}) {
+function order(id: number, table: string | null, overrides: Record<string, unknown> = {}) {
   return {
     id,
     reference: `REF${id}`,
@@ -58,6 +58,44 @@ describe('TableOrdersPage', () => {
     expect(within(groups[0]!).getByRole('button', { name: 'Served' })).toBeInTheDocument()
   })
 
+  it('puts tables with nothing waiting in name order, and says nothing is waiting', async () => {
+    mock.onGet('/api/orders', { params: { kind: 'table' } }).reply(200, {
+      data: [
+        order(1, 'Table 10', { status: 'done' }),
+        order(2, 'Table 9', { status: 'cancelled' }),
+        // A new order with no time on it waits behind every timed one, and
+        // one whose table has no name left groups under a dash.
+        order(3, null, { status: 'done', placed_at: null }),
+      ],
+      meta: { open: 0 },
+    })
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+
+    const groups = await screen.findAllByRole('region', {
+      name: (name) => !name.startsWith('Notifications'),
+    })
+    expect(groups.map((group) => group.getAttribute('aria-label'))).toEqual([
+      '-',
+      'Table 9',
+      'Table 10',
+    ])
+    expect(screen.queryByText(/still waiting/)).not.toBeInTheDocument()
+  })
+
+  it('puts a waiting order with no time on it behind one that has a time', async () => {
+    mock.onGet('/api/orders', { params: { kind: 'table' } }).reply(200, {
+      data: [order(1, 'Bar', { placed_at: null }), order(2, 'Terrace')],
+      meta: { open: 2 },
+    })
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+
+    const groups = await screen.findAllByRole('region', {
+      name: (name) => !name.startsWith('Notifications'),
+    })
+    expect(groups.map((group) => group.getAttribute('aria-label'))).toEqual(['Terrace', 'Bar'])
+    expect(screen.getByText('2 orders are still waiting.')).toBeInTheDocument()
+  })
+
   it('filters by the steps a table order goes through', async () => {
     mock.onGet('/api/orders').reply(200, { data: [order(1, 'Table 4')], meta: { open: 1 } })
     const user = userEvent.setup()
@@ -94,6 +132,34 @@ describe('TableOrdersPage', () => {
         guest_updates: 0,
       }),
     )
+  })
+
+  it('says a load failed, and tries again on request', async () => {
+    mock.onGet('/api/orders').replyOnce(500, { message: 'Something went wrong.' })
+    mock.onGet('/api/orders').reply(200, { data: [order(1, 'Table 4')], meta: { open: 1 } })
+    const user = userEvent.setup()
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+
+    expect(await screen.findByText('Something went wrong.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Try again/ }))
+
+    expect(await screen.findByRole('region', { name: 'Table 4' })).toBeInTheDocument()
+  })
+
+  it('says nothing has that status, without pointing to the Tables page', async () => {
+    mock.onGet('/api/orders', { params: { kind: 'table', status: 'cancelled' } }).reply(200, {
+      data: [],
+      meta: { open: 1 },
+    })
+    mock.onGet('/api/orders').reply(200, { data: [order(1, 'Table 4')], meta: { open: 1 } })
+    const user = userEvent.setup()
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+
+    await screen.findByRole('region', { name: 'Table 4' })
+    await user.click(screen.getByRole('tab', { name: 'Cancelled' }))
+
+    expect(await screen.findByText('Nothing with that status')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Set up your tables' })).not.toBeInTheDocument()
   })
 
   it('points to the Tables page before the first order', async () => {

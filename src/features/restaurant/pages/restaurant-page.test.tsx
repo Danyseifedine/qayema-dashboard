@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import type { AxiosProgressEvent, AxiosRequestConfig } from 'axios'
 import userEvent from '@testing-library/user-event'
+import { StrictMode } from 'react'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
@@ -324,6 +325,100 @@ describe('RestaurantPage', () => {
     await user.click(within(closes).getByRole('tab', { name: 'AM' }))
 
     expect(screen.getByText('Closes the next day, after midnight.')).toBeInTheDocument()
+  })
+
+  it('keeps a saved time on minutes the picker does not offer', async () => {
+    stub({
+      opening_hours: { ...settings.opening_hours, mon: { open: '07:20', close: '22:00' } },
+    })
+    mock.onPatch('/api/restaurant').reply(200, { data: settings })
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantPage />)
+
+    const minutes = await screen.findByRole('combobox', { name: 'Monday opens: minutes' })
+    expect(minutes).toHaveValue('20')
+    await user.click(minutes)
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '00',
+      '15',
+      '20',
+      '30',
+      '45',
+    ])
+    await user.keyboard('{Escape}')
+
+    // A new hour keeps the 20 minutes.
+    await user.click(screen.getByRole('combobox', { name: 'Monday opens: hour' }))
+    await user.click(screen.getByRole('option', { name: '8' }))
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => {
+      const patch = mock.history.patch.find((r) => r.url === '/api/restaurant')
+      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual({
+        open: '08:20',
+        close: '22:00',
+      })
+    })
+  })
+
+  it('asks for a time a day was saved without, and waits for the hour', async () => {
+    stub({ opening_hours: { ...settings.opening_hours, mon: { open: '', close: '22:00' } } })
+    mock.onPatch('/api/restaurant').reply(200, { data: settings })
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantPage />)
+
+    // No hour yet: the minutes and AM wait with a restaurant's defaults.
+    const hour = await screen.findByRole('combobox', { name: 'Monday opens: hour' })
+    expect(hour).toHaveValue('')
+    expect(screen.getByRole('combobox', { name: 'Monday opens: minutes' })).toHaveValue('00')
+    const meridiem = screen.getByRole('tablist', { name: 'Monday opens: AM or PM' })
+    expect(within(meridiem).getByRole('tab', { name: 'AM' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+
+    await user.type(screen.getByLabelText(/^Restaurant name/), '!')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    expect(await screen.findByText('Pick a time.')).toBeInTheDocument()
+    expect(hour).toHaveAttribute('aria-invalid', 'true')
+    expect(mock.history.patch).toHaveLength(0)
+
+    // Minutes and PM picked first are kept for when the hour comes.
+    await user.click(screen.getByRole('combobox', { name: 'Monday opens: minutes' }))
+    await user.click(screen.getByRole('option', { name: '30' }))
+    await user.click(within(meridiem).getByRole('tab', { name: 'PM' }))
+    expect(hour).toHaveValue('')
+    expect(screen.getByRole('combobox', { name: 'Monday opens: minutes' })).toHaveValue('30')
+
+    await user.click(hour)
+    await user.click(screen.getByRole('option', { name: '6' }))
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => {
+      const patch = mock.history.patch.find((r) => r.url === '/api/restaurant')
+      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual({
+        open: '18:30',
+        close: '22:00',
+      })
+    })
+  })
+
+  it('opens again on the restaurant it already has, without refilling the form twice', async () => {
+    stub()
+    const { rerender } = renderWithProviders(<RestaurantPage />)
+    expect(await screen.findByLabelText(/^Restaurant name/)).toHaveValue('Beit Qayema')
+
+    // Opened again in development's StrictMode, which runs each effect twice
+    // on mount: the second run finds the form already filled from this data.
+    rerender(
+      <StrictMode>
+        <RestaurantPage />
+      </StrictMode>,
+    )
+
+    expect(await screen.findByLabelText(/^Restaurant name/)).toHaveValue('Beit Qayema')
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled()
+    expect(mock.history.get.filter((call) => call.url === '/api/restaurant')).toHaveLength(1)
   })
 
   describe('the menu link', () => {

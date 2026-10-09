@@ -45,6 +45,10 @@ describe('order edit pricing', () => {
     expect(unitPrice(dish(), [12], [30], OFF)).toBe(8)
   })
 
+  it('prices a dish without a price of its own by the options picked', () => {
+    expect(unitPrice(dish({ price: null }), [12, 21], [], ON)).toBe(2.5)
+  })
+
   it('sells a dish without a price only when its variants price it', () => {
     expect(isSellable(dish({ price: null }), ON)).toBe(true)
     expect(isSellable(dish({ price: null }), OFF)).toBe(false)

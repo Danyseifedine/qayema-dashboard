@@ -57,6 +57,10 @@ vi.mock('@/features/menu', async (importOriginal) => ({
 vi.mock('@/features/orders', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/orders')>()),
   OrdersPage: stubPage('orders'),
+  TableOrdersPage: stubPage('table-orders'),
+}))
+vi.mock('@/features/tables', () => ({
+  TablesPage: stubPage('tables'),
 }))
 vi.mock('@/features/analytics', () => ({
   AnalyticsPage: stubPage('analytics'),
@@ -105,7 +109,10 @@ function openAt(path: string) {
 }
 
 /** The stand-in for a page, once the session has loaded. */
-const page = (name: string) => screen.findByRole('region', { name: `${name} page` })
+// Pages load on demand (lazy), and the first one a file opens pays for the
+// import: past Testing Library's 1s default when coverage is being measured.
+const page = (name: string) =>
+  screen.findByRole('region', { name: `${name} page` }, { timeout: 4000 })
 
 /** The props App passed to the page on screen. */
 async function propsOf(name: string): Promise<Record<string, unknown>> {
@@ -202,6 +209,10 @@ describe('App', () => {
     { path: '/qr', name: 'qr', action: 'onOpenPackage', lands: 'package' },
     { path: '/social-links', name: 'social-links' },
     { path: '/features', name: 'features', action: 'onOpenPackage', lands: 'package' },
+    { path: '/features', name: 'features', action: 'onOpenTables', lands: 'tables' },
+    { path: '/features', name: 'features', action: 'onOpenDishes', lands: 'dishes' },
+    { path: '/table-orders', name: 'table-orders', action: 'onOpenTables', lands: 'tables' },
+    { path: '/tables', name: 'tables', action: 'onOpenFeatures', lands: 'features' },
     { path: '/restaurant', name: 'restaurant' },
     { path: '/account', name: 'account', action: 'onOpenRestaurant', lands: 'restaurant' },
     { path: '/overview', name: 'overview', action: 'onOpen', lands: 'overview' },
@@ -411,6 +422,32 @@ describe('App', () => {
       expect(
         await screen.findByRole('button', { name: 'Free package. Open your package.' }),
       ).toBeInTheDocument()
+    })
+  })
+
+  describe('the account menu', () => {
+    it('shows how the owner signs in: their email', async () => {
+      signIn()
+      const user = userEvent.setup()
+      renderWithProviders(<App />)
+      await page('overview')
+
+      await user.click(screen.getByRole('button', { name: 'Account menu' }))
+
+      expect(within(screen.getByRole('menu')).getByText('owner@example.com')).toBeInTheDocument()
+    })
+
+    it('shows the username of an account made without an email', async () => {
+      mock.onGet('/api/user').reply(200, {
+        data: { ...makeSessionUser(), email: null, username: 'beit-qayema' },
+      })
+      const user = userEvent.setup()
+      renderWithProviders(<App />)
+      await page('overview')
+
+      await user.click(screen.getByRole('button', { name: 'Account menu' }))
+
+      expect(within(screen.getByRole('menu')).getByText('beit-qayema')).toBeInTheDocument()
     })
   })
 

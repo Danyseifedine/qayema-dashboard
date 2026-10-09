@@ -54,6 +54,29 @@ describe('SocialLinkDialog', () => {
     )
   })
 
+  it('falls back to a bare placeholder, and sends nothing, once the platform is cleared', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<SocialLinkDialog open link={null} taken={[]} onClose={vi.fn()} />)
+
+    // Escape on the closed list clears the choice.
+    screen.getByRole('combobox', { name: /Platform/ }).focus()
+    await user.keyboard('{Escape}')
+
+    await waitFor(() =>
+      expect(screen.getByLabelText(/^Link/)).toHaveAttribute('placeholder', 'https://'),
+    )
+    await user.type(screen.getByLabelText(/^Link/), 'https://instagram.com/beit')
+    await user.click(screen.getByRole('button', { name: 'Add link' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('combobox', { name: /Platform/ })).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      ),
+    )
+    expect(mock.history.post).toHaveLength(0)
+  })
+
   it('closes on Escape, on the backdrop and on Cancel, but not on a click inside', async () => {
     const onClose = vi.fn()
     const user = userEvent.setup()

@@ -142,6 +142,23 @@ describe('OverviewPage', () => {
     expect(screen.getByRole('button', { name: /Share your menu/ })).toHaveTextContent('Done')
   })
 
+  it('opens another step on a tap, and folds an open one away on a second tap', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+
+    const restaurant = await screen.findByRole('button', { name: /Your restaurant/ })
+    const dishes = screen.getByRole('button', { name: /Your dishes/ })
+
+    await user.click(dishes)
+    expect(dishes).toHaveAttribute('aria-expanded', 'true')
+    expect(restaurant).toHaveAttribute('aria-expanded', 'false')
+
+    await user.click(dishes)
+    expect(dishes).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('list', { name: 'Your dishes' })).not.toBeInTheDocument()
+  })
+
   it('sends the sharing step to the QR code', async () => {
     stub()
     const onOpen = vi.fn()

@@ -413,6 +413,74 @@ describe('dish variants and add-ons in the dish form', () => {
     expect(within(region).queryByLabelText('Add-on 1')).not.toBeInTheDocument()
   })
 
+  it('copies only the add-ons when variants are switched off', async () => {
+    const user = userEvent.setup()
+    const other = makeDish({ id: 3, name: { en: 'Cheeseburger' }, ...BURGER })
+    open({ switched_off: ['variants'] }, { dishes: [other] })
+    const region = await section()
+
+    await user.click(within(region).getByRole('combobox', { name: 'Copy from another dish' }))
+    await user.click(screen.getByRole('option', { name: 'Cheeseburger' }))
+
+    expect(within(region).getByLabelText('Add-on 1')).toHaveValue('Extra cheese')
+    expect(within(region).queryByLabelText('Variant name')).not.toBeInTheDocument()
+  })
+
+  it(
+    'offers no more options or add-ons once a dish holds the most it can',
+    { timeout: 20_000 },
+    async () => {
+      const options = Array.from({ length: 10 }, (_, index) => ({
+        id: 100 + index,
+        name: { en: `Option ${index + 1}` },
+        price: '0.00',
+      }))
+      const addons = Array.from({ length: 20 }, (_, index) => ({
+        id: 200 + index,
+        name: { en: `Extra ${index + 1}` },
+        price: '1.00',
+      }))
+      open(
+        {},
+        { dish: makeDish({ id: 5, variants: [{ id: 7, name: { en: 'Size' }, options }], addons }) },
+      )
+      const region = await section()
+
+      await waitFor(() =>
+        expect(within(region).getByLabelText('Add-on 20')).toHaveValue('Extra 20'),
+      )
+      expect(within(region).getByLabelText('Size, option 10')).toHaveValue('Option 10')
+      expect(within(region).queryByRole('button', { name: 'Add option' })).not.toBeInTheDocument()
+      expect(within(region).queryByRole('button', { name: 'Add add-on' })).not.toBeInTheDocument()
+      // A second variant can still be added.
+      expect(within(region).getByRole('button', { name: 'Add variant' })).toBeInTheDocument()
+    },
+  )
+
+  it('follows the menu’s languages when they change while the form is open', async () => {
+    const dish = makeDish({
+      id: 5,
+      variants: [],
+      addons: [{ id: 9, name: { en: 'Extra cheese', ar: 'جبنة إضافية' }, price: '1.00' }],
+    })
+    const { queryClient } = open({}, { dish })
+    const region = await section()
+    await waitFor(() =>
+      expect(within(region).getByLabelText('Add-on 1')).toHaveValue('Extra cheese'),
+    )
+
+    // The owner makes Arabic the menu's one language in another tab.
+    mock
+      .onGet('/api/user')
+      .reply(200, { data: makeSessionUser({ languages: ['ar'], main_locale: 'ar' }) })
+    await queryClient.refetchQueries()
+
+    await waitFor(() =>
+      expect(within(region).getByLabelText('Add-on 1')).toHaveValue('جبنة إضافية'),
+    )
+    expect(within(region).getByLabelText('Add-on 1')).toHaveAttribute('dir', 'rtl')
+  })
+
   it('leaves a list that is switched off out of the form and the save', async () => {
     const user = userEvent.setup()
     open({ switched_off: ['variants'] }, { dish: makeDish({ id: 5, ...BURGER }) })

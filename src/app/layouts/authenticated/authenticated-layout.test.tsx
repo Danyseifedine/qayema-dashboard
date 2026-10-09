@@ -291,6 +291,19 @@ describe('AuthenticatedLayout', () => {
     vi.unstubAllGlobals()
   })
 
+  it('names only the owner when the admin is not named', () => {
+    renderWithProviders(
+      <Harness
+        impersonation={{ admin: null, leave_url: 'http://localhost:8000/impersonate/leave' }}
+      />,
+    )
+
+    const banner = screen.getByRole('status')
+    expect(banner).toHaveTextContent("You are viewing Dany's dashboard from the admin.")
+    expect(banner).not.toHaveTextContent(/signed in as/)
+    expect(screen.getByRole('button', { name: 'Back to admin' })).toBeInTheDocument()
+  })
+
   it('shows no banner to the owner themself', () => {
     renderWithProviders(<Harness />)
 

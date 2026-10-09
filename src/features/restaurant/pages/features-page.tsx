@@ -111,59 +111,66 @@ export function FeaturesPage({
             const offNote = key === 'analytics' ? null : t(`${key}.offNote`)
 
             return (
-              <li key={key} className="flex items-start gap-3 py-3.5">
-                <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-[var(--hover-wash)] text-[var(--muted)]">
-                  <Icon aria-hidden className="size-[18px]" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-medium">
-                    {label}
-                    {included ? null : (
-                      <PackageChip flag={row.plan} onOpenPackage={onOpenPackage} />
-                    )}
-                  </p>
-                  <p className="text-[12.5px] leading-snug text-[var(--muted)]">
-                    {t(`${key}.description`)}
-                  </p>
-                  {included && !on && offNote ? (
-                    <p className="mt-1 text-[12.5px] leading-snug text-[var(--status-warn)]">
-                      {offNote}
+              <li key={key} className="py-3.5">
+                <div className="flex items-start gap-3">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-[var(--hover-wash)] text-[var(--muted)]">
+                    <Icon aria-hidden className="size-[18px]" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-medium">
+                      {label}
+                      {included ? null : (
+                        <PackageChip flag={row.plan} onOpenPackage={onOpenPackage} />
+                      )}
                     </p>
-                  ) : null}
-                  {/* The pickers need the package: the server refuses a second
-                      language without it. */}
-                  {key === 'orders' && on ? (
+                    <p className="text-[12.5px] leading-snug text-[var(--muted)]">
+                      {t(`${key}.description`)}
+                    </p>
+                    {included && !on && offNote ? (
+                      <p className="mt-1 text-[12.5px] leading-snug text-[var(--status-warn)]">
+                        {offNote}
+                      </p>
+                    ) : null}
+                    {key === 'dine_in' && on ? (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={onOpenTables}
+                        className="mt-1 h-auto px-0 text-[12.5px] font-medium"
+                      >
+                        {t('dine_in.openTables')}
+                      </Button>
+                    ) : null}
+                  </div>
+                  <Switch
+                    checked={on}
+                    disabled={!included}
+                    onChange={(next) => toggle(key, next)}
+                    aria-label={t('toggle', { feature: label })}
+                    className="mt-1.5"
+                  />
+                </div>
+                {/* Under the row, not beside the switch: the whole width on a
+                    phone, under the text from a tablet up. The pickers need the
+                    package: the server refuses a second language without it. */}
+                {key === 'orders' && on ? (
+                  <div className="sm:ms-12">
                     <OrderingChoice
                       ordering={ordering}
                       menuIncluded={plan.menu_ordering}
                       onOpenPackage={onOpenPackage}
                     />
-                  ) : null}
-                  {key === 'dine_in' && on ? (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={onOpenTables}
-                      className="mt-1 h-auto px-0 text-[12.5px] font-medium"
-                    >
-                      {t('dine_in.openTables')}
-                    </Button>
-                  ) : null}
-                  {key === 'languages' && on ? (
+                  </div>
+                ) : null}
+                {key === 'languages' && on ? (
+                  <div className="sm:ms-12">
                     <LanguageChoice
                       mainLocale={mainLocale}
                       secondLocale={secondLocale}
                       defaultLocale={defaultLocale}
                     />
-                  ) : null}
-                </div>
-                <Switch
-                  checked={on}
-                  disabled={!included}
-                  onChange={(next) => toggle(key, next)}
-                  aria-label={t('toggle', { feature: label })}
-                  className="mt-1.5"
-                />
+                  </div>
+                ) : null}
               </li>
             )
           })}

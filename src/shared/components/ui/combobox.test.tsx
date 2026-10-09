@@ -1,7 +1,7 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { Combobox, type ComboboxOption } from '@/shared/components/ui/combobox'
 
 const OPTIONS: ComboboxOption[] = [
@@ -329,6 +329,26 @@ describe('Combobox', () => {
     expect(screen.queryByRole('option')).not.toBeInTheDocument()
   })
 
+  it('empties the field when its owner clears the value', () => {
+    const { rerender } = render(
+      <Combobox aria-label="Country" options={OPTIONS} value="AE" onChange={vi.fn()} />,
+    )
+    expect(input()).toHaveValue('AE +971')
+
+    rerender(<Combobox aria-label="Country" options={OPTIONS} value={null} onChange={vi.fn()} />)
+
+    expect(input()).toHaveValue('')
+  })
+
+  it('draws a shorter box with the arrow out of the way in the small size', () => {
+    const { container } = render(<Harness size="sm" />)
+
+    expect(input()).toHaveClass('py-2', 'text-[14px]')
+    expect(input()).not.toHaveClass('pe-10')
+    // Clicks on the arrow fall through to the field, which opens the list.
+    expect(container.querySelector('button')).toHaveClass('pointer-events-none', 'end-0.5')
+  })
+
   it('calls the caller’s blur handler when the field loses focus', async () => {
     const onBlur = vi.fn()
     const user = userEvent.setup()
@@ -393,6 +413,121 @@ describe('Combobox', () => {
       expect(list).toHaveClass('fixed')
       expect(list.style.top).toBe('146px')
       expect(list.style.left).toBe('0px')
+    })
+
+    it('follows the field while open when the page scrolls or the window resizes', async () => {
+      placeAt(100, 140)
+      const user = userEvent.setup()
+      render(<Harness />)
+
+      await user.click(input())
+      const list = screen.getByRole('listbox')
+      expect(list.style.top).toBe('146px')
+
+      // A scrolling dialog body moves the field up the screen.
+      placeAt(60, 100)
+      fireEvent.scroll(document.body)
+      expect(list.style.top).toBe('106px')
+
+      placeAt(200, 240)
+      fireEvent(window, new Event('resize'))
+      expect(list.style.top).toBe('246px')
+
+      // Closed, it stays put: nothing is measured until it opens again.
+      await user.keyboard('{Escape}')
+      await waitFor(() => expect(screen.queryByRole('option')).not.toBeInTheDocument())
+      placeAt(300, 340)
+      fireEvent.scroll(document.body)
+      expect(list.style.top).toBe('246px')
+    })
+  })
+
+  describe('which side it grows from', () => {
+    /** A field 200px wide whose end edge is at `right` (in px from the left). */
+    function placeSide(right: number) {
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+        top: 100,
+        bottom: 140,
+        left: right - 200,
+        right,
+        width: 200,
+        height: 40,
+        x: right - 200,
+        y: 100,
+        toJSON: () => ({}),
+      })
+    }
+
+    /** Arabic: the field's box reads right to left. */
+    function rightToLeft() {
+      const style = document.createElement('style')
+      style.textContent = '.rtl-field { direction: rtl; }'
+      document.head.append(style)
+      onTestFinished(() => style.remove())
+    }
+
+    it('grows from the start edge, at least as wide as the field', async () => {
+      placeSide(300)
+      const user = userEvent.setup()
+      render(<Harness />)
+
+      await user.click(input())
+
+      const list = screen.getByRole('listbox')
+      expect(list.style.left).toBe('100px')
+      expect(list.style.right).toBe('')
+      expect(list.style.minWidth).toBe('200px')
+    })
+
+    it('grows back from the end edge near the right side of the screen', async () => {
+      placeSide(window.innerWidth - 24)
+      const user = userEvent.setup()
+      render(<Harness />)
+
+      await user.click(input())
+
+      const list = screen.getByRole('listbox')
+      expect(list.style.right).toBe('24px')
+      expect(list.style.left).toBe('')
+    })
+
+    it('in Arabic, grows from the right edge when there is room to the left', async () => {
+      rightToLeft()
+      placeSide(window.innerWidth - 24)
+      const user = userEvent.setup()
+      render(<Harness className="rtl-field" />)
+
+      await user.click(input())
+
+      const list = screen.getByRole('listbox')
+      expect(list.style.right).toBe('24px')
+      expect(list.style.left).toBe('')
+    })
+
+    it('in Arabic, grows from the left edge near the left side of the screen', async () => {
+      rightToLeft()
+      placeSide(220)
+      const user = userEvent.setup()
+      render(<Harness className="rtl-field" />)
+
+      await user.click(input())
+
+      const list = screen.getByRole('listbox')
+      expect(list.style.left).toBe('20px')
+      expect(list.style.right).toBe('')
+    })
+
+    it('when embedded, keeps to the start edge and takes its own width', async () => {
+      placeSide(window.innerWidth - 24)
+      const user = userEvent.setup()
+      render(<Harness embedded />)
+
+      await user.click(input())
+
+      const list = screen.getByRole('listbox')
+      expect(list.style.left).toBe(`${window.innerWidth - 224}px`)
+      expect(list.style.minWidth).toBe('')
+      expect(list).toHaveClass('w-[min(320px,calc(100vw-32px))]')
     })
   })
 })

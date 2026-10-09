@@ -290,6 +290,58 @@ describe('OrdersPage', () => {
     expect(await screen.findByText('Order ABC234 deleted')).toBeInTheDocument()
   })
 
+  it('keeps the order when the owner backs out of deleting it', async () => {
+    stub([order({ status: 'done', fulfilment: 'pickup' })])
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Delete order ABC234' }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(mock.history.delete).toHaveLength(0)
+    expect(screen.getByText('ABC234')).toBeInTheDocument()
+  })
+
+  it('says so when an order could not be deleted, and keeps asking', async () => {
+    stub([order({ status: 'done', fulfilment: 'pickup' })])
+    mock.onDelete('/api/orders/1').reply(500, { message: 'Server down', code: 'server_error' })
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Delete order ABC234' }))
+    await user.click(screen.getByRole('button', { name: 'Delete for good' }))
+
+    expect(await screen.findByText('Could not delete that order')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('shows an order as it now stands when an edit is refused', async () => {
+    stub([order({ status: 'accepted', fulfilment: 'pickup' })])
+    mock
+      .onGet('/api/dishes')
+      .reply(200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } })
+    mock.onPut('/api/orders/1/items').reply(409, {
+      message: 'This order was cancelled. It cannot be changed.',
+      code: 'order_closed',
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Edit order ABC234' }))
+    const dialog = screen.getByRole('dialog')
+    const asked = mock.history.get.filter((r) => r.url === '/api/orders').length
+    await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+
+    expect(
+      await within(dialog).findByText('This order was cancelled. It cannot be changed.'),
+    ).toBeInTheDocument()
+    await waitFor(() =>
+      expect(mock.history.get.filter((r) => r.url === '/api/orders').length).toBeGreaterThan(asked),
+    )
+  })
+
   it('cannot edit a cancelled order, only delete it', async () => {
     stub([order({ status: 'cancelled', fulfilment: 'pickup' })])
     renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
