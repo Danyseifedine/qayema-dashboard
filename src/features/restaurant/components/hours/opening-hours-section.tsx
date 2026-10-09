@@ -142,6 +142,7 @@ function DayRow({ control, day }: { control: Control<RestaurantFormValues>; day:
             variant="ghost"
             size="sm"
             leadingIcon={<IconPlus aria-hidden className="size-4" />}
+            aria-label={t('openingHours.addShiftOn', { day: label })}
             onClick={() => shifts.append(nextShift(last))}
           >
             {t('openingHours.addShift')}

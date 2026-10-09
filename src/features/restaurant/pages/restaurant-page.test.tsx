@@ -43,7 +43,7 @@ type SettingsFixture = {
   country_code: string | null
   currency: string
   timezone: string
-  opening_hours: Record<string, { open: string; close: string } | null>
+  opening_hours: Record<string, { open: string; close: string }[] | null>
   logo_url: string | null
   cover_url: string | null
 }
@@ -61,8 +61,8 @@ const settings: SettingsFixture = {
   currency: 'USD',
   timezone: 'Asia/Beirut',
   opening_hours: {
-    mon: { open: '07:30', close: '22:00' },
-    tue: { open: '07:30', close: '22:00' },
+    mon: [{ open: '07:30', close: '22:00' }],
+    tue: [{ open: '07:30', close: '22:00' }],
     wed: null,
     thu: null,
     fri: null,
@@ -304,11 +304,77 @@ describe('RestaurantPage', () => {
     await user.click(screen.getByRole('button', { name: 'Save changes' }))
     await waitFor(() => {
       const patch = mock.history.patch.find((r) => r.url === '/api/restaurant')
-      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual({
-        open: '07:30',
-        close: '23:15',
-      })
+      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual([
+        { open: '07:30', close: '23:15' },
+      ])
     })
+  })
+
+  it('splits a day into shifts, and saves them all', async () => {
+    stub()
+    mock.onPatch('/api/restaurant').reply(200, { data: settings })
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Add a shift on Monday' }))
+
+    // It starts where the first one closes (10 PM), for two hours.
+    expect(screen.getByText('Shift 2')).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Monday, shift 2, opens: hour' })).toHaveValue('10')
+    expect(screen.getByRole('combobox', { name: 'Monday, shift 2, closes: hour' })).toHaveValue(
+      '12',
+    )
+    expect(screen.getByText('Closes the next day, after midnight.')).toBeInTheDocument()
+
+    // Ends at 11 PM instead.
+    await user.click(screen.getByRole('combobox', { name: 'Monday, shift 2, closes: hour' }))
+    await user.click(screen.getByRole('option', { name: '11' }))
+    expect(screen.queryByText('Closes the next day, after midnight.')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    await waitFor(() => {
+      const patch = mock.history.patch.find((r) => r.url === '/api/restaurant')
+      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual([
+        { open: '07:30', close: '22:00' },
+        { open: '22:00', close: '23:00' },
+      ])
+    })
+  })
+
+  it('takes three shifts at most, and removes any after the first', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantPage />)
+
+    const add = await screen.findByRole('button', { name: 'Add a shift on Monday' })
+    await user.click(add)
+    await user.click(add)
+    expect(screen.queryByRole('button', { name: 'Add a shift on Monday' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Remove shift 1 on Monday' }),
+    ).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Remove shift 3 on Monday' }))
+    await user.click(screen.getByRole('button', { name: 'Remove shift 2 on Monday' }))
+    expect(screen.queryByText('Shift 2')).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Monday opens: hour' })).toHaveValue('7')
+    expect(screen.getByRole('button', { name: 'Add a shift on Monday' })).toBeInTheDocument()
+  })
+
+  it('refuses shifts that overlap, under the one at fault, and saves nothing', async () => {
+    stub()
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Add a shift on Monday' }))
+    // Opens at 9 PM, while the first shift runs until 10 PM.
+    await user.click(screen.getByRole('combobox', { name: 'Monday, shift 2, opens: hour' }))
+    await user.click(screen.getByRole('option', { name: '9' }))
+
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    expect(await screen.findByText("Shifts on the same day can't overlap.")).toBeInTheDocument()
+    expect(mock.history.patch).toHaveLength(0)
   })
 
   it('says when a day closes after midnight', async () => {
@@ -329,7 +395,7 @@ describe('RestaurantPage', () => {
 
   it('keeps a saved time on minutes the picker does not offer', async () => {
     stub({
-      opening_hours: { ...settings.opening_hours, mon: { open: '07:20', close: '22:00' } },
+      opening_hours: { ...settings.opening_hours, mon: [{ open: '07:20', close: '22:00' }] },
     })
     mock.onPatch('/api/restaurant').reply(200, { data: settings })
     const user = userEvent.setup()
@@ -354,15 +420,14 @@ describe('RestaurantPage', () => {
 
     await waitFor(() => {
       const patch = mock.history.patch.find((r) => r.url === '/api/restaurant')
-      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual({
-        open: '08:20',
-        close: '22:00',
-      })
+      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual([
+        { open: '08:20', close: '22:00' },
+      ])
     })
   })
 
   it('asks for a time a day was saved without, and waits for the hour', async () => {
-    stub({ opening_hours: { ...settings.opening_hours, mon: { open: '', close: '22:00' } } })
+    stub({ opening_hours: { ...settings.opening_hours, mon: [{ open: '', close: '22:00' }] } })
     mock.onPatch('/api/restaurant').reply(200, { data: settings })
     const user = userEvent.setup()
     renderWithProviders(<RestaurantPage />)
@@ -396,10 +461,9 @@ describe('RestaurantPage', () => {
 
     await waitFor(() => {
       const patch = mock.history.patch.find((r) => r.url === '/api/restaurant')
-      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual({
-        open: '18:30',
-        close: '22:00',
-      })
+      expect(JSON.parse(patch!.data as string).opening_hours.mon).toEqual([
+        { open: '18:30', close: '22:00' },
+      ])
     })
   })
 
@@ -498,7 +562,7 @@ describe('RestaurantPage', () => {
       expect(patch).toBeDefined()
       const body = JSON.parse(patch!.data as string)
       expect(body.opening_hours.mon).toBeNull()
-      expect(body.opening_hours.wed).toEqual({ open: '09:00', close: '22:00' })
+      expect(body.opening_hours.wed).toEqual([{ open: '09:00', close: '22:00' }])
       expect(body.timezone).toBe('Asia/Beirut')
     })
   })

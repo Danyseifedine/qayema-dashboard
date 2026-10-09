@@ -49,6 +49,7 @@
     "dayOpens": "وقت الفتح يوم {{day}}",
     "dayCloses": "وقت الإغلاق يوم {{day}}",
     "addShift": "أضف فترة",
+    "addShiftOn": "أضف فترة يوم {{day}}",
     "removeShift": "احذف الفترة {{number}} يوم {{day}}",
     "shift": "الفترة {{number}}",
     "shiftOpens": "وقت الفتح يوم {{day}}، الفترة {{number}}",

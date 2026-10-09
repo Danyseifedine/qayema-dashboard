@@ -5,7 +5,7 @@ import {
   type RestaurantFormValues,
 } from '@/features/restaurant/schemas/restaurant.schema'
 
-const OPEN = { closed: false, open: '09:00', close: '22:00' }
+const OPEN = { closed: false, shifts: [{ open: '09:00', close: '22:00' }] }
 
 function valid(): RestaurantFormValues {
   return {
@@ -23,7 +23,7 @@ function valid(): RestaurantFormValues {
       thu: OPEN,
       fri: OPEN,
       sat: OPEN,
-      sun: { closed: true, open: 'whatever', close: '' },
+      sun: { closed: true, shifts: [{ open: 'whatever', close: '' }] },
     },
     logo: null,
     cover_image: null,
@@ -55,13 +55,47 @@ describe('restaurantFormSchema', () => {
     expect(problems({ ...valid(), google_maps_url: 'https://maps.google.com/x' })).toEqual({})
   })
 
-  it('wants both times of an open day as HH:MM', () => {
+  it('wants both times of every shift of an open day as HH:MM', () => {
     const values = valid()
-    values.opening_hours.mon = { closed: false, open: '9am', close: '24:00' }
+    values.opening_hours.mon = {
+      closed: false,
+      shifts: [
+        { open: '12:00', close: '15:00' },
+        { open: '9am', close: '24:00' },
+      ],
+    }
 
     expect(problems(values)).toEqual({
-      'opening_hours.mon.open': 'Pick a time.',
-      'opening_hours.mon.close': 'Pick a time.',
+      'opening_hours.mon.shifts.1.open': 'Pick a time.',
+      'opening_hours.mon.shifts.1.close': 'Pick a time.',
+    })
+  })
+
+  it('takes a split day, and refuses shifts that overlap or a late one before the last', () => {
+    const values = valid()
+    values.opening_hours.fri = {
+      closed: false,
+      shifts: [
+        { open: '18:00', close: '01:00' },
+        { open: '12:00', close: '15:00' },
+      ],
+    }
+    expect(problems(values)).toEqual({})
+
+    values.opening_hours.fri.shifts = [
+      { open: '12:00', close: '16:00' },
+      { open: '15:00', close: '23:00' },
+    ]
+    expect(problems(values)).toEqual({
+      'opening_hours.fri.shifts.1.open': "Shifts on the same day can't overlap.",
+    })
+
+    values.opening_hours.fri.shifts = [
+      { open: '20:00', close: '02:00' },
+      { open: '22:00', close: '23:00' },
+    ]
+    expect(problems(values)).toEqual({
+      'opening_hours.fri.shifts.0.open': 'Only the last shift of a day can run past midnight.',
     })
   })
 

@@ -31,7 +31,7 @@ function stub(settings: Record<string, unknown> = {}, dishes = [makeDish()]) {
       phone: '+96170000000',
       country_code: 'LB',
       currency: 'USD',
-      opening_hours: { ...CLOSED, fri: { open: '12:00', close: '23:00' } },
+      opening_hours: { ...CLOSED, fri: [{ open: '12:00', close: '23:00' }] },
       timezone: 'Asia/Beirut',
       logo_url: 'https://cdn.test/logo.webp',
       cover_url: null,

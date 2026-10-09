@@ -45,7 +45,7 @@ describe('menuChecklist', () => {
       settings: settings({
         logo_url: 'https://cdn.test/logo.webp',
         description: { en: null, ar: 'مطعم' },
-        opening_hours: { ...CLOSED, fri: { open: '12:00', close: '23:00' } },
+        opening_hours: { ...CLOSED, fri: [{ open: '12:00', close: '23:00' }] },
         phone: '+96170000000',
       }),
       dishes: [makeDish({ image_url: 'https://cdn.test/a.webp' })],

@@ -49,6 +49,7 @@
     "dayOpens": "{{day}} opens",
     "dayCloses": "{{day}} closes",
     "addShift": "Add a shift",
+    "addShiftOn": "Add a shift on {{day}}",
     "removeShift": "Remove shift {{number}} on {{day}}",
     "shift": "Shift {{number}}",
     "shiftOpens": "{{day}}, shift {{number}}, opens",

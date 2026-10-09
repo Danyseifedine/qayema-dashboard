@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   joinTime,
   periodOf,
+  nextShift,
   runsPastMidnight,
+  shiftProblem,
   splitTime,
 } from '@/features/restaurant/components/hours/time-options'
 
@@ -45,5 +47,39 @@ describe('time options', () => {
     expect(runsPastMidnight('20:00', '02:00')).toBe(true)
     expect(runsPastMidnight('09:00', '22:00')).toBe(false)
     expect(runsPastMidnight('09:00', '')).toBe(false)
+  })
+
+  it('finds the shift at fault the way the server does', () => {
+    expect(
+      shiftProblem([
+        { open: '18:00', close: '01:00' },
+        { open: '12:00', close: '15:00' },
+      ]),
+    ).toBeNull()
+    expect(
+      shiftProblem([
+        { open: '12:00', close: '15:00' },
+        { open: '15:00', close: '18:00' },
+      ]),
+    ).toBeNull()
+    expect(
+      shiftProblem([
+        { open: '15:00', close: '23:00' },
+        { open: '12:00', close: '16:00' },
+      ]),
+    ).toEqual({ index: 0, reason: 'overlap' })
+    expect(
+      shiftProblem([
+        { open: '20:00', close: '02:00' },
+        { open: '22:00', close: '23:00' },
+      ]),
+    ).toEqual({ index: 0, reason: 'pastMidnight' })
+  })
+
+  it('starts a new shift where the last one closes, for two hours', () => {
+    expect(nextShift({ open: '12:00', close: '15:00' })).toEqual({ open: '15:00', close: '17:00' })
+    expect(nextShift({ open: '18:00', close: '23:00' })).toEqual({ open: '23:00', close: '01:00' })
+    expect(nextShift({ open: '18:00', close: '' })).toEqual({ open: '18:00', close: '20:00' })
+    expect(nextShift(undefined)).toEqual({ open: '18:00', close: '20:00' })
   })
 })
