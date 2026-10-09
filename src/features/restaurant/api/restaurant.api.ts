@@ -18,8 +18,8 @@ export type RestaurantPayload = {
   phone: string
   currency: string
   timezone: string
-  /** One range per weekday, null for a day the restaurant does not open. */
-  opening_hours: Record<string, { open: string; close: string } | null>
+  /** The shifts of each weekday, null for a day the restaurant does not open. */
+  opening_hours: Record<string, { open: string; close: string }[] | null>
   /** A temp-upload key, sent only when a new file was picked this session. */
   logo_key?: string
   cover_image_key?: string

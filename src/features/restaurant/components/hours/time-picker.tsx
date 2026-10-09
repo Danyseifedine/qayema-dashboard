@@ -20,6 +20,8 @@ const HOURS = Array.from({ length: 12 }, (_, index) => String(index + 1)).map((h
 export type TimePickerProps = {
   control: Control<RestaurantFormValues>
   day: Weekday
+  /** Which of the day's shifts. */
+  shift: number
   which: 'open' | 'close'
   /** "Opens": shown above the picker, with the part of the day beside it. */
   title: string
@@ -34,9 +36,20 @@ export type TimePickerProps = {
  * falls in beside it. Stored as "HH:MM" as before. A part picked before the
  * hour waits for it; a saved time on other minutes (07:20) keeps them.
  */
-export function TimePicker({ control, day, which, title, label, disabled }: TimePickerProps) {
+export function TimePicker({
+  control,
+  day,
+  shift,
+  which,
+  title,
+  label,
+  disabled,
+}: TimePickerProps) {
   const { t } = useTranslation('restaurant')
-  const { field, fieldState } = useController({ control, name: `opening_hours.${day}.${which}` })
+  const { field, fieldState } = useController({
+    control,
+    name: `opening_hours.${day}.shifts.${shift}.${which}`,
+  })
   const saved = splitTime(field.value)
   // What is picked before the hour has been: defaults that fit a restaurant.
   const [draft, setDraft] = useState<{ minute: string; meridiem: Meridiem }>({

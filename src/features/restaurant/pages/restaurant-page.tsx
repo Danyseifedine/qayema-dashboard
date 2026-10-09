@@ -29,7 +29,7 @@ import {
 
 /** A week with every day switched off, which is what "not set yet" means. */
 const CLOSED_WEEK = Object.fromEntries(
-  WEEKDAYS.map((day) => [day, { closed: true, open: '09:00', close: '22:00' }]),
+  WEEKDAYS.map((day) => [day, { closed: true, shifts: [{ open: '09:00', close: '22:00' }] }]),
 ) as RestaurantFormValues['opening_hours']
 
 const EMPTY: RestaurantFormValues = {
@@ -60,17 +60,16 @@ function toFormValues(settings: Restaurant): RestaurantFormValues {
     phone: settings.phone ?? '',
     currency: settings.currency,
     timezone: settings.timezone,
-    // A day with no range keeps usable defaults in its boxes, so switching it
-    // on does not start from an empty field.
+    // A closed day keeps usable defaults in its boxes, so switching it on
+    // does not start from an empty field.
     opening_hours: Object.fromEntries(
       WEEKDAYS.map((day) => {
-        const range = settings.opening_hours[day]
+        const shifts = settings.opening_hours[day]
         return [
           day,
           {
-            closed: range === null,
-            open: range?.open ?? '09:00',
-            close: range?.close ?? '22:00',
+            closed: shifts === null,
+            shifts: shifts?.length ? shifts : [{ open: '09:00', close: '22:00' }],
           },
         ]
       }),
@@ -131,7 +130,10 @@ export function RestaurantPage() {
         opening_hours: Object.fromEntries(
           WEEKDAYS.map((day) => {
             const entry = values.opening_hours[day]
-            return [day, entry.closed ? null : { open: entry.open, close: entry.close }]
+            return [
+              day,
+              entry.closed ? null : entry.shifts.map(({ open, close }) => ({ open, close })),
+            ]
           }),
         ),
         // Keys are only sent when a new file was picked in this session;

@@ -55,3 +55,44 @@ export function runsPastMidnight(open: string, close: string): boolean {
   const to = minutesOf(close)
   return from !== null && to !== null && to <= from
 }
+
+/** A day's shifts at most, as the server's OpeningHours::MAX_SHIFTS. */
+export const MAX_SHIFTS = 3
+
+/** One opening range of a day, as "HH:MM". */
+export type Shift = { open: string; close: string }
+
+/**
+ * What is wrong with a day's shifts, as the server's
+ * OpeningHours::problemWith() decides: one that runs past midnight before
+ * the last, or one that opens before the one before it closes. The shift
+ * at fault (its place in the form) and why; null when they fit.
+ */
+export function shiftProblem(
+  shifts: readonly Shift[],
+): { index: number; reason: 'pastMidnight' | 'overlap' } | null {
+  const sorted = shifts
+    .map((shift, index) => ({ ...shift, index }))
+    .sort((a, b) => a.open.localeCompare(b.open))
+
+  for (let position = 0; position < sorted.length - 1; position++) {
+    const shift = sorted[position]!
+    const next = sorted[position + 1]!
+    if (runsPastMidnight(shift.open, shift.close)) {
+      return { index: shift.index, reason: 'pastMidnight' }
+    }
+    if (next.open < shift.close) return { index: next.index, reason: 'overlap' }
+  }
+  return null
+}
+
+/** A new shift: from when the last one closes (18:00 without one), for two hours. */
+export function nextShift(last: Shift | undefined): Shift {
+  const from = (last ? minutesOf(last.close) : null) ?? 18 * 60
+  return { open: timeOf(from), close: timeOf(from + 120) }
+}
+
+function timeOf(minutes: number): string {
+  const inDay = minutes % (24 * 60)
+  return `${String(Math.floor(inDay / 60)).padStart(2, '0')}:${String(inDay % 60).padStart(2, '0')}`
+}

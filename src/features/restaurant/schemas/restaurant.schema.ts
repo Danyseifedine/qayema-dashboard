@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { imageFieldSchema } from '@/features/uploads'
+import { MAX_SHIFTS, shiftProblem } from '@/features/restaurant/components/hours/time-options'
 import { t } from '@/lib/i18n'
 import { CURRENCIES } from '@/shared/constants/currencies'
 import { COUNTRIES } from '@/shared/constants/countries'
@@ -46,17 +47,20 @@ export function weekdayLabel(day: Weekday): string {
   return t(`restaurant:weekdays.${day}`)
 }
 
-/** One range, or null for a day the restaurant does not open. */
-const dayRangeSchema = z.object({ open: z.string(), close: z.string() }).nullable()
+/**
+ * A day's shifts, earliest first (lunch, then dinner; MAX_SHIFTS at most),
+ * or null for a day the restaurant does not open.
+ */
+const dayShiftsSchema = z.array(z.object({ open: z.string(), close: z.string() })).nullable()
 
 const openingHoursSchema = z.object({
-  mon: dayRangeSchema,
-  tue: dayRangeSchema,
-  wed: dayRangeSchema,
-  thu: dayRangeSchema,
-  fri: dayRangeSchema,
-  sat: dayRangeSchema,
-  sun: dayRangeSchema,
+  mon: dayShiftsSchema,
+  tue: dayShiftsSchema,
+  wed: dayShiftsSchema,
+  thu: dayShiftsSchema,
+  fri: dayShiftsSchema,
+  sat: dayShiftsSchema,
+  sun: dayShiftsSchema,
 })
 
 export const restaurantResponseSchema = z.object({
@@ -84,20 +88,41 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
 const dayFormSchema = z
   .object({
     closed: z.boolean(),
-    open: z.string(),
-    close: z.string(),
+    shifts: z
+      .array(z.object({ open: z.string(), close: z.string() }))
+      .min(1)
+      .max(MAX_SHIFTS),
   })
   .superRefine((day, ctx) => {
     if (day.closed) return
 
-    for (const field of ['open', 'close'] as const) {
-      if (!TIME.test(day[field])) {
-        ctx.addIssue({
-          code: 'custom',
-          path: [field],
-          message: t('restaurant:validation.timeFormat'),
-        })
+    let picked = true
+    day.shifts.forEach((shift, index) => {
+      for (const field of ['open', 'close'] as const) {
+        if (!TIME.test(shift[field])) {
+          picked = false
+          ctx.addIssue({
+            code: 'custom',
+            path: ['shifts', index, field],
+            message: t('restaurant:validation.timeFormat'),
+          })
+        }
       }
+    })
+    if (!picked) return
+
+    // Under the shift at fault, as the server checks (OpeningHours::problemWith()).
+    const problem = shiftProblem(day.shifts)
+    if (problem) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['shifts', problem.index, 'open'],
+        message: t(
+          problem.reason === 'overlap'
+            ? 'restaurant:validation.shiftsOverlap'
+            : 'restaurant:validation.pastMidnightNotLast',
+        ),
+      })
     }
   })
 
@@ -138,8 +163,8 @@ export const restaurantFormSchema = z
     logo: imageFieldSchema,
     cover_image: imageFieldSchema,
     /**
-     * A day is either both times or neither. The form keeps an `closed` flag per
-     * day so unticking it does not throw away what was typed.
+     * A day is its shifts, or closed. The form keeps a `closed` flag per day
+     * so unticking it does not throw away what was picked.
      */
     opening_hours: z.object({
       mon: dayFormSchema,
