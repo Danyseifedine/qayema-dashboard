@@ -35,7 +35,7 @@
   "categoryDialog": {
     "titleNew": "New category",
     "titleEdit": "Edit category",
-    "nameHint": "Needed in English; the other language can be added later.",
+    "nameHint": "Needed in your menu's main language; the other one can be added later.",
     "description": "Description",
     "descriptionHint": "One line under the heading on your menu.",
     "save": "Save",
@@ -59,7 +59,7 @@
     "reorderFailed": "Could not save the new order"
   },
   "categorySchema": {
-    "nameRequired": "A category name is required in English."
+    "nameRequired": "A category name is required in {{language}}."
   },
   "dishesPage": {
     "title": "Dishes",
@@ -147,9 +147,9 @@
     "guestsPay": "Guests pay <min />",
     "guestsPayRange": "Guests pay <min /> to <max />",
     "needTwo": "A variant needs at least 2 options.",
-    "variantNameRequired": "Give every variant a name in English.",
-    "optionNameRequired": "Give every option a name in English.",
-    "addonNameRequired": "Give every add-on a name in English."
+    "variantNameRequired": "Give every variant a name in {{language}}.",
+    "optionNameRequired": "Give every option a name in {{language}}.",
+    "addonNameRequired": "Give every add-on a name in {{language}}."
   },
   "dishToast": {
     "added": "Dish added",
@@ -165,7 +165,7 @@
     "priceNegative": "A price cannot be negative.",
     "priceTooHigh": "That price is too high.",
     "categoryRequired": "Choose a category.",
-    "nameRequired": "A dish name is required in English.",
+    "nameRequired": "A dish name is required in {{language}}.",
     "priceForAddons": "Give the dish a price before adding add-ons.",
     "optionPriceRequired": "Give it a price, or give the dish one."
   },

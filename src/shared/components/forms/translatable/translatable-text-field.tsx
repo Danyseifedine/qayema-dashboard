@@ -9,7 +9,7 @@ import {
   type FieldValues,
 } from 'react-hook-form'
 import { HelperText, Input, Label, Textarea } from '@/shared/components/ui'
-import { MAIN_LANGUAGE, languageDir, languageName } from '@/shared/constants/menu-languages'
+import { mainLanguageOf, languageDir, languageName } from '@/shared/constants/menu-languages'
 import { LocaleTabs } from '@/shared/components/forms/translatable/locale-tabs'
 
 export type TranslatableFieldProps<T extends FieldValues> = {
@@ -20,7 +20,7 @@ export type TranslatableFieldProps<T extends FieldValues> = {
   languages: readonly string[]
   label: ReactNode
   hint?: ReactNode
-  /** Marks English as required: the one language every name must have. */
+  /** Marks the main language as required: the one every name must have. */
   required?: boolean
   optionalText?: ReactNode
   placeholder?: Partial<Record<string, string>>
@@ -51,10 +51,11 @@ export function TranslatableTextField<T extends FieldValues>({
   multiline = false,
   rows = 4,
 }: TranslatableFieldProps<T>) {
-  const [chosen, setChosen] = useState<string>(MAIN_LANGUAGE)
+  const main = mainLanguageOf(languages)
+  const [chosen, setChosen] = useState<string>(main)
   // The menu's languages can change under an open form (Settings); fall back
-  // to English rather than point at a tab that is gone.
-  const active = languages.includes(chosen) ? chosen : (languages[0] ?? MAIN_LANGUAGE)
+  // to the main one rather than point at a tab that is gone.
+  const active = languages.includes(chosen) ? chosen : main
 
   const current = useController({ control, name: `${name}.${active}` as FieldPath<T> })
   const all = (useWatch({ control, name }) ?? {}) as Record<string, string | null | undefined>
@@ -65,12 +66,11 @@ export function TranslatableTextField<T extends FieldValues>({
   const value = (current.field.value as string | null | undefined) ?? ''
   const error = current.fieldState.error?.message
 
-  // A language is flagged when it has an error, or when English is empty on a
-  // required field. Either way the owner needs to open that tab.
+  // A language is flagged when it has an error, or when the main one is
+  // empty on a required field. Either way the owner needs to open that tab.
   const incomplete = languages.filter(
     (code) =>
-      Boolean(errorOf(code)) ||
-      (required && code === MAIN_LANGUAGE && (all[code] ?? '').trim() === ''),
+      Boolean(errorOf(code)) || (required && code === main && (all[code] ?? '').trim() === ''),
   )
 
   const hidden = languages.find((code) => code !== active && errorOf(code))

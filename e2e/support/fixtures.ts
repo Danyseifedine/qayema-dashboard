@@ -17,6 +17,8 @@ export type ScenarioInput = {
   name?: MenuText
   description?: MenuText
   slug?: string
+  /** The language every name is written in (English when left out). */
+  main_locale?: string
   second_locale?: string | null
   is_active?: boolean
   switched_off?: string[]

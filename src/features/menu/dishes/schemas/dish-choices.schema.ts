@@ -3,7 +3,7 @@ import { t } from '@/lib/i18n'
 import {
   menuTextField,
   menuTextSchema,
-  requireEnglish,
+  requireMainLanguage,
   toMenuTextForm,
   type MenuText,
   type MenuTextForm,
@@ -77,23 +77,33 @@ export type VariantForm = z.input<typeof variantsField>[number]
 type ChoicesForm = { variants: VariantForm[]; addons: ChoiceRowForm[] }
 
 /**
- * English is the one language every variant, option and add-on needs, as
- * with the dish's own name. Added to the dish form's refinement.
+ * The menu's main language is the one every variant, option and add-on
+ * needs, as with the dish's own name. Added to the dish form's refinement.
  */
 export function requireChoiceNames(values: ChoicesForm, ctx: z.RefinementCtx): void {
   values.variants.forEach((variant, v) => {
-    requireEnglish(variant.name, `variants.${v}.name`, t('menu:choices.variantNameRequired'), ctx)
+    requireMainLanguage(
+      variant.name,
+      `variants.${v}.name`,
+      (language) => t('menu:choices.variantNameRequired', { language }),
+      ctx,
+    )
     variant.options.forEach((option, o) =>
-      requireEnglish(
+      requireMainLanguage(
         option.name,
         `variants.${v}.options.${o}.name`,
-        t('menu:choices.optionNameRequired'),
+        (language) => t('menu:choices.optionNameRequired', { language }),
         ctx,
       ),
     )
   })
   values.addons.forEach((addon, a) =>
-    requireEnglish(addon.name, `addons.${a}.name`, t('menu:choices.addonNameRequired'), ctx),
+    requireMainLanguage(
+      addon.name,
+      `addons.${a}.name`,
+      (language) => t('menu:choices.addonNameRequired', { language }),
+      ctx,
+    ),
   )
 }
 

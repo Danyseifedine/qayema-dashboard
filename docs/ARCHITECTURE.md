@@ -244,8 +244,10 @@ Sanctum stateful auth. The SPA's responsibilities:
   ones, so RTL needs no overrides.
 - **Two kinds of language.** `shared/constants/locales.ts` is the dashboard's
   interface (en/ar). `shared/constants/menu-languages.ts` is what a restaurant's
-  _menu_ can be written in: English plus one optional second language, read
-  with `useMenuLanguages()` from `features/auth`. Menu text is
+  _menu_ can be written in: a main language the owner picks (any of them,
+  `restaurant.main_locale`, English by default) plus one optional second
+  language, read with `useMenuLanguages()` from `features/auth`, the main one
+  first (`mainLanguageOf()`). Menu text is
   `Record<code, string|null>` (`menuTextSchema`); platform content (package
   and design names) is `{en, ar}` (`translatableTextSchema`). Both live in
   `shared/utils/string/menu-text.ts`.

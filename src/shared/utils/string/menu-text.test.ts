@@ -3,7 +3,7 @@ import { z } from 'zod'
 import {
   menuTextField,
   menuTextSchema,
-  requireEnglish,
+  requireMainLanguage,
   toMenuTextForm,
   translatableTextSchema,
   type MenuTextForm,
@@ -72,12 +72,14 @@ describe('toMenuTextForm', () => {
   })
 })
 
-describe('requireEnglish', () => {
+describe('requireMainLanguage', () => {
   const schema = z
     .object({ name: z.record(z.string(), z.string()) })
-    .superRefine((values, ctx) => requireEnglish(values.name, 'name', 'Name it in English.', ctx))
+    .superRefine((values, ctx) =>
+      requireMainLanguage(values.name, 'name', (language) => `Name it in ${language}.`, ctx),
+    )
 
-  it('adds an issue under the English entry when it is blank', () => {
+  it('adds an issue under the main language, the first entry, when it is blank', () => {
     const result = schema.safeParse({ name: { en: '   ', fr: 'Soupe' } })
 
     expect(result.success).toBe(false)
@@ -86,12 +88,16 @@ describe('requireEnglish', () => {
     ])
   })
 
-  it('treats a missing English entry as blank', () => {
-    const name: MenuTextForm = { fr: 'Soupe' }
-    expect(schema.safeParse({ name }).success).toBe(false)
+  it('follows a main language other than English, naming it', () => {
+    const result = schema.safeParse({ name: { fr: '', en: 'Soup' } })
+
+    expect(result.error?.issues).toEqual([
+      expect.objectContaining({ path: ['name', 'fr'], message: 'Name it in French.' }),
+    ])
   })
 
-  it('passes when English has text', () => {
-    expect(schema.safeParse({ name: { en: 'Soup' } }).success).toBe(true)
+  it('passes when the main language has text, whatever the second one holds', () => {
+    const name: MenuTextForm = { ar: 'شوربة', en: '' }
+    expect(schema.safeParse({ name }).success).toBe(true)
   })
 })

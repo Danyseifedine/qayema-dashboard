@@ -149,9 +149,13 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   through the session cache; must match `Restaurant::OPTIONAL_FEATURES`). A nav
   item with `hideable: true` (analytics, orders) leaves the sidebar when off
   (`isNavItemHidden`), and an open page hands over to Overview. QR Studio off
-  keeps the QR code page with the plain code (`qr.switched_off`). Multiple
-  languages carries its own pickers (second language, opening language) saved
-  with `PUT /api/menu-languages`; the Restaurant page's text fields just
+  keeps the QR code page with the plain code (`qr.switched_off`). Above the
+  switches, "Menu language" picks the main language for every package
+  (`MainLanguageSection`): the second one swaps at once, a new one asks
+  first (`ConfirmDialog`), and `GET /api/menu-languages`'s `missing` says how
+  many categories and dishes still lack a name in it, with the way to
+  Dishes. Multiple languages carries its own pickers (second language, never
+  the main one; opening language) saved with `PUT /api/menu-languages`; the Restaurant page's text fields just
   follow `useMenuLanguages()` (from `features/auth`, it reads the session).
   Orders carries how guests send them (`OrderingChoice`): "On WhatsApp" or
   "In your menu" (locked without `plan.menu_ordering`), and in the menu one
@@ -253,14 +257,17 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   tests mock it and assert the options it was given, not the pixels.
 - **Two kinds of language.** `shared/constants/locales.ts` is the dashboard's
   own interface (en/ar). `shared/constants/menu-languages.ts` is what a
-  restaurant's _menu_ can be written in: English plus one optional second
-  language, per restaurant, read with `useMenuLanguages()` (`features/auth`).
+  restaurant's _menu_ can be written in: a main language the owner picks
+  (any on the list, `restaurant.main_locale`) plus one optional second
+  language, per restaurant, read with `useMenuLanguages()` (`features/auth`),
+  the main one first (`mainLanguageOf()`).
   Menu text is `Record<code, string|null>` (`menuTextSchema`); platform
   content (package, design names) is `{en, ar}` (`translatableTextSchema`),
   both in `shared/utils/string/menu-text.ts`; forms build menu text
-  with `toMenuTextForm()` and require English with `requireEnglish()`.
-  `TranslatableTextField` takes `languages` and shows no tabs for an
-  English-only menu. Send every active language (blank clears it); never send
+  with `toMenuTextForm()` and require the main language with
+  `requireMainLanguage()` (the form text's first entry; the message names
+  it). `TranslatableTextField` takes `languages` and shows no tabs for a
+  one-language menu. Send every active language (blank clears it); never send
   a hidden one (the server keeps it for when the owner switches back).
 - **Menu link** (`features/restaurant/components/identity/link-section.tsx`):
   the slug, changed on its own (not with the page's save), after a

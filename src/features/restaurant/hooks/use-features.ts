@@ -8,7 +8,6 @@ import { restaurantKeys } from '@/features/restaurant/hooks/restaurant-keys'
 import type { AuthUser } from '@/features/auth'
 import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
-import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
 import type { ApiError } from '@/shared/types/api'
 import { saveSwitchedOff } from '@/features/restaurant/api/features.api'
 
@@ -21,10 +20,11 @@ function withOff(user: AuthUser | undefined, off: string[]): AuthUser | undefine
   if (!user?.restaurant) return user
 
   const { restaurant } = user
+  const main = restaurant.main_locale
   const second = restaurant.second_locale
   const bilingual =
     restaurant.plan.multiple_languages && !off.includes('languages') && second !== null
-  const languages = bilingual ? [MAIN_LANGUAGE, second] : [MAIN_LANGUAGE]
+  const languages = bilingual ? [main, second] : [main]
 
   return {
     ...user,
@@ -34,7 +34,7 @@ function withOff(user: AuthUser | undefined, off: string[]): AuthUser | undefine
       languages,
       default_locale: languages.includes(restaurant.default_locale)
         ? restaurant.default_locale
-        : MAIN_LANGUAGE,
+        : main,
     },
   }
 }

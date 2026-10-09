@@ -13,7 +13,7 @@ import { Money } from '@/shared/components/data-display'
 import { LocaleTabs } from '@/shared/components/forms/translatable/locale-tabs'
 import { Button, Combobox, HelperText } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
-import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
+import { mainLanguageOf } from '@/shared/constants/menu-languages'
 import { translated } from '@/shared/utils/string/translated'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
 import { ChoiceRow } from '@/features/menu/dishes/components/options/choice-row'
@@ -78,8 +78,8 @@ export function DishChoicesSection({
 }: DishChoicesSectionProps) {
   const { t } = useTranslation('menu')
   const { control } = form
-  const [chosen, setChosen] = useState<string>(MAIN_LANGUAGE)
-  const language = languages.includes(chosen) ? chosen : (languages[0] ?? MAIN_LANGUAGE)
+  const [chosen, setChosen] = useState<string>(mainLanguageOf(languages))
+  const language = languages.includes(chosen) ? chosen : mainLanguageOf(languages)
 
   const variants = useFieldArray({ control, name: 'variants' })
   const addons = useFieldArray({ control, name: 'addons' })

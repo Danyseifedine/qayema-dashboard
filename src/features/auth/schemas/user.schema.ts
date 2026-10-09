@@ -36,8 +36,10 @@ const limit = z.object({
 const restaurantSchema = z.object({
   /** Names the live orders channel. */
   id: z.number().int(),
-  /** What the menu is written in: English, then the second language if any. */
+  /** What the menu is written in: the main language, then the second if any. */
   languages: z.array(z.string()).min(1),
+  /** The language every name is written in, any on the list (English by default). */
+  main_locale: z.string().default('en'),
   /** The second language chosen, kept even while "Multiple languages" is off. */
   second_locale: z.string().nullable(),
   /** What the menu opens in: one of `languages`. */

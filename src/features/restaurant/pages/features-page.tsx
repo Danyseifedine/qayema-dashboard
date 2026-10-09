@@ -9,13 +9,18 @@ import {
   IconReceipt,
   IconToolsKitchen2,
 } from '@tabler/icons-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AuthRestaurant, OrderMode, OrderType, Plan } from '@/features/auth'
 import { usePackageFor, type PackageFlag } from '@/features/package'
+import { ConfirmDialog } from '@/shared/components/feedback'
 import { Field, FormSection } from '@/shared/components/forms'
-import { Button, Combobox, Segmented, Switch } from '@/shared/components/ui'
-import { MAIN_LANGUAGE, MENU_LANGUAGES, languageName } from '@/shared/constants/menu-languages'
-import { useSaveMenuLanguages } from '@/features/restaurant/hooks/use-menu-languages-save'
+import { Alert, Button, Combobox, Segmented, Switch } from '@/shared/components/ui'
+import { MENU_LANGUAGES, languageName } from '@/shared/constants/menu-languages'
+import {
+  useMenuLanguagesState,
+  useSaveMenuLanguages,
+} from '@/features/restaurant/hooks/use-menu-languages-save'
 import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
 import { useSaveOrdering } from '@/features/restaurant/hooks/use-ordering-save'
 import { usePreferencesStore } from '@/stores/preferences.store'
@@ -28,6 +33,8 @@ export type FeaturesPageProps = {
   off: readonly string[]
   /** What the package includes, to mark a feature it does not. */
   plan: Plan
+  /** The language every name is written in. */
+  mainLocale: string
   /** The second language chosen, kept even while languages are off. */
   secondLocale: string | null
   /** What the menu opens in. */
@@ -38,6 +45,8 @@ export type FeaturesPageProps = {
   onOpenPackage: () => void
   /** Opens the Tables page, from ordering at the table. */
   onOpenTables: () => void
+  /** Opens the Dishes page, to write what a new main language still lacks. */
+  onOpenDishes: () => void
 }
 
 const ROWS: { key: FeatureKey; icon: TablerIcon; plan: PackageFlag }[] = [
@@ -51,19 +60,23 @@ const ROWS: { key: FeatureKey; icon: TablerIcon; plan: PackageFlag }[] = [
 ]
 
 /**
- * One switch per optional feature, in the order owners think about them.
- * Nothing is deleted by switching one off; see `Restaurant::OPTIONAL_FEATURES`
- * in ../qayema for what each one does. "Multiple languages" carries its own
- * settings: which second language, and which one the menu opens in.
+ * The menu's main language first (every package has one, in any language),
+ * then one switch per optional feature, in the order owners think about
+ * them. Nothing is deleted by switching one off; see
+ * `Restaurant::OPTIONAL_FEATURES` in ../qayema for what each one does.
+ * "Multiple languages" carries its own settings: which second language, and
+ * which one the menu opens in.
  */
 export function FeaturesPage({
   off,
   plan,
+  mainLocale,
   secondLocale,
   defaultLocale,
   ordering,
   onOpenPackage,
   onOpenTables,
+  onOpenDishes,
 }: FeaturesPageProps) {
   const { t } = useTranslation('features')
   const save = useSaveSwitchedOff()
@@ -78,6 +91,13 @@ export function FeaturesPage({
         <h2 className="font-display text-[19px] leading-tight">{t('title')}</h2>
         <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">{t('description')}</p>
       </div>
+
+      <MainLanguageSection
+        mainLocale={mainLocale}
+        secondLocale={secondLocale}
+        defaultLocale={defaultLocale}
+        onOpenDishes={onOpenDishes}
+      />
 
       <FormSection title={t('listTitle')}>
         <ul className="flex flex-col divide-y-[0.5px] divide-[var(--line-2)]">
@@ -130,7 +150,11 @@ export function FeaturesPage({
                     </Button>
                   ) : null}
                   {key === 'languages' && on ? (
-                    <LanguageChoice secondLocale={secondLocale} defaultLocale={defaultLocale} />
+                    <LanguageChoice
+                      mainLocale={mainLocale}
+                      secondLocale={secondLocale}
+                      defaultLocale={defaultLocale}
+                    />
                   ) : null}
                 </div>
                 <Switch
@@ -276,10 +300,130 @@ function OrderingChoice({
 }
 
 /** Which second language, and which of the two the menu opens in. Saves on change. */
+type Languages = { main_locale: string; second_locale: string | null; default_locale: string }
+
+/**
+ * The languages with a new main one, as `MenuLanguages::withMain()` in
+ * ../qayema: the second language chosen as main swaps with the old main (both
+ * texts already exist), another keeps the second; the menu keeps opening in
+ * the main language if it did.
+ */
+function withMain(current: Languages, main: string): Languages {
+  const oldMain = current.main_locale
+  const second = current.second_locale === main ? oldMain : current.second_locale
+  const opening =
+    current.default_locale === oldMain || ![main, second].includes(current.default_locale)
+      ? main
+      : current.default_locale
+  return { main_locale: main, second_locale: second, default_locale: opening }
+}
+
+/**
+ * The language the menu is written in: every name is required in it, and it
+ * is the only one shown while "Multiple languages" is off or not on the
+ * package. Any package picks it. Making the second language the main one is
+ * a swap and saves at once; a brand-new one asks first, since what is
+ * written keeps its old language until it is written again, and says how
+ * much is left to write.
+ */
+function MainLanguageSection({
+  mainLocale,
+  secondLocale,
+  defaultLocale,
+  onOpenDishes,
+}: {
+  mainLocale: string
+  secondLocale: string | null
+  defaultLocale: string
+  onOpenDishes: () => void
+}) {
+  const { t } = useTranslation('features')
+  const save = useSaveMenuLanguages()
+  const state = useMenuLanguagesState()
+  const [pending, setPending] = useState<string | null>(null)
+  const current = {
+    main_locale: mainLocale,
+    second_locale: secondLocale,
+    default_locale: defaultLocale,
+  }
+
+  const options = Object.keys(MENU_LANGUAGES).map((code) => ({
+    value: code,
+    label: describe(code),
+  }))
+  const missing = state.data?.missing
+  const left = (missing?.categories ?? 0) + (missing?.dishes ?? 0)
+
+  const choose = (next: string | null) => {
+    if (!next || next === mainLocale) return
+    if (next === secondLocale) {
+      save.mutate(withMain(current, next))
+      return
+    }
+    setPending(next)
+  }
+
+  return (
+    <FormSection title={t('mainLanguage.title')} description={t('mainLanguage.description')}>
+      <Field label={t('mainLanguage.label')} hint={t('mainLanguage.hint')} className="pt-0">
+        {({ id, describedBy }) => (
+          <Combobox
+            id={id}
+            aria-describedby={describedBy}
+            options={options}
+            value={mainLocale}
+            emptyText={t('languages.searchEmpty')}
+            disabled={save.isPending}
+            onChange={choose}
+          />
+        )}
+      </Field>
+
+      {missing && left > 0 ? (
+        <Alert variant="warning">
+          <span>
+            {t('mainLanguage.missing', {
+              categories: t('mainLanguage.categories', { count: missing.categories }),
+              dishes: t('mainLanguage.dishes', { count: missing.dishes }),
+              language: languageName(mainLocale),
+            })}
+          </span>{' '}
+          <Button
+            variant="link"
+            size="sm"
+            onClick={onOpenDishes}
+            className="h-auto px-0 align-baseline font-medium"
+          >
+            {t('mainLanguage.openDishes')}
+          </Button>
+        </Alert>
+      ) : null}
+
+      <ConfirmDialog
+        open={pending !== null}
+        title={t('mainLanguage.confirmTitle', { language: languageName(pending ?? mainLocale) })}
+        description={t('mainLanguage.confirmBody', {
+          language: languageName(pending ?? mainLocale),
+          current: languageName(mainLocale),
+        })}
+        confirmLabel={t('mainLanguage.confirm', { language: languageName(pending ?? mainLocale) })}
+        loading={save.isPending}
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          if (pending === null) return
+          save.mutate(withMain(current, pending), { onSettled: () => setPending(null) })
+        }}
+      />
+    </FormSection>
+  )
+}
+
 function LanguageChoice({
+  mainLocale,
   secondLocale,
   defaultLocale,
 }: {
+  mainLocale: string
   secondLocale: string | null
   defaultLocale: string
 }) {
@@ -287,10 +431,10 @@ function LanguageChoice({
   const save = useSaveMenuLanguages()
 
   const options = Object.keys(MENU_LANGUAGES)
-    .filter((code) => code !== MAIN_LANGUAGE)
+    .filter((code) => code !== mainLocale)
     .map((code) => ({ value: code, label: describe(code) }))
 
-  const opening = secondLocale && defaultLocale === secondLocale ? secondLocale : MAIN_LANGUAGE
+  const opening = secondLocale && defaultLocale === secondLocale ? secondLocale : mainLocale
 
   return (
     <div className="mt-3 grid gap-4 rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-3.5 sm:grid-cols-2">
@@ -306,11 +450,12 @@ function LanguageChoice({
             disabled={save.isPending}
             onChange={(next) => {
               if (!next || next === secondLocale) return
-              // A new second language keeps the menu opening in English unless
-              // it already opened in the old second one.
+              // A new second language keeps the menu opening in the main one
+              // unless it already opened in the old second one.
               save.mutate({
+                main_locale: mainLocale,
                 second_locale: next,
-                default_locale: opening === MAIN_LANGUAGE ? MAIN_LANGUAGE : next,
+                default_locale: opening === mainLocale ? mainLocale : next,
               })
             }}
           />
@@ -324,9 +469,13 @@ function LanguageChoice({
               aria-label={t('languages.openingLabel')}
               value={opening}
               onChange={(next) =>
-                save.mutate({ second_locale: secondLocale, default_locale: next })
+                save.mutate({
+                  main_locale: mainLocale,
+                  second_locale: secondLocale,
+                  default_locale: next,
+                })
               }
-              options={[MAIN_LANGUAGE, secondLocale].map((code) => ({
+              options={[mainLocale, secondLocale].map((code) => ({
                 value: code,
                 label: languageName(code),
                 disabled: save.isPending,

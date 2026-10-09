@@ -17,7 +17,7 @@ import { BrandingSection } from '@/features/restaurant/components/branding/brand
 import { LinkSection } from '@/features/restaurant/components/identity/link-section'
 import { IdentitySection } from '@/features/restaurant/components/identity/identity-section'
 import { useSaveRestaurant, useRestaurant } from '@/features/restaurant/hooks/use-restaurant'
-import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
+import { DEFAULT_MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
 import { useMenuLanguages } from '@/features/auth'
 import { toMenuTextForm } from '@/shared/utils/string/menu-text'
 import {
@@ -33,8 +33,9 @@ const CLOSED_WEEK = Object.fromEntries(
 ) as RestaurantFormValues['opening_hours']
 
 const EMPTY: RestaurantFormValues = {
-  name: { [MAIN_LANGUAGE]: '' },
-  description: { [MAIN_LANGUAGE]: '' },
+  // Until the restaurant loads; the form is reset to its languages then.
+  name: { [DEFAULT_MAIN_LANGUAGE]: '' },
+  description: { [DEFAULT_MAIN_LANGUAGE]: '' },
   google_maps_url: '',
   country_code: '',
   phone: '',

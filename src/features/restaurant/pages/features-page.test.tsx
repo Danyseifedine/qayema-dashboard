@@ -20,11 +20,13 @@ function page(props: Partial<FeaturesPageProps> = {}) {
     <FeaturesPage
       off={[]}
       plan={ALL}
+      mainLocale="en"
       secondLocale="ar"
       defaultLocale="en"
       ordering={{ mode: 'whatsapp', types: ['delivery', 'pickup'] }}
       onOpenPackage={() => {}}
       onOpenTables={() => {}}
+      onOpenDishes={() => {}}
       {...props}
     />
   )
@@ -38,13 +40,32 @@ function FromSession() {
     <FeaturesPage
       off={restaurant.switched_off}
       plan={restaurant.plan}
+      mainLocale={restaurant.main_locale}
       secondLocale={restaurant.second_locale}
       defaultLocale={restaurant.default_locale}
       ordering={restaurant.ordering}
       onOpenPackage={() => {}}
       onOpenTables={() => {}}
+      onOpenDishes={() => {}}
     />
   )
+}
+
+/** The languages as `/api/menu-languages` answers, nothing left to write unless said. */
+function languages(data: {
+  languages: string[]
+  main_locale?: string
+  second_locale: string | null
+  default_locale: string
+  missing?: { categories: number; dishes: number }
+}) {
+  return {
+    data: {
+      main_locale: data.languages[0],
+      missing: { categories: 0, dishes: 0 },
+      ...data,
+    },
+  }
 }
 
 /** A reply the test lets go of when it is ready, to look at the in-between state. */
@@ -63,6 +84,9 @@ describe('FeaturesPage', () => {
     resetCsrfToken(api)
     installCsrfInterceptor(api)
     mock.onGet('/api/csrf-token').reply(200, { token: 'csrf' })
+    mock
+      .onGet('/api/menu-languages')
+      .reply(200, languages({ languages: ['en', 'ar'], second_locale: 'ar', default_locale: 'en' }))
   })
 
   afterEach(() => {
@@ -112,9 +136,9 @@ describe('FeaturesPage', () => {
   })
 
   it('chooses the second language inside the languages row', async () => {
-    mock.onPut('/api/menu-languages').reply(200, {
-      data: { languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' },
-    })
+    mock
+      .onPut('/api/menu-languages')
+      .reply(200, languages({ languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' }))
     const user = userEvent.setup()
     renderWithProviders(page())
 
@@ -123,15 +147,16 @@ describe('FeaturesPage', () => {
 
     await waitFor(() => expect(mock.history.put).toHaveLength(1))
     expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      main_locale: 'en',
       second_locale: 'fr',
       default_locale: 'en',
     })
   })
 
   it('sets which language the menu opens in', async () => {
-    mock.onPut('/api/menu-languages').reply(200, {
-      data: { languages: ['en', 'ar'], second_locale: 'ar', default_locale: 'ar' },
-    })
+    mock
+      .onPut('/api/menu-languages')
+      .reply(200, languages({ languages: ['en', 'ar'], second_locale: 'ar', default_locale: 'ar' }))
     const user = userEvent.setup()
     renderWithProviders(page())
 
@@ -139,6 +164,7 @@ describe('FeaturesPage', () => {
 
     await waitFor(() => expect(mock.history.put).toHaveLength(1))
     expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      main_locale: 'en',
       second_locale: 'ar',
       default_locale: 'ar',
     })
@@ -148,7 +174,7 @@ describe('FeaturesPage', () => {
     renderWithProviders(page({ off: ['languages'] }))
 
     expect(screen.queryByRole('combobox', { name: /Second language/ })).not.toBeInTheDocument()
-    expect(screen.getByText(/Your menu shows English only/)).toBeInTheDocument()
+    expect(screen.getByText(/Your menu shows its main language only/)).toBeInTheDocument()
   })
 
   it('marks a feature the package does not include', () => {
@@ -255,9 +281,9 @@ describe('FeaturesPage', () => {
 
   it('writes the saved languages into the session, so the pickers follow', async () => {
     mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
-    mock.onPut('/api/menu-languages').reply(200, {
-      data: { languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' },
-    })
+    mock
+      .onPut('/api/menu-languages')
+      .reply(200, languages({ languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' }))
     const user = userEvent.setup()
     renderWithProviders(<FromSession />)
 
@@ -284,9 +310,9 @@ describe('FeaturesPage', () => {
   })
 
   it('keeps the menu opening in the second language when that language changes', async () => {
-    mock.onPut('/api/menu-languages').reply(200, {
-      data: { languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'fr' },
-    })
+    mock
+      .onPut('/api/menu-languages')
+      .reply(200, languages({ languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'fr' }))
     const user = userEvent.setup()
     renderWithProviders(page({ defaultLocale: 'ar' }))
 
@@ -296,6 +322,7 @@ describe('FeaturesPage', () => {
 
     await waitFor(() => expect(mock.history.put).toHaveLength(1))
     expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      main_locale: 'en',
       second_locale: 'fr',
       default_locale: 'fr',
     })
@@ -308,13 +335,101 @@ describe('FeaturesPage', () => {
     expect(screen.queryByRole('tablist', { name: 'The menu opens in' })).not.toBeInTheDocument()
   })
 
+  it('chooses the main language for every package, a second one not needed', async () => {
+    mock
+      .onPut('/api/menu-languages')
+      .reply(200, languages({ languages: ['fr'], second_locale: null, default_locale: 'fr' }))
+    const user = userEvent.setup()
+    renderWithProviders(page({ plan: { ...ALL, multiple_languages: false }, secondLocale: null }))
+
+    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
+    await user.click(await screen.findByRole('option', { name: /French/ }))
+    // A brand-new language asks first: what is written keeps its old text.
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveTextContent('Write your menu in French?')
+    await user.click(screen.getByRole('button', { name: 'Switch to French' }))
+
+    await waitFor(() => expect(mock.history.put).toHaveLength(1))
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      main_locale: 'fr',
+      second_locale: null,
+      default_locale: 'fr',
+    })
+  })
+
+  it('makes the second language the main one at once, swapping the two', async () => {
+    mock
+      .onPut('/api/menu-languages')
+      .reply(200, languages({ languages: ['ar', 'en'], second_locale: 'en', default_locale: 'ar' }))
+    const user = userEvent.setup()
+    renderWithProviders(page())
+
+    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
+    await user.click(await screen.findByRole('option', { name: /Arabic/ }))
+
+    await waitFor(() => expect(mock.history.put).toHaveLength(1))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      main_locale: 'ar',
+      second_locale: 'en',
+      default_locale: 'ar',
+    })
+  })
+
+  it('cancels a new main language without saving', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(page())
+
+    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
+    await user.click(await screen.findByRole('option', { name: /German/ }))
+    await user.click(await screen.findByRole('button', { name: 'Cancel' }))
+
+    expect(mock.history.put).toHaveLength(0)
+  })
+
+  it('says how much is left to write in a new main language, with the way to Dishes', async () => {
+    mock.onGet('/api/menu-languages').reply(
+      200,
+      languages({
+        languages: ['fr'],
+        second_locale: null,
+        default_locale: 'fr',
+        missing: { categories: 1, dishes: 12 },
+      }),
+    )
+    const onOpenDishes = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(page({ mainLocale: 'fr', secondLocale: null, onOpenDishes }))
+
+    expect(
+      await screen.findByText(
+        '1 category and 12 dishes have no French name yet. Guests see their old name until you write one.',
+      ),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Open Dishes' }))
+    expect(onOpenDishes).toHaveBeenCalledOnce()
+  })
+
+  it('never offers the main language as the second one', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(page({ mainLocale: 'ar', secondLocale: 'en', defaultLocale: 'ar' }))
+
+    await user.click(screen.getByRole('combobox', { name: /Second language/ }))
+    expect(screen.queryByRole('option', { name: /Arabic/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /English/ })).toBeInTheDocument()
+  })
+
   it('names each language once when the dashboard already speaks it', async () => {
     await i18n.changeLanguage('ar')
     try {
       const user = userEvent.setup()
       renderWithProviders(page({ secondLocale: null }))
 
-      await user.click(screen.getByRole('combobox'))
+      await user.click(
+        screen.getByRole('combobox', {
+          name: new RegExp(i18n.t('features:languages.secondLabel')),
+        }),
+      )
       // In Arabic, Arabic's own name and its dashboard name are the same word.
       expect(await screen.findByRole('option', { name: 'العربية' })).toBeInTheDocument()
     } finally {

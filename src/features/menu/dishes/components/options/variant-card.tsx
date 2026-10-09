@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { useFieldArray, useWatch, type Control } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
-import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
+import { mainLanguageOf } from '@/shared/constants/menu-languages'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
 import { ChoiceRow } from '@/features/menu/dishes/components/options/choice-row'
 import {
@@ -38,7 +38,7 @@ export function VariantCard({
 }: VariantCardProps) {
   const { t } = useTranslation('menu')
   const options = useFieldArray({ control, name: `variants.${index}.options` })
-  const name = useWatch({ control, name: `variants.${index}.name.${MAIN_LANGUAGE}` })
+  const name = useWatch({ control, name: `variants.${index}.name.${mainLanguageOf(languages)}` })
   // The first variant of a dish with no price of its own holds the prices.
   const dishPrice = useWatch({ control, name: 'price' })
   const full = index === 0 && (dishPrice === null || dishPrice === undefined)

@@ -39,7 +39,7 @@
   "categoryDialog": {
     "titleNew": "قسم جديد",
     "titleEdit": "تعديل القسم",
-    "nameHint": "مطلوب بالإنجليزية، ويمكن إضافة اللغة الأخرى لاحقًا.",
+    "nameHint": "مطلوب بلغة قائمتك الرئيسية، ويمكن إضافة اللغة الأخرى لاحقًا.",
     "description": "الوصف",
     "descriptionHint": "سطر واحد يظهر تحت العنوان في قائمتك.",
     "save": "حفظ",
@@ -63,7 +63,7 @@
     "reorderFailed": "تعذّر حفظ الترتيب الجديد"
   },
   "categorySchema": {
-    "nameRequired": "اسم القسم مطلوب بالإنجليزية."
+    "nameRequired": "اسم القسم مطلوب باللغة {{language}}."
   },
   "dishesPage": {
     "title": "الأطباق",
@@ -159,9 +159,9 @@
     "guestsPay": "يدفع الزبون <min />",
     "guestsPayRange": "يدفع الزبون من <min /> إلى <max />",
     "needTwo": "يحتاج كل خيار إلى اختيارين على الأقل.",
-    "variantNameRequired": "اكتب اسم كل خيار بالإنجليزية.",
-    "optionNameRequired": "اكتب اسم كل اختيار بالإنجليزية.",
-    "addonNameRequired": "اكتب اسم كل إضافة بالإنجليزية."
+    "variantNameRequired": "اكتب اسم كل خيار باللغة {{language}}.",
+    "optionNameRequired": "اكتب اسم كل اختيار باللغة {{language}}.",
+    "addonNameRequired": "اكتب اسم كل إضافة باللغة {{language}}."
   },
   "dishToast": {
     "added": "تمت إضافة الطبق",
@@ -177,7 +177,7 @@
     "priceNegative": "لا يمكن أن يكون السعر سالبًا.",
     "priceTooHigh": "هذا السعر مرتفع جدًا.",
     "categoryRequired": "اختر قسمًا.",
-    "nameRequired": "اسم الطبق مطلوب بالإنجليزية.",
+    "nameRequired": "اسم الطبق مطلوب باللغة {{language}}.",
     "priceForAddons": "أضف سعرًا للطبق قبل إضافة الإضافات.",
     "optionPriceRequired": "أضف له سعرًا، أو أضف سعرًا للطبق."
   },

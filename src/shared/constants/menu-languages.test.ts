@@ -3,7 +3,8 @@ import { i18n } from '@/lib/i18n'
 import {
   languageDir,
   languageName,
-  MAIN_LANGUAGE,
+  DEFAULT_MAIN_LANGUAGE,
+  mainLanguageOf,
   MENU_LANGUAGES,
 } from '@/shared/constants/menu-languages'
 
@@ -12,9 +13,14 @@ describe('menu languages', () => {
     await i18n.changeLanguage('en')
   })
 
-  it('writes every menu in English first', () => {
-    expect(MAIN_LANGUAGE).toBe('en')
-    expect(MENU_LANGUAGES[MAIN_LANGUAGE]?.dir).toBe('ltr')
+  it('starts a new menu in English', () => {
+    expect(DEFAULT_MAIN_LANGUAGE).toBe('en')
+    expect(MENU_LANGUAGES[DEFAULT_MAIN_LANGUAGE]?.dir).toBe('ltr')
+  })
+
+  it('reads the main language as the first of the menu languages', () => {
+    expect(mainLanguageOf(['ar', 'en'])).toBe('ar')
+    expect(mainLanguageOf([])).toBe('en')
   })
 
   it('names a known language in the dashboard’s language', async () => {

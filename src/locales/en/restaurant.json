@@ -93,7 +93,7 @@
     "phoneInvalid": "Please enter a valid phone number using digits only.",
     "chooseCurrency": "Please choose a currency from the list.",
     "chooseTimezone": "Choose a timezone.",
-    "nameRequiredInEnglish": "The restaurant name is required in English.",
+    "nameRequired": "The restaurant name is required in {{language}}.",
     "nameTooShort": "The restaurant name must be at least 2 characters.",
     "nameInvalidChars": "The restaurant name contains characters that are not allowed."
   },

@@ -1,10 +1,10 @@
 import { z } from 'zod'
 import { t } from '@/lib/i18n'
-import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
+import { languageName } from '@/shared/constants/menu-languages'
 
 /**
  * A piece of menu text as the API sends it: one entry per language the menu
- * is written in (English, then the second language), null when not written.
+ * is written in (the main one, then the second), null when not written.
  */
 export const menuTextSchema = z.record(z.string(), z.string().nullable())
 
@@ -55,16 +55,19 @@ export function toMenuTextForm(
 }
 
 /**
- * Adds "required in English" to a form schema's refinement: English is the
- * one language every name must have.
+ * Adds "required in <the main language>" to a form schema's refinement: the
+ * menu's main language is the one every name must have. It is the form
+ * text's first entry, as `toMenuTextForm()` orders it by the menu's
+ * languages. `message` gets that language's name ("French").
  */
-export function requireEnglish(
+export function requireMainLanguage(
   text: MenuTextForm,
   path: string,
-  message: string,
+  message: (language: string) => string,
   ctx: z.RefinementCtx,
 ): void {
-  if ((text[MAIN_LANGUAGE] ?? '').trim() === '') {
-    ctx.addIssue({ code: 'custom', path: [path, MAIN_LANGUAGE], message })
+  const main = Object.keys(text)[0]
+  if (main !== undefined && (text[main] ?? '').trim() === '') {
+    ctx.addIssue({ code: 'custom', path: [path, main], message: message(languageName(main)) })
   }
 }

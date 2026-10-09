@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { t } from '@/lib/i18n'
-import { menuTextField, menuTextSchema, requireEnglish } from '@/shared/utils/string/menu-text'
+import { menuTextField, menuTextSchema, requireMainLanguage } from '@/shared/utils/string/menu-text'
 
 /**
  * Mirrors ../qayema/app/Http/Resources/CategoryResource.php and the
@@ -44,7 +44,12 @@ export const categoryFormSchema = z
   })
   .superRefine(
     (values, ctx) =>
-      requireEnglish(values.name, 'name', t('menu:categorySchema.nameRequired'), ctx),
+      requireMainLanguage(
+        values.name,
+        'name',
+        (language) => t('menu:categorySchema.nameRequired', { language }),
+        ctx,
+      ),
     // Also when the description is wrong, so one submit shows both.
     { when: () => true },
   )

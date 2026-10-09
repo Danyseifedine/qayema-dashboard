@@ -1,7 +1,7 @@
 /**
- * What a restaurant's menu can be written in: English, always, plus at most
- * one second language the owner picks in Settings. Mirrors
- * `config('locales.menu')` in ../qayema.
+ * What a restaurant's menu can be written in: a main language the owner
+ * picks (English unless they choose another), plus at most one second
+ * language. Mirrors `config('locales.menu')` in ../qayema.
  *
  * Separate from `locales.ts`, which is the dashboard's own interface language.
  * An owner can run the dashboard in English and write their menu in French.
@@ -9,7 +9,16 @@
 
 import { t } from '@/lib/i18n'
 
-export const MAIN_LANGUAGE = 'en'
+/** A new menu's main language, and the one used before the session loads. */
+export const DEFAULT_MAIN_LANGUAGE = 'en'
+
+/**
+ * The main language of a menu's languages: the first, as `/api/user` and
+ * `useMenuLanguages()` give them. The one every name is required in.
+ */
+export function mainLanguageOf(languages: readonly string[]): string {
+  return languages[0] ?? DEFAULT_MAIN_LANGUAGE
+}
 
 type LanguageInfo = {
   /** The language's own name for itself. */

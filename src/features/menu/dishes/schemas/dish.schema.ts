@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { imageFieldSchema } from '@/features/uploads'
 import { t } from '@/lib/i18n'
-import { menuTextField, menuTextSchema, requireEnglish } from '@/shared/utils/string/menu-text'
+import { menuTextField, menuTextSchema, requireMainLanguage } from '@/shared/utils/string/menu-text'
 import {
   addonsField,
   addonsSchema,
@@ -80,7 +80,12 @@ export const dishFormSchema = z
   })
   .superRefine(
     (values, ctx) => {
-      requireEnglish(values.name, 'name', t('menu:dishSchema.nameRequired'), ctx)
+      requireMainLanguage(
+        values.name,
+        'name',
+        (language) => t('menu:dishSchema.nameRequired', { language }),
+        ctx,
+      )
       requireChoiceNames(values, ctx)
       // An add-on adds to the price, so the dish needs one, unless its
       // variants price it (a sandwich by size alone).

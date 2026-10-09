@@ -109,8 +109,8 @@ function Dashboard({ user }: { user: AuthUser }) {
   const activeItem = NAV_ITEMS.find((item) => item.key === activeKey)
 
   // Menu text shows in the dashboard's language when the menu is written in
-  // it, and in English (the language every name has) otherwise.
-  const contentLocale = restaurant.languages.includes(locale) ? locale : 'en'
+  // it, and in its main language (the one every name has) otherwise.
+  const contentLocale = restaurant.languages.includes(locale) ? locale : restaurant.main_locale
 
   // The topbar pill names the package in the reader's language, falling back
   // to the slug for a package that has no name in either.
@@ -203,11 +203,13 @@ function Dashboard({ user }: { user: AuthUser }) {
           <FeaturesPage
             off={switchedOff}
             plan={plan}
+            mainLocale={restaurant.main_locale}
             secondLocale={restaurant.second_locale}
             defaultLocale={restaurant.default_locale}
             ordering={restaurant.ordering}
             onOpenPackage={() => setActiveKey('package')}
             onOpenTables={() => setActiveKey('tables')}
+            onOpenDishes={() => setActiveKey('dishes')}
           />
         ) : activeKey === 'account' ? (
           <AccountPage onOpenRestaurant={() => setActiveKey('restaurant')} />

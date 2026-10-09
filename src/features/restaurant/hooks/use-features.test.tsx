@@ -57,12 +57,18 @@ describe('restaurant save hooks on a session without a restaurant', () => {
 
   it('leaves the session alone when saving the languages', async () => {
     mock.onPut('/api/menu-languages').reply(200, {
-      data: { languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' },
+      data: {
+        languages: ['en', 'fr'],
+        main_locale: 'en',
+        second_locale: 'fr',
+        default_locale: 'en',
+        missing: { categories: 0, dishes: 0 },
+      },
     })
     const { queryClient, user, wrapper } = withoutRestaurant()
 
     const { result } = renderHook(() => useSaveMenuLanguages(), { wrapper })
-    result.current.mutate({ second_locale: 'fr', default_locale: 'en' })
+    result.current.mutate({ main_locale: 'en', second_locale: 'fr', default_locale: 'en' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(queryClient.getQueryData(sessionKeys.current())).toEqual(user)
@@ -122,12 +128,18 @@ describe('what a feature or language save throws away', () => {
 
   it('saving the languages drops every page that shows menu text', async () => {
     mock.onPut('/api/menu-languages').reply(200, {
-      data: { languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' },
+      data: {
+        languages: ['en', 'fr'],
+        main_locale: 'en',
+        second_locale: 'fr',
+        default_locale: 'en',
+        missing: { categories: 0, dishes: 0 },
+      },
     })
     const { queryClient, wrapper } = withCachedPages()
 
     const { result } = renderHook(() => useSaveMenuLanguages(), { wrapper })
-    result.current.mutate({ second_locale: 'fr', default_locale: 'en' })
+    result.current.mutate({ main_locale: 'en', second_locale: 'fr', default_locale: 'en' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     for (const page of ['restaurant', 'categories', 'dishes', 'appearance'] as const) {

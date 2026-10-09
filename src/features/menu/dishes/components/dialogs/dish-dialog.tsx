@@ -15,7 +15,7 @@ import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 import { ImageField, imageChanges } from '@/features/uploads'
 import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
-import { MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
+import { mainLanguageOf } from '@/shared/constants/menu-languages'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
@@ -93,7 +93,8 @@ export function DishDialog({
     name: ['price', 'variants'],
   })
   const firstVariant =
-    watchedVariants[0]?.name[MAIN_LANGUAGE]?.trim() || t('choices.variantNumber', { number: 1 })
+    watchedVariants[0]?.name[mainLanguageOf(languages)]?.trim() ||
+    t('choices.variantNumber', { number: 1 })
   const priceHint =
     !show.variants || watchedVariants.length === 0
       ? t('dishDialog.priceHint')

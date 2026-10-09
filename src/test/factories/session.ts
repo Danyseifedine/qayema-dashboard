@@ -47,6 +47,7 @@ export function makeSessionUser(
     restaurant: {
       id: 7,
       languages: ['en', 'ar'],
+      main_locale: 'en',
       second_locale: 'ar',
       default_locale: 'en',
       template_id: 1,

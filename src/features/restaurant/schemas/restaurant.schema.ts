@@ -6,7 +6,7 @@ import { COUNTRIES } from '@/shared/constants/countries'
 import {
   menuTextField,
   menuTextSchema,
-  requireEnglish,
+  requireMainLanguage,
   type MenuTextForm,
 } from '@/shared/utils/string/menu-text'
 
@@ -61,7 +61,7 @@ const openingHoursSchema = z.object({
 
 export const restaurantResponseSchema = z.object({
   data: z.object({
-    /** What the menu is written in: English, then the second language if any. */
+    /** What the menu is written in: the main language, then the second if any. */
     languages: z.array(z.string()).min(1),
     name: menuTextSchema,
     description: menuTextSchema,
@@ -103,7 +103,7 @@ const dayFormSchema = z
 
 export const restaurantFormSchema = z
   .object({
-    /** One entry per menu language; English is required. */
+    /** One entry per menu language; the main one is required. */
     name: menuTextField(255, () => t('restaurant:fields.restaurantName')),
     description: menuTextField(2000, () => t('restaurant:fields.description')),
 
@@ -155,7 +155,12 @@ export const restaurantFormSchema = z
   })
   .superRefine(
     (values, ctx) => {
-      requireEnglish(values.name, 'name', t('restaurant:validation.nameRequiredInEnglish'), ctx)
+      requireMainLanguage(
+        values.name,
+        'name',
+        (language) => t('restaurant:validation.nameRequired', { language }),
+        ctx,
+      )
       checkNames(values.name, ctx)
     },
     // Also when another field is wrong, so one submit shows every problem.

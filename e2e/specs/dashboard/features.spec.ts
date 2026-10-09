@@ -139,7 +139,9 @@ test.describe('features', () => {
     await expect(
       page.getByText('Your plain black QR code stays on the QR code page', { exact: false }),
     ).toBeVisible()
-    await expect(page.getByText('Your menu shows English only.', { exact: false })).toBeVisible()
+    await expect(
+      page.getByText('Your menu shows its main language only.', { exact: false }),
+    ).toBeVisible()
     await expect(page.getByText('Your variants are kept.', { exact: false })).toBeVisible()
     await expect(page.getByText('Your add-ons are kept.', { exact: false })).toBeVisible()
     await expect(page.getByRole('combobox', { name: 'Second language' })).toHaveCount(0)
@@ -213,6 +215,44 @@ test.describe('features', () => {
     const guest = await context.newPage()
     await guest.goto(restaurant.restaurant.public_url)
     await expect(guest.locator('html')).toHaveAttribute('lang', 'fr')
+    await context.close()
+  })
+
+  test('a free owner makes the menu Arabic only, and guests read it in Arabic', async ({
+    page,
+    owner,
+    browser,
+  }) => {
+    const restaurant = await owner({
+      package: 'free',
+      second_locale: 'ar',
+      name: { en: 'E2E Kitchen', ar: 'مطبخ' },
+      categories: [
+        {
+          name: { en: 'Plates', ar: 'أطباق' },
+          dishes: [{ name: { en: 'House Bowl', ar: 'صحن البيت' }, price: 12 }],
+        },
+      ],
+    })
+    await page.goto('/features')
+
+    // Arabic is already written as the second language: making it the main
+    // one is a swap, saved at once with nothing to write.
+    const saved = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/menu-languages') && response.request().method() === 'PUT',
+    )
+    await page.getByRole('combobox', { name: /Your menu is written in/ }).click()
+    await page.getByRole('option', { name: /Arabic/ }).click()
+    await saved
+    await expect(page.getByText('Menu languages saved').first()).toBeVisible()
+
+    const context = await browser.newContext()
+    const guest = await context.newPage()
+    await guest.goto(restaurant.restaurant.public_url)
+    await expect(guest.locator('html')).toHaveAttribute('lang', 'ar')
+    await expect(guest.getByText('صحن البيت').first()).toBeVisible()
+    await expect(guest.getByText('House Bowl')).toHaveCount(0)
     await context.close()
   })
 
