@@ -9,8 +9,10 @@ import type { ApiError } from '@/shared/types/api'
 import {
   saveDineIn,
   saveOrdering,
+  saveWhatsAppFields,
   type DineInMode,
   type OrderingSettings,
+  type WhatsAppFieldsSettings,
 } from '@/features/restaurant/api/ordering.api'
 
 function withOrdering(
@@ -89,6 +91,42 @@ export function useSaveDineIn() {
       refreshOrderViews(queryClient)
     },
     onError: (error, _mode, context) => {
+      queryClient.setQueryData(sessionKeys.current(), context?.previous)
+      toast.error(t('features:saveFailed'), error)
+    },
+  })
+}
+
+/**
+ * Saves what a WhatsApp order asks the guest for, the whole set at once.
+ * Optimistic the same way. The order pages read nothing of it, so they are
+ * left alone.
+ */
+export function useSaveWhatsAppFields() {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    WhatsAppFieldsSettings,
+    ApiError,
+    WhatsAppFieldsSettings,
+    { previous: AuthUser | undefined }
+  >({
+    mutationFn: saveWhatsAppFields,
+    onMutate: async (fields) => {
+      await queryClient.cancelQueries({ queryKey: sessionKeys.current() })
+      const previous = queryClient.getQueryData<AuthUser>(sessionKeys.current())
+      queryClient.setQueryData(
+        sessionKeys.current(),
+        withOrdering(previous, { whatsapp_fields: fields }),
+      )
+      return { previous }
+    },
+    onSuccess: (fields) => {
+      queryClient.setQueryData<AuthUser>(sessionKeys.current(), (user) =>
+        withOrdering(user, { whatsapp_fields: fields }),
+      )
+    },
+    onError: (error, _fields, context) => {
       queryClient.setQueryData(sessionKeys.current(), context?.previous)
       toast.error(t('features:saveFailed'), error)
     },

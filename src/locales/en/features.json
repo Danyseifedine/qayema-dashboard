@@ -1,10 +1,25 @@
 {
   "title": "Features",
   "description": "Switch off what you don't use. Nothing is deleted, and switching it back on brings it all back.",
-  "listTitle": "What your restaurant uses",
+  "groups": {
+    "ordering": {
+      "title": "Orders",
+      "description": "How guests send you their orders, from home or from their table."
+    },
+    "dishes": {
+      "title": "Dishes",
+      "description": "Choices guests make on a dish."
+    },
+    "languages": {
+      "title": "Menu languages",
+      "description": "What your menu is written in, and a second language guests can switch to."
+    },
+    "sharing": {
+      "title": "QR code and analytics",
+      "description": "How your QR code looks, and what guests do on your menu."
+    }
+  },
   "mainLanguage": {
-    "title": "Menu language",
-    "description": "The language your menu is written in.",
     "label": "Your menu is written in",
     "hint": "Every name needs it. While a second language is off, it is the only one guests see.",
     "missing": "{{categories}} and {{dishes}} have no {{language}} name yet. Guests see their old name until you write one.",
@@ -39,6 +54,10 @@
     "typeHints": {
       "delivery": "Guests give their phone number and address.",
       "pickup": "Guests give their phone number and collect it."
+    },
+    "whatsappTypeHints": {
+      "delivery": "Guests who choose it give their address.",
+      "pickup": "Guests who choose it collect the order."
     }
   },
   "dine_in": {
@@ -53,6 +72,22 @@
     "needsNumber": "WhatsApp needs your restaurant's phone number.",
     "noNumber": "Your restaurant has no WhatsApp number, so table orders arrive on your dashboard until you add one.",
     "addNumber": "Add it on the Restaurant page"
+  },
+  "askFor": {
+    "label": "Ask guests for",
+    "hint": "Guests fill these in before WhatsApp opens, and they show at the top of the message.",
+    "what": "{{field}}: what to ask",
+    "fields": {
+      "name": "Name",
+      "phone": "Phone",
+      "address": "Delivery address"
+    },
+    "levels": {
+      "off": "Off",
+      "optional": "Optional",
+      "required": "Required"
+    },
+    "addressHint": "Guests then choose delivery or pickup, and the address is only asked for a delivery."
   },
   "variants": {
     "label": "Variants",

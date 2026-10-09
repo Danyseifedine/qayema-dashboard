@@ -8,9 +8,11 @@ export { useOrderingMode, useTableOrderingMode } from '@/features/auth/hooks/use
 export { useSession } from '@/features/auth/hooks/use-session'
 export { userResponseSchema } from '@/features/auth/schemas/user.schema'
 export type {
+  AskLevel,
   AuthRestaurant,
   AuthUser,
   OrderMode,
   OrderType,
   Plan,
+  WhatsAppFields,
 } from '@/features/auth/schemas/user.schema'

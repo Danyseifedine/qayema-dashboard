@@ -329,6 +329,12 @@ describe('RestaurantPage', () => {
     // Ends at 11 PM instead.
     await user.click(screen.getByRole('combobox', { name: 'Monday, shift 2, closes: hour' }))
     await user.click(screen.getByRole('option', { name: '11' }))
+    await user.click(
+      within(screen.getByRole('tablist', { name: 'Monday, shift 2, closes: AM or PM' })).getByRole(
+        'tab',
+        { name: 'PM' },
+      ),
+    )
     expect(screen.queryByText('Closes the next day, after midnight.')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Save changes' }))

@@ -142,16 +142,18 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `utils/package-rows.ts`, the one list of features, groups and order. Tests
   use `PACKAGE_CATALOGUE` / `makePackage()` (`test/factories/packages`)
   and `FULL_PLAN` / `EMPTY_PLAN` (`…/session`).
-- **Features page** (`features/restaurant/pages/features-page.tsx`): one switch
-  each for Orders, Variants, Add-ons, QR Studio, Analytics and Multiple
-  languages, stored in
+- **Features page** (`features/restaurant/pages/features-page.tsx`): related
+  features grouped in sections (`GROUPS`, in the sidebar's order): Orders
+  (Orders, Ordering at the table), Dishes (Variants, Add-ons), Menu languages
+  (the main language, then Multiple languages) and QR code and analytics (QR
+  Studio, Analytics). Each feature is a switch (`FeatureRow`), stored in
   `restaurant.switched_off` (`PUT /api/features` with `{off}`, optimistic
   through the session cache; must match `Restaurant::OPTIONAL_FEATURES`). A nav
   item with `hideable: true` (analytics, orders) leaves the sidebar when off
   (`isNavItemHidden`), and an open page hands over to Overview. QR Studio off
-  keeps the QR code page with the plain code (`qr.switched_off`). Above the
-  switches, "Menu language" picks the main language for every package
-  (`MainLanguageSection`): the second one swaps at once, a new one asks
+  keeps the QR code page with the plain code (`qr.switched_off`). At the top
+  of Menu languages, "Your menu is written in" picks the main language for
+  every package (`MainLanguageField`): the second one swaps at once, a new one asks
   first (`ConfirmDialog`), and `GET /api/menu-languages`'s `missing` says how
   many categories and dishes still lack a name in it, with the way to
   Dishes. Multiple languages carries its own pickers (second language, never
@@ -166,7 +168,13 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   Orders, with its own way in (`DineInChoice`): "Dashboard" (the Table
   orders page) or "WhatsApp" (the table's name heads the message),
   `PUT /api/features/dine-in`, optimistic into `restaurant.ordering.dine_in`
-  (`useSaveDineIn`). WhatsApp needs the restaurant's number
+  (`useSaveDineIn`). On WhatsApp, "Ask guests for" (`AskGuestsFor`) sets
+  Name, Phone and Delivery address (Off | Optional | Required) for delivery
+  and pickup, and Name and Phone for table orders on WhatsApp
+  (`ordering.whatsapp_fields.{away,table}`, saved whole with
+  `PUT /api/features/whatsapp-fields`, optimistic, `useSaveWhatsAppFields`);
+  once the address is asked, the Delivery/Pickup switches show on WhatsApp
+  too, since the guest then picks one. WhatsApp needs the restaurant's number
   (`ordering.whatsapp_number`): without one it is disabled with the way to
   the Restaurant page, and a choice made before says orders arrive here
   until one is added. `useTableOrderingMode()` (from `features/auth`) is the
@@ -282,13 +290,18 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `useChangeSlug` (`PUT /api/restaurant/slug`) refreshes the session and the
   QR page. The server writes the link cleanly ("My Place" → my-place).
 - **Opening hours** (`features/restaurant/components/hours/`): each day is
-  its name and switch, then an Opens and a Closes line. A time is picked the
+  its name and switch, then its shifts, each an Opens and a Closes line:
+  "Add a shift" up to `MAX_SHIFTS` (3; a new one starts where the last
+  closes, for two hours, `nextShift()`), a remove button on every shift after
+  the first. Shifts must not overlap and only the last may run past midnight
+  (`shiftProblem()`, the server's `OpeningHours::problemWith()`), said under
+  the shift at fault. The API sends a list per day, null when closed. A time is picked the
   way a clock reads (`TimePicker`): the hour (1 to 12), the minutes (00, 15,
   30, 45; a saved 07:20 keeps its 20) and AM | PM, with its part of the day
   beside it (Morning 05:00, Afternoon 12:00, Evening 17:00, Night 21:00),
   and stored as "HH:MM" as before (`splitTime` / `joinTime` in
-  `time-options.ts`). A day whose close comes before its open says it runs
-  past midnight. The shared `Combobox` has a `size="sm"` for small pickers on
+  `time-options.ts`). A day whose last shift closes before it opens says it
+  runs past midnight. The shared `Combobox` has a `size="sm"` for small pickers on
   one line, opens on the current choice, and grows to fit its options (up to
   320px) toward the side with room.
 - Card text on the QR form is `''` in the form and `null` on the wire;

@@ -33,6 +33,9 @@ const limit = z.object({
   limit: z.number().nullable(),
 })
 
+/** How a WhatsApp order asks the guest for one thing. */
+const askLevel = z.enum(['off', 'optional', 'required'])
+
 const restaurantSchema = z.object({
   /** Names the live orders channel. */
   id: z.number().int(),
@@ -75,13 +78,19 @@ const restaurantSchema = z.object({
    * the menu (only while the package includes it), and which kinds of order
    * the menu takes. Orders at the table have their own way in (`dine_in`,
    * the owner's choice), and WhatsApp needs a number it can reach
-   * (`whatsapp_number`); without one they arrive here.
+   * (`whatsapp_number`); without one they arrive here. `whatsapp_fields`
+   * is what a WhatsApp order asks the guest for: `away` for delivery and
+   * pickup, `table` for orders at the table.
    */
   ordering: z.object({
     mode: z.enum(['whatsapp', 'menu']),
     types: z.array(z.enum(['delivery', 'pickup'])).min(1),
     dine_in: z.enum(['whatsapp', 'menu']),
     whatsapp_number: z.boolean(),
+    whatsapp_fields: z.object({
+      away: z.object({ name: askLevel, phone: askLevel, address: askLevel }),
+      table: z.object({ name: askLevel, phone: askLevel }),
+    }),
   }),
   /** What this restaurant may use: its package plus any grants. */
   plan: planSchema,
@@ -116,3 +125,5 @@ export type AuthRestaurant = z.infer<typeof restaurantSchema>
 export type Plan = z.infer<typeof planSchema>
 export type OrderMode = AuthRestaurant['ordering']['mode']
 export type OrderType = AuthRestaurant['ordering']['types'][number]
+export type WhatsAppFields = AuthRestaurant['ordering']['whatsapp_fields']
+export type AskLevel = z.infer<typeof askLevel>

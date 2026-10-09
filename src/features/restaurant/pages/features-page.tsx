@@ -11,7 +11,14 @@ import {
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { AuthRestaurant, OrderMode, OrderType, Plan } from '@/features/auth'
+import type {
+  AskLevel,
+  AuthRestaurant,
+  OrderMode,
+  OrderType,
+  Plan,
+  WhatsAppFields,
+} from '@/features/auth'
 import { usePackageFor, type PackageFlag } from '@/features/package'
 import { ConfirmDialog } from '@/shared/components/feedback'
 import { Field, FormSection } from '@/shared/components/forms'
@@ -22,7 +29,11 @@ import {
   useSaveMenuLanguages,
 } from '@/features/restaurant/hooks/use-menu-languages-save'
 import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
-import { useSaveDineIn, useSaveOrdering } from '@/features/restaurant/hooks/use-ordering-save'
+import {
+  useSaveDineIn,
+  useSaveOrdering,
+  useSaveWhatsAppFields,
+} from '@/features/restaurant/hooks/use-ordering-save'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -51,23 +62,37 @@ export type FeaturesPageProps = {
   onOpenDishes: () => void
 }
 
-const ROWS: { key: FeatureKey; icon: TablerIcon; plan: PackageFlag }[] = [
-  { key: 'orders', icon: IconReceipt, plan: 'ordering' },
-  { key: 'dine_in', icon: IconToolsKitchen2, plan: 'dine_in' },
-  { key: 'variants', icon: IconListCheck, plan: 'variants' },
-  { key: 'addons', icon: IconCirclePlus, plan: 'addons' },
-  { key: 'qr', icon: IconQrcode, plan: 'qr_studio' },
-  { key: 'analytics', icon: IconChartHistogram, plan: 'analytics' },
-  { key: 'languages', icon: IconLanguage, plan: 'multiple_languages' },
+const ROWS: Record<FeatureKey, { icon: TablerIcon; plan: PackageFlag }> = {
+  orders: { icon: IconReceipt, plan: 'ordering' },
+  dine_in: { icon: IconToolsKitchen2, plan: 'dine_in' },
+  variants: { icon: IconListCheck, plan: 'variants' },
+  addons: { icon: IconCirclePlus, plan: 'addons' },
+  languages: { icon: IconLanguage, plan: 'multiple_languages' },
+  qr: { icon: IconQrcode, plan: 'qr_studio' },
+  analytics: { icon: IconChartHistogram, plan: 'analytics' },
+}
+
+type GroupKey = 'ordering' | 'dishes' | 'languages' | 'sharing'
+
+/**
+ * Related features together, in the sidebar's order: how orders come in,
+ * the choices on a dish, the menu's languages, then sharing and what guests
+ * do on the menu.
+ */
+const GROUPS: { key: GroupKey; rows: FeatureKey[] }[] = [
+  { key: 'ordering', rows: ['orders', 'dine_in'] },
+  { key: 'dishes', rows: ['variants', 'addons'] },
+  { key: 'languages', rows: ['languages'] },
+  { key: 'sharing', rows: ['qr', 'analytics'] },
 ]
 
 /**
- * The menu's main language first (every package has one, in any language),
- * then one switch per optional feature, in the order owners think about
- * them. Nothing is deleted by switching one off; see
+ * One section per group of related features, each feature a switch. The
+ * languages section starts with the menu's main language (every package has
+ * one, in any language). Nothing is deleted by switching one off; see
  * `Restaurant::OPTIONAL_FEATURES` in ../qayema for what each one does.
- * "Multiple languages" carries its own settings: which second language, and
- * which one the menu opens in.
+ * Orders, ordering at the table and multiple languages carry their own
+ * settings under their switch.
  */
 export function FeaturesPage({
   off,
@@ -95,96 +120,148 @@ export function FeaturesPage({
         <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">{t('description')}</p>
       </div>
 
-      <MainLanguageSection
-        mainLocale={mainLocale}
-        secondLocale={secondLocale}
-        defaultLocale={defaultLocale}
-        onOpenDishes={onOpenDishes}
-      />
-
-      <FormSection title={t('listTitle')}>
-        <ul className="flex flex-col divide-y-[0.5px] divide-[var(--line-2)]">
-          {ROWS.map((row) => {
-            const { key, icon: Icon } = row
-            // Without the package a feature is off whatever the owner chose;
-            // their choice is kept and applies again once the package has it.
-            const included = plan[row.plan]
-            const on = included && !off.includes(key)
-            const label = t(`${key}.label`)
-            const offNote = key === 'analytics' ? null : t(`${key}.offNote`)
-
-            return (
-              <li key={key} className="py-3.5">
-                <div className="flex items-start gap-3">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-[var(--hover-wash)] text-[var(--muted)]">
-                    <Icon aria-hidden className="size-[18px]" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[14px] font-medium">
-                      {label}
-                      {included ? null : (
-                        <PackageChip flag={row.plan} onOpenPackage={onOpenPackage} />
-                      )}
-                    </p>
-                    <p className="text-[12.5px] leading-snug text-[var(--muted)]">
-                      {t(`${key}.description`)}
-                    </p>
-                    {included && !on && offNote ? (
-                      <p className="mt-1 text-[12.5px] leading-snug text-[var(--status-warn)]">
-                        {offNote}
-                      </p>
-                    ) : null}
-                    {key === 'dine_in' && on ? (
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onClick={onOpenTables}
-                        className="mt-1 h-auto px-0 text-[12.5px] font-medium"
-                      >
-                        {t('dine_in.openTables')}
-                      </Button>
-                    ) : null}
-                  </div>
-                  <Switch
-                    checked={on}
-                    disabled={!included}
-                    onChange={(next) => toggle(key, next)}
-                    aria-label={t('toggle', { feature: label })}
-                    className="mt-1.5"
-                  />
-                </div>
-                {/* Under the row, not beside the switch: the whole width on a
-                    phone, under the text from a tablet up. The pickers need the
-                    package: the server refuses a second language without it. */}
-                {key === 'orders' && on ? (
-                  <div className="sm:ms-12">
-                    <OrderingChoice
-                      ordering={ordering}
-                      menuIncluded={plan.menu_ordering}
-                      onOpenPackage={onOpenPackage}
-                    />
-                  </div>
-                ) : null}
-                {key === 'dine_in' && on ? (
-                  <div className="sm:ms-12">
-                    <DineInChoice ordering={ordering} onOpenRestaurant={onOpenRestaurant} />
-                  </div>
-                ) : null}
-                {key === 'languages' && on ? (
-                  <div className="sm:ms-12">
-                    <LanguageChoice
-                      mainLocale={mainLocale}
-                      secondLocale={secondLocale}
-                      defaultLocale={defaultLocale}
-                    />
-                  </div>
-                ) : null}
-              </li>
-            )
-          })}
-        </ul>
-      </FormSection>
+      {GROUPS.map((group) => (
+        <FormSection
+          key={group.key}
+          title={t(`groups.${group.key}.title`)}
+          description={t(`groups.${group.key}.description`)}
+        >
+          {group.key === 'languages' ? (
+            <MainLanguageField
+              mainLocale={mainLocale}
+              secondLocale={secondLocale}
+              defaultLocale={defaultLocale}
+              onOpenDishes={onOpenDishes}
+            />
+          ) : null}
+          <ul
+            className={cn(
+              'flex flex-col divide-y-[0.5px] divide-[var(--line-2)]',
+              // Apart from the main language above it.
+              group.key === 'languages' && 'border-t-[0.5px] border-[var(--line-2)]',
+            )}
+          >
+            {group.rows.map((key) => (
+              <FeatureRow
+                key={key}
+                feature={key}
+                plan={plan}
+                off={off}
+                ordering={ordering}
+                mainLocale={mainLocale}
+                secondLocale={secondLocale}
+                defaultLocale={defaultLocale}
+                onToggle={toggle}
+                onOpenPackage={onOpenPackage}
+                onOpenTables={onOpenTables}
+                onOpenRestaurant={onOpenRestaurant}
+              />
+            ))}
+          </ul>
+        </FormSection>
+      ))}
     </div>
+  )
+}
+
+/** One feature: its switch, and while on, the settings that come with it. */
+function FeatureRow({
+  feature: key,
+  plan,
+  off,
+  ordering,
+  mainLocale,
+  secondLocale,
+  defaultLocale,
+  onToggle: toggle,
+  onOpenPackage,
+  onOpenTables,
+  onOpenRestaurant,
+}: Pick<
+  FeaturesPageProps,
+  | 'plan'
+  | 'off'
+  | 'ordering'
+  | 'mainLocale'
+  | 'secondLocale'
+  | 'defaultLocale'
+  | 'onOpenPackage'
+  | 'onOpenTables'
+  | 'onOpenRestaurant'
+> & { feature: FeatureKey; onToggle: (key: FeatureKey, on: boolean) => void }) {
+  const { t } = useTranslation('features')
+  const row = ROWS[key]
+  const Icon = row.icon
+  // Without the package a feature is off whatever the owner chose; their
+  // choice is kept and applies again once the package has it.
+  const included = plan[row.plan]
+  const on = included && !off.includes(key)
+  const label = t(`${key}.label`)
+  const offNote = key === 'analytics' ? null : t(`${key}.offNote`)
+
+  return (
+    <li key={key} className="py-3.5">
+      <div className="flex items-start gap-3">
+        <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-[var(--hover-wash)] text-[var(--muted)]">
+          <Icon aria-hidden className="size-[18px]" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] font-medium">
+            {label}
+            {included ? null : <PackageChip flag={row.plan} onOpenPackage={onOpenPackage} />}
+          </p>
+          <p className="text-[12.5px] leading-snug text-[var(--muted)]">
+            {t(`${key}.description`)}
+          </p>
+          {included && !on && offNote ? (
+            <p className="mt-1 text-[12.5px] leading-snug text-[var(--status-warn)]">{offNote}</p>
+          ) : null}
+          {key === 'dine_in' && on ? (
+            <Button
+              variant="link"
+              size="sm"
+              onClick={onOpenTables}
+              className="mt-1 h-auto px-0 text-[12.5px] font-medium"
+            >
+              {t('dine_in.openTables')}
+            </Button>
+          ) : null}
+        </div>
+        <Switch
+          checked={on}
+          disabled={!included}
+          onChange={(next) => toggle(key, next)}
+          aria-label={t('toggle', { feature: label })}
+          className="mt-1.5"
+        />
+      </div>
+      {/* Under the row, not beside the switch: the whole width on a
+            phone, under the text from a tablet up. The pickers need the
+            package: the server refuses a second language without it. */}
+      {key === 'orders' && on ? (
+        <div className="sm:ms-12">
+          <OrderingChoice
+            ordering={ordering}
+            menuIncluded={plan.menu_ordering}
+            onOpenPackage={onOpenPackage}
+          />
+        </div>
+      ) : null}
+      {key === 'dine_in' && on ? (
+        <div className="sm:ms-12">
+          <DineInChoice ordering={ordering} onOpenRestaurant={onOpenRestaurant} />
+        </div>
+      ) : null}
+      {key === 'languages' && on ? (
+        <div className="sm:ms-12">
+          <LanguageChoice
+            mainLocale={mainLocale}
+            secondLocale={secondLocale}
+            defaultLocale={defaultLocale}
+          />
+        </div>
+      ) : null}
+    </li>
   )
 }
 
@@ -248,7 +325,66 @@ function DineInChoice({
           </Button>
         </p>
       ) : null}
+      {mode === 'whatsapp' ? <AskGuestsFor set="table" fields={ordering.whatsapp_fields} /> : null}
     </div>
+  )
+}
+
+const ASK_LEVELS: readonly AskLevel[] = ['off', 'optional', 'required']
+
+type AskField = keyof WhatsAppFields['away']
+
+/**
+ * What a WhatsApp order asks the guest for before WhatsApp opens: `away`
+ * (delivery and pickup) has a name, a phone and a delivery address, `table`
+ * a name and a phone. Each is off, optional or required, and a change saves
+ * the whole set with that one value changed.
+ */
+function AskGuestsFor({ set, fields }: { set: keyof WhatsAppFields; fields: WhatsAppFields }) {
+  const { t } = useTranslation('features')
+  const save = useSaveWhatsAppFields()
+  // The table's set has no address; it is never shown for it.
+  const current: Record<AskField, AskLevel> = { address: 'off', ...fields[set] }
+  const keys: readonly AskField[] =
+    set === 'away' ? ['name', 'phone', 'address'] : ['name', 'phone']
+
+  const choose = (key: AskField, level: AskLevel) => {
+    if (level === current[key]) return
+    save.mutate({ ...fields, [set]: { ...fields[set], [key]: level } })
+  }
+
+  return (
+    <fieldset className="grid gap-3">
+      <legend className="pb-2 text-[13px] font-medium text-[var(--text)]">
+        {t('askFor.label')}
+      </legend>
+      {keys.map((key) => {
+        const label = t(`askFor.fields.${key}`)
+        return (
+          <div key={key} className="grid gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-x-3.5 gap-y-1.5">
+              <span className="min-w-0 text-[13.5px] text-[var(--text)]">{label}</span>
+              <Segmented
+                size="sm"
+                aria-label={t('askFor.what', { field: label })}
+                value={current[key]}
+                onChange={(level) => choose(key, level)}
+                options={ASK_LEVELS.map((level) => ({
+                  value: level,
+                  label: t(`askFor.levels.${level}`),
+                }))}
+              />
+            </div>
+            {key === 'address' ? (
+              <span className="text-[12px] leading-[1.45] text-[var(--muted)]">
+                {t('askFor.addressHint')}
+              </span>
+            ) : null}
+          </div>
+        )
+      })}
+      <p className="text-[12px] leading-[1.45] text-[var(--muted)]">{t('askFor.hint')}</p>
+    </fieldset>
   )
 }
 
@@ -302,6 +438,8 @@ function OrderingChoice({
   const { t } = useTranslation('features')
   const save = useSaveOrdering()
   const { mode, types } = ordering
+  // On WhatsApp the guest picks delivery or pickup only once the address is asked.
+  const asksType = mode === 'menu' || ordering.whatsapp_fields.away.address !== 'off'
 
   const setMode = (next: OrderMode) => {
     if (next !== mode) save.mutate({ mode: next, types })
@@ -342,7 +480,9 @@ function OrderingChoice({
         )}
       </Field>
 
-      {mode === 'menu' ? (
+      {mode === 'whatsapp' ? <AskGuestsFor set="away" fields={ordering.whatsapp_fields} /> : null}
+
+      {asksType ? (
         <fieldset className="grid gap-2.5">
           <legend className="pb-2 text-[13px] font-medium text-[var(--text)]">
             {t('orders.typesLabel')}
@@ -358,7 +498,11 @@ function OrderingChoice({
                     {t(`orders.types.${type}`)}
                   </span>
                   <span id={hintId} className="text-[12px] leading-[1.45] text-[var(--muted)]">
-                    {t(`orders.typeHints.${type}`)}
+                    {t(
+                      mode === 'menu'
+                        ? `orders.typeHints.${type}`
+                        : `orders.whatsappTypeHints.${type}`,
+                    )}
                   </span>
                 </div>
                 <Switch
@@ -405,7 +549,7 @@ function withMain(current: Languages, main: string): Languages {
  * written keeps its old language until it is written again, and says how
  * much is left to write.
  */
-function MainLanguageSection({
+function MainLanguageField({
   mainLocale,
   secondLocale,
   defaultLocale,
@@ -443,7 +587,7 @@ function MainLanguageSection({
   }
 
   return (
-    <FormSection title={t('mainLanguage.title')} description={t('mainLanguage.description')}>
+    <>
       <Field label={t('mainLanguage.label')} hint={t('mainLanguage.hint')} className="pt-0">
         {({ id, describedBy }) => (
           <Combobox
@@ -493,7 +637,7 @@ function MainLanguageSection({
           save.mutate(withMain(current, pending), { onSettled: () => setPending(null) })
         }}
       />
-    </FormSection>
+    </>
   )
 }
 

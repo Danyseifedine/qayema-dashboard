@@ -53,6 +53,16 @@ describe('PhoneField', () => {
     await i18n.changeLanguage('en')
   })
 
+  it('takes only what a phone number is written with, Arabic digits as 0 to 9', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+
+    await user.type(number(), 'call 71-234 abc ٥٦۷')
+
+    expect(number()).toHaveValue('71-234  567')
+    expect(stored().phone).toBe('71-234  567')
+  })
+
   it('shows the country and the national number in one field', () => {
     render(<Harness phone="71234567" />)
 

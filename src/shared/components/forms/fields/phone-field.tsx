@@ -72,7 +72,7 @@ export function PhoneField<T extends FieldValues>({
             name={phone.name}
             ref={phone.ref}
             value={(phone.value as string | null | undefined) ?? ''}
-            onChange={phone.onChange}
+            onChange={(event) => phone.onChange(phoneCharacters(event.target.value))}
             onBlur={phone.onBlur}
             type="tel"
             inputMode="tel"
@@ -87,4 +87,17 @@ export function PhoneField<T extends FieldValues>({
       )}
     </Field>
   )
+}
+
+/**
+ * Only what a phone number is written with, as the server accepts it
+ * (UpdateRestaurantRequest): digits, spaces, + ( ) - and dots. Arabic and
+ * Persian digits, from those keyboards, become 0 to 9 rather than vanish.
+ */
+function phoneCharacters(text: string): string {
+  return text
+    .replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 0x0660))
+    .replace(/[\u06f0-\u06f9]/g, (digit) => String(digit.charCodeAt(0) - 0x06f0))
+    .replace(/[^0-9+() .-]/g, '')
+    .replace(/^ +/, '')
 }

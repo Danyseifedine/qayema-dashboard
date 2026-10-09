@@ -1,4 +1,4 @@
-import type { AuthUser, Plan } from '@/features/auth'
+import type { AuthUser, Plan, WhatsAppFields } from '@/features/auth'
 
 /** Every flag on: the tests of a page are about the page, not its lock. */
 export const FULL_PLAN: Plan = {
@@ -13,6 +13,12 @@ export const FULL_PLAN: Plan = {
   dine_in: true,
   analytics: true,
   advanced_analytics: true,
+}
+
+/** A WhatsApp order asking the guest for nothing, as a new restaurant starts. */
+export const WHATSAPP_FIELDS_OFF: WhatsAppFields = {
+  away: { name: 'off', phone: 'off', address: 'off' },
+  table: { name: 'off', phone: 'off' },
 }
 
 /** Every flag off, as the Free package ships. */
@@ -72,6 +78,7 @@ export function makeSessionUser(
         types: ['delivery', 'pickup'],
         dine_in: 'menu',
         whatsapp_number: true,
+        whatsapp_fields: WHATSAPP_FIELDS_OFF,
       },
       plan: FULL_PLAN,
       ...restaurant,

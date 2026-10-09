@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/render-with-providers'
-import { makeSessionUser } from '@/test/factories/session'
+import { WHATSAPP_FIELDS_OFF, makeSessionUser } from '@/test/factories/session'
 import { TableOrdersPage } from '@/features/orders/pages/table-orders-page'
 
 let mock: MockAdapter
@@ -183,6 +183,7 @@ describe('TableOrdersPage', () => {
             types: ['delivery', 'pickup'],
             dine_in: 'whatsapp',
             whatsapp_number: true,
+            whatsapp_fields: WHATSAPP_FIELDS_OFF,
           },
         }),
       })
@@ -224,6 +225,7 @@ describe('TableOrdersPage', () => {
             types: ['delivery', 'pickup'],
             dine_in: 'whatsapp',
             whatsapp_number: false,
+            whatsapp_fields: WHATSAPP_FIELDS_OFF,
           },
         }),
       })

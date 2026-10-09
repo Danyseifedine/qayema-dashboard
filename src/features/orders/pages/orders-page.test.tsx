@@ -6,7 +6,7 @@ import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { makeDish } from '@/test/factories/menu'
 import { renderWithProviders } from '@/test/render-with-providers'
-import { makeSessionUser } from '@/test/factories/session'
+import { WHATSAPP_FIELDS_OFF, makeSessionUser } from '@/test/factories/session'
 import { OrdersPage } from '@/features/orders/pages/orders-page'
 
 let mock: MockAdapter
@@ -591,6 +591,7 @@ describe('OrdersPage', () => {
             types: ['delivery', 'pickup'],
             dine_in: 'menu',
             whatsapp_number: true,
+            whatsapp_fields: WHATSAPP_FIELDS_OFF,
           },
         }),
       })

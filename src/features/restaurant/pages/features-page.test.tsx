@@ -8,7 +8,7 @@ import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { PACKAGE_CATALOGUE } from '@/test/factories/packages'
-import { FULL_PLAN, makeSessionUser } from '@/test/factories/session'
+import { FULL_PLAN, WHATSAPP_FIELDS_OFF, makeSessionUser } from '@/test/factories/session'
 import { FeaturesPage, type FeaturesPageProps } from '@/features/restaurant/pages/features-page'
 
 let mock: MockAdapter
@@ -21,7 +21,13 @@ const ORDERING = {
   types: ['delivery', 'pickup'],
   dine_in: 'menu',
   whatsapp_number: true,
+  whatsapp_fields: WHATSAPP_FIELDS_OFF,
 } satisfies FeaturesPageProps['ordering']
+
+/** One of the "what to ask" choices: Name, Phone or Delivery address. */
+function askTab(field: string, level: string) {
+  return tabOf(`${field}: what to ask`, level)
+}
 
 /** A tab of one choice: delivery and pickup's, or the table's. */
 function tabOf(group: string, name: string) {
@@ -116,21 +122,27 @@ describe('FeaturesPage', () => {
     resetCsrfToken(api)
   })
 
-  it('has a switch for orders, ordering at the table, variants, add-ons, the QR studio, analytics and languages', () => {
+  it('groups related features in sections, each feature a switch', () => {
     renderWithProviders(page({ off: ['orders'] }))
 
-    const switches = screen
-      .getAllByRole('switch')
-      .map((element) => element.getAttribute('aria-label'))
-    expect(switches).toEqual([
-      'Orders on',
-      'Ordering at the table on',
-      'Variants on',
-      'Add-ons on',
-      'QR Studio on',
-      'Analytics on',
-      'Multiple languages on',
-    ])
+    const section = (title: string) =>
+      screen.getByRole('heading', { level: 3, name: title }).closest('section')!
+    const switchesIn = (title: string) =>
+      within(section(title))
+        .getAllByRole('switch')
+        .map((element) => element.getAttribute('aria-label'))
+
+    expect(
+      screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent),
+    ).toEqual(['Orders', 'Dishes', 'Menu languages', 'QR code and analytics'])
+    expect(switchesIn('Orders')).toEqual(['Orders on', 'Ordering at the table on'])
+    expect(switchesIn('Dishes')).toEqual(['Variants on', 'Add-ons on'])
+    expect(switchesIn('QR code and analytics')).toEqual(['QR Studio on', 'Analytics on'])
+    // The main language and the second one, together.
+    expect(switchesIn('Menu languages')).toEqual(['Multiple languages on'])
+    expect(
+      within(section('Menu languages')).getByRole('combobox', { name: 'Your menu is written in' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Orders on' })).not.toBeChecked()
     expect(screen.getByRole('switch', { name: 'Analytics on' })).toBeChecked()
   })
@@ -632,6 +644,129 @@ describe('FeaturesPage', () => {
         0,
       )
       expect(mock.history.put).toHaveLength(1)
+    })
+  })
+
+  describe('what a WhatsApp order asks the guest for', () => {
+    it('asks for a name, a phone and an address only while orders go to WhatsApp', () => {
+      const { unmount } = renderWithProviders(page())
+
+      const group = screen.getByRole('group', { name: 'Ask guests for' })
+      expect(
+        within(group)
+          .getAllByRole('tablist')
+          .map((list) => list.getAttribute('aria-label')),
+      ).toEqual(['Name: what to ask', 'Phone: what to ask', 'Delivery address: what to ask'])
+      expect(askTab('Name', 'Off')).toHaveAttribute('aria-selected', 'true')
+      expect(within(group).getByText(/before WhatsApp opens/)).toBeInTheDocument()
+      expect(
+        within(group).getByText(/the address is only asked for a delivery/),
+      ).toBeInTheDocument()
+      unmount()
+
+      renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu' } }))
+      expect(screen.queryByRole('group', { name: 'Ask guests for' })).not.toBeInTheDocument()
+    })
+
+    it('saves the whole set when one is changed', async () => {
+      const saved = {
+        away: { name: 'required', phone: 'off', address: 'off' },
+        table: { name: 'off', phone: 'off' },
+      }
+      mock.onPut('/api/features/whatsapp-fields').reply(200, { data: saved })
+      const user = userEvent.setup()
+      renderWithProviders(page())
+
+      await user.click(askTab('Name', 'Required'))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(1))
+      expect(mock.history.put[0]!.url).toBe('/api/features/whatsapp-fields')
+      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual(saved)
+    })
+
+    it('saves nothing when the level already chosen is picked again', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(page())
+
+      await user.click(askTab('Phone', 'Off'))
+
+      expect(askTab('Phone', 'Off')).toHaveAttribute('aria-selected', 'true')
+      expect(mock.history.put).toHaveLength(0)
+    })
+
+    it('lets guests choose delivery or pickup once the address is asked', async () => {
+      mock.onGet('/api/user').reply(200, { data: makeSessionUser({ ordering: ORDERING }) })
+      mock.onPut('/api/features/whatsapp-fields').reply(200, {
+        data: {
+          ...WHATSAPP_FIELDS_OFF,
+          away: { ...WHATSAPP_FIELDS_OFF.away, address: 'optional' },
+        },
+      })
+      mock.onPut('/api/features/ordering').reply(200, {
+        data: { mode: 'whatsapp', types: ['delivery'] },
+      })
+      const user = userEvent.setup()
+      renderWithProviders(<FromSession />)
+
+      await screen.findByRole('group', { name: 'Ask guests for' })
+      expect(screen.queryByRole('group', { name: 'You take' })).not.toBeInTheDocument()
+      await user.click(askTab('Delivery address', 'Optional'))
+
+      const types = await screen.findByRole('group', { name: 'You take' })
+      expect(
+        within(types).getByText('Guests who choose it give their address.'),
+      ).toBeInTheDocument()
+      await user.click(within(types).getByRole('switch', { name: 'Pickup' }))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(2))
+      expect(mock.history.put[1]!.url).toBe('/api/features/ordering')
+      expect(JSON.parse(mock.history.put[1]!.data as string)).toEqual({
+        mode: 'whatsapp',
+        types: ['delivery'],
+      })
+    })
+
+    it('asks table guests for a name and a phone only while table orders go to WhatsApp', async () => {
+      mock.onPut('/api/features/whatsapp-fields').reply(200, {
+        data: { ...WHATSAPP_FIELDS_OFF, table: { name: 'off', phone: 'optional' } },
+      })
+      const user = userEvent.setup()
+      const { unmount } = renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu' } }))
+      expect(screen.queryByRole('group', { name: 'Ask guests for' })).not.toBeInTheDocument()
+      unmount()
+
+      renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu', dine_in: 'whatsapp' } }))
+      const group = screen.getByRole('group', { name: 'Ask guests for' })
+      expect(
+        within(group)
+          .getAllByRole('tablist')
+          .map((list) => list.getAttribute('aria-label')),
+      ).toEqual(['Name: what to ask', 'Phone: what to ask'])
+      await user.click(askTab('Phone', 'Optional'))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(1))
+      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+        away: { name: 'off', phone: 'off', address: 'off' },
+        table: { name: 'off', phone: 'optional' },
+      })
+    })
+
+    it('moves at once, and snaps back with a reason when the save fails', async () => {
+      mock.onGet('/api/user').reply(200, { data: makeSessionUser({ ordering: ORDERING }) })
+      const answer = held()
+      mock.onPut('/api/features/whatsapp-fields').reply(answer.reply)
+      const user = userEvent.setup()
+      renderWithProviders(<FromSession />)
+
+      await screen.findByRole('group', { name: 'Ask guests for' })
+      await user.click(askTab('Name', 'Required'))
+      expect(askTab('Name', 'Required')).toHaveAttribute('aria-selected', 'true')
+
+      answer.release([500, { message: 'Server down', code: 'server_error' }])
+      await waitFor(() => expect(askTab('Name', 'Off')).toHaveAttribute('aria-selected', 'true'))
+      expect((await screen.findAllByText('Could not update your features')).length).toBeGreaterThan(
+        0,
+      )
     })
   })
 
