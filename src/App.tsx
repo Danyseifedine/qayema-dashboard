@@ -10,7 +10,7 @@ import {
 import { PlanLockedPage } from '@/app/layouts/authenticated/plan-locked-page'
 import { usePageKey } from '@/app/layouts/authenticated/use-page-key'
 import { SessionGate } from '@/features/auth'
-import { useLogout, useOrderingMode } from '@/features/auth'
+import { useLogout, useOrderingMode, useTableOrderingMode } from '@/features/auth'
 import type { AuthUser } from '@/features/auth'
 import { OrdersPage, TableOrdersPage, useOrderPulse } from '@/features/orders'
 import { PageSkeleton } from '@/shared/components/feedback'
@@ -97,10 +97,11 @@ function Dashboard({ user }: { user: AuthUser }) {
   const setLocale = usePreferencesStore((state) => state.setLocale)
   const { t } = useTranslation()
   // Orders placed in the menu are watched for wherever the owner is: those
-  // to a table come in the menu whichever way the rest go.
-  const takesTableOrders = plan.dine_in && !switchedOff.includes('dine_in')
+  // to a table have their own way in, apart from the rest.
+  const orderingMode = useOrderingMode()
+  const tableOrderingMode = useTableOrderingMode()
   const ordersWaiting = useOrderPulse(
-    useOrderingMode() === 'menu' || takesTableOrders,
+    orderingMode === 'menu' || tableOrderingMode === 'menu',
     restaurant.id,
   )
   usePrefetchPages()
@@ -184,7 +185,10 @@ function Dashboard({ user }: { user: AuthUser }) {
         ) : activeKey === 'orders' ? (
           <OrdersPage onOpenFeatures={() => setActiveKey('features')} />
         ) : activeKey === 'table-orders' ? (
-          <TableOrdersPage onOpenTables={() => setActiveKey('tables')} />
+          <TableOrdersPage
+            onOpenTables={() => setActiveKey('tables')}
+            onOpenFeatures={() => setActiveKey('features')}
+          />
         ) : activeKey === 'tables' ? (
           <TablesPage onOpenFeatures={() => setActiveKey('features')} />
         ) : activeKey === 'qr' ? (
@@ -209,6 +213,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             ordering={restaurant.ordering}
             onOpenPackage={() => setActiveKey('package')}
             onOpenTables={() => setActiveKey('tables')}
+            onOpenRestaurant={() => setActiveKey('restaurant')}
             onOpenDishes={() => setActiveKey('dishes')}
           />
         ) : activeKey === 'account' ? (

@@ -77,6 +77,9 @@
     "emptyTitle": "No table orders yet",
     "emptyDescription": "When a guest scans the QR code on their table and orders, it shows here with the table's name and a sound.",
     "openTables": "Set up your tables",
+    "whatsappTitle": "Your table orders go to WhatsApp",
+    "whatsappDescription": "Guests send each table order to your WhatsApp with the table's name, so you handle it there and it doesn't show here. To get them here instead, with a sound when one arrives, choose Dashboard for table orders on the Features page.",
+    "whatsappEarlier": "New table orders open in WhatsApp. Below are the ones guests placed here before.",
     "count_one": "{{count}} order",
     "count_other": "{{count}} orders"
   },

@@ -585,7 +585,14 @@ describe('OrdersPage', () => {
   describe('while orders go to WhatsApp', () => {
     beforeEach(() => {
       mock.onGet('/api/user').reply(200, {
-        data: makeSessionUser({ ordering: { mode: 'whatsapp', types: ['delivery', 'pickup'] } }),
+        data: makeSessionUser({
+          ordering: {
+            mode: 'whatsapp',
+            types: ['delivery', 'pickup'],
+            dine_in: 'menu',
+            whatsapp_number: true,
+          },
+        }),
       })
     })
 

@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/render-with-providers'
+import { makeSessionUser } from '@/test/factories/session'
 import { TableOrdersPage } from '@/features/orders/pages/table-orders-page'
 
 let mock: MockAdapter
@@ -49,7 +50,7 @@ describe('TableOrdersPage', () => {
       ],
       meta: { open: 1 },
     })
-    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
 
     const groups = await screen.findAllByRole('region', { name: /^Table/ })
     expect(groups.map((group) => group.getAttribute('aria-label'))).toEqual(['Table 2', 'Table 10'])
@@ -69,7 +70,7 @@ describe('TableOrdersPage', () => {
       ],
       meta: { open: 0 },
     })
-    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
 
     const groups = await screen.findAllByRole('region', {
       name: (name) => !name.startsWith('Notifications'),
@@ -87,7 +88,7 @@ describe('TableOrdersPage', () => {
       data: [order(1, 'Bar', { placed_at: null }), order(2, 'Terrace')],
       meta: { open: 2 },
     })
-    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
 
     const groups = await screen.findAllByRole('region', {
       name: (name) => !name.startsWith('Notifications'),
@@ -99,7 +100,7 @@ describe('TableOrdersPage', () => {
   it('filters by the steps a table order goes through', async () => {
     mock.onGet('/api/orders').reply(200, { data: [order(1, 'Table 4')], meta: { open: 1 } })
     const user = userEvent.setup()
-    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
 
     const filter = await screen.findByRole('tablist', { name: 'Filter orders by status' })
     expect(
@@ -122,7 +123,7 @@ describe('TableOrdersPage', () => {
     mock.onGet('/api/orders').reply(200, { data: [order(1, 'Table 4')], meta: { open: 1 } })
     mock.onPatch('/api/orders/1').reply(200, { data: order(1, 'Table 4', { status: 'accepted' }) })
     const user = userEvent.setup()
-    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
 
     await user.click(await screen.findByRole('button', { name: 'Start preparing' }))
 
@@ -138,7 +139,7 @@ describe('TableOrdersPage', () => {
     mock.onGet('/api/orders').replyOnce(500, { message: 'Something went wrong.' })
     mock.onGet('/api/orders').reply(200, { data: [order(1, 'Table 4')], meta: { open: 1 } })
     const user = userEvent.setup()
-    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
 
     expect(await screen.findByText('Something went wrong.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /Try again/ }))
@@ -153,7 +154,7 @@ describe('TableOrdersPage', () => {
     })
     mock.onGet('/api/orders').reply(200, { data: [order(1, 'Table 4')], meta: { open: 1 } })
     const user = userEvent.setup()
-    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} />)
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
 
     await screen.findByRole('region', { name: 'Table 4' })
     await user.click(screen.getByRole('tab', { name: 'Cancelled' }))
@@ -166,10 +167,73 @@ describe('TableOrdersPage', () => {
     mock.onGet('/api/orders').reply(200, { data: [], meta: { open: 0 } })
     const onOpenTables = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(<TableOrdersPage onOpenTables={onOpenTables} />)
+    renderWithProviders(<TableOrdersPage onOpenTables={onOpenTables} onOpenFeatures={() => {}} />)
 
     expect(await screen.findByText('No table orders yet')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Set up your tables' }))
     expect(onOpenTables).toHaveBeenCalledOnce()
+  })
+
+  describe('while table orders go to WhatsApp', () => {
+    beforeEach(() => {
+      mock.onGet('/api/user').reply(200, {
+        data: makeSessionUser({
+          ordering: {
+            mode: 'menu',
+            types: ['delivery', 'pickup'],
+            dine_in: 'whatsapp',
+            whatsapp_number: true,
+          },
+        }),
+      })
+    })
+
+    it('says they are handled in WhatsApp, with the way to change it', async () => {
+      mock
+        .onGet('/api/orders', { params: { kind: 'table' } })
+        .reply(200, { data: [], meta: { open: 0 } })
+      const onOpenFeatures = vi.fn()
+      const user = userEvent.setup()
+      renderWithProviders(
+        <TableOrdersPage onOpenTables={() => {}} onOpenFeatures={onOpenFeatures} />,
+      )
+
+      expect(await screen.findByText('Your table orders go to WhatsApp')).toBeInTheDocument()
+      expect(screen.queryByText('No table orders yet')).not.toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Open Features' }))
+      expect(onOpenFeatures).toHaveBeenCalledOnce()
+    })
+
+    it('still lists orders placed here before, so they can be finished', async () => {
+      mock.onGet('/api/orders', { params: { kind: 'table' } }).reply(200, {
+        data: [order(1, 'Table 2')],
+        meta: { open: 1 },
+      })
+      renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
+
+      expect(await screen.findByText(/New table orders open in WhatsApp/)).toBeInTheDocument()
+      expect(screen.getByRole('region', { name: 'Table 2' })).toBeInTheDocument()
+    })
+
+    it('keeps them here while there is no number to send to', async () => {
+      mock.onGet('/api/user').reply(200, {
+        data: makeSessionUser({
+          ordering: {
+            mode: 'menu',
+            types: ['delivery', 'pickup'],
+            dine_in: 'whatsapp',
+            whatsapp_number: false,
+          },
+        }),
+      })
+      mock
+        .onGet('/api/orders', { params: { kind: 'table' } })
+        .reply(200, { data: [], meta: { open: 0 } })
+      renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
+
+      expect(await screen.findByText('No table orders yet')).toBeInTheDocument()
+      expect(screen.queryByText('Your table orders go to WhatsApp')).not.toBeInTheDocument()
+    })
   })
 })

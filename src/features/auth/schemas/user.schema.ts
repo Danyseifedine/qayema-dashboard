@@ -73,11 +73,15 @@ const restaurantSchema = z.object({
   /**
    * How guests send their orders while ordering is on: to WhatsApp, or in
    * the menu (only while the package includes it), and which kinds of order
-   * the menu takes.
+   * the menu takes. Orders at the table have their own way in (`dine_in`,
+   * the owner's choice), and WhatsApp needs a number it can reach
+   * (`whatsapp_number`); without one they arrive here.
    */
   ordering: z.object({
     mode: z.enum(['whatsapp', 'menu']),
     types: z.array(z.enum(['delivery', 'pickup'])).min(1),
+    dine_in: z.enum(['whatsapp', 'menu']),
+    whatsapp_number: z.boolean(),
   }),
   /** What this restaurant may use: its package plus any grants. */
   plan: planSchema,

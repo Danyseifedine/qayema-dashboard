@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -15,6 +15,24 @@ let mock: MockAdapter
 
 const ALL = FULL_PLAN
 
+/** How orders come in, as the session sends it: table orders on the dashboard. */
+const ORDERING = {
+  mode: 'whatsapp',
+  types: ['delivery', 'pickup'],
+  dine_in: 'menu',
+  whatsapp_number: true,
+} satisfies FeaturesPageProps['ordering']
+
+/** A tab of one choice: delivery and pickup's, or the table's. */
+function tabOf(group: string, name: string) {
+  return within(screen.getByRole('tablist', { name: group })).getByRole('tab', { name })
+}
+
+/** How delivery and pickup come in (the table's choice has a WhatsApp too). */
+function orderTab(name: string) {
+  return tabOf('Guests send their order', name)
+}
+
 function page(props: Partial<FeaturesPageProps> = {}) {
   return (
     <FeaturesPage
@@ -23,9 +41,10 @@ function page(props: Partial<FeaturesPageProps> = {}) {
       mainLocale="en"
       secondLocale="ar"
       defaultLocale="en"
-      ordering={{ mode: 'whatsapp', types: ['delivery', 'pickup'] }}
+      ordering={{ ...ORDERING, mode: 'whatsapp', types: ['delivery', 'pickup'] }}
       onOpenPackage={() => {}}
       onOpenTables={() => {}}
+      onOpenRestaurant={() => {}}
       onOpenDishes={() => {}}
       {...props}
     />
@@ -46,6 +65,7 @@ function FromSession() {
       ordering={restaurant.ordering}
       onOpenPackage={() => {}}
       onOpenTables={() => {}}
+      onOpenRestaurant={() => {}}
       onOpenDishes={() => {}}
     />
   )
@@ -493,7 +513,7 @@ describe('FeaturesPage', () => {
       renderWithProviders(page())
 
       expect(screen.getByText(/won't show on your Orders page/)).toBeInTheDocument()
-      await user.click(screen.getByRole('tab', { name: 'In your menu' }))
+      await user.click(orderTab('In your menu'))
 
       await waitFor(() => expect(mock.history.put).toHaveLength(1))
       expect(mock.history.put[0]!.url).toBe('/api/features/ordering')
@@ -506,7 +526,9 @@ describe('FeaturesPage', () => {
     it('takes pickup only', async () => {
       mock.onPut('/api/features/ordering').reply(200, { data: { mode: 'menu', types: ['pickup'] } })
       const user = userEvent.setup()
-      renderWithProviders(page({ ordering: { mode: 'menu', types: ['delivery', 'pickup'] } }))
+      renderWithProviders(
+        page({ ordering: { ...ORDERING, mode: 'menu', types: ['delivery', 'pickup'] } }),
+      )
 
       expect(screen.getByText(/Orders arrive on your Orders page with a sound/)).toBeInTheDocument()
       expect(screen.getByRole('switch', { name: 'Delivery' })).toHaveAttribute(
@@ -527,7 +549,7 @@ describe('FeaturesPage', () => {
         data: { mode: 'menu', types: ['delivery', 'pickup'] },
       })
       const user = userEvent.setup()
-      renderWithProviders(page({ ordering: { mode: 'menu', types: ['delivery'] } }))
+      renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu', types: ['delivery'] } }))
 
       expect(screen.getByRole('switch', { name: 'Pickup' })).toHaveAttribute(
         'aria-checked',
@@ -546,14 +568,14 @@ describe('FeaturesPage', () => {
       const user = userEvent.setup()
       renderWithProviders(page())
 
-      await user.click(screen.getByRole('tab', { name: 'WhatsApp' }))
+      await user.click(orderTab('WhatsApp'))
 
-      expect(screen.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute('aria-selected', 'true')
+      expect(orderTab('WhatsApp')).toHaveAttribute('aria-selected', 'true')
       expect(mock.history.put).toHaveLength(0)
     })
 
     it('keeps the last kind of order on, so guests can always order', () => {
-      renderWithProviders(page({ ordering: { mode: 'menu', types: ['pickup'] } }))
+      renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu', types: ['pickup'] } }))
 
       expect(screen.getByRole('switch', { name: 'Pickup' })).toBeDisabled()
       expect(screen.getByRole('switch', { name: 'Delivery' })).toBeEnabled()
@@ -564,7 +586,7 @@ describe('FeaturesPage', () => {
     it('asks nothing about delivery while orders go to WhatsApp', () => {
       renderWithProviders(page())
 
-      expect(screen.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute('aria-selected', 'true')
+      expect(orderTab('WhatsApp')).toHaveAttribute('aria-selected', 'true')
       expect(screen.queryByRole('group', { name: 'You take' })).not.toBeInTheDocument()
     })
 
@@ -574,7 +596,7 @@ describe('FeaturesPage', () => {
       const user = userEvent.setup()
       renderWithProviders(page({ plan: { ...ALL, menu_ordering: false }, onOpenPackage }))
 
-      expect(screen.getByRole('tab', { name: 'In your menu' })).toBeDisabled()
+      expect(orderTab('In your menu')).toBeDisabled()
       await user.click(
         await screen.findByRole('button', { name: 'Available on Premium. See packages' }),
       )
@@ -591,7 +613,9 @@ describe('FeaturesPage', () => {
 
     it('moves at once, and snaps back with a reason when the save fails', async () => {
       mock.onGet('/api/user').reply(200, {
-        data: makeSessionUser({ ordering: { mode: 'whatsapp', types: ['delivery', 'pickup'] } }),
+        data: makeSessionUser({
+          ordering: { ...ORDERING, mode: 'whatsapp', types: ['delivery', 'pickup'] },
+        }),
       })
       const answer = held()
       mock.onPut('/api/features/ordering').reply(answer.reply)
@@ -599,18 +623,10 @@ describe('FeaturesPage', () => {
       renderWithProviders(<FromSession />)
 
       await user.click(await screen.findByRole('tab', { name: 'In your menu' }))
-      expect(screen.getByRole('tab', { name: 'In your menu' })).toHaveAttribute(
-        'aria-selected',
-        'true',
-      )
+      expect(orderTab('In your menu')).toHaveAttribute('aria-selected', 'true')
 
       answer.release([500, { message: 'Server down', code: 'server_error' }])
-      await waitFor(() =>
-        expect(screen.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute(
-          'aria-selected',
-          'true',
-        ),
-      )
+      await waitFor(() => expect(orderTab('WhatsApp')).toHaveAttribute('aria-selected', 'true'))
       // The toaster outlives a test, so the one before may still show its own.
       expect((await screen.findAllByText('Could not update your features')).length).toBeGreaterThan(
         0,
@@ -623,7 +639,9 @@ describe('FeaturesPage', () => {
     it('is a feature of its own, switched off like any other', async () => {
       mock.onPut('/api/features').reply(200, { data: { off: ['dine_in'] } })
       const user = userEvent.setup()
-      renderWithProviders(page({ ordering: { mode: 'whatsapp', types: ['delivery', 'pickup'] } }))
+      renderWithProviders(
+        page({ ordering: { ...ORDERING, mode: 'whatsapp', types: ['delivery', 'pickup'] } }),
+      )
 
       await user.click(screen.getByRole('switch', { name: 'Ordering at the table on' }))
 
@@ -648,6 +666,92 @@ describe('FeaturesPage', () => {
         screen.getByText(/guests can't order to their table while this is off/),
       ).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Set up your tables' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('tablist', { name: 'Table orders arrive' })).not.toBeInTheDocument()
+    })
+
+    it('sends table orders to WhatsApp, apart from delivery and pickup', async () => {
+      mock.onGet('/api/user').reply(200, {
+        data: makeSessionUser({ ordering: { ...ORDERING, mode: 'menu' } }),
+      })
+      mock.onPut('/api/features/dine-in').reply(200, { data: { dine_in: 'whatsapp' } })
+      const user = userEvent.setup()
+      renderWithProviders(<FromSession />)
+
+      expect(await screen.findByText(/Orders arrive on your Table orders page/)).toBeInTheDocument()
+      await user.click(tabOf('Table orders arrive', 'WhatsApp'))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(1))
+      expect(mock.history.put[0]!.url).toBe('/api/features/dine-in')
+      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({ mode: 'whatsapp' })
+      expect(tabOf('Table orders arrive', 'WhatsApp')).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByText(/with the table's name at the top/)).toBeInTheDocument()
+      // Delivery and pickup keep their own way in.
+      expect(orderTab('In your menu')).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('saves nothing when the way already chosen is picked again', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(page())
+
+      await user.click(tabOf('Table orders arrive', 'Dashboard'))
+
+      expect(mock.history.put).toHaveLength(0)
+    })
+
+    it('waits for a number before WhatsApp, with the way to add one', async () => {
+      const onOpenRestaurant = vi.fn()
+      const user = userEvent.setup()
+      renderWithProviders(
+        page({ ordering: { ...ORDERING, whatsapp_number: false }, onOpenRestaurant }),
+      )
+
+      expect(tabOf('Table orders arrive', 'WhatsApp')).toBeDisabled()
+      expect(screen.getByText(/WhatsApp needs your restaurant's phone number/)).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: 'Add it on the Restaurant page' }))
+      expect(onOpenRestaurant).toHaveBeenCalledOnce()
+    })
+
+    it('says table orders stay here while WhatsApp has no number, and can move back', async () => {
+      mock.onPut('/api/features/dine-in').reply(200, { data: { dine_in: 'menu' } })
+      const user = userEvent.setup()
+      renderWithProviders(
+        page({ ordering: { ...ORDERING, dine_in: 'whatsapp', whatsapp_number: false } }),
+      )
+
+      expect(
+        screen.getByText(/so table orders arrive on your dashboard until you add one/),
+      ).toBeInTheDocument()
+      expect(tabOf('Table orders arrive', 'WhatsApp')).toBeEnabled()
+      await user.click(tabOf('Table orders arrive', 'Dashboard'))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(1))
+      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({ mode: 'menu' })
+    })
+
+    it('moves at once, and snaps back with a reason when the save fails', async () => {
+      mock.onGet('/api/user').reply(200, { data: makeSessionUser({ ordering: ORDERING }) })
+      const answer = held()
+      mock.onPut('/api/features/dine-in').reply(answer.reply)
+      const user = userEvent.setup()
+      renderWithProviders(<FromSession />)
+
+      await screen.findByRole('tablist', { name: 'Table orders arrive' })
+      await user.click(tabOf('Table orders arrive', 'WhatsApp'))
+      expect(tabOf('Table orders arrive', 'WhatsApp')).toHaveAttribute('aria-selected', 'true')
+
+      answer.release([
+        422,
+        {
+          message: 'Add your WhatsApp number on the Restaurant page first.',
+          code: 'validation_failed',
+        },
+      ])
+      await waitFor(() =>
+        expect(tabOf('Table orders arrive', 'Dashboard')).toHaveAttribute('aria-selected', 'true'),
+      )
+      expect((await screen.findAllByText('Could not update your features')).length).toBeGreaterThan(
+        0,
+      )
     })
   })
 })

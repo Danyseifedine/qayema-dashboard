@@ -67,7 +67,12 @@ export function makeSessionUser(
         social_links: { used: 0, limit: 2 },
       },
       switched_off: [],
-      ordering: { mode: 'whatsapp', types: ['delivery', 'pickup'] },
+      ordering: {
+        mode: 'whatsapp',
+        types: ['delivery', 'pickup'],
+        dine_in: 'menu',
+        whatsapp_number: true,
+      },
       plan: FULL_PLAN,
       ...restaurant,
     },

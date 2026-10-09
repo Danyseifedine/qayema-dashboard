@@ -163,8 +163,14 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `PUT /api/features/ordering`, optimistic into
   `restaurant.ordering` (`useSaveOrdering`). **Ordering at the table** is a
   row of its own (switch `dine_in`, flag `plan.dine_in`), independent of
-  Orders: its orders are placed in the menu even while delivery and pickup
-  go to WhatsApp or are off. It hides both Tables and Table orders
+  Orders, with its own way in (`DineInChoice`): "Dashboard" (the Table
+  orders page) or "WhatsApp" (the table's name heads the message),
+  `PUT /api/features/dine-in`, optimistic into `restaurant.ordering.dine_in`
+  (`useSaveDineIn`). WhatsApp needs the restaurant's number
+  (`ordering.whatsapp_number`): without one it is disabled with the way to
+  the Restaurant page, and a choice made before says orders arrive here
+  until one is added. `useTableOrderingMode()` (from `features/auth`) is the
+  server's `dineInChannel()`. It hides both Tables and Table orders
   (`switchKey: 'dine_in'` on their nav items; `isNavItemHidden` reads
   `switchKey ?? key`).
 - **Design page** (`features/design`): picking a design (backend `Template`
@@ -239,9 +245,10 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `GET /api/orders?kind=table`): orders to a table, grouped by table, the
   one waiting longest first, with the same cards and actions as Orders
   (`useOrderActions`, `CancelOrderDialog`). The Orders page asks
-  `kind=away`. The pulse runs while orders are taken in the menu or at the
-  table, and returns `{orders, tables}`: one sidebar count each, both in
-  the tab title.
+  `kind=away`. While table orders go to WhatsApp the page says so, as the
+  Orders page does, and still lists those placed here before. The pulse
+  runs while orders or table orders are taken in the menu, and returns
+  `{orders, tables}`: one sidebar count each, both in the tab title.
 - **Tables** (`features/tables`, `/api/tables`, needs `plan.dine_in`):
   each table has a name and a random `code`; its QR code opens the menu at
   `?table=<code>&qr=1`, and an order "at my table" (`dine_in`) goes to it.

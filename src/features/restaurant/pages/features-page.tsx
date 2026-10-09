@@ -22,7 +22,7 @@ import {
   useSaveMenuLanguages,
 } from '@/features/restaurant/hooks/use-menu-languages-save'
 import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
-import { useSaveOrdering } from '@/features/restaurant/hooks/use-ordering-save'
+import { useSaveDineIn, useSaveOrdering } from '@/features/restaurant/hooks/use-ordering-save'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -45,6 +45,8 @@ export type FeaturesPageProps = {
   onOpenPackage: () => void
   /** Opens the Tables page, from ordering at the table. */
   onOpenTables: () => void
+  /** Opens the Restaurant page, to add the number WhatsApp sends to. */
+  onOpenRestaurant: () => void
   /** Opens the Dishes page, to write what a new main language still lacks. */
   onOpenDishes: () => void
 }
@@ -76,6 +78,7 @@ export function FeaturesPage({
   ordering,
   onOpenPackage,
   onOpenTables,
+  onOpenRestaurant,
   onOpenDishes,
 }: FeaturesPageProps) {
   const { t } = useTranslation('features')
@@ -162,6 +165,11 @@ export function FeaturesPage({
                     />
                   </div>
                 ) : null}
+                {key === 'dine_in' && on ? (
+                  <div className="sm:ms-12">
+                    <DineInChoice ordering={ordering} onOpenRestaurant={onOpenRestaurant} />
+                  </div>
+                ) : null}
                 {key === 'languages' && on ? (
                   <div className="sm:ms-12">
                     <LanguageChoice
@@ -176,6 +184,70 @@ export function FeaturesPage({
           })}
         </ul>
       </FormSection>
+    </div>
+  )
+}
+
+/**
+ * How orders at the table come in, apart from delivery and pickup: on the
+ * Table orders page (followed by the guest, with a sound here) or on
+ * WhatsApp with the table's name on top. WhatsApp needs the restaurant's
+ * number; without one the server keeps them here, and this says so.
+ */
+function DineInChoice({
+  ordering,
+  onOpenRestaurant,
+}: {
+  ordering: AuthRestaurant['ordering']
+  onOpenRestaurant: () => void
+}) {
+  const { t } = useTranslation('features')
+  const save = useSaveDineIn()
+  const mode = ordering.dine_in
+  const noNumber = !ordering.whatsapp_number
+
+  return (
+    <div className="mt-3 grid gap-3 rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-3.5">
+      <Field
+        label={t('dine_in.modeLabel')}
+        hint={t(mode === 'whatsapp' ? 'dine_in.whatsappHint' : 'dine_in.dashboardHint')}
+        className="pt-0"
+      >
+        {() => (
+          <Segmented
+            aria-label={t('dine_in.modeLabel')}
+            value={mode}
+            onChange={(next) => {
+              if (next !== mode) {
+                save.mutate(next)
+              }
+            }}
+            options={[
+              { value: 'menu', label: t('dine_in.dashboard') },
+              {
+                value: 'whatsapp',
+                label: t('orders.whatsapp'),
+                // Chosen before the number went: it stays, so the owner can
+                // move back to the dashboard from it.
+                disabled: noNumber && mode !== 'whatsapp',
+              },
+            ]}
+          />
+        )}
+      </Field>
+      {noNumber ? (
+        <p className="text-[12.5px] leading-snug text-[var(--status-warn)]">
+          {t(mode === 'whatsapp' ? 'dine_in.noNumber' : 'dine_in.needsNumber')}{' '}
+          <Button
+            variant="link"
+            size="sm"
+            onClick={onOpenRestaurant}
+            className="h-auto px-0 align-baseline text-[12.5px] font-medium"
+          >
+            {t('dine_in.addNumber')}
+          </Button>
+        </p>
+      ) : null}
     </div>
   )
 }

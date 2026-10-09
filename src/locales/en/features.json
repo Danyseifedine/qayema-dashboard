@@ -43,9 +43,16 @@
   },
   "dine_in": {
     "label": "Ordering at the table",
-    "description": "Each table gets its own QR code. Guests order straight to their table, no phone number needed, and orders arrive on the Table orders page. Works whatever you choose for orders above.",
+    "description": "Each table gets its own QR code. Guests order straight to their table, no phone number needed. Works whatever you choose for orders above.",
     "offNote": "Table QR codes still open your menu, but guests can't order to their table while this is off. Your tables are kept.",
-    "openTables": "Set up your tables"
+    "openTables": "Set up your tables",
+    "modeLabel": "Table orders arrive",
+    "dashboard": "Dashboard",
+    "dashboardHint": "Orders arrive on your Table orders page with a sound, and guests follow theirs as you prepare and serve it. Keep the dashboard open in a tab.",
+    "whatsappHint": "The order opens in WhatsApp for the guest to send you, with the table's name at the top. It won't show on your Table orders page, guests can't follow it, and we can't tell if it was sent.",
+    "needsNumber": "WhatsApp needs your restaurant's phone number.",
+    "noNumber": "Your restaurant has no WhatsApp number, so table orders arrive on your dashboard until you add one.",
+    "addNumber": "Add it on the Restaurant page"
   },
   "variants": {
     "label": "Variants",
