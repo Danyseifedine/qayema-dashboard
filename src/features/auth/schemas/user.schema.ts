@@ -94,6 +94,8 @@ const restaurantSchema = z.object({
   }),
   /** What this restaurant may use: its package plus any grants. */
   plan: planSchema,
+  /** The AI buttons (translate, write a description): on while the server has a provider. */
+  writing_help: z.boolean().default(false),
 })
 
 const userSchema = z.object({

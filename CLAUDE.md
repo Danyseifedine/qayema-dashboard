@@ -284,6 +284,21 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   it). `TranslatableTextField` takes `languages` and shows no tabs for a
   one-language menu. Send every active language (blank clears it); never send
   a hidden one (the server keeps it for when the owner switches back).
+- **Writing help (AI)**: while `restaurant.writing_help` is on (the server
+  has an AI provider set up; every package), `WritingHelpProvider` (around
+  the pages in `App.tsx`) lets every `TranslatableTextField` show
+  `WritingHelpButtons` under its control: "Translate", either way: "to
+  <other>" puts the open tab's text into the other language and opens it;
+  on an empty tab "from <other>" fills it from the other language. With
+  `write` (`{kind: 'category', name}` on the
+  category description, `{kind: 'restaurant'}` on the restaurant's, which
+  the server writes from the saved menu) "Write with AI", or "Improve with
+  AI" once the open tab has text, writes in the open language. The text
+  lands in the form only; saving is the form's. The calls are
+  `useTranslateText` / `useWriteDescription`
+  (`shared/hooks/use-writing-help.ts`, error toasts only; a spent day's
+  allowance, 429 `writing_help_limit`, shows the server's words rather than
+  a seconds countdown).
 - **Menu link** (`features/restaurant/components/identity/link-section.tsx`):
   the slug, changed on its own (not with the page's save), after a
   `ConfirmDialog` saying the old link and printed QR codes keep forwarding;

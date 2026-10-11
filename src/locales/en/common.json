@@ -66,6 +66,16 @@
   "localeTabs": {
     "label": "Content language"
   },
+  "writing": {
+    "write": "Write with AI",
+    "improve": "Improve with AI",
+    "translateTo": "Translate to {{language}}",
+    "translateFrom": "Translate from {{language}}",
+    "nameFirst": "Give the category a name first.",
+    "writeFirst": "Write the text in either language first.",
+    "translateFailed": "Could not translate",
+    "writeFailed": "Could not write the description"
+  },
   "menuLanguages": {
     "en": "English",
     "ar": "Arabic",

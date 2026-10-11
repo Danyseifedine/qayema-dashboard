@@ -1,11 +1,16 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import MockAdapter from 'axios-mock-adapter'
 import { useForm, useWatch } from 'react-hook-form'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { api } from '@/lib/api/client'
+import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import {
   TranslatableTextField,
   type TranslatableFieldProps,
 } from '@/shared/components/forms/translatable/translatable-text-field'
+import { WritingHelpProvider } from '@/shared/components/forms/translatable/writing-help'
+import { renderWithProviders } from '@/test/render-with-providers'
 
 type Values = { name?: Record<string, string | null> }
 
@@ -239,5 +244,185 @@ describe('TranslatableTextField', () => {
 
     expect(tab('EN')).toHaveTextContent('EN•')
     expect(screen.getByTestId('value')).toHaveTextContent('null')
+  })
+})
+
+describe('TranslatableTextField writing help', () => {
+  let mock: MockAdapter
+
+  beforeEach(() => {
+    mock = new MockAdapter(api)
+    resetCsrfToken(api)
+    installCsrfInterceptor(api)
+    mock.onGet('/api/csrf-token').reply(200, { token: 'csrf' })
+  })
+
+  afterEach(() => {
+    mock.restore()
+    api.interceptors.request.clear()
+    resetCsrfToken(api)
+  })
+
+  const helped = (props: Parameters<typeof Harness>[0] = {}, on = true) =>
+    renderWithProviders(
+      <WritingHelpProvider on={on}>
+        <Harness {...props} />
+      </WritingHelpProvider>,
+    )
+  const button = (name: RegExp) => screen.getByRole('button', { name })
+  const sent = (index = 0) => JSON.parse(mock.history.post[index]?.data as string) as unknown
+  const value = () => JSON.parse(screen.getByTestId('value').textContent ?? '') as unknown
+
+  it('shows nothing while the writing help is off, or with nothing to do', () => {
+    const { unmount } = helped(
+      { initial: { en: 'Soup', fr: '' }, write: { kind: 'category', name: { en: 'Soups' } } },
+      false,
+    )
+    expect(screen.queryByRole('button', { name: /translate|with ai/i })).not.toBeInTheDocument()
+    unmount()
+
+    helped({ languages: ['en'], initial: { en: 'Soup' } })
+    expect(screen.queryByRole('button', { name: /translate|with ai/i })).not.toBeInTheDocument()
+  })
+
+  it('translates the open tab into the other language and opens it', async () => {
+    const user = userEvent.setup()
+    mock.onPost('/api/writing/translate').reply(200, { data: { text: 'Soupe du jour' } })
+    helped({ initial: { en: 'Soup of the day', fr: 'old' } })
+
+    await user.click(button(/^Translate to French$/))
+
+    await waitFor(() => expect(control()).toHaveValue('Soupe du jour'))
+    expect(tab('FR')).toHaveAttribute('aria-selected', 'true')
+    expect(sent()).toEqual({ text: 'Soup of the day', from: 'en', to: 'fr' })
+    expect(value()).toEqual({ en: 'Soup of the day', fr: 'Soupe du jour' })
+    // The French tab has text now, so from here it goes the other way.
+    expect(button(/^Translate to English$/)).toBeEnabled()
+  })
+
+  it('translates the second language into the main one', async () => {
+    const user = userEvent.setup()
+    mock
+      .onPost('/api/writing/translate')
+      .replyOnce(200, { data: { text: 'Lentil soup' } })
+      .onPost('/api/writing/translate')
+      .replyOnce(200, { data: { text: 'Lentil soup, warm' } })
+    helped({ initial: { en: '', fr: 'Soupe de lentilles' } })
+
+    // An empty open tab is filled from the other language.
+    await user.click(button(/^Translate from French$/))
+
+    await waitFor(() => expect(control()).toHaveValue('Lentil soup'))
+    expect(tab('EN')).toHaveAttribute('aria-selected', 'true')
+    expect(sent()).toEqual({ text: 'Soupe de lentilles', from: 'fr', to: 'en' })
+
+    // From the French tab, its text goes into English.
+    await user.click(tab('FR'))
+    await user.click(button(/^Translate to English$/))
+
+    await waitFor(() => expect(control()).toHaveValue('Lentil soup, warm'))
+    expect(tab('EN')).toHaveAttribute('aria-selected', 'true')
+    expect(sent(1)).toEqual({ text: 'Soupe de lentilles', from: 'fr', to: 'en' })
+    expect(value()).toEqual({ en: 'Lentil soup, warm', fr: 'Soupe de lentilles' })
+  })
+
+  it('has nothing to translate until either language has text', async () => {
+    const user = userEvent.setup()
+    helped({ initial: { en: '  ', fr: '' } })
+
+    expect(button(/^Translate from French$/)).toBeDisabled()
+    expect(button(/^Translate from French$/)).toHaveAttribute(
+      'title',
+      'Write the text in either language first.',
+    )
+
+    await user.type(control(), 'Soup')
+    expect(button(/^Translate to French$/)).toBeEnabled()
+    expect(button(/^Translate to French$/)).not.toHaveAttribute('title')
+  })
+
+  it('writes a description from the name, then offers to improve it', async () => {
+    const user = userEvent.setup()
+    mock
+      .onPost('/api/writing/category-description')
+      .replyOnce(200, { data: { text: 'Warm bowls to start.' } })
+      .onPost('/api/writing/category-description')
+      .replyOnce(200, { data: { text: 'Warm bowls, made fresh, to start.' } })
+    helped({
+      initial: { en: '', fr: '' },
+      write: { kind: 'category', name: { en: 'Soups', fr: '' } },
+    })
+
+    await user.click(button(/^Write with AI$/))
+    await waitFor(() => expect(control()).toHaveValue('Warm bowls to start.'))
+    expect(sent()).toEqual({ name: 'Soups', text: '', language: 'en' })
+
+    await user.click(button(/^Improve with AI$/))
+    await waitFor(() => expect(control()).toHaveValue('Warm bowls, made fresh, to start.'))
+    expect(sent(1)).toEqual({ name: 'Soups', text: 'Warm bowls to start.', language: 'en' })
+  })
+
+  it('writes in the open language, from the main name when it has none there', async () => {
+    const user = userEvent.setup()
+    mock.onPost('/api/writing/category-description').reply(200, { data: { text: 'Des soupes.' } })
+    helped({
+      initial: { en: '', fr: '' },
+      write: { kind: 'category', name: { en: 'Soups', fr: undefined } },
+    })
+
+    await user.click(tab('FR'))
+    await user.click(button(/^Write with AI$/))
+
+    await waitFor(() => expect(value()).toEqual({ en: '', fr: 'Des soupes.' }))
+    expect(sent()).toEqual({ name: 'Soups', text: '', language: 'fr' })
+  })
+
+  it('writes the restaurant’s description, which the server bases on its menu', async () => {
+    const user = userEvent.setup()
+    mock
+      .onPost('/api/writing/restaurant-description')
+      .reply(200, { data: { text: 'Pizzas and salads for every appetite.' } })
+    helped({ languages: ['en'], initial: { en: '' }, write: { kind: 'restaurant' } })
+
+    await user.click(button(/^Write with AI$/))
+
+    await waitFor(() => expect(control()).toHaveValue('Pizzas and salads for every appetite.'))
+    expect(sent()).toEqual({ text: '', language: 'en' })
+    expect(button(/^Improve with AI$/)).not.toHaveAttribute('title')
+  })
+
+  it('needs a name before it can write', () => {
+    helped({
+      languages: ['en'],
+      initial: { en: '' },
+      write: { kind: 'category', name: { en: ' ' } },
+    })
+
+    expect(button(/^Write with AI$/)).toBeDisabled()
+    expect(button(/^Write with AI$/)).toHaveAttribute('title', 'Give the category a name first.')
+  })
+
+  it('says why when it fails, and when the day’s uses are spent', async () => {
+    const user = userEvent.setup()
+    mock
+      .onPost('/api/writing/translate')
+      .replyOnce(503, { message: 'Try again in a moment.', code: 'writing_help_failed' })
+      .onPost('/api/writing/category-description')
+      .replyOnce(429, {
+        message: 'You have used today’s writing help.',
+        code: 'writing_help_limit',
+        retry_after: 80000,
+      })
+    helped({ initial: { en: 'Soup', fr: '' }, write: { kind: 'category', name: { en: 'Soups' } } })
+
+    await user.click(button(/^Translate to French$/))
+    expect(await screen.findByText('Could not translate')).toBeInTheDocument()
+    expect(screen.getByText('Try again in a moment.')).toBeInTheDocument()
+    expect(control()).toHaveValue('Soup')
+
+    await user.click(button(/^Improve with AI$/))
+    expect(await screen.findByText('You have used today’s writing help.')).toBeInTheDocument()
+    expect(screen.queryByText(/80000/)).not.toBeInTheDocument()
+    expect(control()).toHaveValue('Soup')
   })
 })

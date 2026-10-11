@@ -35,6 +35,7 @@ export function IdentitySection({ control, languages }: IdentitySectionProps) {
         multiline
         rows={3}
         maxLength={2000}
+        write={{ kind: 'restaurant' }}
         placeholder={{ en: 'A sentence or two about your food.' }}
       />
     </FormSection>

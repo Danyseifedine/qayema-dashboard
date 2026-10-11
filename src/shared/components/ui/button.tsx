@@ -40,6 +40,8 @@ const button = cva(
         link: 'text-accent underline-offset-4 hover:underline',
       },
       size: {
+        /** Small actions beside a field (the writing help). */
+        xs: 'h-7 gap-1.5 px-2.5 text-[12.5px]',
         sm: 'h-9 px-3.5 text-[13px]',
         md: 'h-11 px-5 text-[14px]',
         lg: 'h-[50px] px-6 text-[14.5px]',

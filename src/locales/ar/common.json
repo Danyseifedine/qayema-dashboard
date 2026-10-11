@@ -70,6 +70,16 @@
   "localeTabs": {
     "label": "لغة المحتوى"
   },
+  "writing": {
+    "write": "اكتب بالذكاء الاصطناعي",
+    "improve": "حسّن بالذكاء الاصطناعي",
+    "translateTo": "ترجم إلى {{language}}",
+    "translateFrom": "ترجم من {{language}}",
+    "nameFirst": "أعطِ القسم اسمًا أولًا.",
+    "writeFirst": "اكتب النص بإحدى اللغتين أولًا.",
+    "translateFailed": "تعذّرت الترجمة",
+    "writeFailed": "تعذّرت كتابة الوصف"
+  },
   "menuLanguages": {
     "en": "الإنجليزية",
     "ar": "العربية",

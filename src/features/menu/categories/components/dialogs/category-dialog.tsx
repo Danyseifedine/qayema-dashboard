@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Form, FormActions, TranslatableTextField } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
@@ -44,6 +44,8 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
   })
 
   const { formError, applyApiError, clearFormError } = useApiFormErrors(form.setError)
+  // What "Write with AI" describes.
+  const name = useWatch({ control: form.control, name: 'name' })
 
   // Reset whenever the dialog opens, so a previous edit never leaks in.
   useEffect(() => {
@@ -118,6 +120,7 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
             multiline
             rows={2}
             maxLength={300}
+            write={{ kind: 'category', name }}
             optionalText={t('shared.optional')}
             placeholder={{
               en: 'Served from noon until close',
