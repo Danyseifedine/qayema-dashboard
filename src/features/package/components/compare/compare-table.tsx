@@ -27,7 +27,8 @@ export function CompareTable({ packages, current, locale }: CompareTableProps) {
   const { t } = useTranslation('package')
 
   const cell = (row: PackageRow, pkg: Package) => {
-    if (row.kind === 'limit') {
+    // A limit of none (no AI writing help) reads like a feature left out.
+    if (row.kind === 'limit' && pkg.features[row.key] !== 0) {
       const value = pkg.features[row.key]
       return value === null ? (
         <span className="font-medium text-accent">{t('compare.unlimited')}</span>
@@ -38,7 +39,7 @@ export function CompareTable({ packages, current, locale }: CompareTableProps) {
       )
     }
 
-    return pkg.features[row.key] ? (
+    return row.kind === 'flag' && pkg.features[row.key] ? (
       <>
         <IconCheck aria-hidden className="mx-auto size-4 text-accent" />
         <span className="sr-only">{t('compare.included')}</span>

@@ -53,6 +53,8 @@ export type ScenarioInput = {
   settings?: Record<string, string | boolean>
   qr_settings?: Record<string, unknown>
   logo?: boolean
+  /** AI writing uses already spent today (tests/E2e/E2eController). */
+  writing_help_used?: number
 }
 
 export type Owner = {

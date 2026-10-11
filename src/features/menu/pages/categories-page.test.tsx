@@ -9,6 +9,7 @@ import { makeSessionUser } from '@/test/factories/session'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { moveDown, stubSortableRects } from '@/test/sortable'
 import { CategoriesPage } from '@/features/menu/pages/categories-page'
+import { WritingHelpProvider } from '@/shared/components/forms/translatable/writing-help'
 
 let mock: MockAdapter
 
@@ -58,6 +59,40 @@ describe('CategoriesPage', () => {
     expect(screen.getByText('2 dishes')).toBeInTheDocument()
     expect(screen.getByText('1 dish')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('writes a new category’s description from the name typed, in the open language', async () => {
+    mock.onGet('/api/categories').reply(200, { data: [], meta: { used: 0, limit: 10 } })
+    mock.onPost('/api/writing/category-description').reply(200, {
+      data: { text: 'Warm bowls of soup to start your meal or share across the table.', left: 9 },
+    })
+    const user = userEvent.setup()
+    renderWithProviders(
+      <WritingHelpProvider uses={{ limit: 10, left: 10 }} onLeft={() => {}}>
+        <CategoriesPage locale="en" onOpenDishes={vi.fn()} />
+      </WritingHelpProvider>,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Add your first category' }))
+    const dialog = screen.getByRole('dialog')
+    const write = within(dialog).getByRole('button', { name: /^Write with AI$/ })
+    // Nothing to write about until the category has a name.
+    expect(write).toBeDisabled()
+
+    await user.type(within(dialog).getByRole('textbox', { name: /^Name/ }), 'Soups')
+    await user.click(write)
+
+    await waitFor(() =>
+      expect(within(dialog).getByRole('textbox', { name: /^Description/ })).toHaveValue(
+        'Warm bowls of soup to start your meal or share across the table.',
+      ),
+    )
+    expect(JSON.parse(mock.history.post[0]?.data as string)).toEqual({
+      name: 'Soups',
+      text: '',
+      language: 'en',
+    })
+    expect(within(dialog).getAllByText('0/10').length).toBeGreaterThan(0)
   })
 
   it('shows plan usage and blocks adding at the limit', async () => {

@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test'
 import { daysFromNow, either, expect, test } from '../../support/fixtures'
-import { ADMIN_URL } from '../../support/urls'
+import { ADMIN_URL, API_URL } from '../../support/urls'
 
 const ADMIN_EMAIL = 'admin@e2e.test'
 
@@ -536,6 +536,50 @@ test.describe('admin', () => {
     await asOwner(page, signIn, owner.user.email)
     await page.goto('/overview')
     await expect(page.getByRole('definition').filter({ hasText: /0 \/ 45/ })).toBeVisible()
+  })
+
+  test('Packages: each package carries its AI writing help a day', async ({ page, signIn }) => {
+    await asAdmin(page, signIn)
+    await page.goto(`${ADMIN_URL}/packages`)
+    await expect(page.getByRole('columnheader', { name: 'AI writing help a day' })).toBeVisible()
+
+    await page
+      .getByRole('row')
+      .filter({ hasText: 'Pro' })
+      .first()
+      .getByRole('link', { name: 'Edit' })
+      .click()
+    // Read only: the packages are shared by every test running beside this one.
+    await expect(page.getByRole('spinbutton', { name: 'AI writing help a day' })).toHaveValue('100')
+    await expect(page.getByText('0 turns it off. Leave empty for unlimited.')).toBeVisible()
+  })
+
+  test('Extra AI uses: a grant reaches the owner’s AI buttons', async ({
+    page,
+    scenario,
+    signIn,
+  }) => {
+    const owner = await scenario({ package: 'free' })
+
+    await asAdmin(page, signIn)
+    await openRelation(page, owner.restaurant.id, 'Extra slots & add-ons')
+    await page.getByRole('button', { name: 'Grant slots' }).click()
+    const modal = openModal(page)
+    await pick(page, modal, 'Feature', 'AI writing help a day')
+    await modal.getByLabel('Amount').fill('5')
+    await modal.getByLabel('Note').fill('AI trial')
+    await submit(page, modal, 'Create')
+    await expect(page.getByRole('row').filter({ hasText: 'AI trial' })).toContainText('+5')
+
+    await asOwner(page, signIn, owner.user.email)
+    // The writing help is on only for requests that ask (tests/E2e).
+    await page.route(`${API_URL}/api/**`, (route) =>
+      route.continue({ headers: { ...route.request().headers(), 'x-e2e-writing-help': '1' } }),
+    )
+    await page.goto('/categories')
+    await page.getByRole('button', { name: 'Add your first category' }).click()
+    // Free's 10 a day and the 5 granted.
+    await expect(page.getByRole('dialog').getByText('0/15')).toBeVisible()
   })
 
   test('An add-on: ordering for a Free owner unlocks Orders', async ({

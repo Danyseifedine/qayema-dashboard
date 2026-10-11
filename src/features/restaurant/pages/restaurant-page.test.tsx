@@ -10,6 +10,7 @@ import { EMPTY_PLAN, makeSessionUser } from '@/test/factories/session'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { restaurantKeys } from '@/features/restaurant/hooks/restaurant-keys'
 import { RestaurantPage } from '@/features/restaurant/pages/restaurant-page'
+import { WritingHelpProvider } from '@/shared/components/forms/translatable/writing-help'
 
 let mock: MockAdapter
 
@@ -103,6 +104,51 @@ describe('RestaurantPage', () => {
     expect(screen.getByLabelText(/^Phone/)).toHaveValue('70123456')
     expect(screen.getByLabelText(/^Location/)).toHaveValue('https://maps.google.com/beit')
     expect(screen.getByRole('combobox', { name: /Currency/ })).toHaveValue('USD')
+  })
+
+  it('has no AI buttons while the writing help is off', async () => {
+    stub()
+    renderWithProviders(<RestaurantPage />)
+
+    await screen.findByLabelText(/^Description/)
+    expect(screen.queryByRole('button', { name: /with AI|translate/i })).not.toBeInTheDocument()
+  })
+
+  it('improves the description from the menu and translates the name', async () => {
+    stub()
+    mock.onPost('/api/writing/restaurant-description').reply(200, {
+      data: {
+        text: 'Good food and good company, for slow lunches with the people you love.',
+        left: 29,
+      },
+    })
+    mock.onPost('/api/writing/translate').reply(200, { data: { text: 'بيت قايمة', left: 28 } })
+    const user = userEvent.setup()
+    renderWithProviders(
+      <WritingHelpProvider uses={{ limit: 30, left: 30 }} onLeft={() => {}}>
+        <RestaurantPage />
+      </WritingHelpProvider>,
+    )
+
+    const description = await screen.findByLabelText(/^Description/)
+    // There is already a description, so the button improves it.
+    await user.click(screen.getByRole('button', { name: /^Improve with AI$/ }))
+
+    await waitFor(() =>
+      expect(description).toHaveValue(
+        'Good food and good company, for slow lunches with the people you love.',
+      ),
+    )
+    expect(JSON.parse(mock.history.post[0]?.data as string)).toEqual({
+      text: 'Lebanese home cooking.',
+      language: 'en',
+    })
+
+    await user.click(screen.getAllByRole('button', { name: /^Translate to Arabic$/ })[0]!)
+    await waitFor(() => expect(screen.getByLabelText(/^Restaurant name/)).toHaveValue('بيت قايمة'))
+    // Nothing is saved until the owner saves.
+    expect(screen.getByRole('button', { name: /Save changes/ })).toBeEnabled()
+    expect(mock.history.put).toHaveLength(0)
   })
 
   it('links to the menu on its own domain, not the dashboard', async () => {

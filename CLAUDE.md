@@ -290,7 +290,10 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   the pages in `App.tsx`) lets every `TranslatableTextField` show
   `WritingHelpButtons` under its control: "Translate", either way: "to
   <other>" puts the open tab's text into the other language and opens it;
-  on an empty tab "from <other>" fills it from the other language. With
+  on an empty tab "from <other>" fills it from the other language. It sends
+  the field's `maxLength` as `max` (the translation never runs past it) and,
+  on a description, its kind as `fit` (a description the AI wrote keeps its
+  length in the other language). With
   `write` (`{kind: 'category', name}` on the
   category description, `{kind: 'restaurant'}` on the restaurant's, which
   the server writes from the saved menu) "Write with AI", or "Improve with
@@ -304,7 +307,13 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   cap); each answer's `left` is written back into the session
   (`useWritingHelpLeft`, from `features/auth`), and at 0 the buttons turn
   red (Button `variant="spent"`), cannot be pressed and say to come back
-  tomorrow.
+  tomorrow, once per screen (the first spent field holds the note); the
+  uses come back at the restaurant's midnight. E2E:
+  `e2e/specs/dashboard/writing-help.spec.ts` runs on the real backend's
+  pretend Gemini, switched on per test by an `x-e2e-writing-help` header
+  added to API requests only (a font host refuses it); the count is real
+  there, and `writing_help_used` starts an owner with uses spent. On the Package page a
+  limit of 0 reads like a feature left out, in the table too.
 - **Menu link** (`features/restaurant/components/identity/link-section.tsx`):
   the slug, changed on its own (not with the page's save), after a
   `ConfirmDialog` saying the old link and printed QR codes keep forwarding;

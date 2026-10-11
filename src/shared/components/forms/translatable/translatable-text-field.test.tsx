@@ -313,7 +313,7 @@ describe('TranslatableTextField writing help', () => {
 
     await waitFor(() => expect(control()).toHaveValue('Soupe du jour'))
     expect(tab('FR')).toHaveAttribute('aria-selected', 'true')
-    expect(sent()).toEqual({ text: 'Soup of the day', from: 'en', to: 'fr' })
+    expect(sent()).toEqual({ text: 'Soup of the day', from: 'en', to: 'fr', max: 255 })
     expect(value()).toEqual({ en: 'Soup of the day', fr: 'Soupe du jour' })
     // The French tab has text now, so from here it goes the other way.
     expect(button(/^Translate to English$/)).toBeEnabled()
@@ -333,7 +333,7 @@ describe('TranslatableTextField writing help', () => {
 
     await waitFor(() => expect(control()).toHaveValue('Lentil soup'))
     expect(tab('EN')).toHaveAttribute('aria-selected', 'true')
-    expect(sent()).toEqual({ text: 'Soupe de lentilles', from: 'fr', to: 'en' })
+    expect(sent()).toEqual({ text: 'Soupe de lentilles', from: 'fr', to: 'en', max: 255 })
 
     // From the French tab, its text goes into English.
     await user.click(tab('FR'))
@@ -341,7 +341,7 @@ describe('TranslatableTextField writing help', () => {
 
     await waitFor(() => expect(control()).toHaveValue('Lentil soup, warm'))
     expect(tab('EN')).toHaveAttribute('aria-selected', 'true')
-    expect(sent(1)).toEqual({ text: 'Soupe de lentilles', from: 'fr', to: 'en' })
+    expect(sent(1)).toEqual({ text: 'Soupe de lentilles', from: 'fr', to: 'en', max: 255 })
     expect(value()).toEqual({ en: 'Lentil soup, warm', fr: 'Soupe de lentilles' })
   })
 

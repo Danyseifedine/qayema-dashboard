@@ -327,6 +327,58 @@ describe('PackagePage', () => {
     )
   })
 
+  it('lists the AI writing help a day on each card: none, a number or unlimited', async () => {
+    session()
+    mock.onGet('/api/packages').reply(200, {
+      data: [
+        makePackage({ features: { writing_help_limit: 0 } }),
+        makePackage({
+          id: 2,
+          slug: 'pro',
+          name: { en: 'Pro', ar: null },
+          is_default: false,
+          features: { writing_help_limit: 100 },
+        }),
+        makePackage({
+          id: 3,
+          slug: 'custom',
+          name: { en: 'Custom', ar: null },
+          is_default: false,
+          features: { writing_help_limit: null },
+        }),
+      ],
+      meta: { current: 'free' },
+    })
+    renderWithProviders(<PackagePage locale="en" />)
+
+    expect(await screen.findByText('No AI writing help')).toBeInTheDocument()
+    expect(screen.getByText('100 AI writing uses a day')).toBeInTheDocument()
+    expect(screen.getByText('Unlimited AI writing help')).toBeInTheDocument()
+
+    const table = screen.getByRole('table')
+    const ai = within(table)
+      .getByRole('rowheader', { name: 'AI writing help a day' })
+      .closest('tr')!
+    // None reads like a feature left out, not a bare 0.
+    expect(
+      within(ai)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent),
+    ).toEqual(['Not included', '100', 'Unlimited'])
+  })
+
+  it('names one AI use a day in the singular', async () => {
+    session()
+    mock.onGet('/api/packages').reply(200, {
+      data: [makePackage({ features: { writing_help_limit: 1 } })],
+      meta: { current: 'free' },
+    })
+    const { unmount } = renderWithProviders(<PackagePage locale="en" />)
+
+    expect(await screen.findByText('1 AI writing use a day')).toBeInTheDocument()
+    unmount()
+  })
+
   it('offers a retry when the catalog cannot be loaded', async () => {
     session()
     mock.onGet('/api/packages').reply(500, { message: 'Something went wrong.' })

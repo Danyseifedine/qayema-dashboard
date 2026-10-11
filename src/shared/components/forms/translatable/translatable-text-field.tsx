@@ -157,6 +157,7 @@ export function TranslatableTextField<T extends FieldValues>({
                 }
               : (write ?? null)
           }
+          maxLength={maxLength}
           onTranslated={(code, text) => {
             setTranslated({ code, text })
             setChosen(code)

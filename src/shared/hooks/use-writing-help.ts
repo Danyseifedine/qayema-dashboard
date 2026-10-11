@@ -39,7 +39,15 @@ const answerSchema = z.object({
   data: z.object({ text: z.string(), left: z.number().int().nullable() }),
 })
 
-export type TranslateInput = { text: string; from: string; to: string }
+export type TranslateInput = {
+  text: string
+  from: string
+  to: string
+  /** The field's own limit, which the translation keeps to. */
+  max?: number
+  /** The description it is: one the AI wrote keeps that length in the other language. */
+  fit?: 'category' | 'restaurant'
+}
 
 /** `text` is the owner's own description to improve; empty writes a new one. */
 export type DescribeInput =

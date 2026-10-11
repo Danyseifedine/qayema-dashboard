@@ -25,6 +25,7 @@ describe('Button', () => {
     ['secondary', 'bg-[var(--surface)]'],
     ['ghost', 'border-transparent'],
     ['danger', 'bg-danger'],
+    ['spent', 'text-status-danger'],
     ['link', 'underline-offset-4'],
   ] as const)('paints the %s variant', (variant, className) => {
     render(<Button variant={variant}>Go</Button>)
@@ -32,7 +33,21 @@ describe('Button', () => {
     expect(screen.getByRole('button')).toHaveClass(className)
   })
 
+  it('keeps a spent button fully red when it cannot be pressed', () => {
+    render(
+      <Button variant="spent" disabled>
+        Go
+      </Button>,
+    )
+
+    const button = screen.getByRole('button')
+    expect(button).toBeDisabled()
+    expect(button).toHaveClass('bg-status-danger-wash', 'disabled:opacity-100')
+    expect(button).not.toHaveClass('disabled:opacity-50')
+  })
+
   it.each([
+    ['xs', 'h-7'],
     ['sm', 'h-9'],
     ['lg', 'h-[50px]'],
     ['icon', 'size-10'],

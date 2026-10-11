@@ -23,6 +23,8 @@ export type WritingHelpButtonsProps = {
   peerText: string
   /** Null when this field is not a description. */
   write: DescriptionToWrite | null
+  /** The field's limit: a translation never runs past it. */
+  maxLength: number
   onTranslated: (language: string, text: string) => void
   onWritten: (text: string) => void
 }
@@ -45,6 +47,7 @@ export function WritingHelpButtons({
   peer,
   peerText,
   write,
+  maxLength,
   onTranslated,
   onWritten,
 }: WritingHelpButtonsProps) {
@@ -111,7 +114,7 @@ export function WritingHelpButtons({
                 write.kind === 'category'
                   ? { kind: 'category', name: write.subject, text, language: active }
                   : { kind: 'restaurant', text, language: active },
-                { onSuccess: onWritten },
+                { onSuccess: (written) => onWritten(written) },
               ),
           })
         : null}
@@ -129,7 +132,7 @@ export function WritingHelpButtons({
               const [from, to, source] =
                 text === '' ? [peer, active, peerText] : [active, peer, text]
               translation.mutate(
-                { text: source, from, to },
+                { text: source, from, to, max: maxLength, fit: write?.kind },
                 { onSuccess: (translated) => onTranslated(to, translated) },
               )
             },
