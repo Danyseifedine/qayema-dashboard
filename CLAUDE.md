@@ -285,7 +285,8 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   one-language menu. Send every active language (blank clears it); never send
   a hidden one (the server keeps it for when the owner switches back).
 - **Writing help (AI)**: while `restaurant.writing_help` is on (the server
-  has an AI provider set up; every package), `WritingHelpProvider` (around
+  has an AI provider set up and the package gives uses a day,
+  `writing_help_limit`, a limit row on the Package page), `WritingHelpProvider` (around
   the pages in `App.tsx`) lets every `TranslatableTextField` show
   `WritingHelpButtons` under its control: "Translate", either way: "to
   <other>" puts the open tab's text into the other language and opens it;
@@ -298,7 +299,12 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `useTranslateText` / `useWriteDescription`
   (`shared/hooks/use-writing-help.ts`, error toasts only; a spent day's
   allowance, 429 `writing_help_limit`, shows the server's words rather than
-  a seconds countdown).
+  a seconds countdown). Every AI button shows the uses left today
+  (`restaurant.writing_help.{limit, left}`, e.g. "28/30", none for no daily
+  cap); each answer's `left` is written back into the session
+  (`useWritingHelpLeft`, from `features/auth`), and at 0 the buttons turn
+  red (Button `variant="spent"`), cannot be pressed and say to come back
+  tomorrow.
 - **Menu link** (`features/restaurant/components/identity/link-section.tsx`):
   the slug, changed on its own (not with the page's save), after a
   `ConfirmDialog` saying the old link and printed QR codes keep forwarding;

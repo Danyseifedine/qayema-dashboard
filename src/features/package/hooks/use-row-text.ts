@@ -7,6 +7,7 @@ const NOUNS = {
   dish_limit: 'dishes',
   category_limit: 'categories',
   social_link_limit: 'socialLinks',
+  writing_help_limit: 'writingHelp',
 } as const satisfies Record<PackageLimit, string>
 
 /**

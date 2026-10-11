@@ -11,7 +11,7 @@ import {
 import { HelperText, Input, Label, Textarea } from '@/shared/components/ui'
 import { mainLanguageOf, languageDir, languageName } from '@/shared/constants/menu-languages'
 import { LocaleTabs } from '@/shared/components/forms/translatable/locale-tabs'
-import { useWritingHelpOn } from '@/shared/hooks/use-writing-help'
+import { useWritingHelp } from '@/shared/hooks/use-writing-help'
 import { WritingHelpButtons } from '@/shared/components/forms/translatable/writing-help-buttons'
 
 export type TranslatableFieldProps<T extends FieldValues> = {
@@ -81,7 +81,7 @@ export function TranslatableTextField<T extends FieldValues>({
   const value = (current.field.value as string | null | undefined) ?? ''
   const error = current.fieldState.error?.message
 
-  const helpOn = useWritingHelpOn()
+  const helpOn = useWritingHelp().uses !== null
   // A menu has its main language and at most one more: the tab not open.
   const peer = languages.find((code) => code !== active)
 

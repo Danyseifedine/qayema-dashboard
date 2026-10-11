@@ -39,7 +39,11 @@
       "categoriesUnlimited": "Unlimited categories",
       "socialLinks_one": "{{number}} social link",
       "socialLinks_other": "{{number}} social links",
-      "socialLinksUnlimited": "Unlimited social links"
+      "socialLinksUnlimited": "Unlimited social links",
+      "writingHelp_zero": "No AI writing help",
+      "writingHelp_one": "{{number}} AI writing use a day",
+      "writingHelp_other": "{{number}} AI writing uses a day",
+      "writingHelpUnlimited": "Unlimited AI writing help"
     },
     "yours": "Your package",
     "includedForEveryone": "Included for everyone",
@@ -68,6 +72,7 @@
     "dish_limit": "Dishes",
     "category_limit": "Categories",
     "social_link_limit": "Social links",
+    "writing_help_limit": "AI writing help a day",
     "multiple_languages": "Second menu language",
     "variants": "Dish variants",
     "addons": "Dish add-ons (extra cheese)",

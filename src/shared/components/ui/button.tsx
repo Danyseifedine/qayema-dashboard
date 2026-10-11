@@ -36,6 +36,9 @@ const button = cva(
           'border-[0.5px] border-transparent text-[var(--text)] hover:bg-[var(--hover-wash)]',
         /** Destructive confirmations only. */
         danger: 'border-[0.5px] border-danger bg-danger text-white hover:brightness-110',
+        /** An action the day has run out of (the writing help): soft red, never pressable. */
+        spent:
+          'border-[0.5px] border-status-danger-border bg-status-danger-wash text-status-danger disabled:opacity-100',
         /** Reads as a link, behaves as a button. */
         link: 'text-accent underline-offset-4 hover:underline',
       },

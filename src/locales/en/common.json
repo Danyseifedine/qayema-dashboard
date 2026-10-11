@@ -73,6 +73,8 @@
     "translateFrom": "Translate from {{language}}",
     "nameFirst": "Give the category a name first.",
     "writeFirst": "Write the text in either language first.",
+    "usesUsed": "You've used {{used}} of {{limit}} AI uses today",
+    "spent": "Come back tomorrow for more AI help.",
     "translateFailed": "Could not translate",
     "writeFailed": "Could not write the description"
   },

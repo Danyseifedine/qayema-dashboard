@@ -16,6 +16,7 @@ export const PACKAGE_ROWS: readonly PackageRow[] = [
   { kind: 'limit', key: 'dish_limit', group: 'menu' },
   { kind: 'limit', key: 'category_limit', group: 'menu' },
   { kind: 'limit', key: 'social_link_limit', group: 'menu' },
+  { kind: 'limit', key: 'writing_help_limit', group: 'menu' },
   { kind: 'flag', key: 'multiple_languages', group: 'menu' },
   { kind: 'flag', key: 'variants', group: 'menu' },
   { kind: 'flag', key: 'addons', group: 'menu' },

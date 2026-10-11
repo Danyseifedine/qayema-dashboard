@@ -94,8 +94,15 @@ const restaurantSchema = z.object({
   }),
   /** What this restaurant may use: its package plus any grants. */
   plan: planSchema,
-  /** The AI buttons (translate, write a description): on while the server has a provider. */
-  writing_help: z.boolean().default(false),
+  /**
+   * The AI buttons (translate, write a description): null while off (no
+   * provider, or none on the package), else the uses a day (null for no
+   * cap) and those left today.
+   */
+  writing_help: z
+    .object({ limit: z.number().int().nullable(), left: z.number().int().nullable() })
+    .nullable()
+    .default(null),
 })
 
 const userSchema = z.object({

@@ -1,11 +1,34 @@
-import type { ReactNode } from 'react'
-import { WritingHelpContext } from '@/shared/hooks/use-writing-help'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { WritingHelpContext, type WritingHelpUses } from '@/shared/hooks/use-writing-help'
 
 /**
- * Whether the AI buttons show (`restaurant.writing_help` from the session).
- * Provided once around the signed-in app, so every translatable field
- * follows it (`useWritingHelpOn`) without each form passing it down.
+ * The writing help's state for every AI button (`restaurant.writing_help`
+ * from the session): null for no buttons, else the uses a day and those
+ * left. Provided once around the signed-in app, so every translatable field
+ * follows it (`useWritingHelp`) without each form passing it down;
+ * `onLeft` keeps the session's count in step after each use. It also keeps
+ * the queue for the one "come back tomorrow" note a screen shows.
  */
-export function WritingHelpProvider({ on, children }: { on: boolean; children: ReactNode }) {
-  return <WritingHelpContext.Provider value={on}>{children}</WritingHelpContext.Provider>
+export function WritingHelpProvider({
+  uses,
+  onLeft,
+  children,
+}: {
+  uses: WritingHelpUses | null
+  onLeft: (left: number | null) => void
+  children: ReactNode
+}) {
+  const [queue, setQueue] = useState<string[]>([])
+  const queueForSpentNote = useCallback((field: string) => {
+    setQueue((now) => [...now, field])
+    return () => setQueue((now) => now.filter((queued) => queued !== field))
+  }, [])
+
+  // One value per change, so the fields under it redraw only when it moves.
+  const value = useMemo(
+    () => ({ uses, setLeft: onLeft, spentNoteBy: queue[0] ?? null, queueForSpentNote }),
+    [uses, onLeft, queue, queueForSpentNote],
+  )
+
+  return <WritingHelpContext.Provider value={value}>{children}</WritingHelpContext.Provider>
 }

@@ -6,14 +6,38 @@ import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
 
-const answerSchema = z.object({ data: z.object({ text: z.string() }) })
+/** The uses a day and those left; null for no daily cap. */
+export type WritingHelpUses = { limit: number | null; left: number | null }
+
+export type WritingHelpState = {
+  /** Null while the restaurant has no writing help: no buttons. */
+  uses: WritingHelpUses | null
+  /** What is left now, after a use or a refusal. */
+  setLeft: (left: number | null) => void
+  /**
+   * "Come back tomorrow" is said once on a screen, not under every field:
+   * fields whose buttons are spent queue for it, and the first one says it.
+   */
+  spentNoteBy: string | null
+  /** Queues a field for the note; returns the way out of the queue. */
+  queueForSpentNote: (field: string) => () => void
+}
 
 /** Set by `WritingHelpProvider`; off where there is none. */
-export const WritingHelpContext = createContext(false)
+export const WritingHelpContext = createContext<WritingHelpState>({
+  uses: null,
+  setLeft: () => {},
+  spentNoteBy: null,
+  queueForSpentNote: () => () => {},
+})
 
-export function useWritingHelpOn(): boolean {
+export function useWritingHelp(): WritingHelpState {
   return useContext(WritingHelpContext)
 }
+
+const answerSchema = z.object({
+  data: z.object({ text: z.string(), left: z.number().int().nullable() }),
+})
 
 export type TranslateInput = { text: string; from: string; to: string }
 
@@ -31,11 +55,13 @@ export type DescribeInput =
 
 /**
  * The writing help (`POST /api/writing/*`, see ../qayema WritingHelpController).
- * Each answers with text for the form; nothing is saved until the owner
- * saves, so only a failure toasts (the server's words: a limit for today, or
- * try again).
+ * Each answers with text for the form and the uses left today, which every
+ * AI button shows; nothing is saved until the owner saves, so only a failure
+ * toasts (the server's words: none left today, busy, or try again).
  */
 export function useTranslateText() {
+  const { setLeft } = useWritingHelp()
+
   return useMutation<string, ApiError, TranslateInput>({
     mutationFn: async (input) => {
       const { data } = await request(answerSchema, {
@@ -43,13 +69,16 @@ export function useTranslateText() {
         url: '/api/writing/translate',
         data: input,
       })
+      setLeft(data.left)
       return data.text
     },
-    onError: (error) => failed(t('writing.translateFailed'), error),
+    onError: (error) => failed(t('writing.translateFailed'), error, setLeft),
   })
 }
 
 export function useWriteDescription() {
+  const { setLeft } = useWritingHelp()
+
   return useMutation<string, ApiError, DescribeInput>({
     mutationFn: async ({ kind, ...body }) => {
       const { data } = await request(answerSchema, {
@@ -57,15 +86,21 @@ export function useWriteDescription() {
         url: `/api/writing/${kind}-description`,
         data: body,
       })
+      setLeft(data.left)
       return data.text
     },
-    onError: (error) => failed(t('writing.writeFailed'), error),
+    onError: (error) => failed(t('writing.writeFailed'), error, setLeft),
   })
 }
 
-function failed(fallback: string, error: ApiError) {
-  // The day's uses are spent: the server says when they are back, where the
+function failed(fallback: string, error: ApiError, setLeft: (left: number) => void) {
+  // The day's uses are spent (another tab may have used the last): the
+  // buttons lock, and the server's words say when they are back, where the
   // usual rate-limit line would count the seconds until tomorrow.
-  if (error.code === 'writing_help_limit') toast.error(error.message)
-  else toast.error(fallback, error)
+  if (error.code === 'writing_help_limit') {
+    setLeft(0)
+    toast.error(error.message)
+  } else {
+    toast.error(fallback, error)
+  }
 }

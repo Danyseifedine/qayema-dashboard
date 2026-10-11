@@ -81,7 +81,7 @@ export function makeSessionUser(
         whatsapp_fields: WHATSAPP_FIELDS_OFF,
       },
       plan: FULL_PLAN,
-      writing_help: false,
+      writing_help: null,
       ...restaurant,
     },
   }

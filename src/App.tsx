@@ -9,7 +9,7 @@ import {
 } from '@/app/layouts/authenticated/nav-items'
 import { PlanLockedPage } from '@/app/layouts/authenticated/plan-locked-page'
 import { usePageKey } from '@/app/layouts/authenticated/use-page-key'
-import { SessionGate } from '@/features/auth'
+import { SessionGate, useWritingHelpLeft } from '@/features/auth'
 import { useLogout, useOrderingMode, useTableOrderingMode } from '@/features/auth'
 import type { AuthUser } from '@/features/auth'
 import { OrdersPage, TableOrdersPage, useOrderPulse } from '@/features/orders'
@@ -111,6 +111,9 @@ function Dashboard({ user }: { user: AuthUser }) {
   const lock = navLock(activeKey, { hasTemplate, plan })
   const activeItem = NAV_ITEMS.find((item) => item.key === activeKey)
 
+  // Each AI answer says how many uses are left; the session keeps the count.
+  const setWritingHelpLeft = useWritingHelpLeft()
+
   // Menu text shows in the dashboard's language when the menu is written in
   // it, and in its main language (the one every name has) otherwise.
   const contentLocale = restaurant.languages.includes(locale) ? locale : restaurant.main_locale
@@ -146,7 +149,7 @@ function Dashboard({ user }: { user: AuthUser }) {
         </Alert>
       ) : null}
 
-      <WritingHelpProvider on={restaurant.writing_help}>
+      <WritingHelpProvider uses={restaurant.writing_help} onLeft={setWritingHelpLeft}>
         <Suspense fallback={<PageSkeleton />}>
           {lock === 'plan' && activeItem ? (
             <PlanLockedPage
