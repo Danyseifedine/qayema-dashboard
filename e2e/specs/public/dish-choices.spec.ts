@@ -59,7 +59,7 @@ test.describe('dish variants and add-ons on the menu', () => {
     await page.goto(restaurant.restaurant.public_url)
 
     const burger = dish(page, 'Burger')
-    await expect(burger.locator('.price')).toHaveText('$8.00')
+    await expect(burger.locator('.price')).toHaveText('$8')
 
     await burger.getByRole('button', { name: 'See options: Burger' }).click()
     const sheet = page.getByRole('dialog', { name: 'Burger' })
@@ -77,14 +77,14 @@ test.describe('dish variants and add-ons on the menu', () => {
     await expect(sheet.getByRole('checkbox', { name: /Extra cheese/ })).toBeChecked()
     await sheet.getByRole('button', { name: 'Add', exact: true }).click()
     const add = sheet.locator('.dish-sheet-add')
-    await expect(add).toHaveText('Add$24.00')
+    await expect(add).toHaveText('Add$24')
     await add.click()
     await expect(sheet).toBeHidden()
     await expect(burger.locator('.add-count')).toHaveText('2')
 
     // The same burger again, as it comes: a line of its own.
     await burger.getByRole('button', { name: 'See options: Burger' }).click()
-    await expect(add).toHaveText('Add$8.00')
+    await expect(add).toHaveText('Add$8')
     await add.click()
     // The page behind takes no typing until the sheet has slid away.
     await expect(sheet).toBeHidden()
@@ -94,9 +94,9 @@ test.describe('dish variants and add-ons on the menu', () => {
     const lines = cart.locator('.cart-line')
     await expect(lines).toHaveCount(2)
     await expect(lines.nth(0)).toContainText('Large, Hot, + Extra cheese')
-    await expect(lines.nth(0)).toContainText('$12.00 each')
+    await expect(lines.nth(0)).toContainText('$12 each')
     await expect(lines.nth(1)).toContainText('Small, Mild')
-    await expect(cart.locator('.cart-total')).toHaveText('Total$32.00')
+    await expect(cart.locator('.cart-total')).toHaveText('Total$32')
 
     await cart.getByLabel('Your name').fill('Rami')
 
@@ -147,18 +147,18 @@ test.describe('dish variants and add-ons on the menu', () => {
     await page.goto(owner.restaurant.public_url)
 
     const taouk = dish(page, 'Taouk')
-    await expect(taouk.locator('.price')).toHaveText('$7.00')
+    await expect(taouk.locator('.price')).toHaveText('$7')
     await taouk.getByRole('button', { name: 'See options: Taouk' }).click()
     const sheet = page.getByRole('dialog', { name: 'Taouk' })
-    await expect(sheet.locator('label', { hasText: 'Small' })).toContainText('$7.00')
+    await expect(sheet.locator('label', { hasText: 'Small' })).toContainText('$7')
     await expect(sheet.locator('label', { hasText: 'Small' })).not.toContainText('+')
-    await expect(sheet.locator('label', { hasText: 'Fries inside' })).toContainText('+$1.00')
+    await expect(sheet.locator('label', { hasText: 'Fries inside' })).toContainText('+$1')
 
     await sheet.getByText('Large').click()
-    await expect(sheet.locator('.dish-sheet-add')).toHaveText('Add$12.00')
+    await expect(sheet.locator('.dish-sheet-add')).toHaveText('Add$12')
     await sheet.locator('.dish-sheet-add').click()
     const cart = await openCart(page)
-    await expect(cart.locator('.cart-total')).toHaveText('Total$12.00')
+    await expect(cart.locator('.cart-total')).toHaveText('Total$12')
   })
 
   test('without ordering, a guest still sees the choices and their prices', async ({
@@ -173,10 +173,10 @@ test.describe('dish variants and add-ons on the menu', () => {
     await burger.getByRole('button', { name: 'See options' }).click()
 
     const sheet = page.getByRole('dialog', { name: 'Burger' })
-    await expect(sheet.locator('label', { hasText: 'Large' })).toContainText('+$3.00')
+    await expect(sheet.locator('label', { hasText: 'Large' })).toContainText('+$3')
     await expect(sheet.getByRole('checkbox', { name: /Bacon/ })).toBeAttached()
     await sheet.getByText('Large').click()
-    await expect(sheet.locator('[data-dish-price]')).toHaveText('$11.00')
+    await expect(sheet.locator('[data-dish-price]')).toHaveText('$11')
     await expect(sheet.locator('.dish-sheet-add')).toHaveCount(0)
 
     await page.keyboard.press('Escape')
@@ -231,7 +231,7 @@ test.describe('dish variants and add-ons on the menu', () => {
     await choices.getByRole('button', { name: either('Add add-on', 'إضافة جديدة') }).click()
     await choices.getByLabel(either('Add-on 1', 'الإضافة 1'), { exact: true }).fill('Extra cheese')
     await choices.getByLabel(either('Add-on 1, price', 'الإضافة 1، السعر')).fill('1')
-    await expect(choices).toContainText(/\$8\.00.*\$12\.00/)
+    await expect(choices).toContainText(/\$8\b.*\$12\b/)
 
     await dialog.getByRole('button', { name: either('Add dish', 'إضافة الطبق') }).click()
     await expect(dialog).toBeHidden()
@@ -246,8 +246,8 @@ test.describe('dish variants and add-ons on the menu', () => {
       .getByRole('button', { name: 'See options' })
       .click()
     const sheet = page.getByRole('dialog', { name: 'Burger' })
-    await expect(sheet.locator('label', { hasText: 'Large' })).toContainText('+$3.00')
-    await expect(sheet.locator('label', { hasText: 'Extra cheese' })).toContainText('+$1.00')
+    await expect(sheet.locator('label', { hasText: 'Large' })).toContainText('+$3')
+    await expect(sheet.locator('label', { hasText: 'Extra cheese' })).toContainText('+$1')
   })
 
   test('switching variants off takes them off the menu and out of the form, and keeps them', async ({
@@ -265,7 +265,7 @@ test.describe('dish variants and add-ons on the menu', () => {
 
     await page.goto(restaurant.public_url)
     const burger = dish(page, 'Burger')
-    await expect(burger.locator('.price')).toHaveText('$8.00')
+    await expect(burger.locator('.price')).toHaveText('$8')
     await burger.getByRole('button', { name: 'See options: Burger' }).click()
     const sheet = page.getByRole('dialog', { name: 'Burger' })
     await expect(sheet.getByRole('group', { name: /Add-ons/ })).toBeVisible()

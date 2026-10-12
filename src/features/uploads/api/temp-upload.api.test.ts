@@ -4,6 +4,13 @@ import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { ApiError } from '@/shared/types/api'
 import { uploadTempImage } from '@/features/uploads/api/temp-upload.api'
+import { shrinkImage } from '@/features/uploads/utils/shrink-image'
+
+// The shrink step has its own tests; here it hands the file through unless a
+// test says otherwise.
+vi.mock('@/features/uploads/utils/shrink-image', () => ({
+  shrinkImage: vi.fn((file: File) => Promise.resolve(file)),
+}))
 
 let mock: MockAdapter
 
@@ -48,6 +55,26 @@ describe('uploadTempImage', () => {
     expect(body).toBeInstanceOf(FormData)
     expect(body.get('context')).toBe('logo')
     expect(body.get('file')).toBeInstanceOf(File)
+  })
+
+  it('sends the shrunk file and reports the saving against the original', async () => {
+    const original = new File([new Uint8Array(1000)], 'dish.jpg', { type: 'image/jpeg' })
+    const shrunk = new File([new Uint8Array(100)], 'dish.webp', { type: 'image/webp' })
+    vi.mocked(shrinkImage).mockResolvedValueOnce(shrunk)
+    mock.onGet('/api/csrf-token').reply(200, { token: 'csrf-abc' })
+    // The server halved the 100 bytes it got: 50 of the original 1000 remain.
+    mock.onPost('/api/uploads/temp').reply(200, {
+      key: '11111111-2222-4333-8444-555555555555',
+      optimized_size: '50 B',
+      saved_percent: 50,
+    })
+
+    const result = await uploadTempImage(original, { context: 'dish' })
+
+    expect(shrinkImage).toHaveBeenCalledWith(original)
+    const sent = (mock.history.post[0]!.data as FormData).get('file') as File
+    expect([sent.name, sent.type, sent.size]).toEqual(['dish.webp', 'image/webp', 100])
+    expect(result.saved_percent).toBe(95)
   })
 
   it('turns a 422 into an ApiError carrying the field messages', async () => {

@@ -42,14 +42,10 @@ function shortDate(iso: string): string {
 
 const LOCKED_BUTTON = either('See packages', 'عرض الباقات')
 
-/** Which of the three gated sections each package leaves locked, and the chip each shows. */
-const LOCKS: Record<PackageSlug, { analytics?: RegExp; appearance?: RegExp; orders?: RegExp }> = {
-  free: {
-    analytics: /Pro|برو/,
-    appearance: /Pro|برو/,
-    orders: /Premium|مميّز/,
-  },
-  pro: { orders: /Premium|مميّز/ },
+/** Which of the three gated sections each package leaves locked. */
+const LOCKS: Record<PackageSlug, { analytics?: true; appearance?: true; orders?: true }> = {
+  free: { analytics: true, appearance: true, orders: true },
+  pro: { orders: true },
   premium: {},
   custom: {},
 }
@@ -78,18 +74,18 @@ const SECTIONS = [
 
 test.describe('packages: what each package opens', () => {
   for (const slug of ['free', 'pro', 'premium', 'custom'] as const) {
-    test(`${slug}: sidebar chips and locked pages @matrix`, async ({ page, owner }) => {
+    test(`${slug}: the sidebar and the locked pages @matrix`, async ({ page, owner }) => {
       await owner({ package: slug })
       await page.goto('/overview')
 
+      // A section the package lacks is left out of the sidebar; a link to it
+      // still opens its locked page (below).
       const nav = await sidebar(page)
       await Promise.all(
         SECTIONS.map(async (section) => {
-          const chip = LOCKS[slug][section.key]
           const item = row(nav, section.en, section.ar)
-          await expect(item).toBeVisible()
-          await (chip
-            ? expect(item).toContainText(chip)
+          await (LOCKS[slug][section.key]
+            ? expect(item).toHaveCount(0)
             : expect(item).toHaveAccessibleName(either(section.en, section.ar)))
         }),
       )

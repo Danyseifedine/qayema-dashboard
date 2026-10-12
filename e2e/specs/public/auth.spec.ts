@@ -288,9 +288,13 @@ test.describe('password reset', () => {
     await page.locator('#password_confirmation').fill('another-e2e-password')
     await page.getByRole('button', { name: 'Save new password' }).click()
 
-    await expect(loginError(page)).toHaveText(
-      'This reset link is invalid or has expired. Please request a new one.',
-    )
+    // Back on the reset page, the email field says why.
+    await expect(
+      page
+        .locator('.ui-field')
+        .filter({ has: page.locator('#email') })
+        .locator('.ui-help.error:visible'),
+    ).toHaveText('This reset link is invalid or has expired. Please request a new one.')
 
     // The old password still works.
     await signInWithForm(page, owner.user.email, owner.user.password)

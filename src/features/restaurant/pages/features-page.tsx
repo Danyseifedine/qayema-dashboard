@@ -131,6 +131,7 @@ export function FeaturesPage({
               mainLocale={mainLocale}
               secondLocale={secondLocale}
               defaultLocale={defaultLocale}
+              canHaveSecond={plan.multiple_languages}
               onOpenDishes={onOpenDishes}
             />
           ) : null}
@@ -529,9 +530,12 @@ type Languages = { main_locale: string; second_locale: string | null; default_lo
  * The languages with a new main one, as `MenuLanguages::withMain()` in
  * ../qayema: the second language chosen as main swaps with the old main (both
  * texts already exist), another keeps the second; the menu keeps opening in
- * the main language if it did.
+ * the main language if it did. A package without multiple languages saves
+ * none (the server refuses one): the main language alone, whatever is
+ * written in the other one kept for a package that has it.
  */
-function withMain(current: Languages, main: string): Languages {
+function withMain(current: Languages, main: string, canHaveSecond: boolean): Languages {
+  if (!canHaveSecond) return { main_locale: main, second_locale: null, default_locale: main }
   const oldMain = current.main_locale
   const second = current.second_locale === main ? oldMain : current.second_locale
   const opening =
@@ -553,11 +557,14 @@ function MainLanguageField({
   mainLocale,
   secondLocale,
   defaultLocale,
+  canHaveSecond,
   onOpenDishes,
 }: {
   mainLocale: string
   secondLocale: string | null
   defaultLocale: string
+  /** The package has multiple languages, so a second one is kept. */
+  canHaveSecond: boolean
   onOpenDishes: () => void
 }) {
   const { t } = useTranslation('features')
@@ -580,7 +587,7 @@ function MainLanguageField({
   const choose = (next: string | null) => {
     if (!next || next === mainLocale) return
     if (next === secondLocale) {
-      save.mutate(withMain(current, next))
+      save.mutate(withMain(current, next, canHaveSecond))
       return
     }
     setPending(next)
@@ -634,7 +641,9 @@ function MainLanguageField({
         onCancel={() => setPending(null)}
         onConfirm={() => {
           if (pending === null) return
-          save.mutate(withMain(current, pending), { onSettled: () => setPending(null) })
+          save.mutate(withMain(current, pending, canHaveSecond), {
+            onSettled: () => setPending(null),
+          })
         }}
       />
     </>

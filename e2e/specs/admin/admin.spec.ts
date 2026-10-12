@@ -703,8 +703,10 @@ test.describe('admin', () => {
       .getByRole('link', { name: 'Log in as owner' })
       .click()
 
-    // Impersonation lands on the home page, which leads a signed-in owner in.
-    await page.getByRole('link', { name: 'My dashboard' }).first().click()
+    // Impersonation opens the owner's dashboard, which says who is looking.
+    await expect(
+      page.getByRole('status').filter({ hasText: /signed in as|مسجّلًا الدخول باسم/ }),
+    ).toBeVisible()
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       either('Overview', 'نظرة عامة'),
     )

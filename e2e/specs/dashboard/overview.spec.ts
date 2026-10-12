@@ -105,6 +105,8 @@ test.describe('overview', () => {
   })
 
   test('each item to do opens the page that fixes it', async ({ page, owner }) => {
+    // Nine pages in a row: more than the default minute while the full suite runs.
+    test.slow()
     await owner({ package: 'free' })
 
     const targets: [which: keyof typeof STEPS, button: string, path: string][] = [

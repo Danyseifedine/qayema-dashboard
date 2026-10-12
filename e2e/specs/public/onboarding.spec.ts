@@ -60,8 +60,10 @@ test.describe('onboarding', () => {
     // Step 2: contact and currency.
     await w.step(2)
     await w.phone.fill('70 123 456')
-    await page.locator('.ui-combo-control').click()
-    await page.locator('.ui-combo-input').fill('EUR')
+    // The searchable list is named by its label (x-ui.combo).
+    const currency = page.getByLabel(/^\s*(Currency|العملة)/)
+    await currency.click()
+    await currency.fill('EUR')
     await page.locator('.ui-menu-item', { hasText: 'Euro' }).click()
     await expect(page.locator('input[name="currency"]')).toHaveValue('EUR')
     await w.next.click()

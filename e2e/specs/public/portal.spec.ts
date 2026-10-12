@@ -36,7 +36,7 @@ test.describe('portal', () => {
     const popular = pricing.locator('.plan', { hasText: 'Most popular' })
     await expect(popular).toHaveCount(1)
     await expect(popular).toContainText('Premium')
-    await expect(popular).toContainText('$29')
+    await expect(popular).toContainText('$10')
     await expect(popular).toContainText('Everything in Pro, plus:')
     // Unlimited on screen, with the fair-use number stated under the cards.
     await expect(popular).toContainText('Unlimited dishes*')

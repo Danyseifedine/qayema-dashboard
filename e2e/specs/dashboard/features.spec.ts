@@ -26,6 +26,7 @@ async function flip(page: Page, name: RegExp | string) {
 
 const SWITCHES = [
   'Orders on',
+  'Ordering at the table on',
   'Variants on',
   'Add-ons on',
   'QR Studio on',
@@ -269,11 +270,11 @@ test.describe('features', () => {
       'Choose a language',
     )
     await expect(page.getByRole('tablist', { name: 'The menu opens in' })).toHaveCount(0)
-    // Pro has everything on this page except Orders and QR Studio, which come
-    // with Premium.
+    // Pro has everything on this page except Orders, Ordering at the table and
+    // QR Studio, which come with Premium.
     await expect(
       page.getByRole('button', { name: 'Available on Premium. See packages' }),
-    ).toHaveCount(2)
+    ).toHaveCount(3)
     await expect(page.getByRole('button', { name: 'Available on Pro. See packages' })).toHaveCount(
       0,
     )
@@ -287,11 +288,11 @@ test.describe('features', () => {
     await owner({ package: 'free' })
     await page.goto('/features')
 
-    await expect(page.getByRole('switch')).toHaveCount(6)
+    await expect(page.getByRole('switch')).toHaveCount(SWITCHES.length)
     // Each names the first package that has it.
     await expect(
       page.getByRole('button', { name: 'Available on Premium. See packages' }),
-    ).toHaveCount(2)
+    ).toHaveCount(3)
     await expect(page.getByRole('button', { name: 'Available on Pro. See packages' })).toHaveCount(
       4,
     )

@@ -114,6 +114,20 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   UI already moved, so a success toast is noise, while an error toast explains
   why it snapped back.
 - Every query has a skeleton and an `ErrorState` with retry.
+- **A slow or patchy connection is not an error at once.** A read that
+  never reached the server is tried for about 15 s (`NETWORK_RETRIES`, 1,
+  2, 4, 8 s apart; a 5xx twice) before its `ErrorState`, and paused while
+  the phone says it is offline; the session gate says "Your connection is
+  slow. Still trying…" meanwhile. A PUT, PATCH or DELETE that got no answer
+  is sent again after 1 and 2 s (`RESEND_AFTER` in `lib/api/request.ts`); a
+  POST never, so nothing is created twice. A request the app called off
+  (axios cancel) is handed back as it came, never as "We could not connect".
+- **Images are shrunk before they upload.** `uploadTempImage` sends what
+  `shrinkImage` (`features/uploads/utils/shrink-image.ts`) returns: longest
+  side at most 2048 px, WebP 0.85 (JPEG on Safari, which cannot encode WebP,
+  only for a JPEG source), the original whenever that is not smaller or
+  anything fails. Every new upload path goes through `uploadTempImage`; the
+  input guard still checks the original.
 - Backend contract: `../qayema/routes/api.php` and
   `../qayema/app/Http/Resources/*`. Errors are `{message, code}`; a rate limit
   is **429** carrying `retry_after`.

@@ -4,6 +4,7 @@ import {
   type TempUpload,
   type UploadContext,
 } from '@/features/uploads/schemas/temp-upload.schema'
+import { shrinkImage } from '@/features/uploads/utils/shrink-image'
 
 export type UploadTempImageOptions = {
   context: UploadContext
@@ -15,8 +16,10 @@ export type UploadTempImageOptions = {
 /**
  * Uploads one image to the temp area and returns its key.
  *
- * The server optimizes the file with Intervention before parking it, so what
- * comes back describes the optimized result. The key rides along on the next
+ * A large photo is scaled down in the browser first (`shrinkImage`), so less
+ * crosses the network and the server has less to decode. The server still
+ * optimizes the file with Intervention before parking it, so what comes back
+ * describes the optimized result. The key rides along on the next
  * save (`logo_key`, `cover_image_key`, `image_key`); the original is never
  * stored.
  *
@@ -26,11 +29,12 @@ export async function uploadTempImage(
   file: File,
   { context, onProgress, signal }: UploadTempImageOptions,
 ): Promise<TempUpload> {
+  const sent = await shrinkImage(file)
   const body = new FormData()
-  body.append('file', file)
+  body.append('file', sent)
   body.append('context', context)
 
-  return request(tempUploadSchema, {
+  const result = await request(tempUploadSchema, {
     method: 'POST',
     url: '/api/uploads/temp',
     data: body,
@@ -43,4 +47,11 @@ export async function uploadTempImage(
         }
       : undefined,
   })
+
+  if (sent === file) return result
+
+  // The server measures its saving against the file it got; the owner picked
+  // the original, so "97% smaller" stays about that.
+  const kept = ((100 - result.saved_percent) / 100) * sent.size
+  return { ...result, saved_percent: Math.round((1 - kept / file.size) * 100) }
 }

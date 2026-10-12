@@ -98,7 +98,8 @@ test.describe('analytics', () => {
   })
 
   test('a premium owner gets the advanced sections and every range', async ({ page, owner }) => {
-    await owner({ package: 'premium', visits: 5, qr_scans: 2, orders: 1 })
+    // Orders taken in the menu (the seeded order is one), so the tile is "Orders".
+    await owner({ package: 'premium', order_mode: 'menu', visits: 5, qr_scans: 2, orders: 1 })
     await page.goto('/analytics')
 
     await expect(tile(page, 'Menu views')).toContainText('5')
@@ -157,11 +158,10 @@ test.describe('analytics', () => {
     await owner({ package: 'free', visits: 5 })
     await page.goto('/overview')
 
+    // A section the package lacks is left out of the sidebar; a link still opens it.
     const nav = page.getByRole('navigation', { name: 'Dashboard' })
-    const row = nav.getByRole('button', { name: /Analytics/ })
-    await expect(row).toContainText('Pro')
-    await row.click()
-    await expect(page).toHaveURL(/\/analytics$/)
+    await expect(nav.getByRole('button', { name: /Analytics/ })).toHaveCount(0)
+    await page.goto('/analytics')
 
     await expect(lockedCard(page, /See how guests use your menu/)).toContainText('Pro')
     await expect(page.getByText('Comes with the Pro package.', { exact: false })).toBeVisible()

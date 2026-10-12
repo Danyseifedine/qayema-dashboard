@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createQueryClient } from '@/lib/query/client'
+import { createQueryClient, NETWORK_RETRIES, SERVER_RETRIES } from '@/lib/query/client'
 import { ApiError } from '@/shared/types/api'
 
 function retryOf() {
@@ -18,15 +18,20 @@ describe('createQueryClient', () => {
     expect(options.mutations?.retry).toBe(false)
   })
 
-  it('retries network and server failures, up to twice', () => {
+  it('keeps trying a dropped connection longer than a failing server', () => {
     const shouldRetry = retryOf()
     const network = new ApiError({ message: 'offline', status: 0 })
     const server = new ApiError({ message: 'down', status: 503 })
 
+    // A request that never reached the server: four more tries (1, 2, 4, 8 s).
     expect(shouldRetry(0, network)).toBe(true)
+    expect(shouldRetry(3, network)).toBe(true)
+    expect(shouldRetry(4, network)).toBe(false)
+    // A server that answered with a failure: two more tries.
     expect(shouldRetry(1, server)).toBe(true)
     expect(shouldRetry(2, server)).toBe(false)
-    expect(shouldRetry(2, network)).toBe(false)
+    expect(NETWORK_RETRIES).toBe(4)
+    expect(SERVER_RETRIES).toBe(2)
   })
 
   it('never retries a 4xx or something that is not an ApiError', () => {

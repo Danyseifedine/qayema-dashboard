@@ -176,13 +176,13 @@ test.describe('accessibility: what guests see', () => {
     await page.goto(`${created.restaurant.public_url}?lang=en`)
     const placed = await page.evaluate(
       async ({ url, dishId }) => {
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        const token = document.querySelector('meta[name="menu-token"]')?.getAttribute('content')
         const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
-            'X-CSRF-TOKEN': token ?? '',
+            'X-Menu-Token': token ?? '',
           },
           credentials: 'same-origin',
           body: JSON.stringify({

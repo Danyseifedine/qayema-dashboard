@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -39,6 +40,28 @@ describe('SessionGate', () => {
     expect(screen.getByText('Loading your dashboard…')).toBeInTheDocument()
     expect(await screen.findByText('Dashboard for Dany')).toBeInTheDocument()
     expect(dashboard).toHaveBeenCalledWith(expect.objectContaining({ email: 'owner@example.com' }))
+  })
+
+  it('says the connection is slow while it tries again, then lets the owner in', async () => {
+    // A slow phone connection drops the first try; the next one gets through.
+    mock
+      .onGet('/api/user')
+      .networkErrorOnce()
+      .onGet('/api/user')
+      .reply(200, { data: makeSessionUser() })
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: 1, retryDelay: 50 } },
+    })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <SessionGate>{dashboard}</SessionGate>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Your connection is slow. Still trying…')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Your connection is slow. Still trying…')
+    expect(await screen.findByText('Dashboard for Dany')).toBeInTheDocument()
+    expect(screen.queryByText('We could not load your account')).not.toBeInTheDocument()
   })
 
   it('leaves for sign-in on a 401 by itself, with a button should it not', async () => {

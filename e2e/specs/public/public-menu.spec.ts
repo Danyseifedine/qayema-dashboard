@@ -61,10 +61,10 @@ test.describe('public menu', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Beit Beirut' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: 'Starters' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: 'Mains' })).toBeAttached()
-    await expect(dish(page, 'Hummus')).toContainText('$6.00')
+    await expect(dish(page, 'Hummus')).toContainText('$6')
     await expect(dish(page, 'Hummus')).toContainText('Chickpeas, tahini')
     await expect(dish(page, 'Fattoush')).toBeVisible()
-    await expect(dish(page, 'Kafta')).toContainText('$12.00')
+    await expect(dish(page, 'Kafta')).toContainText('$12')
 
     // An unavailable dish and an empty category are not on the menu at all.
     await expect(page.getByText('Secret special')).toHaveCount(0)
@@ -153,6 +153,85 @@ test.describe('public menu', () => {
     await expect(dish(page, 'Hummus')).toBeVisible()
   })
 
+  test('the menu reports its own visit once, and a language switch is not a second one', async ({
+    page,
+    scenario,
+  }) => {
+    const owner = await scenario({ package: 'pro', second_locale: 'ar', categories: MENU })
+    const events = `${owner.restaurant.public_url}/events`
+    const sent = () =>
+      page.waitForRequest((request) => request.url() === events && request.method() === 'POST')
+
+    // A QR scan: the visit goes out on its own a moment after the page opens,
+    // with the menu token and the browser's anonymous id.
+    const first = sent()
+    await page.goto(`${owner.restaurant.public_url}?qr=1`)
+    const visit = await first
+    const body = visit.postDataJSON() as {
+      visitor: string
+      visit?: { qr: boolean; locale: string }
+    }
+    expect(body.visitor).toMatch(/^[a-f0-9]{32}$/)
+    expect(body.visit).toEqual({ locale: 'en', qr: true })
+    expect(visit.headers()['x-menu-token']).toMatch(/^\d+\.[a-f0-9]{64}$/)
+    expect((await visit.response())?.status()).toBe(204)
+
+    // Switching to Arabic sends the tap; the page it opens counts no visit.
+    const tap = sent()
+    await page.getByRole('button', { name: 'Language' }).click()
+    await page.locator('#pop-lang a[lang="ar"]').click()
+    expect((await tap).postDataJSON()).toMatchObject({
+      visitor: body.visitor,
+      events: [{ type: 'language' }],
+    })
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
+
+    const next = sent()
+    await page.evaluate(() =>
+      document.dispatchEvent(new CustomEvent('qayema:track', { detail: { type: 'map' } })),
+    )
+    const after = (await next).postDataJSON() as Record<string, unknown>
+    expect(after.visit).toBeUndefined()
+    expect(after.visitor).toBe(body.visitor)
+  })
+
+  test("a browser's anonymous id is kept, and made anew after 13 months", async ({
+    page,
+    scenario,
+  }) => {
+    const owner = await scenario({ package: 'pro', categories: MENU })
+    const events = `${owner.restaurant.public_url}/events`
+    const visitorSent = async () => {
+      const request = await page.waitForRequest((r) => r.url() === events && r.method() === 'POST')
+      return (request.postDataJSON() as { visitor: string }).visitor
+    }
+    const keep = (id: string, daysAgo: number) =>
+      page.evaluate(
+        ([value, days]) => {
+          const day = Math.floor(Date.now() / 86400000) - Number(days)
+          localStorage.setItem('qayema-visitor', `${value}.${day}`)
+        },
+        [id, daysAgo] as const,
+      )
+    const recent = 'a'.repeat(32)
+
+    await page.goto(owner.restaurant.public_url)
+    await keep(recent, 394)
+    const sameVisitor = visitorSent()
+    await page.reload()
+    expect(await sameVisitor).toBe(recent)
+
+    await keep(recent, 395)
+    const newVisitor = visitorSent()
+    await page.reload()
+    const fresh = await newVisitor
+    expect(fresh).toMatch(/^[a-f0-9]{32}$/)
+    expect(fresh).not.toBe(recent)
+    expect(await page.evaluate(() => localStorage.getItem('qayema-visitor'))).toMatch(
+      new RegExp(`^${fresh}\\.\\d+$`),
+    )
+  })
+
   test('an English-only menu on Free has no language switcher, even with Arabic written', async ({
     page,
     scenario,
@@ -166,6 +245,75 @@ test.describe('public menu', () => {
     await expect(dish(page, 'Hummus')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Language' })).toHaveCount(0)
     await expect(page.locator('#pop-lang')).toHaveCount(0)
+  })
+
+  test("open or closed is the phone's own clock, so a cached page is never wrong", async ({
+    page,
+    scenario,
+  }) => {
+    // Beirut is UTC+3 in October; 12 October 2026 is a Monday.
+    const owner = await scenario({
+      categories: MENU,
+      opening_hours: {
+        mon: { open: '12:00', close: '15:00' },
+        tue: { open: '18:00', close: '01:00' },
+        wed: null,
+      },
+    })
+    const label = page.locator('[data-hours-label]').first()
+    const value = page.locator('[data-hours-value]').first()
+    const at = async (utc: string) => {
+      await page.clock.setFixedTime(new Date(utc))
+      await page.goto(owner.restaurant.public_url)
+    }
+
+    // Monday 10:00 in Beirut, before lunch.
+    await at('2026-10-12T07:00:00Z')
+    await expect(label).toHaveText('Closed now')
+    await expect(label).toHaveClass(/fact-shut/)
+    await expect(value).toHaveText('12:00 - 15:00')
+
+    // Monday 13:00, during it.
+    await at('2026-10-12T10:00:00Z')
+    await expect(label).toHaveText('Open now')
+    await expect(label).toHaveClass(/fact-open/)
+
+    // Wednesday 00:30: Tuesday's shift runs past midnight, and Wednesday has none.
+    await at('2026-10-13T21:30:00Z')
+    await expect(label).toHaveText('Open now')
+    await expect(value).toHaveText('Closed today')
+
+    // Wednesday 02:00: that shift is over.
+    await at('2026-10-13T23:00:00Z')
+    await expect(label).toHaveText('Closed now')
+  })
+
+  test('ordering in the menu waits for the opening hours on the same clock', async ({
+    page,
+    owner,
+  }) => {
+    const restaurant = await owner({
+      package: 'premium',
+      order_mode: 'menu',
+      categories: MENU,
+      opening_hours: { mon: { open: '12:00', close: '15:00' } },
+    })
+    const cart = page.locator('aside.col-aside')
+    const at = async (utc: string) => {
+      await page.clock.setFixedTime(new Date(utc))
+      await page.goto(restaurant.restaurant.public_url)
+    }
+
+    // Monday 10:00 in Beirut: the cart keeps what was picked and says why it waits.
+    await at('2026-10-12T07:00:00Z')
+    await dish(page, 'Hummus').getByRole('button', { name: 'Add Hummus' }).click()
+    await expect(cart).toContainText('We are closed right now. Ordering opens again when we do.')
+
+    // Monday 13:00, the same cart (kept in the phone): open.
+    await at('2026-10-12T10:00:00Z')
+    await expect(cart).toContainText('Hummus')
+    await expect(cart).not.toContainText('We are closed right now.')
+    await expect(cart.getByRole('button', { name: /Place order/ })).toBeEnabled()
   })
 
   test('opening hours, phone, map and social links show when the owner set them', async ({
@@ -299,28 +447,28 @@ test.describe('public menu', () => {
 
     await dish(page, 'Hummus').getByRole('button', { name: 'Add Hummus' }).click()
     await expect(dish(page, 'Hummus').locator('output')).toHaveText('1')
-    await expect(total).toHaveText('Total$6.00')
+    await expect(total).toHaveText('Total$6')
 
     await dish(page, 'Hummus').getByRole('button', { name: 'Add', exact: true }).click()
     await expect(dish(page, 'Hummus').locator('output')).toHaveText('2')
-    await expect(total).toHaveText('Total$12.00')
+    await expect(total).toHaveText('Total$12')
 
     await dish(page, 'Kafta').getByRole('button', { name: 'Add Kafta' }).click()
     await expect(cart).toContainText('3 items')
-    await expect(total).toHaveText('Total$24.00')
+    await expect(total).toHaveText('Total$24')
 
     // Stepping down in the cart itself, then down to nothing removes the line.
     const hummusLine = cart.locator('.cart-line', { hasText: 'Hummus' })
     await hummusLine.getByRole('button', { name: 'Remove' }).click()
     await expect(hummusLine.locator('output')).toHaveText('1')
-    await expect(total).toHaveText('Total$18.00')
+    await expect(total).toHaveText('Total$18')
     await hummusLine.getByRole('button', { name: 'Remove' }).click()
     await expect(cart.locator('.cart-line', { hasText: 'Hummus' })).toHaveCount(0)
     await expect(dish(page, 'Hummus').getByRole('button', { name: 'Add Hummus' })).toBeVisible()
-    await expect(total).toHaveText('Total$12.00')
+    await expect(total).toHaveText('Total$12')
 
     await dish(page, 'Fattoush').getByRole('button', { name: 'Add Fattoush' }).click()
-    await expect(total).toHaveText('Total$19.00')
+    await expect(total).toHaveText('Total$19')
 
     // On WhatsApp the cart asks only for a note, which goes into the message.
     await expect(cart.getByLabel('Phone number')).toHaveCount(0)
@@ -334,19 +482,19 @@ test.describe('public menu', () => {
 
     await expect(page).toHaveURL(/^https:\/\/wa\.me\/96170123456\?text=/)
     const text = new URL(page.url()).searchParams.get('text') ?? ''
+    // The owner's copy, in WhatsApp's bold (WhatsAppLink::message in ../qayema).
     const lines = text.split('\n')
-    const reference = lines[0]!.replace('New order ', '')
-    expect(lines[0]).toMatch(/^New order \S+$/)
-    expect(text).toContain('1 × Kafta  $12.00')
-    expect(text).toContain('1 × Fattoush  $7.00')
-    expect(text).toContain('Total: $19.00')
-    expect(text).toContain('Note: Extra lemon')
+    expect(lines[0]).toBe('*New order · E2E Kitchen*')
+    expect(lines).toContain('*1 × Kafta*   $12')
+    expect(lines).toContain('*1 × Fattoush*   $7')
+    expect(lines).toContain('*Total: $19*')
+    expect(lines).toContain('Note: Extra lemon')
 
     // Whether it was sent and served happens in WhatsApp, so the Orders page
     // says so instead of listing it.
     await page.goto(`${DASHBOARD_URL}/orders`)
     await expect(page.getByText('Your orders go to WhatsApp')).toBeVisible()
-    await expect(page.getByText(reference, { exact: true })).toHaveCount(0)
+    await expect(page.getByRole('article')).toHaveCount(0)
 
     // And the guest's cart was emptied once the order went through.
     await page.goto(restaurant.restaurant.public_url)
@@ -363,10 +511,10 @@ test.describe('public menu', () => {
     await expect(page.getByRole('button', { name: /^Add/ })).toHaveCount(0)
 
     // Nor does the endpoint take one sent by hand, with the page's own token.
-    const token = await page.locator('meta[name="csrf-token"]').getAttribute('content')
+    const token = await page.locator('meta[name="menu-token"]').getAttribute('content')
     const order = await page.request.post(`${owner.restaurant.public_url}/order`, {
       data: { items: [{ dish_id: owner.categories[0]!.dishes[0]!.id, quantity: 1 }] },
-      headers: { Accept: 'application/json', 'X-CSRF-TOKEN': token ?? '' },
+      headers: { Accept: 'application/json', 'X-Menu-Token': token ?? '' },
     })
     expect(order.status()).toBe(404)
   })

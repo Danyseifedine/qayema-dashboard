@@ -172,6 +172,7 @@
   },
   "session": {
     "checking": "Loading your dashboard…",
+    "slow": "Your connection is slow. Still trying…",
     "redirectingTitle": "Taking you to sign in",
     "redirectingBody": "One moment…",
     "signIn": "Go to sign in",

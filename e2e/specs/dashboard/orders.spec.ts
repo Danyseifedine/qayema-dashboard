@@ -63,7 +63,7 @@ test.describe('orders', () => {
 
     const cart = guest.locator('.col-aside')
     await expect(cart).toContainText('3 items')
-    await expect(cart).toContainText('$34.00')
+    await expect(cart).toContainText('$34')
 
     // Nothing leaves without a way to reach the guest and somewhere to go.
     await cart.getByRole('button', { name: /Place order/ }).click()
@@ -407,9 +407,13 @@ test.describe('orders', () => {
       (response) =>
         response.url().endsWith('/api/features/ordering') && response.request().method() === 'PUT',
     )
-    await page.getByRole('tab', { name: 'In your menu' }).click()
+    const sendWay = page.getByRole('tablist', { name: 'Guests send their order' })
+    await sendWay.getByRole('tab', { name: 'In your menu' }).click()
     expect((await saved).ok()).toBeTruthy()
-    await expect(page.getByRole('tab', { name: 'Both' })).toHaveAttribute('aria-selected', 'true')
+    await expect(sendWay.getByRole('tab', { name: 'In your menu' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
 
     await page.goto('/orders')
     await expect(page.getByText('No orders yet')).toBeVisible()
@@ -426,8 +430,9 @@ test.describe('orders', () => {
 
     // The owner switches while the guest still has the menu open.
     await page.goto('/features')
-    await page.getByRole('tab', { name: 'WhatsApp' }).click()
-    await expect(page.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute(
+    const sendWay = page.getByRole('tablist', { name: 'Guests send their order' })
+    await sendWay.getByRole('tab', { name: 'WhatsApp' }).click()
+    await expect(sendWay.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute(
       'aria-selected',
       'true',
     )
@@ -482,9 +487,12 @@ test.describe('orders', () => {
     // The waiting line is redundant on the New filter itself.
     await expect(page.getByText('1 order is still waiting.')).toBeHidden()
 
+    // A finished order has no step left: it can only be edited or deleted.
     await chips.getByRole('tab', { name: 'Done' }).click()
     await expect(cards).toHaveCount(1)
-    await expect(cards.first().getByRole('button')).toHaveCount(0)
+    await expect(cards.first().getByRole('button')).toHaveCount(2)
+    await expect(cards.first().getByRole('button', { name: /^Edit order/ })).toBeVisible()
+    await expect(cards.first().getByRole('button', { name: /^Delete order/ })).toBeVisible()
 
     await chips.getByRole('tab', { name: 'Cancelled' }).click()
     await expect(cards).toHaveCount(1)

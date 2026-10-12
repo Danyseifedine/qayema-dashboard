@@ -57,9 +57,10 @@ export function SessionGate({ children }: SessionGateProps) {
   if (session.isPending) {
     return (
       <div className="grid min-h-dvh place-items-center bg-[var(--bg)] text-[var(--muted)]">
-        <p className="flex items-center gap-2.5 text-[14px]">
+        <p className="flex items-center gap-2.5 text-[14px]" role="status">
           <IconLoader2 aria-hidden className="size-4 animate-spin" />
-          {t('session.checking')}
+          {/* A try has failed and another is on its way: say so, rather than wait in silence. */}
+          {session.failureCount > 0 ? t('session.slow') : t('session.checking')}
         </p>
       </div>
     )

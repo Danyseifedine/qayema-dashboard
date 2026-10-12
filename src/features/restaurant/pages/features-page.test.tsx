@@ -408,6 +408,46 @@ describe('FeaturesPage', () => {
     })
   })
 
+  it('on a package with one language, makes the written second language the main one alone', async () => {
+    // Free keeps no second language (the server refuses one), so the swap
+    // sends the main language only; the other text stays saved.
+    mock
+      .onPut('/api/menu-languages')
+      .reply(200, languages({ languages: ['ar'], second_locale: null, default_locale: 'ar' }))
+    const user = userEvent.setup()
+    renderWithProviders(page({ plan: { ...ALL, multiple_languages: false } }))
+
+    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
+    await user.click(await screen.findByRole('option', { name: /Arabic/ }))
+
+    await waitFor(() => expect(mock.history.put).toHaveLength(1))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      main_locale: 'ar',
+      second_locale: null,
+      default_locale: 'ar',
+    })
+  })
+
+  it('on a package with one language, a new main language leaves a kept second one out', async () => {
+    mock
+      .onPut('/api/menu-languages')
+      .reply(200, languages({ languages: ['fr'], second_locale: null, default_locale: 'fr' }))
+    const user = userEvent.setup()
+    renderWithProviders(page({ plan: { ...ALL, multiple_languages: false }, defaultLocale: 'ar' }))
+
+    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
+    await user.click(await screen.findByRole('option', { name: /French/ }))
+    await user.click(await screen.findByRole('button', { name: 'Switch to French' }))
+
+    await waitFor(() => expect(mock.history.put).toHaveLength(1))
+    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+      main_locale: 'fr',
+      second_locale: null,
+      default_locale: 'fr',
+    })
+  })
+
   it('cancels a new main language without saving', async () => {
     const user = userEvent.setup()
     renderWithProviders(page())
