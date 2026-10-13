@@ -56,7 +56,11 @@ export default defineConfig(({ mode }) => {
               // release does not download them again.
               { name: 'react', test: /node_modules\/(react|react-dom|scheduler)\// },
               { name: 'query', test: /node_modules\/@tanstack\// },
-              { name: 'forms', test: /node_modules\/(zod|react-hook-form|@hookform)\// },
+              // config/zod.ts rides with zod, so it runs before any schema is made.
+              {
+                name: 'forms',
+                test: /node_modules\/(zod|react-hook-form|@hookform)\/|src\/config\/zod\.ts$/,
+              },
               { name: 'i18n', test: /node_modules\/(i18next|react-i18next)\// },
             ],
           },

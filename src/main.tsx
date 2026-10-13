@@ -1,3 +1,5 @@
+// First: before any schema is made (it sets how zod builds them).
+import '@/config/zod'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@/styles/globals.css'

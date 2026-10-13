@@ -5,7 +5,8 @@
   "type": "module",
   "sideEffects": [
     "**/*.css",
-    "./src/main.tsx"
+    "./src/main.tsx",
+    "./src/config/zod.ts"
   ],
   "scripts": {
     "dev": "vite",

@@ -410,7 +410,9 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `Content-Security-Policy-Report-Only` reporting to the API
   (`/api/csp-report`); once a week of reports is clean it is renamed
   `Content-Security-Policy`. A new outside host (a script, an API, an image
-  domain) is added to it in the same change.
+  domain) is added to it in the same change. Nothing may need `eval`: zod
+  runs jitless (`src/config/zod.ts`, in zod's own chunk so it runs before
+  any schema is made); its `new Function` probe was the only report.
 
 ## Commands
 
