@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { NAV_ITEMS, type NavItem } from '@/app/layouts/authenticated/nav-items'
 import { PlanLockedPage } from '@/app/layouts/authenticated/plan-locked-page'
-import { AnalyticsTeaser } from '@/features/analytics'
+import { AnalyticsTeaser } from '@/features/analytics/pages'
 import { PACKAGE_CATALOGUE } from '@/test/factories/packages'
 import { renderWithProviders } from '@/test/render-with-providers'
 

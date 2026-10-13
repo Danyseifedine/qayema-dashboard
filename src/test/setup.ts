@@ -1,8 +1,11 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
-// Tests read the English text, so every file starts in English.
-import '@/lib/i18n'
+// Tests read the English text, so every file starts in English; every other
+// language is loaded up front, so a test can switch to it at once.
+import { LANGUAGES, loadLanguage } from '@/lib/i18n'
+
+await Promise.all(LANGUAGES.map(loadLanguage))
 
 afterEach(() => {
   cleanup()

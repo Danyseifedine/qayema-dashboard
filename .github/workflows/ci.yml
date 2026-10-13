@@ -1,0 +1,119 @@
+# Every push and pull request to main, and once a week: lint, types,
+# formatting, unit tests at the coverage floor, the build within its size
+# budget, the committed dist/ matching that build, known holes in the
+# packages, and the end-to-end suite on the built dashboard against the real
+# backend (checked out beside it, as ../qayema).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Mondays 04:00 UTC: drift shows up even in a week without commits.
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The production build's public settings (they ship inside the bundle),
+    # kept as repository variables (Settings, Secrets and variables, Actions,
+    # Variables) since .env.production is not committed. They make this
+    # build the same as the dist/ built on the owner's machine.
+    env:
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
+      VITE_LOGIN_URL: ${{ vars.VITE_LOGIN_URL }}
+      VITE_PUSHER_KEY: ${{ vars.VITE_PUSHER_KEY }}
+      VITE_PUSHER_CLUSTER: ${{ vars.VITE_PUSHER_CLUSTER }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Known security holes in the packages
+        run: npm audit --omit=dev --audit-level=high
+
+      # Lint, types, formatting, unit tests with coverage, the build and its
+      # size budget.
+      - run: npm run check
+
+      # dist/ is committed and uploaded as it is: it must be this build.
+      # Only once the variables above are set, or the two builds differ.
+      - name: The committed dist/ matches the source
+        if: vars.VITE_API_URL != ''
+        run: |
+          if ! git diff --quiet -- dist || [ -n "$(git ls-files --others --exclude-standard dist)" ]; then
+            git status --short dist
+            echo "::error::dist/ is out of date: run npm run build and commit dist/."
+            exit 1
+          fi
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: qayema-dashboard
+
+      - uses: actions/checkout@v4
+        with:
+          repository: Danyseifedine/qayema
+          path: qayema
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: qayema-dashboard/package-lock.json
+
+      # Production runs PHP 8.4.
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: bcmath, exif, gd, intl, mbstring, pdo_sqlite, sqlite3, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Backend packages
+        working-directory: qayema
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Dashboard packages and the browser
+        working-directory: qayema-dashboard
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      # The built dashboard (E2E_BUILD), not the dev server. The screenshot
+      # projects stay on the owner's machine: the runner's fonts differ.
+      - name: End-to-end
+        working-directory: qayema-dashboard
+        env:
+          E2E_BUILD: '1'
+        run: npx playwright test -c e2e --project=desktop --project=phone --project=arabic-rtl --project=dark
+
+      - name: Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: qayema-dashboard/.test-output/
+          retention-days: 7

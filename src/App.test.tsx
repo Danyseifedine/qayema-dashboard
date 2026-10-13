@@ -21,9 +21,12 @@ vi.mock('@/lib/security/safe-redirect', () => ({ safeRedirect: vi.fn(() => true)
  * button per callback, named after the prop. So the tests are about App's
  * routing, locks and hand-overs rather than about every page's requests.
  */
-const { stubPage } = vi.hoisted(() => ({
+const { broken, stubPage } = vi.hoisted(() => ({
+  /** A page that throws while drawing, for the error boundary's test. */
+  broken: { page: '' },
   stubPage: (name: string) =>
     function StubPage(props: Record<string, unknown>) {
+      if (broken.page === name) throw new Error(`The ${name} page broke`)
       const data = Object.fromEntries(
         Object.entries(props).filter(([, value]) => typeof value !== 'function'),
       )
@@ -49,50 +52,44 @@ const { stubPage } = vi.hoisted(() => ({
     },
 }))
 
-vi.mock('@/features/menu', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/menu')>()),
+vi.mock('@/features/menu/pages', () => ({
   CategoriesPage: stubPage('categories'),
   DishesPage: stubPage('dishes'),
 }))
-vi.mock('@/features/orders', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/orders')>()),
+vi.mock('@/features/orders/pages', () => ({
   OrdersPage: stubPage('orders'),
   TableOrdersPage: stubPage('table-orders'),
 }))
-vi.mock('@/features/tables', () => ({
+vi.mock('@/features/tables/pages', () => ({
   TablesPage: stubPage('tables'),
 }))
-vi.mock('@/features/analytics', () => ({
+vi.mock('@/features/analytics/pages', () => ({
   AnalyticsPage: stubPage('analytics'),
   AnalyticsTeaser: stubPage('analytics teaser'),
 }))
-vi.mock('@/features/overview', () => ({
+vi.mock('@/features/overview/pages', () => ({
   OverviewPage: stubPage('overview'),
 }))
-vi.mock('@/features/qr', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/qr')>()),
+vi.mock('@/features/qr/pages', () => ({
   QrPage: stubPage('qr'),
 }))
-vi.mock('@/features/package', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/package')>()),
+vi.mock('@/features/package/pages', () => ({
   PackagePage: stubPage('package'),
 }))
-vi.mock('@/features/social-links', () => ({
+vi.mock('@/features/social-links/pages', () => ({
   SocialLinksPage: stubPage('social-links'),
 }))
-vi.mock('@/features/account', () => ({
+vi.mock('@/features/account/pages', () => ({
   AccountPage: stubPage('account'),
 }))
-vi.mock('@/features/restaurant', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/restaurant')>()),
+vi.mock('@/features/restaurant/pages', () => ({
   FeaturesPage: stubPage('features'),
   RestaurantPage: stubPage('restaurant'),
 }))
-vi.mock('@/features/appearance', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/features/appearance')>()),
+vi.mock('@/features/appearance/pages', () => ({
   AppearancePage: stubPage('appearance'),
 }))
-vi.mock('@/features/design', () => ({
+vi.mock('@/features/design/pages', () => ({
   DesignPage: stubPage('design'),
 }))
 
@@ -229,6 +226,30 @@ describe('App', () => {
       await user.click(screen.getByRole('button', { name: action }))
       expect(await page(lands)).toBeInTheDocument()
       expect(window.location.pathname).toBe(`/${lands}`)
+    }
+  })
+
+  it('shows a way out in place of a page that broke, and the next page opens as usual', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const report = vi.fn(() => Promise.resolve(new Response(null, { status: 204 })))
+    vi.stubGlobal('fetch', report)
+    broken.page = 'social-links'
+    try {
+      signIn()
+      openAt('/social-links')
+      const user = userEvent.setup()
+      renderWithProviders(<App />)
+
+      expect(await screen.findByRole('alert', {}, { timeout: 4000 })).toHaveTextContent(
+        'Something on this page went wrong',
+      )
+      expect(report).toHaveBeenCalledOnce()
+      // The rest of the dashboard still stands.
+      await user.click(within(sidebar()).getByRole('button', { name: 'Categories' }))
+      expect(await page('categories')).toBeInTheDocument()
+    } finally {
+      broken.page = ''
+      vi.unstubAllGlobals()
     }
   })
 

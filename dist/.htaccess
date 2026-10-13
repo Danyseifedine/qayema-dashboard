@@ -13,6 +13,20 @@
 </IfModule>
 
 <IfModule mod_headers.c>
+  # The owner's session lives here: never framed, never sniffed, always
+  # HTTPS, and the address of this page is not handed to other sites.
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+  Header always set X-Frame-Options "DENY"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(self), camera=(), microphone=()"
+  # What the page may load and talk to: the API, Pusher (live orders),
+  # Google Fonts, the OpenStreetMap preview, photos from any https address
+  # (the media domain). The hash allows the font loader's one inline
+  # onload in index.html. Reported only, to the API (logged, Grafana),
+  # until a week of clean reports: then rename it Content-Security-Policy.
+  Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-hashes' 'sha256-C6b/4Iv4ZcrPnfjsnUI/tt1KLtFSZRbC4PywNhjbLfw='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://qayema.com https://*.pusher.com wss://*.pusher.com; frame-src https://www.openstreetmap.org; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://qayema.com; frame-ancestors 'none'; report-uri https://qayema.com/api/csp-report"
+
   # The page itself is always checked for a new release.
   <FilesMatch "^index\.html$">
     Header set Cache-Control "no-cache"

@@ -303,9 +303,12 @@ test.describe('navigation', () => {
     const { restaurant } = await owner({ package: 'free', name: { en: 'Public Link Diner' } })
     await page.goto('/overview')
 
-    // The top bar names the menu's address too.
+    // The top bar names the menu's address too (the overview's link card does
+    // as well, once the page has loaded).
     await expect(
-      page.getByRole('link', { name: restaurant.public_url.replace(/^https?:\/\//, '') }),
+      page
+        .getByRole('banner')
+        .getByRole('link', { name: restaurant.public_url.replace(/^https?:\/\//, '') }),
     ).toHaveAttribute('href', restaurant.public_url)
 
     const menu = await openUserMenu(page)

@@ -1,0 +1,2 @@
+export { OrdersPage } from '@/features/orders/pages/orders-page'
+export { TableOrdersPage } from '@/features/orders/pages/table-orders-page'

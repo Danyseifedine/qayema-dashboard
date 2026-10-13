@@ -134,6 +134,9 @@
   "confirmDialog": {
     "cancel": "إلغاء"
   },
+  "errorBoundary": {
+    "body": "حدث خطأ في هذه الصفحة وقد أُبلغنا به. حاول مجددًا."
+  },
   "errorState": {
     "title": "تعذّر التحميل",
     "retry": "حاول مجددًا"

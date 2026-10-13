@@ -130,6 +130,9 @@
   "confirmDialog": {
     "cancel": "Cancel"
   },
+  "errorBoundary": {
+    "body": "Something on this page went wrong. We have been told; try again."
+  },
   "errorState": {
     "title": "That did not load",
     "retry": "Try again"

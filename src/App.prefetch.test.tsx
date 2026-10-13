@@ -24,47 +24,47 @@ const { asked, stubPage } = vi.hoisted(() => ({
     },
 }))
 
-vi.mock('@/features/overview', () => {
+vi.mock('@/features/overview/pages', () => {
   asked.add('overview')
   return { OverviewPage: stubPage('overview') }
 })
-vi.mock('@/features/analytics', () => {
+vi.mock('@/features/analytics/pages', () => {
   asked.add('analytics')
   return { AnalyticsPage: stubPage('analytics'), AnalyticsTeaser: stubPage('analytics teaser') }
 })
-vi.mock('@/features/menu', () => {
+vi.mock('@/features/menu/pages', () => {
   asked.add('menu')
   return { CategoriesPage: stubPage('categories'), DishesPage: stubPage('dishes') }
 })
-vi.mock('@/features/qr', () => {
+vi.mock('@/features/qr/pages', () => {
   asked.add('qr')
   return { QrPage: stubPage('qr') }
 })
-vi.mock('@/features/package', () => {
+vi.mock('@/features/package/pages', () => {
   asked.add('package')
   return { PackagePage: stubPage('package') }
 })
-vi.mock('@/features/social-links', () => {
+vi.mock('@/features/social-links/pages', () => {
   asked.add('social-links')
   throw new Error('Failed to fetch dynamically imported module')
 })
-vi.mock('@/features/account', () => {
+vi.mock('@/features/account/pages', () => {
   asked.add('account')
   return { AccountPage: stubPage('account') }
 })
-vi.mock('@/features/restaurant', () => {
+vi.mock('@/features/restaurant/pages', () => {
   asked.add('restaurant')
   return { RestaurantPage: stubPage('restaurant'), FeaturesPage: stubPage('features') }
 })
-vi.mock('@/features/appearance', () => {
+vi.mock('@/features/appearance/pages', () => {
   asked.add('appearance')
   return { AppearancePage: stubPage('appearance') }
 })
-vi.mock('@/features/design', () => {
+vi.mock('@/features/design/pages', () => {
   asked.add('design')
   return { DesignPage: stubPage('design') }
 })
-vi.mock('@/features/tables', () => {
+vi.mock('@/features/tables/pages', () => {
   asked.add('tables')
   return { TablesPage: stubPage('tables') }
 })

@@ -1,0 +1,1 @@
+var e=4.5;function t(e,t){let r=n(e),i=n(t);return(Math.max(r,i)+.05)/(Math.min(r,i)+.05)}function n(e){let t=[1,3,5].map(t=>{let n=parseInt(e.slice(t,t+2),16)/255;return n<=.03928?n/12.92:((n+.055)/1.055)**2.4});return .2126*t[0]+.7152*t[1]+.0722*t[2]}export{t as n,e as t};

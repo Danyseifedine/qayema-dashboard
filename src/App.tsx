@@ -12,8 +12,9 @@ import { usePageKey } from '@/app/layouts/authenticated/use-page-key'
 import { SessionGate, useWritingHelpLeft } from '@/features/auth'
 import { useLogout, useOrderingMode, useTableOrderingMode } from '@/features/auth'
 import type { AuthUser } from '@/features/auth'
-import { OrdersPage, TableOrdersPage, useOrderPulse } from '@/features/orders'
-import { PageSkeleton } from '@/shared/components/feedback'
+import { useOrderPulse } from '@/features/orders'
+import { OrdersPage, TableOrdersPage } from '@/features/orders/pages'
+import { ErrorBoundary, PageSkeleton } from '@/shared/components/feedback'
 // Straight from its file: the forms barrel would bring every field into the shell.
 import { WritingHelpProvider } from '@/shared/components/forms/translatable/writing-help'
 import { Alert, Button } from '@/shared/components/ui'
@@ -30,17 +31,17 @@ const ENDING_SOON_DAYS = 7
  * first download: its alerts run on every page.
  */
 const PAGES = {
-  overview: () => import('@/features/overview'),
-  analytics: () => import('@/features/analytics'),
-  menu: () => import('@/features/menu'),
-  qr: () => import('@/features/qr'),
-  package: () => import('@/features/package'),
-  socialLinks: () => import('@/features/social-links'),
-  account: () => import('@/features/account'),
-  restaurant: () => import('@/features/restaurant'),
-  appearance: () => import('@/features/appearance'),
-  design: () => import('@/features/design'),
-  tables: () => import('@/features/tables'),
+  overview: () => import('@/features/overview/pages'),
+  analytics: () => import('@/features/analytics/pages'),
+  menu: () => import('@/features/menu/pages'),
+  qr: () => import('@/features/qr/pages'),
+  package: () => import('@/features/package/pages'),
+  socialLinks: () => import('@/features/social-links/pages'),
+  account: () => import('@/features/account/pages'),
+  restaurant: () => import('@/features/restaurant/pages'),
+  appearance: () => import('@/features/appearance/pages'),
+  design: () => import('@/features/design/pages'),
+  tables: () => import('@/features/tables/pages'),
 }
 
 const OverviewPage = lazy(() => PAGES.overview().then((m) => ({ default: m.OverviewPage })))
@@ -150,89 +151,92 @@ function Dashboard({ user }: { user: AuthUser }) {
       ) : null}
 
       <WritingHelpProvider uses={restaurant.writing_help} onLeft={setWritingHelpLeft}>
-        <Suspense fallback={<PageSkeleton />}>
-          {lock === 'plan' && activeItem ? (
-            <PlanLockedPage
-              item={activeItem}
-              locale={locale}
-              onOpenPackage={() => setActiveKey('package')}
-            >
-              {activeKey === 'analytics' ? <AnalyticsTeaser locale={locale} /> : null}
-            </PlanLockedPage>
-          ) : lock === 'template' ? (
-            <div>
-              <Alert variant="info" title={t('app.lockedTitle')}>
-                {t('app.lockedBody')}
+        {/* Keyed by the page: a page that broke is left behind when another opens. */}
+        <ErrorBoundary key={activeKey}>
+          <Suspense fallback={<PageSkeleton />}>
+            {lock === 'plan' && activeItem ? (
+              <PlanLockedPage
+                item={activeItem}
+                locale={locale}
+                onOpenPackage={() => setActiveKey('package')}
+              >
+                {activeKey === 'analytics' ? <AnalyticsTeaser locale={locale} /> : null}
+              </PlanLockedPage>
+            ) : lock === 'template' ? (
+              <div>
+                <Alert variant="info" title={t('app.lockedTitle')}>
+                  {t('app.lockedBody')}
+                </Alert>
+                <Button className="mt-4" onClick={() => setActiveKey('design')}>
+                  {t('app.browseDesigns')}
+                </Button>
+              </div>
+            ) : activeKey === 'overview' ? (
+              <OverviewPage
+                limits={restaurant.limits}
+                switchedOff={switchedOff}
+                onOpen={setActiveKey}
+              />
+            ) : activeKey === 'analytics' ? (
+              <AnalyticsPage
+                locale={locale}
+                advanced={plan.advanced_analytics}
+                onOpenPackage={() => setActiveKey('package')}
+              />
+            ) : activeKey === 'design' ? (
+              <DesignPage locale={locale} onOpenPackage={() => setActiveKey('package')} />
+            ) : activeKey === 'appearance' ? (
+              <AppearancePage locale={locale} />
+            ) : activeKey === 'categories' ? (
+              <CategoriesPage locale={contentLocale} onOpenDishes={() => setActiveKey('dishes')} />
+            ) : activeKey === 'dishes' ? (
+              <DishesPage
+                locale={contentLocale}
+                onOpenCategories={() => setActiveKey('categories')}
+              />
+            ) : activeKey === 'orders' ? (
+              <OrdersPage onOpenFeatures={() => setActiveKey('features')} />
+            ) : activeKey === 'table-orders' ? (
+              <TableOrdersPage
+                onOpenTables={() => setActiveKey('tables')}
+                onOpenFeatures={() => setActiveKey('features')}
+              />
+            ) : activeKey === 'tables' ? (
+              <TablesPage onOpenFeatures={() => setActiveKey('features')} />
+            ) : activeKey === 'qr' ? (
+              <QrPage
+                locale={locale}
+                onOpenFeatures={() => setActiveKey('features')}
+                onOpenPackage={() => setActiveKey('package')}
+              />
+            ) : activeKey === 'social-links' ? (
+              <SocialLinksPage />
+            ) : activeKey === 'package' ? (
+              <PackagePage locale={locale} />
+            ) : activeKey === 'restaurant' ? (
+              <RestaurantPage />
+            ) : activeKey === 'features' ? (
+              <FeaturesPage
+                off={switchedOff}
+                plan={plan}
+                mainLocale={restaurant.main_locale}
+                secondLocale={restaurant.second_locale}
+                defaultLocale={restaurant.default_locale}
+                ordering={restaurant.ordering}
+                onOpenPackage={() => setActiveKey('package')}
+                onOpenTables={() => setActiveKey('tables')}
+                onOpenRestaurant={() => setActiveKey('restaurant')}
+                onOpenDishes={() => setActiveKey('dishes')}
+              />
+            ) : activeKey === 'account' ? (
+              <AccountPage onOpenRestaurant={() => setActiveKey('restaurant')} />
+            ) : (
+              <Alert variant="info" title={t('app.notBuiltTitle')}>
+                {t('app.notBuiltBody')}
               </Alert>
-              <Button className="mt-4" onClick={() => setActiveKey('design')}>
-                {t('app.browseDesigns')}
-              </Button>
-            </div>
-          ) : activeKey === 'overview' ? (
-            <OverviewPage
-              limits={restaurant.limits}
-              switchedOff={switchedOff}
-              onOpen={setActiveKey}
-            />
-          ) : activeKey === 'analytics' ? (
-            <AnalyticsPage
-              locale={locale}
-              advanced={plan.advanced_analytics}
-              onOpenPackage={() => setActiveKey('package')}
-            />
-          ) : activeKey === 'design' ? (
-            <DesignPage locale={locale} onOpenPackage={() => setActiveKey('package')} />
-          ) : activeKey === 'appearance' ? (
-            <AppearancePage locale={locale} />
-          ) : activeKey === 'categories' ? (
-            <CategoriesPage locale={contentLocale} onOpenDishes={() => setActiveKey('dishes')} />
-          ) : activeKey === 'dishes' ? (
-            <DishesPage
-              locale={contentLocale}
-              onOpenCategories={() => setActiveKey('categories')}
-            />
-          ) : activeKey === 'orders' ? (
-            <OrdersPage onOpenFeatures={() => setActiveKey('features')} />
-          ) : activeKey === 'table-orders' ? (
-            <TableOrdersPage
-              onOpenTables={() => setActiveKey('tables')}
-              onOpenFeatures={() => setActiveKey('features')}
-            />
-          ) : activeKey === 'tables' ? (
-            <TablesPage onOpenFeatures={() => setActiveKey('features')} />
-          ) : activeKey === 'qr' ? (
-            <QrPage
-              locale={locale}
-              onOpenFeatures={() => setActiveKey('features')}
-              onOpenPackage={() => setActiveKey('package')}
-            />
-          ) : activeKey === 'social-links' ? (
-            <SocialLinksPage />
-          ) : activeKey === 'package' ? (
-            <PackagePage locale={locale} />
-          ) : activeKey === 'restaurant' ? (
-            <RestaurantPage />
-          ) : activeKey === 'features' ? (
-            <FeaturesPage
-              off={switchedOff}
-              plan={plan}
-              mainLocale={restaurant.main_locale}
-              secondLocale={restaurant.second_locale}
-              defaultLocale={restaurant.default_locale}
-              ordering={restaurant.ordering}
-              onOpenPackage={() => setActiveKey('package')}
-              onOpenTables={() => setActiveKey('tables')}
-              onOpenRestaurant={() => setActiveKey('restaurant')}
-              onOpenDishes={() => setActiveKey('dishes')}
-            />
-          ) : activeKey === 'account' ? (
-            <AccountPage onOpenRestaurant={() => setActiveKey('restaurant')} />
-          ) : (
-            <Alert variant="info" title={t('app.notBuiltTitle')}>
-              {t('app.notBuiltBody')}
-            </Alert>
-          )}
-        </Suspense>
+            )}
+          </Suspense>
+        </ErrorBoundary>
       </WritingHelpProvider>
     </AuthenticatedLayout>
   )

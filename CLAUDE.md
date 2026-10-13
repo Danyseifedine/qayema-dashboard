@@ -44,7 +44,12 @@ React 19, Vite, TypeScript (strict), TanStack Query, Zustand, React Hook Form
   Prettier. Hooks: Husky + lint-staged. No router library: the open page is its
   nav key in the URL (`/categories`), via `usePageKey`.
 
-No third-party error telemetry.
+No third-party error telemetry. Our own instead: a page that throws shows
+"Something on this page went wrong" (`ErrorBoundary`, one per page in
+`App.tsx`, keyed by the page, and one around the app in `main.tsx`), and
+that, script errors and uncaught promises go to the backend's log
+(`lib/api/report-error.ts`, `POST /api/client-errors`; plain `fetch`, no
+cookies, five a page load at most), and from there to Grafana.
 
 ## Architecture (full detail in docs/ARCHITECTURE.md)
 
@@ -67,7 +72,9 @@ No third-party error telemetry.
   page (`restaurant.switched_off`, `hideable` in nav-items); **grant** is a
   backend word (an admin giving one restaurant more than its package).
 - Feature-first: `src/features/<name>/{api,schemas,hooks,components/<area>,pages}`
-  plus an `index.ts` barrel that exports only what outsiders import.
+  plus an `index.ts` barrel that exports only what outsiders import, never a
+  page: pages are exported by `pages/index.ts`, which only `App.tsx` imports
+  (`App.pages.test.ts`).
 - Import direction: `app → features → shared → lib → config`. Cross-feature
   imports only through the other feature's `index.ts`; `shared` never imports
   from `features` or `app`. Always `@/…`, never relative.
@@ -371,12 +378,26 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
 
 ## Speed
 
-- Every page but Orders is `lazy()` in `App.tsx` (`PAGES`), so the first
-  download is the shell; the rest load on idle (`usePrefetchPages`) and a
-  page still on its way shows `PageSkeleton`. Pusher's library loads only
-  in menu mode (`realtime()` imports it). Keep heavy libraries (recharts,
-  qr-code-styling, dnd-kit) inside their feature, never in `shared` or the
-  shell, or they come back into the first download.
+- Every page but Orders is `lazy()` in `App.tsx` (`PAGES`, from each
+  feature's `pages/index.ts`), so the first download is the shell; the rest
+  load on idle (`usePrefetchPages`) and a page still on its way shows
+  `PageSkeleton`. Pusher's library loads only in menu mode (`realtime()`
+  imports it). Keep heavy libraries (recharts, qr-code-styling, dnd-kit)
+  inside their feature, never in `shared` or the shell, or they come back
+  into the first download.
+- `package.json` says the source has no side effects (`sideEffects`: only
+  the CSS and `main.tsx`), so importing one hook from a barrel brings that
+  hook, not everything the barrel re-exports. A module that must run for
+  its side effects alone goes on that list.
+- The build splits the libraries that change least into their own files
+  (react, query, forms, i18n: `vite.config.ts`, `codeSplitting`), so a
+  release does not download them again, and each extra language is a file
+  of its own.
+- **The size budget** (`npm run check:bundle`, last step of `npm run check`,
+  `scripts/check-bundle.mjs`): the JavaScript the first page needs, gzipped,
+  stays under its budget (220 KB measured in October 2026, budget 235), no
+  file over 300 KB but the charts, and the build's `.htaccess` keeps its
+  security headers. Raise a number only on purpose.
 - A library only a lazy page uses goes in `optimizeDeps.include`
   (`vite.config.ts`): otherwise the dev server bundles it at that page's
   first visit and reloads the page mid-load, which times out e2e tests.
@@ -384,13 +405,27 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `app/new-release.ts` reloads it once (`vite:preloadError`).
 - `public/.htaccess` ships with the build: `index.html` is `no-cache`,
   hashed files are kept a year, and a missing `assets/` file is a 404 (not
-  the page). Fonts load without blocking the first paint.
+  the page). Fonts load without blocking the first paint. It also sets the
+  security headers (HSTS, no framing, nosniff, referrer, permissions) and a
+  `Content-Security-Policy-Report-Only` reporting to the API
+  (`/api/csp-report`); once a week of reports is clean it is renamed
+  `Content-Security-Policy`. A new outside host (a script, an API, an image
+  domain) is added to it in the same change.
 
 ## Commands
 
-`npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` ·
-`npm run test` · `npm run test:coverage` · `npm run format` ·
-`npm run format:check` · `npm run e2e` · `npm run e2e:update-snapshots`
+`npm run dev` · `npm run build` · `npm run check:bundle` · `npm run lint` ·
+`npm run typecheck` · `npm run test` · `npm run test:coverage` ·
+`npm run format` · `npm run format:check` · `npm run e2e` ·
+`npm run e2e:update-snapshots`
+
+CI (`.github/workflows/ci.yml`) runs `npm run check`, `npm audit`, checks
+the committed `dist/` is this build (once the production `VITE_*` values
+are repository variables), and runs the end-to-end suite on the built
+dashboard (`E2E_BUILD=1`: `vite build --mode e2e` into
+`.test-output/e2e-dist` and `vite preview`, never touching `dist/`),
+except the screenshot projects, which stay on the owner's machine. Weekly
+too.
 
 A change is done when `typecheck`, `lint`, `format:check`, `test:coverage`,
 `build` and `e2e` are all green; the full runs happen only when the user asks

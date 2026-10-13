@@ -1,4 +1,3 @@
-export { QrPage } from '@/features/qr/pages/qr-page'
 export { qrKeys } from '@/features/qr/hooks/qr-keys'
 export { useQr } from '@/features/qr/hooks/use-qr'
 export { qrOptions } from '@/features/qr/utils/qr-options'

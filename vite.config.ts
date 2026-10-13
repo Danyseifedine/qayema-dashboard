@@ -32,6 +32,37 @@ export default defineConfig(({ mode }) => {
     },
     // Resolves the `@/*` alias straight from tsconfig.app.json.
     resolve: { tsconfigPaths: true },
+    build: {
+      // Above this a chunk is worth a look (the budget in
+      // scripts/check-bundle.mjs is what fails the build).
+      chunkSizeWarningLimit: 400,
+      rolldownOptions: {
+        output: {
+          // A page's chunk is named after its feature (`menu-…js`), not `pages-…js`.
+          chunkFileNames: (chunk) => {
+            const page = /features\/([^/]+)\/pages\/index\.ts$/.exec(chunk.facadeModuleId ?? '')
+            return `assets/${page ? page[1] : '[name]'}-[hash].js`
+          },
+          codeSplitting: {
+            groups: [
+              // One file per extra language, downloaded when it is chosen.
+              {
+                name: (id) => {
+                  const language = /src\/locales\/([^/]+)\/(?!meta\.json)/.exec(id)?.[1]
+                  return language && language !== 'en' ? `locale-${language}` : null
+                },
+              },
+              // Libraries that change less often than the app, apart, so a
+              // release does not download them again.
+              { name: 'react', test: /node_modules\/(react|react-dom|scheduler)\// },
+              { name: 'query', test: /node_modules\/@tanstack\// },
+              { name: 'forms', test: /node_modules\/(zod|react-hook-form|@hookform)\// },
+              { name: 'i18n', test: /node_modules\/(i18next|react-i18next)\// },
+            ],
+          },
+        },
+      },
+    },
     server: {
       host: '127.0.0.1',
       port: 5173,

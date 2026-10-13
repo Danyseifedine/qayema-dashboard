@@ -22,24 +22,46 @@ export type LanguageMeta = {
 
 type Messages = Record<string, unknown>
 
-const files = import.meta.glob<{ default: Messages }>('../../locales/*/*.json', { eager: true })
+export const FALLBACK_LANGUAGE = 'en'
 
-const resources: Record<string, Record<string, Messages>> = {}
+/**
+ * English is built in: it is the fallback for anything untranslated, so it
+ * is always needed. Every other language downloads the first time it is
+ * chosen (`setLanguage`), so the first download carries one language, not
+ * all of them. Each language's meta file is small and always built in, for
+ * the switcher.
+ */
+const english = import.meta.glob<{ default: Messages }>(
+  ['../../locales/en/*.json', '!../../locales/en/meta.json'],
+  { eager: true },
+)
+const others = import.meta.glob<{ default: Messages }>([
+  '../../locales/*/*.json',
+  '!../../locales/en/*.json',
+  '!../../locales/*/meta.json',
+])
+const metaFiles = import.meta.glob<{ default: LanguageMeta }>('../../locales/*/meta.json', {
+  eager: true,
+})
+
+const resources: Record<string, Record<string, Messages>> = { [FALLBACK_LANGUAGE]: {} }
 const metas: Record<string, LanguageMeta> = {}
 
-for (const [path, file] of Object.entries(files)) {
-  const match = /locales\/([^/]+)\/([^/]+)\.json$/.exec(path)
-  if (!match) continue
-  const [, code, namespace] = match as unknown as [string, string, string]
-
-  if (namespace === 'meta') {
-    metas[code] = file.default as unknown as LanguageMeta
-  } else {
-    ;(resources[code] ??= {})[namespace] = file.default
-  }
+/** The language and area a locale file holds, from its path (`locales/ar/menu.json`). */
+function fileOf(path: string): [code: string, namespace: string] {
+  const [, code, namespace] = /locales\/([^/]+)\/([^/]+)\.json$/.exec(path)!
+  return [code!, namespace!]
 }
 
-export const FALLBACK_LANGUAGE = 'en'
+for (const [path, file] of Object.entries(metaFiles)) {
+  const [code] = fileOf(path)
+  metas[code] = file.default
+}
+
+for (const [path, file] of Object.entries(english)) {
+  const [, namespace] = fileOf(path)
+  resources[FALLBACK_LANGUAGE]![namespace] = file.default
+}
 
 /** Every language the dashboard can be shown in, English first. */
 export const LANGUAGES: readonly string[] = Object.keys(metas).sort((a, b) =>
@@ -53,13 +75,61 @@ export function languageMeta(code: string): LanguageMeta {
   return metas[code] ?? { name: code, short: code.toUpperCase(), dir: 'ltr' }
 }
 
-/** The raw messages, for the test that checks every language is complete. */
+/** The raw messages of a loaded language, for the test that checks every language is complete. */
 export function messagesFor(code: string): Record<string, Messages> {
   return resources[code] ?? {}
 }
 
+const loading: Record<string, Promise<void>> = {}
+
+/** Downloads a language's text once, and hands it to i18next. */
+export function loadLanguage(code: string): Promise<void> {
+  if (resources[code]) return Promise.resolve()
+
+  loading[code] ??= Promise.all(
+    Object.entries(others)
+      .filter(([path]) => fileOf(path)[0] === code)
+      .map(async ([path, load]) => {
+        const [, namespace] = fileOf(path)
+        const messages = (await load()).default
+        i18n.addResourceBundle(code, namespace, messages, true, true)
+        return [namespace, messages] as const
+      }),
+  )
+    .then((files) => {
+      resources[code] = Object.fromEntries(files)
+    })
+    .finally(() => {
+      delete loading[code]
+    })
+
+  return loading[code]
+}
+
+let switching: Promise<unknown> = Promise.resolve()
+
+/**
+ * Shows the dashboard in another language once its text is here. A language
+ * that cannot be downloaded (the connection dropped) leaves the text in the
+ * one on screen.
+ */
+export function setLanguage(code: string): Promise<unknown> {
+  switching = loadLanguage(code).then(
+    () => i18n.changeLanguage(code),
+    () => undefined,
+  )
+  return switching
+}
+
+/** Settles once the language last asked for is on screen (or failed to load). */
+export function languageReady(): Promise<unknown> {
+  return switching
+}
+
 void i18n.use(initReactI18next).init({
   resources,
+  // Other languages arrive later (loadLanguage), never all at once.
+  partialBundledLanguages: true,
   lng: FALLBACK_LANGUAGE,
   fallbackLng: FALLBACK_LANGUAGE,
   ns: NAMESPACES as string[],

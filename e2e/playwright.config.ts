@@ -6,6 +6,9 @@ import { API_URL, DASHBOARD_URL } from './support/urls'
 /** The dashboard's root: the servers start there, and reports go under it. */
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 
+/** Where the E2E_BUILD run builds the dashboard. */
+const E2E_DIST = '.test-output/e2e-dist'
+
 /**
  * End-to-end suite: the real Laravel app (APP_ENV=e2e, its own SQLite file,
  * port 8001) and the real dashboard (Vite, port 5174), driven by a browser.
@@ -13,6 +16,9 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url))
  *
  * Every test builds the owner it needs (support/fixtures.ts), so tests share no
  * state and run in parallel. A flaky test is a bug: no retries.
+ *
+ * The dashboard is Vite's dev server, or with E2E_BUILD=1 the production
+ * build served by `vite preview` (what CI runs).
  *
  * Projects: `desktop` runs everything; `phone`, `arabic-rtl` and `dark` re-run
  * the flows tagged @matrix; `visual` holds the screenshot baselines.
@@ -90,11 +96,16 @@ export default defineConfig<Options>({
       timeout: 60_000,
     },
     {
-      command: 'npx vite --mode e2e --port 5174 --strictPort',
+      // E2E_BUILD=1 (CI) tests the built dashboard, as it is uploaded, into
+      // .test-output so the committed dist/ is never touched: a chunk that
+      // fails to load or anything else only the build gets wrong fails here.
+      command: process.env.E2E_BUILD
+        ? `npx vite build --mode e2e --outDir ${E2E_DIST} --emptyOutDir && npx vite preview --outDir ${E2E_DIST} --port 5174 --strictPort`
+        : 'npx vite --mode e2e --port 5174 --strictPort',
       cwd: ROOT,
       url: DASHBOARD_URL,
       reuseExistingServer: true,
-      timeout: 60_000,
+      timeout: 180_000,
       env: {
         VITE_API_URL: API_URL,
         VITE_LOGIN_URL: `${API_URL}/get-started`,

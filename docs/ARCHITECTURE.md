@@ -32,7 +32,8 @@ of re-implementing it, always report status truthfully.
    pass through Zod schemas. Nothing untyped leaks past `lib/` or `features/*/api`.
 5. **Dependency direction is one way.**
    `app → features → shared → lib → config`. A feature imports another feature
-   only through its `index.ts` barrel. `shared` never imports from `features`
+   only through its `index.ts` barrel; `App.tsx` takes pages from
+   `features/<name>/pages` (§3). `shared` never imports from `features`
    or `app`. Every import uses the `@/` alias, even inside a feature.
 6. **The tree below is the tree.** Adding a file into an existing folder is
    routine. Adding, renaming or removing a folder means updating §2 in the
@@ -94,7 +95,8 @@ qayema-dashboard/
     ├── locales/<code>/              meta.json + one JSON per namespace (§6)
     ├── stores/                      preferences.store.ts (theme, locale), ui.store.ts (sidebar)
     ├── lib/
-    │   ├── api/                     axios client, request(), interceptors/{csrf,auth-redirect,locale}
+    │   ├── api/                     axios client, request(), interceptors/{csrf,auth-redirect,locale},
+    │   │                            report-error (errors to the backend's log)
     │   ├── i18n/                    loader (discovers locales/*), resources.ts (typed keys), parity test
     │   ├── query/                   QueryClient, QUERY_ROOTS
     │   ├── realtime/                echo.ts: Laravel Echo on Pusher, made on first use (null without a key)
@@ -109,7 +111,7 @@ qayema-dashboard/
     │   ├── components/ui/           Primitives: button, input, switch, combobox, segmented, alert…
     │   ├── components/forms/        fields/ (text, price, color, choice…), layout/ (Form, FormSection, Field),
     │   │                            translatable/ (TranslatableTextField, LocaleTabs), index.ts
-    │   ├── components/feedback/     dialogs/confirm, skeletons, states/{empty,error,locked}, toasts, index.ts
+    │   ├── components/feedback/     dialogs/confirm, skeletons, states/{empty,error,error-boundary,locked}, toasts, index.ts
     │   ├── components/data-display/ badges/{limit-badge,limit-notice}, formatters/money, stats/stat-tile
     │   ├── constants/               countries, currencies, locales (UI languages), menu-languages
     │   ├── hooks/                   use-api-form-errors
@@ -132,8 +134,9 @@ features/restaurant/
 ├── schemas/      restaurant.schema.ts                                        # response + form schemas
 ├── hooks/        restaurant-keys.ts, use-restaurant.ts, use-features.ts, …   # queries and mutations
 ├── components/   identity/ contact/ hours/ branding/                          # grouped by area
-├── pages/        restaurant-page.tsx, features-page.tsx (+ .test.tsx)         # what App.tsx renders
-└── index.ts      the ONLY path other features and app/ may import from
+├── pages/        restaurant-page.tsx, features-page.tsx (+ .test.tsx),        # what App.tsx renders
+│                 index.ts (the pages, for App.tsx only)
+└── index.ts      the ONLY path other features may import from (never a page)
 ```
 
 - `api/` functions return **parsed** data (`request(schema, …)`), never raw
@@ -146,8 +149,12 @@ features/restaurant/
 - Components are grouped by area subfolder; adding a component is adding a
   file. A file that is not a component (`qr/utils/qr-options.ts`) lives in
   `utils/`, not under `components/`.
-- The barrel exports only what someone outside actually imports. Page
-  components, key factories and a few types; never a whole folder.
+- The barrel exports only what someone outside actually imports: hooks, key
+  factories and a few types; never a whole folder and **never a page**. A
+  page in a barrel comes along with every hook another feature imports from
+  it (it once put Menu, Package and drag and drop in the first download).
+  Pages are exported by `pages/index.ts`, which only `App.tsx` imports, as a
+  `lazy()` chunk (`src/App.pages.test.ts` holds both rules).
 - `menu` is the one composite feature: `categories/` and `dishes/` are
   sub-features with the same shape, and `menu/components/` holds what both
   share (drag-and-drop, the category filter). Its two pages sit in `menu/pages`.
@@ -231,7 +238,11 @@ Sanctum stateful auth. The SPA's responsibilities:
 - `i18next` + `react-i18next`. `src/locales/<code>/` holds `meta.json` (name,
   short label, `ltr`/`rtl`) and one JSON per namespace. `lib/i18n/index.ts`
   discovers the files at build time, so **adding a language is copying
-  `locales/en/` and translating it**; nothing else changes.
+  `locales/en/` and translating it**; nothing else changes. English is built
+  in (the fallback); every other language is its own file
+  (`locale-<code>-….js`), downloaded the first time it is chosen
+  (`setLanguage`), and `main.tsx` waits for the owner's language before the
+  first paint (`languageReady`). The tests load every language up front.
 - Namespaces are the feature folders: `common` (the shell and shared
   components), `overview`, `analytics`, `menu`, `design`, `appearance`, `orders`, `qr`,
   `social-links`, `restaurant`, `features`, `package`, `account`. A new

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { i18n } from '@/lib/i18n'
+import { setLanguage } from '@/lib/i18n'
 import { isLocale, localeDir, type Locale } from '@/shared/constants/locales'
 
 export type Theme = 'light' | 'dark'
@@ -60,7 +60,7 @@ function persistLocale(locale: Locale): void {
 function applyLocale(locale: Locale): void {
   document.documentElement.lang = locale
   document.documentElement.dir = localeDir(locale)
-  void i18n.changeLanguage(locale)
+  void setLanguage(locale)
 }
 
 type PreferencesState = {
