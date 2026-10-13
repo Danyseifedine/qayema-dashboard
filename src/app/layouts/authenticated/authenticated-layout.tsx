@@ -3,6 +3,7 @@ import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ImpersonationBanner } from '@/app/layouts/authenticated/impersonation-banner'
 import { Sidebar } from '@/app/layouts/authenticated/sidebar/sidebar'
+import type { PackageTier } from '@/app/layouts/authenticated/topbar/package-tier'
 import { Topbar } from '@/app/layouts/authenticated/topbar/topbar'
 import type { AuthUser } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
@@ -17,8 +18,10 @@ export type AuthenticatedLayoutProps = {
   user: { name: string; login: string }
   /** The package the restaurant is on, in the current language. */
   packageName: string
-  /** The package ends within a week. */
-  packageEndingSoon?: boolean
+  /** Its metal in the topbar: bronze Free, silver Pro, gold Premium. */
+  packageTier: PackageTier
+  /** Whole days until the package ends; null when it does not end. */
+  packageDaysLeft?: number | null
   publicUrl?: string | null
   hasTemplate: boolean
   plan: NavAccess['plan']
@@ -43,7 +46,8 @@ export function AuthenticatedLayout({
   onNavigate,
   user,
   packageName,
-  packageEndingSoon = false,
+  packageTier,
+  packageDaysLeft = null,
   publicUrl,
   hasTemplate,
   plan,
@@ -162,21 +166,10 @@ export function AuthenticatedLayout({
         ) : null}
         <Topbar
           title={activeItem ? t(activeItem.labelKey) : t('app.dashboard')}
-          subtitle={
-            publicUrl ? (
-              <a
-                href={publicUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="force-ltr hover:text-accent hover:underline"
-              >
-                {publicUrl.replace(/^https?:\/\//, '')}
-              </a>
-            ) : null
-          }
           user={user}
           packageName={packageName}
-          packageEndingSoon={packageEndingSoon}
+          packageTier={packageTier}
+          packageDaysLeft={packageDaysLeft}
           publicUrl={publicUrl}
           locale={locale}
           onLocaleChange={onLocaleChange}

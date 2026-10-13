@@ -61,13 +61,13 @@ function advanced(overrides: Record<string, unknown> = {}) {
   }
 }
 
-function stubSummary(range = '30d', overrides: Record<string, unknown> = {}) {
+function stubSummary(range = 'today', overrides: Record<string, unknown> = {}) {
   mock
     .onGet('/api/analytics', { params: { range } })
     .reply(200, { data: summary({ range, ...overrides }) })
 }
 
-function stubAdvanced(range = '30d', overrides: Record<string, unknown> = {}) {
+function stubAdvanced(range = 'today', overrides: Record<string, unknown> = {}) {
   mock
     .onGet('/api/analytics/advanced', { params: { range } })
     .reply(200, { data: advanced({ range, ...overrides }) })
@@ -89,19 +89,32 @@ describe('AnalyticsPage', () => {
   })
 
   describe('on a package with basic analytics', () => {
-    it('shows the headline numbers for the last 30 days', async () => {
+    it('opens on today, with the headline numbers and no "today" line under the views', async () => {
       stubSummary()
       renderWithProviders(<AnalyticsPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
 
       await screen.findByText('Menu views')
+      expect(screen.getByRole('tab', { name: 'Today' })).toHaveAttribute('aria-selected', 'true')
       expect(tile('Menu views')).toHaveTextContent('120')
-      expect(tile('Menu views')).toHaveTextContent('7 today')
+      expect(tile('Menu views')).not.toHaveTextContent('7 today')
       expect(tile('QR scans')).toHaveTextContent('90')
       expect(tile('Orders')).toHaveTextContent('12')
     })
 
+    it('says how many of the views were today on a longer range', async () => {
+      stubSummary()
+      stubSummary('30d')
+      const user = userEvent.setup()
+      renderWithProviders(<AnalyticsPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
+
+      await screen.findByText('Menu views')
+      await user.click(screen.getByRole('tab', { name: '30 days' }))
+
+      await waitFor(() => expect(tile('Menu views')).toHaveTextContent('7 today'))
+    })
+
     it('counts orders placed in the menu, with how many were done', async () => {
-      stubSummary('30d', {
+      stubSummary('today', {
         totals: {
           views: 120,
           unique_visitors: 80,
@@ -120,7 +133,7 @@ describe('AnalyticsPage', () => {
     })
 
     it('calls WhatsApp orders only what they are: sent there', async () => {
-      stubSummary('30d', { order_channel: 'whatsapp' })
+      stubSummary('today', { order_channel: 'whatsapp' })
       renderWithProviders(<AnalyticsPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
 
       await screen.findByText('Menu views')
@@ -157,7 +170,7 @@ describe('AnalyticsPage', () => {
       expect(screen.getByRole('tab', { name: '7 days' })).toBeEnabled()
     })
 
-    it('switches between 30 and 7 days', async () => {
+    it('switches from today to 7 days', async () => {
       stubSummary()
       stubSummary('7d', {
         totals: { views: 9, unique_visitors: 5, qr_scans: 4, views_today: 1, orders: 2 },
@@ -185,7 +198,7 @@ describe('AnalyticsPage', () => {
     })
 
     it('leaves orders out when the package does not take them', async () => {
-      stubSummary('30d', {
+      stubSummary('today', {
         totals: { views: 1, unique_visitors: 1, qr_scans: 0, views_today: 0, orders: null },
       })
       renderWithProviders(<AnalyticsPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
@@ -195,7 +208,7 @@ describe('AnalyticsPage', () => {
     })
 
     it('says so when there are no visits yet', async () => {
-      stubSummary('30d', {
+      stubSummary('today', {
         totals: { views: 0, unique_visitors: 0, qr_scans: 0, views_today: 0, orders: 0 },
       })
       renderWithProviders(<AnalyticsPage locale="en" advanced={false} onOpenPackage={vi.fn()} />)
@@ -312,7 +325,7 @@ describe('AnalyticsPage', () => {
 
     it('drops the cart and order parts when the package does not take orders', async () => {
       stubSummary()
-      stubAdvanced('30d', { funnel: null })
+      stubAdvanced('today', { funnel: null })
       renderWithProviders(<AnalyticsPage locale="en" advanced onOpenPackage={vi.fn()} />)
 
       await screen.findByText('Tapped WhatsApp')
@@ -347,7 +360,7 @@ describe('AnalyticsPage', () => {
 
     it('has nothing to compare with on all time', async () => {
       stubSummary()
-      stubAdvanced('30d', { previous: null })
+      stubAdvanced('today', { previous: null })
       renderWithProviders(<AnalyticsPage locale="en" advanced onOpenPackage={vi.fn()} />)
 
       await screen.findByText('Tapped WhatsApp')
@@ -374,7 +387,7 @@ describe('AnalyticsPage', () => {
 
     it('shows their own section when the menu takes orders', async () => {
       stubSummary()
-      stubAdvanced('30d', { menu_orders: menuOrders })
+      stubAdvanced('today', { menu_orders: menuOrders })
       renderWithProviders(<AnalyticsPage locale="en" advanced onOpenPackage={vi.fn()} />)
 
       expect(await screen.findByText('Orders placed in your menu')).toBeInTheDocument()
@@ -383,7 +396,7 @@ describe('AnalyticsPage', () => {
 
     it('leaves the section out when orders go to WhatsApp or are not taken', async () => {
       stubSummary()
-      stubAdvanced('30d', {
+      stubAdvanced('today', {
         menu_orders: null,
         funnel: { visitors: 80, carted: 20, ordered: 12, channel: 'whatsapp' },
       })

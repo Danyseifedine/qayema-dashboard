@@ -155,9 +155,18 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
 - **Package page** (`features/package`): the current package with its dates
   from the session (`package.{ends_at, days_left}`, `lapsed`,
   `upcoming`), shown as "Until …, N days left", a warning with "Ask to
-  extend" in the last 7 days (the topbar pill shows a dot then too), "Your Pro
-  ended on …" with "Ask to renew", or "Premium starts on …"; the limits used;
-  and what the package includes. Then one card per package ("Everything in Free, plus:",
+  extend" in the last 7 days; the topbar pill is a crown with no text in the
+  package's metal (bronze Free, silver Pro, gold Premium and Custom with a
+  flickering glow, `tierOf()`) with the days left on its corner
+  (`package.days_left`, 99+ past 99, amber in the last 7). "Your Pro
+  ended on …" with when the menu goes offline and "Ask to renew", or
+  "Premium starts on …"; the limits used; and what the package includes.
+  An ended package is kept, never swapped for Free: for a few days
+  (`lapsed.offline_at`) the menu stays online and every page but Package
+  carries a warning (`MenuGoingOffline`); once `lapsed.offline`, every page
+  but Package and Account (`OPEN_WHILE_OFFLINE` in nav-items) is the renew
+  screen (`MenuOfflinePage`, `app/layouts/authenticated/menu-offline.tsx`).
+  Then one card per package ("Everything in Free, plus:",
   built by `highlightsOf()`, only when it really has everything the one before
   has) and the comparison table. Cards and table both read
   `utils/package-rows.ts`, the one list of features, groups and order. Tests
@@ -366,7 +375,9 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   owner's request and remembered in `ui.store`), then the dish, category and
   social-link counts from the session's `limits`. Each item's action is a nav
   key.
-- **Analytics** (`features/analytics`): the page needs `plan.analytics` (the
+- **Analytics** (`features/analytics`): opens on Today (ranges Today, 7
+  and 30 days for every package, 90 days and All time with advanced; Today's
+  chart is by the hour). The page needs `plan.analytics` (the
   nav locks it otherwise, with `AnalyticsTeaser`: this week's views from
   `GET /api/analytics/teaser`); `GET /api/analytics/advanced` only when
   `restaurant.plan.advanced_analytics` is on (the hook is disabled otherwise,

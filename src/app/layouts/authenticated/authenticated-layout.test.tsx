@@ -45,6 +45,7 @@ function Harness({
       onNavigate={(item: NavItem) => setActiveKey(item.key)}
       user={{ name: 'Dany', login: 'owner@example.com' }}
       packageName="Free"
+      packageTier="bronze"
       publicUrl={publicUrl}
       hasTemplate={hasTemplate}
       plan={full ? FULL_PLAN : EMPTY_PLAN}
@@ -418,13 +419,11 @@ describe('AuthenticatedLayout', () => {
     expect(screen.getByRole('heading', { name: 'Package' })).toBeInTheDocument()
   })
 
-  it('shows the public menu address under the title, without its scheme', () => {
+  it('keeps the page name and the menu address out of the topbar', () => {
     renderWithProviders(<Harness />)
 
-    expect(screen.getByRole('link', { name: 'qayema.test/beit-qayema' })).toHaveAttribute(
-      'href',
-      'https://qayema.test/beit-qayema',
-    )
+    expect(screen.queryByRole('link', { name: 'qayema.test/beit-qayema' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Overview' })).toHaveClass('sr-only')
   })
 
   it('falls back to "Dashboard" for a page that is not a section, and no address', () => {

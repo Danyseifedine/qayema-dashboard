@@ -351,6 +351,64 @@ describe('App', () => {
     })
   })
 
+  describe('an ended package', () => {
+    const lapsed = (offline: boolean) => ({
+      slug: 'pro',
+      name: { en: 'Pro', ar: null },
+      ended_at: '2026-09-01T10:00:00+00:00',
+      offline_at: '2026-09-04T10:00:00+00:00',
+      offline,
+    })
+
+    it('warns above every page in the grace days, but not on the Package page', async () => {
+      signIn({ lapsed: lapsed(false) })
+      openAt('/dishes')
+      const user = userEvent.setup()
+      renderWithProviders(<App />)
+
+      expect(await page('dishes')).toBeInTheDocument()
+      expect(screen.getByText('Your Pro package ended on Sep 1, 2026')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'Your menu goes offline on Sep 4, 2026 unless you renew. Everything you made is kept.',
+        ),
+      ).toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Ask to renew' }))
+      expect(await page('package')).toBeInTheDocument()
+      expect(screen.queryByText(/Your menu goes offline on/)).not.toBeInTheDocument()
+    })
+
+    it('shows the renew screen in place of every page once the menu is offline', async () => {
+      signIn({ lapsed: lapsed(true) })
+      openAt('/dishes')
+      const user = userEvent.setup()
+      renderWithProviders(<App />)
+
+      expect(await screen.findByText('Your menu is offline')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'Your Pro package ended on Sep 1, 2026, so guests cannot open your menu. Ask us to renew it and it is back at once.',
+        ),
+      ).toBeInTheDocument()
+      expect(screen.getByText('Printed QR codes working again')).toBeInTheDocument()
+      expect(screen.queryByRole('region', { name: 'dishes page' })).not.toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Ask to renew' }))
+      expect(await page('package')).toBeInTheDocument()
+      expect(screen.queryByText('Your menu is offline')).not.toBeInTheDocument()
+    })
+
+    it('keeps Account open while the menu is offline', async () => {
+      signIn({ lapsed: lapsed(true) })
+      openAt('/account')
+      renderWithProviders(<App />)
+
+      expect(await page('account')).toBeInTheDocument()
+      expect(screen.queryByText('Your menu is offline')).not.toBeInTheDocument()
+    })
+  })
+
   it('hands a switched-off section over to the overview, replacing the history entry', async () => {
     signIn({ switched_off: ['orders'] })
     openAt('/orders')
@@ -366,7 +424,7 @@ describe('App', () => {
   })
 
   describe('package pill', () => {
-    it('warns in the last week of the package', async () => {
+    it('counts the days left on the badge, amber in the last week', async () => {
       signIn({
         package: {
           slug: 'pro',
@@ -378,12 +436,14 @@ describe('App', () => {
       })
       renderWithProviders(<App />)
 
-      expect(
-        await screen.findByRole('button', { name: 'Pro package, ending soon. Open your package.' }),
-      ).toBeInTheDocument()
+      const pill = await screen.findByRole('button', {
+        name: 'Pro package, 7 days left. Open your package.',
+      })
+      expect(pill).toHaveTextContent(/^7$/)
+      expect(pill.querySelector('[data-ending-soon]')).not.toBeNull()
     })
 
-    it('stays quiet with more than a week left, or no end', async () => {
+    it('counts without the amber with more than a week left, and shows nothing without an end', async () => {
       signIn({
         package: {
           slug: 'pro',
@@ -394,9 +454,10 @@ describe('App', () => {
         },
       })
       const { unmount } = renderWithProviders(<App />)
-      expect(
-        await screen.findByRole('button', { name: 'Pro package. Open your package.' }),
-      ).toBeInTheDocument()
+      const pill = await screen.findByRole('button', {
+        name: 'Pro package, 8 days left. Open your package.',
+      })
+      expect(pill.querySelector('[data-ending-soon]')).toBeNull()
       unmount()
 
       mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
@@ -419,7 +480,9 @@ describe('App', () => {
       })
       renderWithProviders(<App />)
 
-      expect(await screen.findByText('برو')).toBeInTheDocument()
+      // No text on the badge: the name is what a screen reader hears, in silver.
+      const pill = await screen.findByRole('button', { name: /برو/ })
+      expect(pill).toHaveAttribute('data-tier', 'silver')
     })
 
     it('falls back to the slug, then to "Free", for a package with no name', async () => {

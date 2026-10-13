@@ -111,14 +111,23 @@ export function CurrentPackageCard({
 
       {lapsed?.slug ? (
         <Alert
-          variant="warning"
+          variant={lapsed.offline ? 'error' : 'warning'}
           title={t('current.lapsedTitle', {
             name: nameOf(lapsed.name, lapsed.slug),
             date: lapsed.ended_at ? formatDate(lapsed.ended_at, locale) : '',
           })}
         >
           <p>
-            {t('current.lapsedBody', { name: nameOf(lapsed.name, lapsed.slug), current: name })}
+            {lapsed.offline || !lapsed.offline_at ? (
+              t('current.lapsedOffline', { name: nameOf(lapsed.name, lapsed.slug) })
+            ) : (
+              <Trans
+                ns="package"
+                i18nKey="current.lapsedGrace"
+                values={{ date: formatDate(lapsed.offline_at, locale) }}
+                components={{ date: <strong className="font-medium" /> }}
+              />
+            )}
           </p>
           <Button
             variant="secondary"

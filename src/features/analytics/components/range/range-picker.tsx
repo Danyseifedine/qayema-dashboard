@@ -14,7 +14,7 @@ export type RangePickerProps = {
   advanced: boolean
 }
 
-/** 7 and 30 days for every package; 90 days and all time with advanced analytics. */
+/** Today, 7 and 30 days for every package; 90 days and all time with advanced analytics. */
 export function RangePicker({ value, onChange, advanced }: RangePickerProps) {
   const { t } = useTranslation('analytics')
 

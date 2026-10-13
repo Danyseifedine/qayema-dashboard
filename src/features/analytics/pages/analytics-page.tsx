@@ -33,7 +33,8 @@ export type AnalyticsPageProps = {
  */
 export function AnalyticsPage({ locale, advanced, onOpenPackage }: AnalyticsPageProps) {
   const { t } = useTranslation('analytics')
-  const [range, setRange] = useState<StatsRange>('30d')
+  // Today first: what an owner opens the page to see.
+  const [range, setRange] = useState<StatsRange>('today')
   const summary = useStatsSummary(range)
   const insights = useAdvancedStats(range, advanced)
 
@@ -54,6 +55,7 @@ export function AnalyticsPage({ locale, advanced, onOpenPackage }: AnalyticsPage
       ) : (
         <Summary
           summary={summary.data}
+          today={range === 'today'}
           previous={advanced ? insights.data?.previous : undefined}
           locale={locale}
         />
@@ -74,10 +76,13 @@ export function AnalyticsPage({ locale, advanced, onOpenPackage }: AnalyticsPage
 
 function Summary({
   summary,
+  today,
   previous,
   locale,
 }: {
   summary: StatsSummary
+  /** The range is today: the views tile needs no "N today" under it. */
+  today: boolean
   previous: AdvancedStats['previous'] | undefined
   locale: Locale
 }) {
@@ -87,7 +92,12 @@ function Summary({
 
   return (
     <>
-      <SummaryTiles totals={totals} channel={summary.order_channel} previous={previous} />
+      <SummaryTiles
+        totals={totals}
+        channel={summary.order_channel}
+        previous={previous}
+        showToday={!today}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <FormSection title={t('visits.title')} description={t('visits.description')}>

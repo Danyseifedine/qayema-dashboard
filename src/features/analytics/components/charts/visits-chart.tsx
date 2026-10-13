@@ -7,7 +7,7 @@ import {
   CHART_COLORS,
   TOOLTIP_STYLE,
 } from '@/features/analytics/components/charts/chart-style'
-import { formatDay } from '@/shared/utils/format/date'
+import { formatDay, formatHour } from '@/shared/utils/format/date'
 import { formatNumber } from '@/shared/utils/format/number'
 
 export type VisitsChartProps = {
@@ -15,20 +15,33 @@ export type VisitsChartProps = {
   locale: Locale
 }
 
-/** Menu views per day, with the QR scans among them. */
+/** A point's time: its hour for today ("2026-10-13T14:00"), its day otherwise. */
+function pointLabel(date: string, locale: Locale): string {
+  return date.includes('T') ? formatHour(Number(date.slice(11, 13))) : formatDay(date, locale)
+}
+
+/** Menu views per day (per hour for today), with the QR scans among them. */
 export function VisitsChart({ series, locale }: VisitsChartProps) {
   const { t } = useTranslation('analytics')
   const views = series.reduce((sum, point) => sum + point.views, 0)
   const scans = series.reduce((sum, point) => sum + point.qr_scans, 0)
+  const byHour = series[0]?.date.includes('T') ?? false
 
   return (
     <figure
       role="img"
-      aria-label={t('visits.chartLabel', {
-        count: series.length,
-        views: formatNumber(views, locale),
-        scans: formatNumber(scans, locale),
-      })}
+      aria-label={
+        byHour
+          ? t('visits.chartLabelToday', {
+              views: formatNumber(views, locale),
+              scans: formatNumber(scans, locale),
+            })
+          : t('visits.chartLabel', {
+              count: series.length,
+              views: formatNumber(views, locale),
+              scans: formatNumber(scans, locale),
+            })
+      }
       className="m-0"
     >
       <div className="flex gap-4 pb-2 text-[12px] text-[var(--muted)]">
@@ -52,7 +65,7 @@ export function VisitsChart({ series, locale }: VisitsChartProps) {
           <CartesianGrid vertical={false} stroke={CHART_COLORS.grid} />
           <XAxis
             dataKey="date"
-            tickFormatter={(date: string) => formatDay(date, locale)}
+            tickFormatter={(date: string) => pointLabel(date, locale)}
             tick={AXIS_TICK}
             tickLine={false}
             axisLine={false}
@@ -61,7 +74,7 @@ export function VisitsChart({ series, locale }: VisitsChartProps) {
           <YAxis allowDecimals={false} tick={AXIS_TICK} tickLine={false} axisLine={false} />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
-            labelFormatter={(date) => formatDay(String(date), locale)}
+            labelFormatter={(date) => pointLabel(String(date), locale)}
           />
           <Area
             type="monotone"

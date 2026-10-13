@@ -17,12 +17,12 @@ function summaryFor(page: Page, range: string) {
 }
 
 test.describe('analytics', () => {
-  test('a pro owner reads views, visitors and QR scans, over 7 or 30 days @matrix', async ({
+  test('a pro owner reads views, visitors and QR scans, today first, then over 7 days @matrix', async ({
     page,
     owner,
   }) => {
     await owner({ package: 'pro', visits: 6, qr_scans: 4 })
-    const first = summaryFor(page, '30d')
+    const first = summaryFor(page, 'today')
     await page.goto('/analytics')
     expect((await first).ok()).toBeTruthy()
 
@@ -33,7 +33,7 @@ test.describe('analytics', () => {
     await expect(page.locator('dl > div')).toHaveCount(3)
 
     const range = page.getByRole('tablist', { name: either('Range', 'الفترة') })
-    await expect(range.getByRole('tab', { name: either('30 days', '30 يومًا') })).toHaveAttribute(
+    await expect(range.getByRole('tab', { name: either('Today', 'اليوم') })).toHaveAttribute(
       'aria-selected',
       'true',
     )

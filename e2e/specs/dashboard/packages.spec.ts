@@ -150,10 +150,10 @@ test.describe('packages: the Package page', () => {
     await expect(page.getByText(`Until ${shortDate(endsAt)}`)).toBeVisible()
     await expect(page.getByText('3 days left')).toBeVisible()
     await expect(
-      page.getByText('Ending soon. Ask us to extend it so nothing switches off.'),
+      page.getByText('Ending soon. Ask us to extend it so your menu stays online.'),
     ).toBeVisible()
     await expect(
-      page.getByRole('button', { name: 'Pro package, ending soon. Open your package.' }),
+      page.getByRole('button', { name: 'Pro package, 3 days left. Open your package.' }),
     ).toBeVisible()
 
     await page.getByRole('button', { name: 'Ask to extend' }).click()
@@ -175,37 +175,65 @@ test.describe('packages: the Package page', () => {
     await expect(page.getByText('60 days left')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Ask to extend' })).toHaveCount(0)
     await expect(
-      page.getByRole('button', { name: 'Premium package. Open your package.' }),
+      page.getByRole('button', { name: 'Premium package, 60 days left. Open your package.' }),
     ).toBeVisible()
   })
 
-  test('a lapsed package offers to renew and the owner is back on Free', async ({
+  test('an ended package is kept, warns when the menu goes offline, and offers to renew', async ({
     page,
     owner,
   }) => {
     const endedAt = daysFromNow(-1)
-    await owner({ package: 'pro', package_starts_at: daysFromNow(-60), package_ends_at: endedAt })
+    const { restaurant } = await owner({
+      package: 'pro',
+      package_starts_at: daysFromNow(-60),
+      package_ends_at: endedAt,
+    })
     await page.goto('/package')
 
     await expect(page.getByText(`Your Pro package ended on ${shortDate(endedAt)}`)).toBeVisible()
     await expect(
-      page.getByText('You are on Free now. Everything you made is kept and comes back with Pro.'),
+      page.getByText(`Your menu stays online until ${shortDate(daysFromNow(2))}`),
     ).toBeVisible()
+    // Never dropped to Free: the pill still says Pro, and Pro's sections stay.
     await expect(
-      page.getByRole('button', { name: 'Free package. Open your package.' }),
+      page.getByRole('button', { name: 'Pro package. Open your package.' }),
     ).toBeVisible()
+    const nav = await sidebar(page)
+    await expect(row(nav, 'Analytics', 'الإحصاءات')).toBeVisible()
 
     await page.getByRole('button', { name: 'Ask to renew' }).click()
     const dialog = page.getByRole('dialog')
     await expect(dialog.getByRole('heading', { name: 'Ask about Pro' })).toBeVisible()
     await dialog.getByRole('button', { name: 'Cancel' }).click()
 
-    // Pro's sections leave the sidebar again.
-    const nav = await sidebar(page)
-    await expect(row(nav, 'Analytics', 'الإحصاءات')).toHaveCount(0)
-    await expect(row(nav, 'Appearance', 'المظهر')).toHaveCount(0)
-    await page.goto('/analytics')
-    await expect(page.getByRole('button', { name: 'See packages' })).toBeVisible()
+    // Every other page carries the warning; guests still get the menu.
+    await page.goto('/dishes')
+    await expect(page.getByText(/Your menu goes offline on/)).toBeVisible()
+    expect((await page.request.get(restaurant.public_url)).status()).toBe(200)
+  })
+
+  test('past the grace days the menu is offline and every page asks to renew', async ({
+    page,
+    owner,
+  }) => {
+    const endedAt = daysFromNow(-4)
+    const { restaurant } = await owner({
+      package: 'pro',
+      package_starts_at: daysFromNow(-60),
+      package_ends_at: endedAt,
+    })
+    await page.goto('/dishes')
+
+    await expect(page.getByRole('heading', { name: 'Your menu is offline' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Add dish' })).toHaveCount(0)
+    expect((await page.request.get(restaurant.public_url)).status()).toBe(404)
+
+    await page.getByRole('button', { name: 'Ask to renew' }).click()
+    await expect(page).toHaveURL(/\/package$/)
+    await expect(
+      page.getByText(/Your menu is offline: guests cannot open it until you renew/),
+    ).toBeVisible()
   })
 
   test('an upcoming package is announced while Free is in force', async ({ page, owner }) => {

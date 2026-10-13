@@ -14,10 +14,12 @@ export type SummaryTilesProps = {
    * change line at all; null ("All time") says there is nothing to compare.
    */
   previous?: AdvancedStats['previous']
+  /** "N today" under the views; left out when the range is today itself. */
+  showToday?: boolean
 }
 
 /** The headline numbers for the range. */
-export function SummaryTiles({ totals, channel, previous }: SummaryTilesProps) {
+export function SummaryTiles({ totals, channel, previous, showToday = true }: SummaryTilesProps) {
   const { t } = useTranslation('analytics')
   const locale = usePreferencesStore((state) => state.locale)
   const change = (key: 'views' | 'unique_visitors' | 'qr_scans' | 'orders', current: number) => {
@@ -32,7 +34,11 @@ export function SummaryTiles({ totals, channel, previous }: SummaryTilesProps) {
         label={t('summary.views')}
         value={formatNumber(totals.views, locale)}
         change={change('views', totals.views)}
-        hint={t('summary.viewsToday', { views: formatNumber(totals.views_today, locale) })}
+        hint={
+          showToday
+            ? t('summary.viewsToday', { views: formatNumber(totals.views_today, locale) })
+            : undefined
+        }
       />
       <StatTile
         label={t('summary.visitors')}

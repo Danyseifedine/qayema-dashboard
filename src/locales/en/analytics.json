@@ -5,6 +5,7 @@
     "label": "Range",
     "locked": "Comes with advanced analytics",
     "options": {
+      "today": "Today",
       "7d": "7 days",
       "30d": "30 days",
       "90d": "90 days",
@@ -28,6 +29,7 @@
     "empty": "No visits in this range yet. Share your menu link, or put the QR code on your tables.",
     "chartLabel_one": "{{views}} views over {{count}} day, {{scans}} of them QR scans.",
     "chartLabel_other": "{{views}} views over {{count}} days, {{scans}} of them QR scans.",
+    "chartLabelToday": "{{views}} views today, {{scans}} of them QR scans.",
     "views": "Views",
     "qrScans": "QR scans"
   },

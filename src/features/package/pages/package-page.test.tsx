@@ -188,23 +188,55 @@ describe('PackagePage', () => {
     expect(within(screen.getByRole('dialog')).getByText('Ask about Pro')).toBeInTheDocument()
   })
 
-  it('explains a package that ended and offers to renew it', async () => {
-    stub('free', {
-      lapsed: { slug: 'pro', name: { en: 'Pro', ar: null }, ended_at: '2026-09-01T10:00:00+00:00' },
+  it('explains a package that ended, when the menu goes offline, and offers to renew it', async () => {
+    stub('pro', {
+      lapsed: {
+        slug: 'pro',
+        name: { en: 'Pro', ar: null },
+        ended_at: '2026-09-01T10:00:00+00:00',
+        offline_at: '2026-09-04T10:00:00+00:00',
+        offline: false,
+      },
     })
     const user = userEvent.setup()
     renderWithProviders(<PackagePage locale="en" />)
 
     expect(await screen.findByText('Your Pro package ended on Sep 1, 2026')).toBeInTheDocument()
-    expect(screen.getByText(/You are on Free now. Everything you made is kept/)).toBeInTheDocument()
+    expect(screen.getByText(/Your menu stays online until/)).toHaveTextContent(
+      'Your menu stays online until Sep 4, 2026, then goes offline until you renew.',
+    )
     await user.click(await screen.findByRole('button', { name: 'Ask to renew' }))
 
     expect(within(screen.getByRole('dialog')).getByText('Ask about Pro')).toBeInTheDocument()
   })
 
+  it('says the menu is offline once the grace days passed', async () => {
+    stub('pro', {
+      lapsed: {
+        slug: 'pro',
+        name: { en: 'Pro', ar: null },
+        ended_at: '2026-09-01T10:00:00+00:00',
+        offline_at: '2026-09-04T10:00:00+00:00',
+        offline: true,
+      },
+    })
+    renderWithProviders(<PackagePage locale="en" />)
+
+    expect(
+      await screen.findByText(/Your menu is offline: guests cannot open it until you renew/),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('Your Pro package ended on Sep 1, 2026')
+  })
+
   it('keeps an ask pressed before the packages arrive and opens it once they do', async () => {
     session({
-      lapsed: { slug: 'pro', name: { en: 'Pro', ar: null }, ended_at: '2026-09-01T10:00:00+00:00' },
+      lapsed: {
+        slug: 'pro',
+        name: { en: 'Pro', ar: null },
+        ended_at: '2026-09-01T10:00:00+00:00',
+        offline_at: '2026-09-04T10:00:00+00:00',
+        offline: false,
+      },
     })
     let release: () => void = () => {}
     mock.onGet('/api/packages').reply(
@@ -481,7 +513,13 @@ describe('PackagePage', () => {
 
   it('names an ended package by slug and leaves the date out when unknown', async () => {
     stub('free', {
-      lapsed: { slug: 'gold', name: { en: null, ar: null }, ended_at: null },
+      lapsed: {
+        slug: 'gold',
+        name: { en: null, ar: null },
+        ended_at: null,
+        offline_at: null,
+        offline: false,
+      },
     })
     const user = userEvent.setup()
     renderWithProviders(<PackagePage locale="en" />)

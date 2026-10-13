@@ -50,9 +50,9 @@ const restaurantSchema = z.object({
   template_id: z.number().nullable(),
   public_url: z.string(),
   /**
-   * The package actually in force. An assignment that has not started or has
-   * ended reports as the default one, because that is where the limits below
-   * came from.
+   * The package actually in force. An assignment that has not started yet
+   * reports as the default one, because that is where the limits below came
+   * from; an ended one is kept (`lapsed` says when the menu goes offline).
    */
   package: z.object({
     ...packageSummary,
@@ -62,8 +62,19 @@ const restaurantSchema = z.object({
     /** Whole days until it ends, 0 on its last day; null when it does not end. */
     days_left: z.number().int().nullable(),
   }),
-  /** The package the restaurant was given when it has ended. */
-  lapsed: z.object({ ...packageSummary, ended_at: z.string().nullable() }).nullable(),
+  /**
+   * The package the restaurant was given when it has ended: the menu stays
+   * online until `offline_at` (a few days of grace), then is offline until
+   * the package is renewed. The defaults read an API from before these.
+   */
+  lapsed: z
+    .object({
+      ...packageSummary,
+      ended_at: z.string().nullable(),
+      offline_at: z.string().nullable().default(null),
+      offline: z.boolean().default(false),
+    })
+    .nullable(),
   /** The package the restaurant was given when it starts later. */
   upcoming: z.object({ ...packageSummary, starts_at: z.string().nullable() }).nullable(),
   limits: z.object({

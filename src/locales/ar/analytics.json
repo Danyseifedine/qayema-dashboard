@@ -5,6 +5,7 @@
     "label": "الفترة",
     "locked": "متاحة مع الإحصاءات المتقدّمة",
     "options": {
+      "today": "اليوم",
       "7d": "7 أيام",
       "30d": "30 يومًا",
       "90d": "90 يومًا",
@@ -36,6 +37,7 @@
     "chartLabel_few": "المشاهدات: {{views}} خلال {{count}} أيام، منها {{scans}} عبر مسح رمز QR.",
     "chartLabel_many": "المشاهدات: {{views}} خلال {{count}} يومًا، منها {{scans}} عبر مسح رمز QR.",
     "chartLabel_other": "المشاهدات: {{views}} خلال {{count}} يوم، منها {{scans}} عبر مسح رمز QR.",
+    "chartLabelToday": "المشاهدات اليوم: {{views}}، منها {{scans}} عبر مسح رمز QR.",
     "views": "المشاهدات",
     "qrScans": "مسح رمز QR"
   },

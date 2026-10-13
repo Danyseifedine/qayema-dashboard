@@ -1,19 +1,20 @@
 import { IconMenu2 } from '@tabler/icons-react'
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { PackagePill } from '@/app/layouts/authenticated/topbar/package-pill'
+import type { PackageTier } from '@/app/layouts/authenticated/topbar/package-tier'
 import { UserMenu } from '@/app/layouts/authenticated/topbar/user-menu'
 
 export type TopbarProps = {
+  /** The open page, for screen readers: the page itself shows its own heading. */
   title: string
-  /** Optional line under the title, e.g. the public menu link. */
-  subtitle?: ReactNode
   user: { name: string; login: string }
   /** The package the restaurant is on, in the current language. */
   packageName: string
-  packageEndingSoon: boolean
+  packageTier: PackageTier
+  /** Whole days until the package ends; null when it does not end. */
+  packageDaysLeft: number | null
   publicUrl?: string | null
   locale: Locale
   onLocaleChange: (locale: Locale) => void
@@ -30,10 +31,10 @@ export type TopbarProps = {
  */
 export function Topbar({
   title,
-  subtitle,
   user,
   packageName,
-  packageEndingSoon,
+  packageTier,
+  packageDaysLeft,
   publicUrl,
   locale,
   onLocaleChange,
@@ -66,14 +67,16 @@ export function Topbar({
           <IconMenu2 aria-hidden className="size-5" />
         </button>
 
-        <div className="me-auto min-w-0">
-          <h1 className="truncate font-display text-[20px] leading-tight">{title}</h1>
-          {subtitle ? (
-            <div className="truncate text-[12px] text-[var(--muted)]">{subtitle}</div>
-          ) : null}
-        </div>
+        <h1 className="sr-only">{title}</h1>
 
-        <PackagePill label={packageName} endingSoon={packageEndingSoon} onClick={onOpenPackage} />
+        <div className="ms-auto">
+          <PackagePill
+            label={packageName}
+            tier={packageTier}
+            daysLeft={packageDaysLeft}
+            onClick={onOpenPackage}
+          />
+        </div>
         <UserMenu
           name={user.name}
           login={user.login}

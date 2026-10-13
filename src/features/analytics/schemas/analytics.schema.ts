@@ -6,11 +6,11 @@ import { z } from 'zod'
  * is the rest, behind the `advanced_analytics` flag.
  */
 
-export const STATS_RANGES = ['7d', '30d', '90d', 'all'] as const
+export const STATS_RANGES = ['today', '7d', '30d', '90d', 'all'] as const
 export type StatsRange = (typeof STATS_RANGES)[number]
 
 /** Ranges every package gets; the others need advanced analytics. */
-export const BASIC_RANGES: readonly StatsRange[] = ['7d', '30d']
+export const BASIC_RANGES: readonly StatsRange[] = ['today', '7d', '30d']
 
 const count = z.number().int().nonnegative()
 
@@ -30,6 +30,7 @@ const statsSummarySchema = z.object({
    * completed), or orders placed in the menu. Null without ordering.
    */
   order_channel: z.enum(['whatsapp', 'menu']).nullable().default(null),
+  /** One point a day ("2026-10-13"); for today, one an hour so far ("2026-10-13T14:00"). */
   series: z.array(z.object({ date: z.string(), views: count, qr_scans: count })),
 })
 

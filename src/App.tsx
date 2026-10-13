@@ -5,9 +5,12 @@ import {
   NAV_ITEMS,
   isNavItemHidden,
   navLock,
+  OPEN_WHILE_OFFLINE,
   type NavItem,
 } from '@/app/layouts/authenticated/nav-items'
+import { MenuGoingOffline, MenuOfflinePage } from '@/app/layouts/authenticated/menu-offline'
 import { PlanLockedPage } from '@/app/layouts/authenticated/plan-locked-page'
+import { tierOf } from '@/app/layouts/authenticated/topbar/package-tier'
 import { usePageKey } from '@/app/layouts/authenticated/use-page-key'
 import { SessionGate, useWritingHelpLeft } from '@/features/auth'
 import { useLogout, useOrderingMode, useTableOrderingMode } from '@/features/auth'
@@ -20,9 +23,6 @@ import { WritingHelpProvider } from '@/shared/components/forms/translatable/writ
 import { Alert, Button } from '@/shared/components/ui'
 import { translated } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
-
-/** How close to its end a package shows a warning, in days. */
-const ENDING_SOON_DAYS = 7
 
 /**
  * Each page's code (and what only it uses: charts, the QR library, drag and
@@ -110,6 +110,10 @@ function Dashboard({ user }: { user: AuthUser }) {
   usePrefetchPages()
 
   const lock = navLock(activeKey, { hasTemplate, plan })
+  // An ended package keeps the menu online for a few days, then takes it
+  // offline: every page but Package and Account asks to renew.
+  const lapsed = restaurant.lapsed
+  const offline = lapsed?.offline === true && !OPEN_WHILE_OFFLINE.includes(activeKey)
   const activeItem = NAV_ITEMS.find((item) => item.key === activeKey)
 
   // Each AI answer says how many uses are left; the session keeps the count.
@@ -128,12 +132,11 @@ function Dashboard({ user }: { user: AuthUser }) {
       activeKey={activeKey}
       onNavigate={(item: NavItem) => setActiveKey(item.key)}
       user={{ name: user.name, login: user.email ?? user.username ?? '' }}
-      packageEndingSoon={
-        restaurant.package.days_left !== null && restaurant.package.days_left <= ENDING_SOON_DAYS
-      }
+      packageDaysLeft={restaurant.package.days_left}
       packageName={
         packageName.missing ? (restaurant.package.slug ?? t('app.freePackage')) : packageName.text
       }
+      packageTier={tierOf(restaurant.package.slug)}
       publicUrl={restaurant.public_url}
       hasTemplate={hasTemplate}
       plan={plan}
@@ -150,11 +153,25 @@ function Dashboard({ user }: { user: AuthUser }) {
         </Alert>
       ) : null}
 
+      {lapsed && !lapsed.offline && lapsed.offline_at && activeKey !== 'package' ? (
+        <MenuGoingOffline
+          lapsed={lapsed}
+          locale={locale}
+          onOpenPackage={() => setActiveKey('package')}
+        />
+      ) : null}
+
       <WritingHelpProvider uses={restaurant.writing_help} onLeft={setWritingHelpLeft}>
         {/* Keyed by the page: a page that broke is left behind when another opens. */}
         <ErrorBoundary key={activeKey}>
           <Suspense fallback={<PageSkeleton />}>
-            {lock === 'plan' && activeItem ? (
+            {offline && lapsed ? (
+              <MenuOfflinePage
+                lapsed={lapsed}
+                locale={locale}
+                onOpenPackage={() => setActiveKey('package')}
+              />
+            ) : lock === 'plan' && activeItem ? (
               <PlanLockedPage
                 item={activeItem}
                 locale={locale}

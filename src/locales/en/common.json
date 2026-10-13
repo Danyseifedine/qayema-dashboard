@@ -49,7 +49,9 @@
   },
   "packagePill": {
     "label": "{{name}} package. Open your package.",
-    "labelEndingSoon": "{{name}} package, ending soon. Open your package."
+    "labelDaysLeft_one": "{{name}} package, {{count}} day left. Open your package.",
+    "labelDaysLeft_other": "{{name}} package, {{count}} days left. Open your package.",
+    "labelEndsToday": "{{name}} package, ends today. Open your package."
   },
   "userMenu": {
     "trigger": "Account menu",
@@ -242,5 +244,17 @@
         "three": "Works whether your other orders go to WhatsApp or your menu"
       }
     }
+  },
+  "menuOffline": {
+    "title": "Your menu is offline",
+    "body": "Your {{name}} package ended on {{date}}, so guests cannot open your menu. Ask us to renew it and it is back at once.",
+    "comesBack": {
+      "one": "Your menu back at the same link",
+      "two": "Every dish, photo and setting as you left them",
+      "three": "Printed QR codes working again"
+    },
+    "renew": "Ask to renew",
+    "soonTitle": "Your {{name}} package ended on {{date}}",
+    "soonBody": "Your menu goes offline on {{date}} unless you renew. Everything you made is kept."
   }
 }

@@ -223,8 +223,12 @@ test.describe('admin', () => {
 
     // Oldest end first: the one that ended comes before the one still running.
     const endedRow = await findRow(widget, ended.user.email)
+    // Kept, never dropped to Free: its menu goes offline 3 days after the end.
     await expect(endedRow).toContainText(
-      standing('Premium', `Ended ${carbonDate(endedAt)}, on Free`),
+      standing(
+        'Premium',
+        `Ended ${carbonDate(endedAt)}, menu offline ${carbonDate(daysFromNow(0))}`,
+      ),
     )
 
     const endingRow = await findRow(widget, ending.user.email)
@@ -271,7 +275,7 @@ test.describe('admin', () => {
       standing('Pro', `Until ${carbonDate(endsAt)}`),
     )
     await expect(restaurantRow(page, ended.restaurant.id)).toContainText(
-      standing('Pro', `Ended ${carbonDate(endedAt)}, on Free`),
+      standing('Pro', `Ended ${carbonDate(endedAt)}, menu offline ${carbonDate(daysFromNow(0))}`),
     )
     await expect(restaurantRow(page, starts.restaurant.id)).toContainText(
       standing('Premium', `Starts ${carbonDate(startsAt)}`),
@@ -325,15 +329,16 @@ test.describe('admin', () => {
       await page.getByRole('button', { name: 'Apply filters' }).click()
     }
 
-    // Pro in force: the one whose Pro still runs, not the one whose Pro ended.
+    // Pro in force: the one whose Pro runs and the one whose Pro ended (kept,
+    // never dropped to Free).
     await filters({ inForce: 'Pro' })
-    await expect(rows).toHaveCount(1)
-    await expect(restaurantRow(page, pro.restaurant.id)).toBeVisible()
-
-    // Free in force: the ended one and the one whose Premium has not started.
-    await filters({ inForce: 'Free' })
     await expect(rows).toHaveCount(2)
+    await expect(restaurantRow(page, pro.restaurant.id)).toBeVisible()
     await expect(restaurantRow(page, ended.restaurant.id)).toBeVisible()
+
+    // Free in force: only the one whose Premium has not started.
+    await filters({ inForce: 'Free' })
+    await expect(rows).toHaveCount(1)
     await expect(restaurantRow(page, scheduled.restaurant.id)).toBeVisible()
 
     await filters({ dates: 'Starts later' })

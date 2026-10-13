@@ -201,3 +201,21 @@
     margin: 12mm;
   }
 }
+
+/* The gold package badge in the topbar burns a little: its glow breathes
+   between amber and a deeper orange (package-pill.tsx). */
+@keyframes package-fire {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.6),
+      0 0 8px 1px rgb(255 170 40 / 0.55),
+      0 0 16px 3px rgb(255 110 20 / 0.25);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.6),
+      0 0 12px 3px rgb(255 140 20 / 0.7),
+      0 0 24px 6px rgb(240 70 10 / 0.35);
+  }
+}

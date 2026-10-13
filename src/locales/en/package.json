@@ -18,10 +18,11 @@
     "daysLeft_one": "{{count}} day left",
     "daysLeft_other": "{{count}} days left",
     "endsToday": "Ends today",
-    "endingSoon": "Ending soon. Ask us to extend it so nothing switches off.",
+    "endingSoon": "Ending soon. Ask us to extend it so your menu stays online.",
     "extend": "Ask to extend",
     "lapsedTitle": "Your {{name}} package ended on {{date}}",
-    "lapsedBody": "You are on {{current}} now. Everything you made is kept and comes back with {{name}}.",
+    "lapsedGrace": "Your menu stays online until <date>{{date}}</date>, then goes offline until you renew. Everything you made is kept.",
+    "lapsedOffline": "Your menu is offline: guests cannot open it until you renew. Everything you made is kept and comes back with {{name}}.",
     "renew": "Ask to renew",
     "upcoming": "{{name}} starts on <date>{{date}}</date>.",
     "includedTitle": "On your package"

@@ -222,3 +222,6 @@ export function navLock(key: string, access: NavAccess): NavLock {
 
   return null
 }
+
+/** The pages an owner can still open while the menu is offline (an ended package past its grace days). */
+export const OPEN_WHILE_OFFLINE: readonly string[] = ['package', 'account']
