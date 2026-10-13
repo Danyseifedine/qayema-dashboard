@@ -102,6 +102,13 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
+      # Playwright starts the backend before its global setup resets the
+      # database, and waits for /up, which answers 500 while the e2e SQLite
+      # file does not exist yet: on a fresh checkout it is made here first.
+      - name: The e2e database
+        working-directory: qayema
+        run: composer e2e:reset
+
       # The built dashboard (E2E_BUILD), not the dev server. The screenshot
       # projects stay on the owner's machine: the runner's fonts differ.
       - name: End-to-end
