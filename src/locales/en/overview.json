@@ -1,12 +1,8 @@
 {
-  "page": {
-    "title": "Overview",
-    "description": "What is on your menu right now, and what is still missing."
-  },
   "counts": {
     "dishes": "Dishes",
     "categories": "Categories",
-    "socialLinks": "Social links",
+    "socialLinks": "Links",
     "noLimit": "No limit on your package",
     "onYourPackage": "on your package"
   },
@@ -66,12 +62,15 @@
   },
   "link": {
     "label": "Your menu link",
-    "live": "Your menu is live at",
-    "copy": "Copy link",
-    "open": "Open menu",
     "qr": "QR code",
     "copied": "Link copied",
-    "copyFailed": "Could not copy the link"
+    "copyFailed": "Could not copy the link",
+    "title": "Your menu <live>is live</live>",
+    "share": "Share my menu",
+    "shareTitle": "Our menu",
+    "body": "Your customers can view your menu now.",
+    "preview": "Preview",
+    "shareShort": "Share"
   },
   "setup": {
     "title": "Set up your menu",
@@ -117,5 +116,26 @@
         "body": "A new price or a dish sold out is live at once. Nothing to reprint."
       }
     }
+  },
+  "waiting_one": "{{count}} new order waiting",
+  "waiting_other": "{{count}} new orders waiting",
+  "today": {
+    "title": "Today",
+    "views": "Views",
+    "scans": "QR scans",
+    "orders": "Orders",
+    "sentToWhatsapp": "WhatsApp",
+    "live": "Live from your menu",
+    "vsYesterday": "vs. yesterday"
+  },
+  "next": {
+    "title": "Next: {{item}}",
+    "cta": "{{action}} {{item}}",
+    "showSteps": "See every step",
+    "hideSteps": "Hide the steps"
+  },
+  "quick": {
+    "title": "Quick",
+    "description": "Update and manage your menu content"
   }
 }

@@ -1,1 +1,0 @@
-import{t as e}from"./keys-LPoUgdzu.js";var t={all:[e.analytics],summary:t=>[e.analytics,`summary`,t],advanced:t=>[e.analytics,`advanced`,t],teaser:()=>[e.analytics,`teaser`]};export{t};

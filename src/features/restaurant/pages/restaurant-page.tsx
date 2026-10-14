@@ -237,7 +237,8 @@ export function RestaurantPage() {
         <FormActions
           align="between"
           className={cn(
-            'sticky bottom-0 z-10 -mx-4 mt-1 border-t-[0.5px] border-[var(--line)] px-4 py-3 sm:-mx-6 sm:px-6',
+            // Above the phone's tabs, which sit 4.5rem tall at the bottom.
+            'sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 mt-1 lg:bottom-0 border-t-[0.5px] border-[var(--line)] px-4 py-3 sm:-mx-6 sm:px-6',
             'bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] backdrop-blur-[16px]',
           )}
         >

@@ -133,7 +133,7 @@ describe('App', () => {
       meta: { current: 'free', ends_at: null },
     })
     openAt('/')
-    useUiStore.setState({ sidebarCollapsed: false, mobileNavOpen: false })
+    useUiStore.setState({ sidebarCollapsed: false })
     usePreferencesStore.getState().setLocale('en')
   })
 

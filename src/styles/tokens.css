@@ -85,6 +85,29 @@ html[data-theme='light'] {
   --status-info-wash: rgba(74, 107, 134, 0.1);
   --status-info-border: rgba(74, 107, 134, 0.3);
 
+  /* ---- Home's tints: "is live" and a rise in green, the QR scans in violet.
+     Each reads at 4.5:1 on its own wash (tokens.test.ts). ---- */
+  --live: #1d6f3f;
+  --live-wash: rgba(29, 111, 63, 0.1);
+  --tint-violet: #5a46a8;
+  --tint-violet-wash: rgba(90, 70, 168, 0.1);
+  /* Home's cards: lifted off the page by a small shadow instead of a
+     border, and the phone picture's own shadow, light on a pale page. */
+  --card-lift: 0 4px 14px -6px rgba(20, 17, 9, 0.16);
+  --phone-shadow: -6px 12px 12px rgba(20, 17, 9, 0.16);
+  /* Home: a soft light falling from the top of the screen, and cards with a
+     see-through fill and light catching their top edge. */
+  --top-light: rgba(255, 255, 255, 0.7);
+  /* The phone's bottom bar, finished like Home's cards (.tab-bar): light on
+     its top edge, no border; the open tab a gold-tinted card with a small
+     shadow. */
+  --tabbar-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 -6px 18px rgba(20, 17, 9, 0.06);
+  --tab-on: linear-gradient(160deg, rgba(233, 189, 102, 0.3), rgba(233, 189, 102, 0.14));
+  --tab-on-edge: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 8px -5px rgba(20, 17, 9, 0.25);
+  --home-dot: rgba(20, 17, 9, 0.09);
+  --glass-fill: rgba(255, 255, 255, 0.55);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 0.5px rgba(255, 255, 255, 0.6);
+
   /* ---- Overlays and elevation ----
      `pill` is the dark badge that sits on a photo and always carries white
      text. `chip` is a control on a photo, so unlike the pill it follows the
@@ -136,6 +159,20 @@ html[data-theme='dark'] {
   --status-info: #93b8d6;
   --status-info-wash: rgba(147, 184, 214, 0.14);
   --status-info-border: rgba(147, 184, 214, 0.38);
+
+  --live: #5fd68a;
+  --live-wash: rgba(95, 214, 138, 0.14);
+  --tint-violet: #b4a8ff;
+  --tint-violet-wash: rgba(180, 168, 255, 0.14);
+  --card-lift: 0 6px 16px -8px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --phone-shadow: -10px 20px 18px rgba(0, 0, 0, 0.5);
+  --top-light: rgba(255, 255, 255, 0.025);
+  --tabbar-edge: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 -10px 24px rgba(0, 0, 0, 0.6);
+  --tab-on: linear-gradient(160deg, rgba(248, 211, 141, 0.22), rgba(248, 211, 141, 0.07));
+  --tab-on-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 3px 8px -5px rgba(0, 0, 0, 0.8);
+  --home-dot: rgba(255, 255, 255, 0.03);
+  --glass-fill: rgba(255, 255, 255, 0.045);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
 
   --overlay-pill: rgba(0, 0, 0, 0.7);
   --overlay-chip: rgba(10, 10, 10, 0.78);

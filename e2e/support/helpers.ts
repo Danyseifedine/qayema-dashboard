@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import type { Browser, Locator, Page } from '@playwright/test'
-import { either, test, type Owner } from './fixtures'
+import { either, expect, type Owner } from './fixtures'
 import { API_URL, DASHBOARD_URL } from './urls'
 
 /** A file under e2e/support/files, for an upload field. */
@@ -28,12 +28,29 @@ export async function callApi(page: Page, method: 'POST' | 'DELETE', path: strin
   })
 }
 
-/** The dashboard's sidebar, opened first on a phone where it is a drawer. */
-export async function openSidebar(page: Page) {
-  if (test.info().project.name === 'phone') {
-    await page.getByRole('button', { name: either('Open navigation', 'فتح القائمة') }).click()
-  }
-  return page.getByRole('navigation', { name: either('Dashboard', 'لوحة التحكم') })
+/** Below Tailwind's `lg` the dashboard is a phone app: tabs at the bottom, no sidebar. */
+export function isPhone(page: Page): boolean {
+  return (page.viewportSize()?.width ?? 1440) < 1024
+}
+
+/**
+ * The dashboard's navigation. On a computer, the sidebar. On a phone, the
+ * More tab is opened and both are searched: the four tabs (Home, Menu, the
+ * orders, More) and the More page's sections. On a phone Overview is "Home"
+ * and Dishes is "Menu".
+ */
+export async function openSidebar(page: Page): Promise<Locator> {
+  const sections = page.getByRole('navigation', { name: either('Dashboard', 'لوحة التحكم') })
+  if (!isPhone(page)) return sections
+  const tabs = page.getByRole('navigation', { name: either('Sections', 'أقسام اللوحة') })
+  await tabs.getByRole('button', { name: either('More', 'المزيد') }).click()
+  await expect(sections).toBeVisible()
+  return sections.or(tabs)
+}
+
+/** Back to the page that was open before `openSidebar`: on a phone that opened More. */
+export async function closeSidebar(page: Page) {
+  if (isPhone(page)) await page.goBack()
 }
 
 /** The owner's public menu in a separate, signed-out browser. */

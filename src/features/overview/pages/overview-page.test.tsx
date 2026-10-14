@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -43,9 +43,15 @@ function stub(settings: Record<string, unknown> = {}, dishes = [makeDish()]) {
     .reply(200, { data: dishes, meta: { used: dishes.length, limit: 40, currency: 'USD' } })
 }
 
-/** A count tile by its label. */
+/** Every step of the set-up, behind "See every step". */
+async function showSteps(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: 'See every step' }))
+}
+
+/** A count tile under Quick, by its label. */
 function tile(label: string): HTMLElement {
-  return screen.getByText(label, { selector: 'dt' }).parentElement!
+  const quick = screen.getByRole('region', { name: 'Quick' })
+  return within(quick).getByRole('button', { name: new RegExp(`^${label}`) })
 }
 
 describe('OverviewPage', () => {
@@ -70,9 +76,24 @@ describe('OverviewPage', () => {
 
     expect(tile('Dishes')).toHaveTextContent('12 / 40')
     expect(tile('Categories')).toHaveTextContent('4 / 10')
-    expect(tile('Social links')).toHaveTextContent('2 / 2')
+    // The links show their count alone.
+    expect(tile('Links')).toHaveTextContent(/^Links2$/)
     // Stays "12 / 40" on an Arabic page instead of flipping to "40 / 12".
     expect(screen.getByText('12 / 40')).toHaveAttribute('dir', 'ltr')
+  })
+
+  it('opens the page each count is about', async () => {
+    stub()
+    const onOpen = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
+
+    await user.click(tile('Dishes'))
+    expect(onOpen).toHaveBeenLastCalledWith('dishes')
+    await user.click(tile('Categories'))
+    expect(onOpen).toHaveBeenLastCalledWith('categories')
+    await user.click(tile('Links'))
+    expect(onOpen).toHaveBeenLastCalledWith('social-links')
   })
 
   it('never shows an unlimited allowance as a number', () => {
@@ -108,10 +129,11 @@ describe('OverviewPage', () => {
     const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
 
-    await user.click(await screen.findByRole('button', { name: 'Add: A cover photo' }))
+    await user.click(await screen.findByRole('button', { name: 'Add a cover photo' }))
     expect(onOpen).toHaveBeenLastCalledWith('restaurant')
 
     // The dishes are the next step: opened with a tap.
+    await showSteps(user)
     await user.click(screen.getByRole('button', { name: /Your dishes/ }))
     await user.click(screen.getByRole('button', { name: 'Fix: 2 dishes have no photo' }))
     expect(onOpen).toHaveBeenLastCalledWith('dishes')
@@ -119,7 +141,9 @@ describe('OverviewPage', () => {
 
   it('opens on the first step not done, what is left before what is done', async () => {
     stub()
+    const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+    await showSteps(user)
 
     const step = await screen.findByRole('list', { name: 'Your restaurant' })
     const rows = within(step).getAllByRole('listitem')
@@ -146,6 +170,7 @@ describe('OverviewPage', () => {
     stub()
     const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+    await showSteps(user)
 
     const restaurant = await screen.findByRole('button', { name: /Your restaurant/ })
     const dishes = screen.getByRole('button', { name: /Your dishes/ })
@@ -164,13 +189,14 @@ describe('OverviewPage', () => {
     const onOpen = vi.fn()
     const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
+    await showSteps(user)
 
     await user.click(await screen.findByRole('button', { name: /Share your menu/ }))
     await user.click(screen.getByRole('button', { name: 'Get your QR code' }))
     expect(onOpen).toHaveBeenLastCalledWith('qr')
   })
 
-  it('puts the menu link first, to copy, open or turn into a QR code', async () => {
+  it('puts the menu link first, to share, preview or turn into a QR code', async () => {
     stub()
     mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
     const onOpen = vi.fn()
@@ -183,7 +209,8 @@ describe('OverviewPage', () => {
       'https://qayema.test/beit-qayema',
     )
 
-    await user.click(within(card).getByRole('button', { name: 'Copy link' }))
+    // No share menu in the test browser: the link is copied instead.
+    await user.click(within(card).getByRole('button', { name: 'Share my menu' }))
     // user-event stands in a clipboard of its own.
     expect(await navigator.clipboard.readText()).toBe('https://qayema.test/beit-qayema')
     expect(await screen.findByText('Link copied')).toBeInTheDocument()
@@ -196,6 +223,7 @@ describe('OverviewPage', () => {
     stub()
     const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+    await showSteps(user)
 
     expect(screen.getByText('Put the QR code on your tables')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Hide the guide' }))
@@ -208,14 +236,16 @@ describe('OverviewPage', () => {
 
   it('offers no button for what is already done', async () => {
     stub()
+    const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+    await showSteps(user)
 
     const logo = (await screen.findByText('Your logo')).closest('li')!
     expect(within(logo).queryByRole('button')).not.toBeInTheDocument()
     expect(logo).toHaveTextContent('(done)')
   })
 
-  it('says so when everything is done', async () => {
+  it('leaves the set-up out once everything is done', async () => {
     stub(
       {
         cover_url: 'https://cdn.test/cover.webp',
@@ -225,10 +255,93 @@ describe('OverviewPage', () => {
     )
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
-    expect(await screen.findByText('10 of 10 done')).toBeInTheDocument()
+    await waitFor(() => expect(document.querySelector('.animate-pulse')).toBeNull())
+    expect(screen.queryByRole('region', { name: 'Set up your menu' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'See every step' })).not.toBeInTheDocument()
+  })
+
+  it('shows only the next thing to set up, why it matters, and the way to add it', async () => {
+    stub()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+
+    const card = await screen.findByRole('region', { name: 'Set up your menu' })
+    expect(within(card).getByText('Next: A cover photo')).toBeInTheDocument()
     expect(
-      screen.getByText('Your menu is ready: everything guests look for is on it.'),
+      within(card).getByText('The first thing guests see when the menu opens.'),
     ).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Your restaurant' })).not.toBeInTheDocument()
+  })
+
+  it('says how many orders are waiting, and opens them', async () => {
+    stub()
+    const onOpen = vi.fn()
+    const user = userEvent.setup()
+    const { rerender } = renderWithProviders(
+      <OverviewPage
+        limits={LIMITS}
+        switchedOff={[]}
+        onOpen={onOpen}
+        ordersWaiting={{ orders: 2, tables: 1 }}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: '3 new orders waiting' }))
+    expect(onOpen).toHaveBeenLastCalledWith('orders')
+
+    rerender(
+      <OverviewPage
+        limits={LIMITS}
+        switchedOff={[]}
+        onOpen={onOpen}
+        ordersWaiting={{ orders: 0, tables: 1 }}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: '1 new order waiting' }))
+    expect(onOpen).toHaveBeenLastCalledWith('table-orders')
+  })
+
+  it("shows today's numbers when asked, each a way to the analytics", async () => {
+    stub()
+    mock.onGet('/api/analytics', { params: { range: 'today' } }).reply(200, {
+      data: {
+        totals: {
+          views: 42,
+          unique_visitors: 30,
+          qr_scans: 18,
+          views_today: 42,
+          orders: 7,
+          orders_done: 2,
+        },
+        order_channel: 'menu',
+        previous: { views: 21, qr_scans: 0, orders: 7 },
+        series: [{ date: '2026-10-13T09:00', views: 42, qr_scans: 18 }],
+      },
+    })
+    const onOpen = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} showToday />)
+
+    const today = await screen.findByRole('region', { name: 'Today' })
+    // Against yesterday up to now: double, up from nothing (the count itself), the same.
+    expect(within(today).getByRole('button', { name: /Views/ })).toHaveTextContent(
+      '42+100%vs. yesterday',
+    )
+    expect(within(today).getByRole('button', { name: /QR scans/ })).toHaveTextContent(
+      '18+18vs. yesterday',
+    )
+    expect(within(today).getByRole('button', { name: /Orders/ })).toHaveTextContent(
+      '70%vs. yesterday',
+    )
+    await user.click(within(today).getByRole('button', { name: /Orders/ }))
+    expect(onOpen).toHaveBeenLastCalledWith('analytics')
+  })
+
+  it("asks for no numbers when today's are not shown", async () => {
+    stub()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+
+    await screen.findByRole('region', { name: 'Set up your menu' })
+    expect(mock.history.get.some((request) => request.url === '/api/analytics')).toBe(false)
   })
 
   it('shows an error with a retry when the checklist cannot load', async () => {

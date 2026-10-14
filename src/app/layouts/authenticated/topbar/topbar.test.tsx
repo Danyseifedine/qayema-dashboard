@@ -8,7 +8,7 @@ import { Topbar, type TopbarProps } from '@/app/layouts/authenticated/topbar/top
 function renderTopbar(props: Partial<TopbarProps> = {}) {
   const handlers = {
     onLocaleChange: vi.fn(),
-    onOpenMobileNav: vi.fn(),
+    onBack: vi.fn(),
     onOpenPackage: vi.fn(),
     onOpenAccount: vi.fn(),
     onLogout: vi.fn(),
@@ -52,14 +52,12 @@ describe('PackagePill', () => {
     expect(onClick).toHaveBeenCalledOnce()
   })
 
-  it('burns a little in gold, unless less motion is asked for', () => {
-    render(<PackagePill label="Premium" tier="gold" />)
+  it("edges the days in the crown's own metal", () => {
+    const { rerender } = render(<PackagePill label="Premium" tier="gold" daysLeft={15} />)
+    expect(screen.getByText('15')).toHaveClass('border-[#f7c843]')
 
-    const crown = screen.getByRole('button', {
-      name: 'Premium package. Open your package.',
-    })
-    expect(crown.className).toContain('animate-[package-fire')
-    expect(crown.className).toContain('motion-reduce:animate-none')
+    rerender(<PackagePill label="Pro" tier="silver" daysLeft={15} />)
+    expect(screen.getByText('15')).toHaveClass('border-[#c9ced6]')
   })
 
   it('counts the days left on the corner of the crown, amber in the last week', () => {
@@ -89,20 +87,42 @@ describe('PackagePill', () => {
 })
 
 describe('Topbar', () => {
+  it('shows a heading of its own instead of a bar, on Home and More', () => {
+    renderTopbar({ hero: { eyebrow: 'Good morning,', title: 'Dany', subtitle: 'Your day.' } })
+
+    expect(screen.getByText('Good morning,')).toBeInTheDocument()
+    expect(screen.getByText('Dany')).toBeInTheDocument()
+    expect(screen.getByText('Your day.')).toBeInTheDocument()
+    expect(screen.getByRole('banner')).not.toHaveClass('sticky')
+  })
+
+  it('is a bar with no heading on the other pages', () => {
+    renderTopbar()
+
+    expect(screen.queryByText('Dany')).not.toBeInTheDocument()
+    expect(screen.getByRole('banner')).toHaveClass('sticky')
+  })
+
   it('names the page for screen readers only, and shows no menu link', () => {
     renderTopbar({ publicUrl: 'https://qayema.test/beit-qayema' })
     expect(screen.getByRole('heading', { level: 1, name: 'Overview' })).toHaveClass('sr-only')
     expect(screen.queryByText('qayema.test/beit-qayema')).not.toBeInTheDocument()
   })
 
-  it('opens the mobile navigation and the package', async () => {
+  it('goes back, and opens the package', async () => {
     const user = userEvent.setup()
-    const { onOpenMobileNav, onOpenPackage } = renderTopbar({ packageDaysLeft: 3 })
+    const { onBack, onOpenPackage } = renderTopbar({ packageDaysLeft: 3 })
 
-    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
+    await user.click(screen.getByRole('button', { name: 'Back' }))
     await user.click(screen.getByRole('button', { name: /Pro package, 3 days left/ }))
 
-    expect(onOpenMobileNav).toHaveBeenCalledOnce()
+    expect(onBack).toHaveBeenCalledOnce()
     expect(onOpenPackage).toHaveBeenCalledOnce()
+  })
+
+  it('shows no back button where there is nowhere to go back to', () => {
+    renderTopbar({ onBack: undefined })
+
+    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
   })
 })

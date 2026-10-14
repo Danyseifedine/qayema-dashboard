@@ -1,7 +1,7 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { either, expect, test, type Owner, type ScenarioInput } from '../../support/fixtures'
 import { API_URL, DASHBOARD_URL } from '../../support/urls'
-import { fixtureFile } from '../../support/helpers'
+import { closeSidebar, fixtureFile, openSidebar } from '../../support/helpers'
 
 const ONBOARDING_URL = `${API_URL}/onboarding`
 
@@ -78,23 +78,11 @@ test.describe('onboarding', () => {
 
     // Into the dashboard, where only Design is open until one is chosen.
     await expect(page).toHaveURL(`${DASHBOARD_URL}/design`)
-    // On a phone the sidebar is a drawer, opened from the top bar.
-    const narrow = (page.viewportSize()?.width ?? 1440) < 1024
-    const openNav = async () => {
-      if (narrow) {
-        await page.getByRole('button', { name: either('Open navigation', 'فتح القائمة') }).click()
-      }
-    }
-    const nav = page.getByRole('navigation', { name: either('Dashboard', 'لوحة التحكم') })
-    const categories = nav.getByRole('button', { name: either('Categories', 'الأقسام') })
-    await openNav()
-    await expect(categories).toBeDisabled()
-    if (narrow) {
-      await page
-        .getByRole('button', { name: either('Close navigation', 'إغلاق القائمة') })
-        .last()
-        .click()
-    }
+    // On a phone the sections are on the More tab (openSidebar).
+    const categoriesIn = (nav: Locator) =>
+      nav.getByRole('button', { name: either('Categories', 'الأقسام') })
+    await expect(categoriesIn(await openSidebar(page))).toBeDisabled()
+    await closeSidebar(page)
 
     await page
       .getByRole('article')
@@ -105,7 +93,7 @@ test.describe('onboarding', () => {
       page.getByRole('button', { name: either('Currently in use', 'مُستخدم حاليًا') }),
     ).toBeVisible()
 
-    await openNav()
+    const categories = categoriesIn(await openSidebar(page))
     await expect(categories).toBeEnabled()
     await categories.click()
     await expect(page).toHaveURL(/\/categories$/)

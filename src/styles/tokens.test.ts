@@ -77,6 +77,16 @@ describe.each([
     }
   })
 
+  it.each(['live', 'tint-violet'])('--%s reads on its own wash and every surface', (tint) => {
+    for (const surface of surfaces) {
+      for (const background of [surface, over(tokens[`${tint}-wash`]!, surface)]) {
+        expect(contrast(tokens[tint]!, background), `on ${background}`).toBeGreaterThanOrEqual(
+          MIN_CONTRAST,
+        )
+      }
+    }
+  })
+
   it('--accent-text reads on a wash over a wash', () => {
     expect(contrast(tokens['accent-text']!, doubleWash)).toBeGreaterThanOrEqual(MIN_CONTRAST)
   })

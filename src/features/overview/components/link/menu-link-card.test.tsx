@@ -22,36 +22,74 @@ describe('MenuLinkCard', () => {
     expect(link).toHaveAttribute('rel', 'noreferrer noopener')
   })
 
-  it('copies the full link and says so', async () => {
+  it('says the menu is live', () => {
+    renderWithProviders(<MenuLinkCard publicUrl={MENU_URL} onOpenQr={vi.fn()} />)
+
+    expect(within(card()).getByText('is live')).toBeInTheDocument()
+    expect(within(card()).getByText('Your customers can view your menu now.')).toBeInTheDocument()
+  })
+
+  it('says the link is copied where there is no share menu, and when the browser refuses', async () => {
     const user = userEvent.setup()
     // user-event puts its own clipboard on navigator; spy on that one.
     const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue()
     renderWithProviders(<MenuLinkCard publicUrl={MENU_URL} onOpenQr={vi.fn()} />)
 
-    await user.click(within(card()).getByRole('button', { name: 'Copy link' }))
-
+    await user.click(within(card()).getByRole('button', { name: 'Share my menu' }))
     expect(writeText).toHaveBeenCalledWith(MENU_URL)
     expect(await screen.findByText('Link copied')).toBeInTheDocument()
-  })
 
-  it('says so when the browser refuses the copy', async () => {
-    const user = userEvent.setup()
-    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'))
-    renderWithProviders(<MenuLinkCard publicUrl={MENU_URL} onOpenQr={vi.fn()} />)
-
-    await user.click(within(card()).getByRole('button', { name: 'Copy link' }))
-
+    writeText.mockRejectedValue(new Error('denied'))
+    await user.click(within(card()).getByRole('button', { name: 'Share my menu' }))
     expect(await screen.findByText('Could not copy the link')).toBeInTheDocument()
   })
 
-  it('opens the menu in a new tab, cut off from the dashboard', async () => {
+  it('previews the menu in a new tab, cut off from the dashboard', async () => {
     const user = userEvent.setup()
     const open = vi.spyOn(window, 'open').mockReturnValue(null)
     renderWithProviders(<MenuLinkCard publicUrl={MENU_URL} onOpenQr={vi.fn()} />)
 
-    await user.click(within(card()).getByRole('button', { name: 'Open menu' }))
+    await user.click(within(card()).getByRole('button', { name: 'Preview' }))
 
     expect(open).toHaveBeenCalledWith(MENU_URL, '_blank', 'noopener,noreferrer')
+  })
+
+  it("shares the link through the phone's share menu", async () => {
+    const user = userEvent.setup()
+    const share = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'share', { value: share, configurable: true })
+    renderWithProviders(<MenuLinkCard publicUrl={MENU_URL} onOpenQr={vi.fn()} />)
+
+    await user.click(within(card()).getByRole('button', { name: 'Share my menu' }))
+
+    expect(share).toHaveBeenCalledWith({ title: 'Our menu', url: MENU_URL })
+    Reflect.deleteProperty(navigator, 'share')
+  })
+
+  it('copies the link where there is no share menu, and stays quiet when the owner closes it', async () => {
+    const user = userEvent.setup()
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue()
+    renderWithProviders(<MenuLinkCard publicUrl={MENU_URL} onOpenQr={vi.fn()} />)
+
+    await user.click(within(card()).getByRole('button', { name: 'Share my menu' }))
+    expect(writeText).toHaveBeenCalledWith(MENU_URL)
+
+    writeText.mockClear()
+    const closed = Object.assign(new Error('closed'), { name: 'AbortError' })
+    Object.defineProperty(navigator, 'share', {
+      value: vi.fn().mockRejectedValue(closed),
+      configurable: true,
+    })
+    await user.click(within(card()).getByRole('button', { name: 'Share my menu' }))
+    expect(writeText).not.toHaveBeenCalled()
+
+    Object.defineProperty(navigator, 'share', {
+      value: vi.fn().mockRejectedValue(new Error('refused')),
+      configurable: true,
+    })
+    await user.click(within(card()).getByRole('button', { name: 'Share my menu' }))
+    expect(writeText).toHaveBeenCalledWith(MENU_URL)
+    Reflect.deleteProperty(navigator, 'share')
   })
 
   it('takes the owner to the QR code', async () => {

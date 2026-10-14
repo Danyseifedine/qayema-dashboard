@@ -19,11 +19,10 @@ describe('useUiStore', () => {
     localStorage.clear()
   })
 
-  it('starts expanded, with the drawer closed', async () => {
+  it('starts expanded', async () => {
     const store = await loadStore()
 
     expect(store.getState().sidebarCollapsed).toBe(false)
-    expect(store.getState().mobileNavOpen).toBe(false)
   })
 
   it('remembers a collapsed sidebar across loads', async () => {
@@ -38,15 +37,6 @@ describe('useUiStore', () => {
 
     store.getState().toggleSidebar()
     expect(localStorage.getItem(KEY)).toBe('0')
-  })
-
-  it('opens and closes the mobile drawer', async () => {
-    const store = await loadStore()
-
-    store.getState().setMobileNavOpen(true)
-    expect(store.getState().mobileNavOpen).toBe(true)
-    store.getState().setMobileNavOpen(false)
-    expect(store.getState().mobileNavOpen).toBe(false)
   })
 
   it('works, without remembering, when storage is blocked', async () => {

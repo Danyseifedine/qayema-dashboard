@@ -68,7 +68,7 @@ describe('AuthenticatedLayout', () => {
 
   beforeEach(() => {
     mock = new MockAdapter(api)
-    useUiStore.setState({ sidebarCollapsed: false, mobileNavOpen: false })
+    useUiStore.setState({ sidebarCollapsed: false })
     usePreferencesStore.getState().setTheme('light')
     usePreferencesStore.getState().setLocale('en')
   })
@@ -341,73 +341,65 @@ describe('AuthenticatedLayout', () => {
     }
   })
 
-  it('opens and closes the mobile drawer', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(<Harness />)
+  describe('on a phone', () => {
+    const tabs = () => screen.getByRole('navigation', { name: 'Sections' })
 
-    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
-    expect(useUiStore.getState().mobileNavOpen).toBe(true)
+    it('has four tabs at the bottom: Home, Menu, Orders and More', () => {
+      renderWithProviders(<Harness />)
 
-    await user.keyboard('{Escape}')
-    await waitFor(() => expect(useUiStore.getState().mobileNavOpen).toBe(false))
-  })
+      expect(
+        within(tabs())
+          .getAllByRole('button')
+          .map((tab) => tab.textContent),
+      ).toEqual(['Home', 'Menu', 'Orders', 'More'])
+      expect(within(tabs()).getByRole('button', { name: 'Home' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+    })
 
-  it('closes the mobile drawer from its backdrop and its close button, freeing the page scroll', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(<Harness />)
+    it('puts the analytics in the third tab for a restaurant without orders, and the QR code without either', () => {
+      const { unmount } = renderWithProviders(<Harness hidden={['orders', 'dine_in']} />)
+      expect(within(tabs()).getByRole('button', { name: 'Analytics' })).toBeInTheDocument()
+      unmount()
 
-    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
-    expect(document.body.style.overflow).toBe('hidden')
-    // Another key leaves it open.
-    await user.keyboard('a')
-    expect(useUiStore.getState().mobileNavOpen).toBe(true)
+      renderWithProviders(<Harness full={false} />)
+      expect(within(tabs()).getByRole('button', { name: 'QR code' })).toBeInTheDocument()
+    })
 
-    const [backdrop, closeButton] = screen.getAllByRole('button', { name: 'Close navigation' })
-    await user.click(backdrop!)
-    expect(useUiStore.getState().mobileNavOpen).toBe(false)
-    expect(document.body.style.overflow).toBe('')
+    it('opens a tab, and lights Menu up for categories as well as dishes', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<Harness initialKey="categories" />)
 
-    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
-    await user.click(closeButton!)
-    expect(useUiStore.getState().mobileNavOpen).toBe(false)
-  })
+      expect(within(tabs()).getByRole('button', { name: 'Menu' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+      await user.click(within(tabs()).getByRole('button', { name: 'Orders' }))
+      expect(screen.getByRole('heading', { name: 'Orders' })).toBeInTheDocument()
+    })
 
-  it('keeps the closed drawer out of the tab order', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(<Harness />)
-    const [backdrop] = screen.getAllByRole('button', { name: 'Close navigation', hidden: true })
+    it('counts the orders waiting on the Orders tab, table orders included', () => {
+      renderWithProviders(<Harness counts={{ orders: 2, 'table-orders': 1 }} />)
 
-    expect(backdrop!.closest('[inert]')).not.toBeNull()
+      expect(
+        within(tabs()).getByRole('button', { name: /^Orders\s*3 orders waiting$/ }),
+      ).toHaveTextContent('3')
+      expect(within(tabs()).getByLabelText('3 orders waiting')).toBeInTheDocument()
+    })
 
-    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
-    expect(backdrop!.closest('[inert]')).toBeNull()
-  })
+    it('shows the way back to More on a section opened from it, and none on a tab', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<Harness initialKey="design" />)
 
-  it("hides the drawer's close button while the drawer is closed", async () => {
-    const user = userEvent.setup()
-    renderWithProviders(<Harness />)
-    // It hangs outside the drawer, so sliding the drawer away does not hide it.
-    const closeButton = screen.getAllByRole('button', {
-      name: 'Close navigation',
-      hidden: true,
-    })[1]!
-
-    expect(closeButton).toHaveClass('invisible')
-
-    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
-    expect(closeButton).not.toHaveClass('invisible')
-  })
-
-  it('closes the drawer once a section is picked in it', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(<Harness />)
-
-    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
-    const navs = screen.getAllByRole('navigation', { name: 'Dashboard' })
-    await user.click(within(navs[1]!).getByRole('button', { name: 'Dishes' }))
-
-    expect(useUiStore.getState().mobileNavOpen).toBe(false)
-    expect(screen.getByRole('heading', { name: 'Dishes' })).toBeInTheDocument()
+      expect(within(tabs()).getByRole('button', { name: 'More' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+      await user.click(screen.getByRole('button', { name: 'Back' }))
+      expect(screen.getByRole('heading', { name: 'More' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
+    })
   })
 
   it('opens the package page from the package pill', async () => {

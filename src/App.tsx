@@ -6,9 +6,11 @@ import {
   isNavItemHidden,
   navLock,
   OPEN_WHILE_OFFLINE,
+  phoneTabs,
   type NavItem,
 } from '@/app/layouts/authenticated/nav-items'
 import { MenuGoingOffline, MenuOfflinePage } from '@/app/layouts/authenticated/menu-offline'
+import { MorePage } from '@/app/layouts/authenticated/more-page'
 import { PlanLockedPage } from '@/app/layouts/authenticated/plan-locked-page'
 import { tierOf } from '@/app/layouts/authenticated/topbar/package-tier'
 import { usePageKey } from '@/app/layouts/authenticated/use-page-key'
@@ -193,6 +195,8 @@ function Dashboard({ user }: { user: AuthUser }) {
                 limits={restaurant.limits}
                 switchedOff={switchedOff}
                 onOpen={setActiveKey}
+                ordersWaiting={ordersWaiting}
+                showToday={plan.analytics && !switchedOff.includes('analytics')}
               />
             ) : activeKey === 'analytics' ? (
               <AnalyticsPage
@@ -244,6 +248,14 @@ function Dashboard({ user }: { user: AuthUser }) {
                 onOpenTables={() => setActiveKey('tables')}
                 onOpenRestaurant={() => setActiveKey('restaurant')}
                 onOpenDishes={() => setActiveKey('dishes')}
+              />
+            ) : activeKey === 'more' ? (
+              <MorePage
+                tabs={phoneTabs({ hasTemplate, plan }, switchedOff)}
+                hasTemplate={hasTemplate}
+                plan={plan}
+                off={switchedOff}
+                onOpen={setActiveKey}
               />
             ) : activeKey === 'account' ? (
               <AccountPage onOpenRestaurant={() => setActiveKey('restaurant')} />

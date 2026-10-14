@@ -1,16 +1,12 @@
 import type { Locator, Page } from '@playwright/test'
 import { daysFromNow, either, expect, test, type ScenarioInput } from '../../support/fixtures'
+import { openSidebar } from '../../support/helpers'
 import { ADMIN_URL, API_URL } from '../../support/urls'
 
 type PackageSlug = NonNullable<ScenarioInput['package']>
 
-/** The sidebar, opened first on a phone where it lives in a drawer (below Tailwind's lg). */
-async function sidebar(page: Page): Promise<Locator> {
-  if ((page.viewportSize()?.width ?? 1440) < 1024) {
-    await page.getByRole('button', { name: either('Open navigation', 'فتح القائمة') }).click()
-  }
-  return page.getByRole('navigation', { name: either('Dashboard', 'لوحة التحكم') })
-}
+/** The sidebar; on a phone, the tabs and the More page (`openSidebar`). */
+const sidebar = (page: Page): Promise<Locator> => openSidebar(page)
 
 /** A sidebar row, whatever chip follows its label (`\\b` knows no Arabic letters). */
 function row(nav: Locator, english: string, arabic: string): Locator {

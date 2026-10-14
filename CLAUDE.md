@@ -156,9 +156,9 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   from the session (`package.{ends_at, days_left}`, `lapsed`,
   `upcoming`), shown as "Until …, N days left", a warning with "Ask to
   extend" in the last 7 days; the topbar pill is a crown with no text in the
-  package's metal (bronze Free, silver Pro, gold Premium and Custom with a
-  flickering glow, `tierOf()`) with the days left on its corner
-  (`package.days_left`, 99+ past 99, amber in the last 7). "Your Pro
+  package's metal (bronze Free, silver Pro, gold Premium and Custom,
+  `tierOf()`) with the days left in a round badge on its corner, edged in
+  the same metal (`package.days_left`, 99+ past 99, amber in the last 7). "Your Pro
   ended on …" with when the menu goes offline and "Ask to renew", or
   "Premium starts on …"; the limits used; and what the package includes.
   An ended package is kept, never swapped for Free: for a few days
@@ -366,15 +366,37 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   320px) toward the side with room.
 - Card text on the QR form is `''` in the form and `null` on the wire;
   `toFormValues` / `toDesign` convert, so blank text never saves as `""`.
-- **Overview** (`features/overview`): the menu's link first
-  (`components/link/menu-link-card.tsx`: copy, open, QR code), then setting
-  it up in three steps (`components/checklist/setup-stepper.tsx`: your
-  restaurant, your dishes, sharing it; built from `menuChecklist()` and
-  `setupSteps()`, pure and unit tested; the first step not done is open)
-  beside "How it works" (`components/guide/how-it-works.tsx`, hidden on the
-  owner's request and remembered in `ui.store`), then the dish, category and
-  social-link counts from the session's `limits`. Each item's action is a nav
-  key.
+- **On a phone it is an app** (below `lg`): no sidebar and no drawer, but
+  four tabs at the bottom (`BottomTabs`, from `phoneTabs()` in nav-items:
+  Home, Menu, the orders, More; a restaurant without orders gets Analytics,
+  else the QR code, in third place; the tab wears the orders waiting; one
+  gold card slides to the open tab, moved at once while the page follows as
+  a transition). Home and More have no bar but a heading of their own
+  (`hero` on `Topbar`) over the textured backdrop (`home-backdrop` in
+  globals.css). More (`more` page, `more-page.tsx`) is every other section
+  as a glass card with a hint line (`more.hints` in `common.json`) and its
+  picture (`src/assets/images/more/<nav key>.webp`, shown once the file
+  exists), in the sidebar's order, locked and left out exactly as the
+  sidebar does, then Account across the width. A section opened
+  from More shows a back button in the topbar. E2E reaches sections through
+  `openSidebar()` (support/helpers), which opens More on a phone.
+- **Overview** (`features/overview`, Home): the topbar greets the owner by
+  name (`greeting` on `Topbar`, by the part of their day; no bar on Home),
+  then "Your menu is live" with the phone picture
+  (`public/assets/images/dashboard/overview-banner.webp`) rising out of the
+  card, a big Share (the phone's share menu, else a copy), Preview and QR
+  code; the orders waiting; today's numbers (`TodayNumbers`, with analytics
+  on: views, QR scans, orders, each against yesterday up to now from the
+  summary's `previous`, asked again every minute); only the next set-up step (`NextStep`, an icon
+  per item; every step and How it works behind "See every step", nothing
+  once all are done); then Quick (`ContentCounts`: dishes and categories
+  against the package, then the links, counted alone; each a tap from its
+  page). Home's tints are `--live`
+  (green) and `--tint-violet` in tokens.css. The steps
+  (`components/checklist/setup-stepper.tsx`: your restaurant, your dishes,
+  sharing it) are built from `menuChecklist()` and `setupSteps()`, pure and
+  unit tested; "How it works" is hidden on the owner's request and
+  remembered in `ui.store`. Each item's action is a nav key.
 - **Analytics** (`features/analytics`): opens on Today (ranges Today, 7
   and 30 days for every package, 90 days and All time with advanced; Today's
   chart is by the hour). The page needs `plan.analytics` (the

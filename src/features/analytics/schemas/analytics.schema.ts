@@ -30,6 +30,11 @@ const statsSummarySchema = z.object({
    * completed), or orders placed in the menu. Null without ordering.
    */
   order_channel: z.enum(['whatsapp', 'menu']).nullable().default(null),
+  /** The same totals for the period before (today: yesterday up to now); null for "All time". */
+  previous: z
+    .object({ views: count, qr_scans: count, orders: count.nullable() })
+    .nullable()
+    .default(null),
   /** One point a day ("2026-10-13"); for today, one an hour so far ("2026-10-13T14:00"). */
   series: z.array(z.object({ date: z.string(), views: count, qr_scans: count })),
 })
