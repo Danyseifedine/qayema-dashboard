@@ -44,6 +44,8 @@ describe('SessionGate', () => {
 
   it('says the connection is slow while it tries again, then lets the owner in', async () => {
     // A slow phone connection drops the first try; the next one gets through.
+    // And the site does not answer either: the phone really is struggling.
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
     mock
       .onGet('/api/user')
       .networkErrorOnce()
@@ -62,6 +64,38 @@ describe('SessionGate', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Your connection is slow. Still trying…')
     expect(await screen.findByText('Dashboard for Dany')).toBeInTheDocument()
     expect(screen.queryByText('We could not load your account')).not.toBeInTheDocument()
+    vi.unstubAllGlobals()
+  })
+
+  it('says the hosting refused the connection when the site still answers, with the way past it', async () => {
+    // The host's bot protection answers without CORS headers: the browser
+    // shows no answer, yet a plain request to the site gets one.
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null)))
+    const open = vi.spyOn(window, 'open').mockReturnValue(null)
+    mock.onGet('/api/user').networkError()
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: 1, retryDelay: 50 } },
+    })
+    const user = userEvent.setup()
+    render(
+      <QueryClientProvider client={queryClient}>
+        <SessionGate>{dashboard}</SessionGate>
+      </QueryClientProvider>,
+    )
+
+    expect(
+      await screen.findByText("Our hosting's security stopped your connection"),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Your connection is slow. Still trying…')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Open qayema.com' }))
+    expect(open).toHaveBeenCalledWith('https://qayema.test', '_blank', 'noopener,noreferrer')
+
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
+    await user.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByText('Dashboard for Dany')).toBeInTheDocument()
+    vi.unstubAllGlobals()
+    open.mockRestore()
   })
 
   it('leaves for sign-in on a 401 by itself, with a button should it not', async () => {

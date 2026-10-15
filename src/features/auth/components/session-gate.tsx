@@ -2,6 +2,7 @@ import { IconLoader2 } from '@tabler/icons-react'
 import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { env } from '@/config/env'
+import { useUnanswered } from '@/lib/api/unanswered'
 import { safeRedirect } from '@/lib/security/safe-redirect'
 import { Alert, Button } from '@/shared/components/ui'
 import { useSession } from '@/features/auth/hooks/use-session'
@@ -42,6 +43,9 @@ export function SessionGate({ children }: SessionGateProps) {
   const { t } = useTranslation()
   const session = useSession()
   const unauthenticated = session.isError && session.error.isUnauthenticated
+  // The phone reaches the site but its requests are refused: the host's bot
+  // protection, not the owner's internet. Said as it is, with the way past it.
+  const blocked = useUnanswered() === 'blocked'
 
   useEffect(() => {
     window.addEventListener('pageshow', reloadWhenRestored)
@@ -60,8 +64,39 @@ export function SessionGate({ children }: SessionGateProps) {
         <p className="flex items-center gap-2.5 text-[14px]" role="status">
           <IconLoader2 aria-hidden className="size-4 animate-spin" />
           {/* A try has failed and another is on its way: say so, rather than wait in silence. */}
-          {session.failureCount > 0 ? t('session.slow') : t('session.checking')}
+          {session.failureCount === 0
+            ? t('session.checking')
+            : blocked
+              ? t('session.blockedTrying')
+              : t('session.slow')}
         </p>
+      </div>
+    )
+  }
+
+  if (
+    session.isError &&
+    (session.error.code === 'blocked' || (blocked && session.error.status === 0))
+  ) {
+    // Opening the site in a page of its own lets the host's check run (it
+    // cannot in a background request); back here, Try again gets through.
+    return (
+      <div className="grid min-h-dvh place-items-center bg-[var(--bg)] px-4">
+        <div className="w-full max-w-md">
+          <Alert variant="error" title={t('session.blockedTitle')}>
+            {t('session.blockedBody')}
+          </Alert>
+          <Button
+            className="mt-4"
+            block
+            onClick={() => window.open(env.VITE_API_URL, '_blank', 'noopener,noreferrer')}
+          >
+            {t('session.openSite')}
+          </Button>
+          <Button className="mt-2" variant="secondary" block onClick={() => void session.refetch()}>
+            {t('session.retry')}
+          </Button>
+        </div>
       </div>
     )
   }

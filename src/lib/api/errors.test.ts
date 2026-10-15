@@ -30,6 +30,24 @@ describe('toApiError', () => {
     expect(error.message).toBe('We could not connect. Check your internet and try again.')
   })
 
+  it("says the hosting's bot protection is the hosting, as JSON or a page", () => {
+    for (const data of [
+      {
+        message:
+          'Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted',
+      },
+      '<html><body>Access denied by Imunify360 bot-protection</body></html>',
+    ]) {
+      const error = toApiError(axiosFailure(403, data))
+
+      expect(error.code).toBe('blocked')
+      expect(error.status).toBe(403)
+      expect(error.message).toBe(
+        "Our hosting's security refused this for now. Wait a moment and try again.",
+      )
+    }
+  })
+
   it('keeps the Laravel envelope: message, code and body', () => {
     const error = toApiError(
       axiosFailure(429, { message: 'Slow down', code: 'rate_limited', retry_after: 12 }),

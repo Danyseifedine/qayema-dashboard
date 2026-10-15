@@ -3,6 +3,7 @@ import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import type { ZodType } from 'zod'
 import { api } from '@/lib/api/client'
 import { toApiError } from '@/lib/api/errors'
+import { checkUnanswered, noteAnswered, noteBlocked } from '@/lib/api/unanswered'
 import { ApiError } from '@/shared/types/api'
 
 /** Writes that land the same however often they are sent: safe to send again. */
@@ -43,13 +44,23 @@ export async function request<T>(schema: ZodType<T>, config: AxiosRequestConfig)
 
   try {
     const response = await send(config)
+    noteAnswered()
     payload = response.data
   } catch (error) {
     // A request the app called off (a page left, a newer one asked) is no
     // failure: it goes back as it came, for TanStack Query to drop, never
     // as "We could not connect".
     if (axios.isCancel(error)) throw error
-    throw toApiError(error)
+    // No answer the page could read: find out whether the phone is offline
+    // or something in front of the server refused it, for the screen to say.
+    if (axios.isAxiosError(error) && !error.response) {
+      void checkUnanswered(config.url ?? '')
+      throw toApiError(error)
+    }
+    const apiError = toApiError(error)
+    if (apiError.code === 'blocked') noteBlocked(config.url ?? '')
+    else noteAnswered()
+    throw apiError
   }
 
   const result = schema.safeParse(payload)

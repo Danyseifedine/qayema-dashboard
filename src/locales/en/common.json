@@ -173,7 +173,8 @@
     "rateLimited": "Too many requests. Wait a moment and try again.",
     "rateLimitedIn_one": "Too many requests. Try again in {{count}} second.",
     "rateLimitedIn_other": "Too many requests. Try again in {{count}} seconds.",
-    "unexpected": "Something went wrong on our side. Please try again in a moment."
+    "unexpected": "Something went wrong on our side. Please try again in a moment.",
+    "blocked": "Our hosting's security refused this for now. Wait a moment and try again."
   },
   "session": {
     "checking": "Loading your dashboard…",
@@ -185,7 +186,11 @@
     "retry": "Try again",
     "onboardingTitle": "Let's finish setting up",
     "onboardingBody": "Your restaurant is not ready yet. Finish the short setup and you will land right back here.",
-    "continueSetup": "Continue setup"
+    "continueSetup": "Continue setup",
+    "blockedTrying": "Our hosting's security is holding the connection. Still trying…",
+    "blockedTitle": "Our hosting's security stopped your connection",
+    "blockedBody": "Your internet is fine: our hosting's bot protection refused this connection. Open qayema.com once, then come back here and tap Try again.",
+    "openSite": "Open qayema.com"
   },
   "upload": {
     "failed": "That image could not be uploaded. Please try again.",

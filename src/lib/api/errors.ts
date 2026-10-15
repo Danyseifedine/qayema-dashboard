@@ -48,6 +48,17 @@ export function toApiError(error: unknown): ApiError {
 
     const body = (response.data ?? {}) as LaravelErrorBody
 
+    // The host's bot protection, not Laravel, when the page can read it
+    // (on qayema.com itself): said as the hosting, never "Something went wrong".
+    const said = typeof response.data === 'string' ? response.data : String(body.message ?? '')
+    if (/imunify/i.test(said)) {
+      return new ApiError({
+        message: t('errors.blocked'),
+        status: response.status,
+        code: 'blocked',
+      })
+    }
+
     return new ApiError({
       message:
         typeof body.message === 'string' && body.message.length > 0

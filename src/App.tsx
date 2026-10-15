@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthenticatedLayout } from '@/app/layouts/authenticated/authenticated-layout'
@@ -61,21 +62,48 @@ const AppearancePage = lazy(() => PAGES.appearance().then((m) => ({ default: m.A
 const DesignPage = lazy(() => PAGES.design().then((m) => ({ default: m.DesignPage })))
 const TablesPage = lazy(() => PAGES.tables().then((m) => ({ default: m.TablesPage })))
 
+/** A phone that asked to save data, or on a 2G/3G connection (where the browser says). */
+function onSlowConnection(): boolean {
+  const connection = (
+    navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
+  ).connection
+  return (
+    connection?.saveData === true ||
+    ['slow-2g', '2g', '3g'].includes(connection?.effectiveType ?? '')
+  )
+}
+
 /**
- * Once the first page is up and the browser has nothing better to do, the
- * other pages download too, so moving between them never waits.
+ * Once the first page and its data are in and the browser has nothing better
+ * to do, the other pages download too, so moving between them never waits.
+ * Never before the page's own data (on a slow line the downloads held it
+ * back), and not at all on a slow or data-saving connection, where a page
+ * downloads when it is opened.
  */
 function usePrefetchPages() {
+  const queryClient = useQueryClient()
   useEffect(() => {
-    const fetchAll = () => Object.values(PAGES).forEach((load) => void load().catch(() => {}))
+    if (onSlowConnection()) return
+    let timer: number | undefined
+    let idle: number | undefined
+    const fetchAll = () => {
+      if (queryClient.isFetching() > 0) {
+        timer = window.setTimeout(fetchAll, 1000)
+        return
+      }
+      Object.values(PAGES).forEach((load) => void load().catch(() => {}))
+    }
     // Safari has no idle callback: a short wait does the same job there.
     if (typeof window.requestIdleCallback === 'function') {
-      const id = window.requestIdleCallback(fetchAll, { timeout: 4000 })
-      return () => window.cancelIdleCallback(id)
+      idle = window.requestIdleCallback(fetchAll, { timeout: 4000 })
+    } else {
+      timer = window.setTimeout(fetchAll, 2000)
     }
-    const id = window.setTimeout(fetchAll, 2000)
-    return () => window.clearTimeout(id)
-  }, [])
+    return () => {
+      if (idle !== undefined) window.cancelIdleCallback(idle)
+      window.clearTimeout(timer)
+    }
+  }, [queryClient])
 }
 
 function Dashboard({ user }: { user: AuthUser }) {

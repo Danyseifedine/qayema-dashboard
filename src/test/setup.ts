@@ -4,11 +4,13 @@ import { afterEach, vi } from 'vitest'
 // Tests read the English text, so every file starts in English; every other
 // language is loaded up front, so a test can switch to it at once.
 import { LANGUAGES, loadLanguage } from '@/lib/i18n'
+import { resetUnanswered } from '@/lib/api/unanswered'
 
 await Promise.all(LANGUAGES.map(loadLanguage))
 
 afterEach(() => {
   cleanup()
+  resetUnanswered()
 })
 
 // jsdom implements neither of these, and the theme store and image field both

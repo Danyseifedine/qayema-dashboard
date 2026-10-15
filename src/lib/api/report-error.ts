@@ -16,7 +16,8 @@ const MAX_REPORTS = 5
 const MESSAGE_LIMIT = 1000
 const STACK_LIMIT = 4000
 
-export type ErrorSource = 'render' | 'error' | 'rejection'
+/** `network`: requests that got no answer, reported once one gets through (`unanswered.ts`). */
+export type ErrorSource = 'render' | 'error' | 'rejection' | 'network'
 
 const sent = new Set<string>()
 

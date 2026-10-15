@@ -121,6 +121,18 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   UI already moved, so a success toast is noise, while an error toast explains
   why it snapped back.
 - Every query has a skeleton and an `ErrorState` with retry.
+- **A refused request is not a bad connection.** The host's bot protection
+  (Imunify360) answers a request it refuses without CORS headers, which the
+  browser shows as no answer at all. `lib/api/unanswered.ts` tells the two
+  apart: on a request with no answer it asks for `favicon.ico` on the API's
+  site (`no-cors`, kept by Cloudflare): an answer means the site is
+  reachable and the request was refused (`blocked`), none that the phone is
+  offline. A refusal the page can read (its text names Imunify360) is
+  `code: 'blocked'` (`toApiError`). The session gate then says it is the
+  hosting, with "Open qayema.com" (a full page lets the host's check run)
+  and Try again, instead of "check your internet". What happened is
+  reported (`source: 'network'`) once a request gets through, so Grafana
+  shows how often owners are refused.
 - **A slow or patchy connection is not an error at once.** A read that
   never reached the server is tried for about 15 s (`NETWORK_RETRIES`, 1,
   2, 4, 8 s apart; a 5xx twice) before its `ErrorState`, and paused while
@@ -391,7 +403,8 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
 
 - Every page but Orders is `lazy()` in `App.tsx` (`PAGES`, from each
   feature's `pages/index.ts`), so the first download is the shell; the rest
-  load on idle (`usePrefetchPages`) and a page still on its way shows
+  load on idle once the page's own data is in (`usePrefetchPages`; not at
+  all on a slow or data-saving connection) and a page still on its way shows
   `PageSkeleton`. Pusher's library loads only in menu mode (`realtime()`
   imports it). Keep heavy libraries (recharts, qr-code-styling, dnd-kit)
   inside their feature, never in `shared` or the shell, or they come back

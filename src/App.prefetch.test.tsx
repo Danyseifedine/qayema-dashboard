@@ -92,6 +92,22 @@ describe('App, loading the other pages ahead', () => {
     window.history.replaceState(null, '', '/')
   })
 
+  it.each([{ saveData: true }, { effectiveType: '3g' }])(
+    'fetches no page ahead on a slow or data-saving connection (%o)',
+    async (connection) => {
+      const requestIdleCallback = vi.fn()
+      vi.stubGlobal('requestIdleCallback', requestIdleCallback)
+      Object.defineProperty(navigator, 'connection', { value: connection, configurable: true })
+
+      renderWithProviders(<App />)
+      expect(
+        await screen.findByRole('region', { name: 'overview page' }, { timeout: 4000 }),
+      ).toBeInTheDocument()
+      expect(requestIdleCallback).not.toHaveBeenCalled()
+      Reflect.deleteProperty(navigator, 'connection')
+    },
+  )
+
   it('fetches every page once the browser is idle, and survives one that fails to load', async () => {
     let idle: (() => void) | undefined
     const requestIdleCallback = vi.fn((callback: () => void) => {
