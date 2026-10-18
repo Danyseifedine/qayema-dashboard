@@ -1,19 +1,6 @@
 import type { Page } from '@playwright/test'
 import { either, expect, test } from '../../support/fixtures'
-import { openSidebar } from '../../support/helpers'
-
-/**
- * Closes the phone drawer with its X. The backdrop shares the name but its
- * centre is under the open drawer, so clicking it only works mid-slide.
- */
-async function closeSidebar(page: Page) {
-  if (test.info().project.name === 'phone') {
-    await page
-      .getByRole('button', { name: either('Close navigation', 'إغلاق القائمة') })
-      .last()
-      .click()
-  }
-}
+import { closeSidebar, isPhone, openSidebar } from '../../support/helpers'
 
 /** Flips a feature switch and waits for the server to have it. */
 async function flip(page: Page, name: RegExp | string) {
@@ -50,7 +37,9 @@ test.describe('features', () => {
 
     const open = async (name: string) => {
       const nav = await openSidebar(page)
-      await nav.getByRole('button', { name, exact: true }).click()
+      // On a phone Dishes is the Menu tab.
+      const label = isPhone(page) && name === 'Dishes' ? 'Menu' : name
+      await nav.getByRole('button', { name: label, exact: true }).click()
     }
     const arabicIn = async (page_: 'Categories' | 'Dishes') => {
       await open(page_)

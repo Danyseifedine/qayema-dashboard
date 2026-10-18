@@ -1,14 +1,13 @@
 {
   "page": {
-    "title": "الحساب",
     "description": "أنت كشخص: اسمك وطريقة تسجيل دخولك. لا شيء هنا يظهر في قائمتك.",
-    "editRestaurant": "عدّل مطعمك بدلًا من ذلك",
     "loadFailed": "تعذّر تحميل حسابك."
   },
   "profile": {
     "title": "أنت",
     "description": "من أنت، وليس اسم مطعمك.",
-    "nameLabel": "اسمك",
+    "nameLabel": "اسم المالك",
+    "namePlaceholder": "مثلًا: رامي حداد",
     "nameHint": "يظهر في لوحة التحكم وفي الرسائل التي نرسلها إليك. لا يراه الزبائن أبدًا.",
     "emailLabel": "البريد الإلكتروني",
     "emailHint": "تسجّل الدخول بهذا العنوان، لذا لا يمكن تغييره هنا.",
@@ -22,10 +21,14 @@
     "changeDescription": "تغييرها يسجّل خروجك من كل متصفح آخر بقيت مسجّلًا فيه.",
     "setDescription": "لقد سجّلت عبر Google. إضافة كلمة مرور تمنحك طريقة ثانية للدخول.",
     "currentLabel": "كلمة المرور الحالية",
+    "currentPlaceholder": "أدخل كلمة مرورك الحالية",
     "newLabel": "كلمة المرور الجديدة",
+    "newPlaceholder": "اختر كلمة مرور جديدة",
     "passwordLabel": "كلمة المرور",
+    "passwordPlaceholder": "اختر كلمة مرور",
     "hint": "8 أحرف على الأقل.",
     "confirmLabel": "تأكيد كلمة المرور",
+    "confirmPlaceholder": "اكتب كلمة المرور نفسها مرة أخرى",
     "changeSubmit": "تغيير كلمة المرور",
     "setSubmit": "تعيين كلمة المرور"
   },
@@ -39,9 +42,9 @@
     "passwordSetFailed": "تعذّر تعيين كلمة مرور"
   },
   "validation": {
-    "nameTooShort": "يجب أن يتكون اسمك من حرفين على الأقل.",
-    "nameTooLong": "لا يمكن أن يزيد اسمك عن 100 حرف.",
-    "nameInvalidChars": "يحتوي اسمك على أحرف غير مسموح بها.",
+    "nameTooShort": "يجب أن يتكون اسم المالك من حرفين على الأقل.",
+    "nameTooLong": "لا يمكن أن يزيد اسم المالك عن 100 حرف.",
+    "nameInvalidChars": "يحتوي اسم المالك على أحرف غير مسموح بها.",
     "passwordTooShort_zero": "استخدم {{count}} حرف على الأقل.",
     "passwordTooShort_one": "استخدم حرفًا واحدًا على الأقل.",
     "passwordTooShort_two": "استخدم حرفين على الأقل.",

@@ -20,6 +20,8 @@ export type SegmentedProps<T extends string> = {
   options: SegmentedOption<T>[]
   'aria-label': string
   size?: 'sm' | 'md'
+  /** The full width, its options sharing it evenly. */
+  block?: boolean
 }
 
 /**
@@ -32,12 +34,16 @@ export function Segmented<T extends string>({
   onChange,
   options,
   size = 'md',
+  block = false,
   ...aria
 }: SegmentedProps<T>) {
   return (
     <div
       role="tablist"
-      className="inline-flex rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-1"
+      className={cn(
+        'rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-1',
+        block ? 'flex w-full' : 'inline-flex',
+      )}
       {...aria}
     >
       {options.map((option) => {
@@ -53,6 +59,7 @@ export function Segmented<T extends string>({
             onClick={() => onChange(option.value)}
             className={cn(
               'inline-flex items-center gap-1.5 whitespace-nowrap rounded-[8px] font-medium',
+              block && 'flex-1 justify-center',
               'transition-[background-color,color,border-color] duration-200',
               'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--gold-on)]',
               size === 'sm' ? 'px-3 py-1 text-[12px]' : 'px-4 py-2 text-[13px]',

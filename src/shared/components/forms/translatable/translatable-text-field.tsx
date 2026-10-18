@@ -114,7 +114,8 @@ export function TranslatableTextField<T extends FieldValues>({
     onBlur: current.field.onBlur,
     dir: languageDir(active),
     lang: active,
-    placeholder: placeholder?.[active],
+    // A language with no example of its own borrows the English one.
+    placeholder: placeholder?.[active] ?? placeholder?.en,
     maxLength,
     'aria-describedby': describedBy,
     'aria-invalid': Boolean(error) || undefined,

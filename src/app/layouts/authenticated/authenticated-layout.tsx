@@ -1,15 +1,20 @@
-import { IconX } from '@tabler/icons-react'
-import { useEffect, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { BottomTabs } from '@/app/layouts/authenticated/bottom-tabs/bottom-tabs'
 import { ImpersonationBanner } from '@/app/layouts/authenticated/impersonation-banner'
 import { Sidebar } from '@/app/layouts/authenticated/sidebar/sidebar'
 import type { PackageTier } from '@/app/layouts/authenticated/topbar/package-tier'
 import { Topbar } from '@/app/layouts/authenticated/topbar/topbar'
+import { usePageHero } from '@/app/layouts/authenticated/topbar/use-page-hero'
 import type { AuthUser } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
-import { cn } from '@/shared/utils/dom/cn'
 import { useUiStore } from '@/stores/ui.store'
-import { NAV_ITEMS, type NavAccess, type NavItem } from '@/app/layouts/authenticated/nav-items'
+import {
+  NAV_ITEMS,
+  phoneTabs,
+  type NavAccess,
+  type NavItem,
+} from '@/app/layouts/authenticated/nav-items'
 
 export type AuthenticatedLayoutProps = {
   activeKey: string
@@ -39,7 +44,9 @@ export type AuthenticatedLayoutProps = {
 
 /**
  * The signed-in shell: a sidebar beside a scrolling content column under a
- * sticky topbar. Below `lg` the sidebar becomes a drawer over the content.
+ * sticky topbar. Below `lg` (a phone, a small tablet) it is an app instead:
+ * four tabs along the bottom (Home, Menu, the orders, More), and a back
+ * button in the topbar on any section opened from More.
  */
 export function AuthenticatedLayout({
   activeKey,
@@ -61,106 +68,42 @@ export function AuthenticatedLayout({
 }: AuthenticatedLayoutProps) {
   const collapsed = useUiStore((state) => state.sidebarCollapsed)
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
-  const mobileOpen = useUiStore((state) => state.mobileNavOpen)
-  const setMobileOpen = useUiStore((state) => state.setMobileNavOpen)
   const { t } = useTranslation()
 
-  // Escape closes the drawer, and an open drawer must not scroll the page
-  // behind it.
-  useEffect(() => {
-    if (!mobileOpen) return
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileOpen(false)
-    }
-    document.addEventListener('keydown', onKeyDown)
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = previousOverflow
-    }
-  }, [mobileOpen, setMobileOpen])
-
   const activeItem = NAV_ITEMS.find((item) => item.key === activeKey)
-
-  const select = (item: NavItem) => {
-    onNavigate(item)
-    setMobileOpen(false)
-  }
+  const tabs = phoneTabs({ hasTemplate, plan }, switchedOff)
 
   const goTo = (key: string) => {
     const item = NAV_ITEMS.find((candidate) => candidate.key === key)
-    if (item) select(item)
+    if (item) onNavigate(item)
   }
 
-  const sidebar = (mobile: boolean) => (
-    <Sidebar
-      activeKey={activeKey}
-      onSelect={select}
-      collapsed={mobile ? false : collapsed}
-      onToggleCollapse={toggleSidebar}
-      hasTemplate={hasTemplate}
-      plan={plan}
-      off={switchedOff}
-      counts={counts}
-    />
-  )
+  const hero = usePageHero(activeKey, user.name)
+
+  // A section that is not a tab was opened from More (or from the package
+  // pill or the account menu): back leads there.
+  const fromMore = !tabs.some((tab) => tab.key === activeKey)
 
   return (
     <div className="flex min-h-dvh bg-[var(--bg)] text-[var(--text)]">
       {/* Desktop rail */}
-      <div className="sticky top-0 hidden h-dvh shrink-0 lg:block">{sidebar(false)}</div>
-
-      {/* Mobile drawer */}
-      <div
-        className={cn(
-          'fixed inset-0 z-50 lg:hidden',
-          mobileOpen ? 'pointer-events-auto' : 'pointer-events-none',
-        )}
-        aria-hidden={!mobileOpen}
-        // Closed, the drawer is off-screen but still in the DOM: inert keeps
-        // its links out of the tab order too, not just out of the screen reader.
-        inert={!mobileOpen}
-      >
-        <button
-          type="button"
-          tabIndex={mobileOpen ? 0 : -1}
-          aria-label={t('layout.closeNavigation')}
-          onClick={() => setMobileOpen(false)}
-          className={cn(
-            'absolute inset-0 bg-black/40 transition-opacity duration-300',
-            mobileOpen ? 'opacity-100' : 'opacity-0',
-          )}
+      <div className="sticky top-0 hidden h-dvh shrink-0 lg:block">
+        <Sidebar
+          activeKey={activeKey}
+          onSelect={onNavigate}
+          collapsed={collapsed}
+          onToggleCollapse={toggleSidebar}
+          hasTemplate={hasTemplate}
+          plan={plan}
+          off={switchedOff}
+          counts={counts}
         />
-        <div
-          className={cn(
-            'absolute inset-y-0 start-0 flex w-[248px] max-w-[85vw]',
-            'transition-transform duration-300 [transition-timing-function:var(--ease-qayema)]',
-            mobileOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full',
-          )}
-        >
-          {sidebar(true)}
-          <button
-            type="button"
-            tabIndex={mobileOpen ? 0 : -1}
-            onClick={() => setMobileOpen(false)}
-            aria-label={t('layout.closeNavigation')}
-            // It sits outside the drawer's edge, so the slide alone would leave
-            // it on screen, over the open-navigation button, while closed.
-            className={cn(
-              'absolute -end-11 top-3 grid size-9 place-items-center rounded-full bg-[var(--surface)] text-[var(--muted)] shadow-lg',
-              !mobileOpen && 'invisible',
-            )}
-          >
-            <IconX aria-hidden className="size-4" />
-          </button>
-        </div>
       </div>
 
       {/* Content column */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* Under the heading: a soft light from the top, a fine grain and a
+          fading dot grid. */}
+      <div className="home-backdrop flex min-w-0 flex-1 flex-col">
         {impersonation ? (
           <ImpersonationBanner owner={user.name} impersonation={impersonation} />
         ) : null}
@@ -173,7 +116,8 @@ export function AuthenticatedLayout({
           publicUrl={publicUrl}
           locale={locale}
           onLocaleChange={onLocaleChange}
-          onOpenMobileNav={() => setMobileOpen(true)}
+          onBack={fromMore ? () => goTo('more') : undefined}
+          hero={hero}
           onOpenPackage={() => goTo('package')}
           onOpenAccount={() => goTo('account')}
           onLogout={onLogout}
@@ -182,8 +126,12 @@ export function AuthenticatedLayout({
             every pixel. A page that needs a narrower measure caps itself.
             A flex column so a page can hand its empty state the leftover
             height instead of leaving it stranded under the heading. */}
-        <main className="flex min-w-0 flex-1 flex-col px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+        <main className="flex min-w-0 flex-1 flex-col px-4 pt-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-8 lg:pb-8">
+          {children}
+        </main>
       </div>
+
+      <BottomTabs tabs={tabs} activeKey={activeKey} onSelect={goTo} counts={counts} />
     </div>
   )
 }

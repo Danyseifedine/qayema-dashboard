@@ -28,9 +28,13 @@
   /* ---- Motion ---- */
   --ease-qayema: cubic-bezier(0.22, 0.61, 0.36, 1);
 
-  /* ---- Radii (portal uses 12px on inputs, 10px on small controls) ---- */
-  --radius-field: 12px;
-  --radius-control: 10px;
+  /* ---- Radii: 8px on fields, buttons and small controls ----
+     `card` is every card, dialog and sheet (rounded-card); `tile` a box
+     inside one (rounded-tile), smaller so it nests. */
+  --radius-field: 8px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-tile: 8px;
 }
 
 /* ------------------------------------------------------------
@@ -54,6 +58,8 @@ html[data-theme='light'] {
   --line-2: rgba(20, 17, 9, 0.06);
   --gold-on: #b08a2c;
   --hover-wash: rgba(20, 17, 9, 0.04);
+  /* A panel set into a card (`inset-tile`). */
+  --inset-fill: rgba(20, 17, 9, 0.05);
   --disabled-wash: rgba(20, 17, 9, 0.04);
   --ring-accent: rgba(248, 211, 141, 0.35);
   --ring-danger: rgba(180, 80, 64, 0.1);
@@ -85,14 +91,35 @@ html[data-theme='light'] {
   --status-info-wash: rgba(74, 107, 134, 0.1);
   --status-info-border: rgba(74, 107, 134, 0.3);
 
-  /* ---- Overlays and elevation ----
-     `pill` is the dark badge that sits on a photo and always carries white
-     text. `chip` is a control on a photo, so unlike the pill it follows the
-     theme: a bright chip in dark mode is the loudest thing on the screen. ---- */
-  --overlay-pill: rgba(20, 17, 9, 0.78);
-  --overlay-chip: rgba(251, 250, 246, 0.92);
-  --overlay-chip-hover: rgb(251, 250, 246);
-  --overlay-chip-ink: #141109;
+  /* ---- Home's tints: "is live" and a rise in green, the QR scans in violet.
+     Each reads at 4.5:1 on its own wash (tokens.test.ts). ---- */
+  --live: #1d6f3f;
+  --live-wash: rgba(29, 111, 63, 0.1);
+  --tint-violet: #5a46a8;
+  --tint-violet-wash: rgba(90, 70, 168, 0.1);
+  /* Home's cards: lifted off the page by a small shadow instead of a
+     border, and the phone picture's own shadow, light on a pale page. */
+  --card-lift: 0 4px 14px -6px rgba(20, 17, 9, 0.16);
+  --phone-shadow: -6px 12px 12px rgba(20, 17, 9, 0.16);
+  /* Home: a soft light falling from the top of the screen, and cards with a
+     see-through fill and light catching their top edge. */
+  --top-light: rgba(255, 255, 255, 0.7);
+  /* The phone's bottom bar, finished like Home's cards (.tab-bar): light on
+     its top edge, no border; the open tab a gold-tinted card with a small
+     shadow. */
+  --tabbar-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 -3px 12px -2px rgba(20, 17, 9, 0.14);
+  --tab-on: linear-gradient(160deg, rgba(233, 189, 102, 0.3), rgba(233, 189, 102, 0.14));
+  --tab-on-edge: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 8px -5px rgba(20, 17, 9, 0.25);
+  --home-dot: rgba(20, 17, 9, 0.09);
+  --glass-fill: rgba(255, 255, 255, 0.55);
+  /* A gold-lit panel (.gold-panel): a warm fill, lighter where the glow
+     falls, inside a gold rim. */
+  --gold-panel-from: #fffaf0;
+  --gold-panel-to: #f6ecd8;
+  --gold-panel-glow: rgba(233, 189, 102, 0.24);
+  --gold-panel-rim: rgba(201, 154, 70, 0.7);
+
+  /* ---- Elevation ---- */
   --pop-shadow: 0 24px 60px -20px rgba(20, 17, 9, 0.35), 0 4px 12px rgba(20, 17, 9, 0.06);
   --lift-shadow: 0 12px 32px -8px rgba(20, 17, 9, 0.18), 0 2px 8px -2px rgba(20, 17, 9, 0.08);
 }
@@ -110,6 +137,8 @@ html[data-theme='dark'] {
   --line-2: rgba(245, 241, 232, 0.06);
   --gold-on: #f8d38d;
   --hover-wash: rgba(245, 241, 232, 0.06);
+  /* A panel set into a card (`inset-tile`). */
+  --inset-fill: rgba(0, 0, 0, 0.45);
   --disabled-wash: rgba(245, 241, 232, 0.04);
   --ring-accent: rgba(248, 211, 141, 0.28);
   --ring-danger: rgba(180, 80, 64, 0.22);
@@ -137,10 +166,23 @@ html[data-theme='dark'] {
   --status-info-wash: rgba(147, 184, 214, 0.14);
   --status-info-border: rgba(147, 184, 214, 0.38);
 
-  --overlay-pill: rgba(0, 0, 0, 0.7);
-  --overlay-chip: rgba(10, 10, 10, 0.78);
-  --overlay-chip-hover: rgba(10, 10, 10, 0.92);
-  --overlay-chip-ink: #f5f1e8;
+  --live: #5fd68a;
+  --live-wash: rgba(95, 214, 138, 0.14);
+  --tint-violet: #b4a8ff;
+  --tint-violet-wash: rgba(180, 168, 255, 0.14);
+  --card-lift: 0 6px 16px -8px rgba(0, 0, 0, 0.9);
+  --phone-shadow: -10px 20px 18px rgba(0, 0, 0, 0.5);
+  --top-light: rgba(255, 255, 255, 0.025);
+  --tabbar-edge: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 -4px 14px -2px rgba(0, 0, 0, 0.9);
+  --tab-on: linear-gradient(160deg, rgba(248, 211, 141, 0.22), rgba(248, 211, 141, 0.07));
+  --tab-on-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 3px 8px -5px rgba(0, 0, 0, 0.8);
+  --home-dot: rgba(255, 255, 255, 0.03);
+  --glass-fill: rgba(255, 255, 255, 0.045);
+  --gold-panel-from: #1d170e;
+  --gold-panel-to: #0e0b07;
+  --gold-panel-glow: rgba(248, 211, 141, 0.16);
+  --gold-panel-rim: rgba(248, 211, 141, 0.6);
+
   --pop-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.85), 0 0 0 0.5px rgba(245, 241, 232, 0.08);
   --lift-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 2px 8px -2px rgba(0, 0, 0, 0.5);
 }
@@ -170,10 +212,6 @@ html[data-theme='dark'] {
   --color-status-info-wash: var(--status-info-wash);
   --color-status-info-border: var(--status-info-border);
 
-  --color-overlay-pill: var(--overlay-pill);
-  --color-overlay-chip: var(--overlay-chip);
-  --color-overlay-chip-hover: var(--overlay-chip-hover);
-  --color-overlay-chip-ink: var(--overlay-chip-ink);
   --shadow-pop: var(--pop-shadow);
   --shadow-lift: var(--lift-shadow);
 }

@@ -58,6 +58,7 @@ export function PhoneField<T extends FieldValues>({
             <Combobox
               embedded
               aria-label={t('phoneField.country')}
+              placeholder={t('phoneField.country')}
               name={country.name}
               inputRef={country.ref}
               value={(country.value as string) ?? null}

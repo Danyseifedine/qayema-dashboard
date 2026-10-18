@@ -12,6 +12,7 @@ import {
 import { fetchCategories } from '@/features/menu/categories/api/category.api'
 import type { Category, CategoryList } from '@/features/menu/categories/schemas/category.schema'
 import { categoryKeys } from '@/features/menu/categories/hooks/category-keys'
+import { dishKeys } from '@/features/menu/dishes/hooks/dish-keys'
 
 /**
  * Every category for the restaurant. Both menu pages read this, so the stale
@@ -58,7 +59,7 @@ export function useDeleteCategory() {
     onSuccess: () => {
       toast.success(t('menu:categoryToast.deleted'), t('menu:categoryToast.deletedDetail'))
       void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
-      void queryClient.invalidateQueries({ queryKey: ['dishes'] })
+      void queryClient.invalidateQueries({ queryKey: dishKeys.all })
     },
     onError: (error) => toast.error(t('menu:categoryToast.deleteFailed'), error),
   })

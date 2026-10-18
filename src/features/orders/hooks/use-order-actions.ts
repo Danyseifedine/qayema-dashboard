@@ -10,6 +10,9 @@ import type { Order, OrderStatus } from '@/features/orders/schemas/order.schema'
  */
 export function useOrderActions() {
   const setStatus = useSetOrderStatus()
+  // The mutation object is new on every render; its mutate is not, so the
+  // callbacks the memoised cards take stay the same.
+  const { mutate: setOrderStatus } = setStatus
   const remove = useDeleteOrder()
   const [pendingCancel, setPendingCancel] = useState<Order | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Order | null>(null)
@@ -17,13 +20,13 @@ export function useOrderActions() {
 
   const move = useCallback(
     (order: Order, status: OrderStatus) =>
-      setStatus.mutate({
+      setOrderStatus({
         id: order.id,
         status,
         // Taking on a new order means the version on this card.
         guestUpdates: order.status === 'placed' ? order.guest_updates : undefined,
       }),
-    [setStatus],
+    [setOrderStatus],
   )
   const askCancel = useCallback((order: Order) => setPendingCancel(order), [])
   const askDelete = useCallback((order: Order) => setPendingDelete(order), [])

@@ -1,7 +1,6 @@
 {
   "optional": "optional",
   "page": {
-    "title": "Restaurant",
     "description": "What guests see at the top of your menu, and how they reach you.",
     "saveFailedTitle": "That did not save",
     "unsavedChanges": "You have unsaved changes.",
@@ -125,6 +124,7 @@
     "title": "Menu link",
     "description": "Where your menu lives. Changing it keeps your old link and printed QR codes working: they take guests to the new one.",
     "label": "Link",
+    "placeholder": "your-restaurant",
     "hint": "Letters, numbers and dashes. Spaces become dashes.",
     "change": "Change link",
     "confirmTitle": "Change your menu link?",

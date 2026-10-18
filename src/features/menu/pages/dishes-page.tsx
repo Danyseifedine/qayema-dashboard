@@ -1,10 +1,10 @@
 import { IconLayoutList, IconPlus, IconToolsKitchen2 } from '@tabler/icons-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LimitNotice } from '@/shared/components/data-display'
 import { useCategories } from '@/features/menu/categories/hooks/use-categories'
-import { CategoryFilter, UNCATEGORISED } from '@/features/menu/components/builder/category-filter'
+import { CategoryFilter, UNCATEGORISED } from '@/features/menu/components/filters/category-filter'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
-import { LimitNotice } from '@/shared/components/data-display/badges/limit-notice'
 import { DishDialog } from '@/features/menu/dishes/components/dialogs/dish-dialog'
 import { DishCard } from '@/features/menu/dishes/components/list/dish-card'
 import {
@@ -14,15 +14,11 @@ import {
   useReorderDishes,
 } from '@/features/menu/dishes/hooks/use-dishes'
 import type { Dish } from '@/features/menu/dishes/schemas/dish.schema'
-import {
-  CardGridSkeleton,
-  ConfirmDialog,
-  EmptyState,
-  ErrorState,
-} from '@/shared/components/feedback'
+import { ConfirmDialog, EmptyState, ErrorState, Skeleton } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
 import { useDishChoices } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
+import { MenuSwitch } from '@/features/menu/components/switch/menu-switch'
 
 export type DishesPageProps = {
   locale: Locale
@@ -81,9 +77,10 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
   // whenever the dialog opens or the filter changes.
   const openEdit = useCallback((dish: Dish) => setDialog({ open: true, dish }), [])
   const confirmDelete = useCallback((dish: Dish) => setPendingDelete(dish), [])
+  const { mutate: setAvailability } = availability
   const toggleAvailability = useCallback(
-    (dish: Dish, isAvailable: boolean) => availability.mutate({ id: dish.id, isAvailable }),
-    [availability],
+    (dish: Dish, isAvailable: boolean) => setAvailability({ id: dish.id, isAvailable }),
+    [setAvailability],
   )
 
   // A category can be deleted while it is the active filter. Fall back to
@@ -96,16 +93,13 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
+      <MenuSwitch value="dishes" onChange={onOpenCategories} />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <LimitNotice
-          label={t('dishesPage.title')}
-          used={dishes.data?.meta.used ?? 0}
-          limit={dishes.data?.meta.limit ?? null}
-          description={t('dishesPage.description')}
-        />
+        <LimitNotice used={dishes.data?.meta.used ?? 0} limit={dishes.data?.meta.limit ?? null} />
         <Button
-          size="sm"
-          leadingIcon={<IconPlus className="size-4" />}
+          className="ms-auto"
+          leadingIcon={<IconPlus className="size-[18px]" />}
           disabled={atLimit || noCategories}
           onClick={() => setDialog({ open: true, dish: null })}
         >
@@ -150,7 +144,11 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
           ) : null}
 
           {dishes.isPending ? (
-            <CardGridSkeleton />
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
+              {Array.from({ length: 6 }, (_, index) => (
+                <Skeleton key={index} className="h-[132px]" />
+              ))}
+            </div>
           ) : dishes.isError ? (
             <ErrorState description={dishes.error.message} onRetry={() => void dishes.refetch()} />
           ) : visible.length === 0 ? (
@@ -179,9 +177,14 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
               layout="grid"
               onReorder={(ordered) => reorder.mutate(ordered)}
             >
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {/* One column of rows on a phone; two from a tablet, three on a wide screen. */}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
                 {visible.map((dish) => (
-                  <SortableCard key={dish.id} id={dish.id} overlayHandle>
+                  <SortableCard
+                    key={dish.id}
+                    id={dish.id}
+                    handleClassName="-my-3 me-2 h-auto w-7 self-stretch rounded-none rounded-s-card bg-[var(--hover-wash)] text-[var(--muted)]"
+                  >
                     {({ handle }) => (
                       <DishCard
                         dish={dish}

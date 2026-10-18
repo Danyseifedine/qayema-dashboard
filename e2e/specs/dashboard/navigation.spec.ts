@@ -1,5 +1,6 @@
 import { devices, type Page } from '@playwright/test'
 import { either, expect, test } from '../../support/fixtures'
+import { isPhone, openSidebar } from '../../support/helpers'
 import { LOGIN_URL } from '../../support/urls'
 
 /** Every sidebar section: its nav key (the path) and its label in each language. */
@@ -21,19 +22,21 @@ const SECTIONS: [key: string, english: string, arabic: string][] = [
 const nav = (page: Page) =>
   page.getByRole('navigation', { name: either('Dashboard', 'لوحة التحكم') })
 
-/** Below `lg` the sidebar is a drawer, closed until the menu button opens it. */
-const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1440) < 1024
+/** The phone's four tabs at the bottom. */
+const tabs = (page: Page) =>
+  page.getByRole('navigation', { name: either('Sections', 'أقسام اللوحة') })
 
-async function openNav(page: Page) {
-  if (isPhone(page)) {
-    await page.getByRole('button', { name: either('Open navigation', 'فتح القائمة') }).click()
-  }
-  await expect(nav(page)).toBeVisible()
+/** On a phone Overview is the Home tab and Dishes the Menu tab. */
+function onPhone(label: RegExp): RegExp {
+  const source = label.source
+  if (/Overview/.test(source)) return either('Home', 'الرئيسية')
+  if (/Dishes/.test(source)) return either('Menu', 'القائمة')
+  return label
 }
 
 async function openSection(page: Page, label: RegExp) {
-  await openNav(page)
-  await nav(page).getByRole('button', { name: label }).click()
+  const sections = await openSidebar(page)
+  await sections.getByRole('button', { name: isPhone(page) ? onPhone(label) : label }).click()
 }
 
 /** The page heading in the top bar names the open section. */
@@ -66,10 +69,10 @@ test.describe('navigation', () => {
     await page.reload()
     await expect(page).toHaveURL(/\/dishes$/)
     await expect(title(page)).toHaveText(either('Dishes', 'الأطباق'))
-    await openNav(page)
-    await expect(
-      nav(page).getByRole('button', { name: either('Dishes', 'الأطباق') }),
-    ).toHaveAttribute('aria-current', 'page')
+    const current = isPhone(page)
+      ? tabs(page).getByRole('button', { name: either('Menu', 'القائمة') })
+      : nav(page).getByRole('button', { name: either('Dishes', 'الأطباق') })
+    await expect(current).toHaveAttribute('aria-current', 'page')
   })
 
   test('opening a section by its address shows it', async ({ page, owner }) => {
@@ -177,7 +180,7 @@ test.describe('navigation', () => {
     await expect(nav(page).getByRole('button', { name: 'Dishes', exact: true })).toBeEnabled()
     await nav(page).getByRole('button', { name: 'Dishes', exact: true }).click()
     await expect(page).toHaveURL(/\/dishes$/)
-    await expect(page.getByRole('heading', { name: 'Dishes', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Dishes', level: 1 })).toBeVisible()
   })
 
   test('a section switched off hands over to the overview', async ({ page, owner }) => {
@@ -352,41 +355,43 @@ test.describe('navigation on a phone', () => {
   const { defaultBrowserType: _browser, ...phone } = devices['Pixel 7']
   test.use(phone)
 
-  test('the drawer opens and closes', async ({ page, owner }) => {
-    await owner({ package: 'pro' })
+  test('four tabs at the bottom, More holding the rest, and back from a section to More', async ({
+    page,
+    owner,
+  }) => {
+    await owner({ package: 'premium', order_mode: 'menu' })
     await page.goto('/overview')
-    await expect(title(page)).toHaveText(either('Overview', 'نظرة عامة'))
 
-    const open = page.getByRole('button', { name: either('Open navigation', 'فتح القائمة') })
-    const close = page.getByRole('button', { name: either('Close navigation', 'إغلاق القائمة') })
-
-    // Closed: nothing of the sidebar is exposed.
+    // No sidebar on a phone: the tabs instead.
     await expect(nav(page)).toHaveCount(0)
+    await expect(tabs(page).getByRole('button')).toHaveText(['Home', 'Menu', 'Orders', 'More'])
+    await expect(tabs(page).getByRole('button', { name: 'Home' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    await expect(page.getByRole('button', { name: 'Back' })).toHaveCount(0)
 
-    // The close button beside the drawer closes it.
-    await open.click()
-    await expect(nav(page)).toBeVisible()
-    await close.last().click()
-    await expect(nav(page)).toHaveCount(0)
+    await tabs(page).getByRole('button', { name: 'Menu' }).click()
+    await expect(page).toHaveURL(/\/dishes$/)
+    await tabs(page).getByRole('button', { name: 'Orders' }).click()
+    await expect(page).toHaveURL(/\/orders$/)
 
-    // Escape closes it.
-    await open.click()
-    await expect(nav(page)).toBeVisible()
-    await page.keyboard.press('Escape')
-    await expect(nav(page)).toHaveCount(0)
+    // More: every other section, each with what it is for.
+    await tabs(page).getByRole('button', { name: 'More' }).click()
+    await expect(page).toHaveURL(/\/more$/)
+    const appearance = nav(page).getByRole('button', { name: 'Appearance' })
+    await expect(appearance).toHaveAccessibleDescription('Colours and fonts')
+    await appearance.click()
+    await expect(page).toHaveURL(/\/appearance$/)
+    await expect(tabs(page).getByRole('button', { name: 'More' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
 
-    // A tap on the backdrop closes it.
-    await open.click()
-    await expect(nav(page)).toBeVisible()
-    await page.mouse.click((page.viewportSize()?.width ?? 400) - 10, 400)
-    await expect(nav(page)).toHaveCount(0)
-
-    // Choosing a section closes it and opens the section.
-    await open.click()
-    await nav(page)
-      .getByRole('button', { name: either('Categories', 'الأقسام') })
-      .click()
-    await expect(page).toHaveURL(/\/categories$/)
-    await expect(nav(page)).toHaveCount(0)
+    // Back leads to More, and the tabs stay at the bottom of the screen.
+    await page.getByRole('button', { name: 'Back' }).click()
+    await expect(page).toHaveURL(/\/more$/)
+    const box = await tabs(page).boundingBox()
+    expect(box!.y + box!.height).toBeCloseTo(page.viewportSize()!.height, 0)
   })
 })

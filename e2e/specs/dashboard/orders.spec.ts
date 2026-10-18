@@ -395,7 +395,7 @@ test.describe('orders', () => {
     await owner({ package: 'premium', orders: 2, order_channel: 'whatsapp' })
     await page.goto('/orders')
 
-    await expect(page.getByText('Your orders go to WhatsApp')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Your orders go to WhatsApp' })).toBeVisible()
     await expect(page.getByRole('article')).toHaveCount(0)
     await expect(page.getByRole('tablist', { name: 'Filter orders by status' })).toHaveCount(0)
     await expectAccessible()
@@ -471,8 +471,12 @@ test.describe('orders', () => {
     await expect(page.getByText(/marked Done/)).toBeVisible()
     await expect(cards.first().getByRole('button', { name: 'Done', exact: true })).toHaveCount(0)
 
-    // Cancel another, through the confirm.
-    await cards.nth(1).getByRole('button', { name: 'Cancel', exact: true }).click()
+    // Cancel another, from its ⋮ menu, through the confirm.
+    await cards
+      .nth(1)
+      .getByRole('button', { name: /^More for order/ })
+      .click()
+    await page.getByRole('menuitem', { name: 'Cancel order' }).click()
     const dialog = page.getByRole('dialog').filter({ hasText: 'Cancel this order?' })
     await expect(dialog).toBeVisible()
     await dialog.getByRole('button', { name: 'Cancel order' }).click()
@@ -487,12 +491,18 @@ test.describe('orders', () => {
     // The waiting line is redundant on the New filter itself.
     await expect(page.getByText('1 order is still waiting.')).toBeHidden()
 
-    // A finished order has no step left: it can only be edited or deleted.
+    // A finished order has no step left: its ⋮ only edits or deletes it.
     await chips.getByRole('tab', { name: 'Done' }).click()
     await expect(cards).toHaveCount(1)
-    await expect(cards.first().getByRole('button')).toHaveCount(2)
-    await expect(cards.first().getByRole('button', { name: /^Edit order/ })).toBeVisible()
-    await expect(cards.first().getByRole('button', { name: /^Delete order/ })).toBeVisible()
+    await expect(cards.first().getByRole('button')).toHaveCount(1)
+    await cards
+      .first()
+      .getByRole('button', { name: /^More for order/ })
+      .click()
+    await expect(page.getByRole('menuitem')).toHaveCount(2)
+    await expect(page.getByRole('menuitem', { name: /^Edit order/ })).toBeVisible()
+    await expect(page.getByRole('menuitem', { name: /^Delete order/ })).toBeVisible()
+    await page.keyboard.press('Escape')
 
     await chips.getByRole('tab', { name: 'Cancelled' }).click()
     await expect(cards).toHaveCount(1)
@@ -511,7 +521,8 @@ test.describe('orders', () => {
     await page.goto('/orders')
 
     const card = page.getByRole('article')
-    await card.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await card.getByRole('button', { name: /^More for order/ }).click()
+    await page.getByRole('menuitem', { name: 'Cancel order' }).click()
     const dialog = page.getByRole('dialog').filter({ hasText: 'Cancel this order?' })
     await expect(dialog).toContainText("The guest's order page will say it was cancelled")
     await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()

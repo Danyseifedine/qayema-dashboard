@@ -1,10 +1,8 @@
 {
   "page": {
-    "limitLabel": "Social links",
     "limitDescription": "Shown as icons at the bottom of your menu, so guests can follow you.",
     "add": "Add link",
     "atLimit": "You have used every social link your plan allows. Remove one to add another.",
-    "allPlatformsUsed": "Every platform your menu can show already has a link. Edit one to point it somewhere else.",
     "emptyTitle": "No social links yet",
     "emptyDescription": "Add {{platforms}} or wherever else guests can find you.",
     "addFirst": "Add your first link",

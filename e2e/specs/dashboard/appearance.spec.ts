@@ -208,7 +208,7 @@ test.describe('appearance', () => {
     ).toBeVisible()
 
     await page.goto('/appearance')
-    await expect(page.getByRole('heading', { name: 'Midnight' })).toBeVisible()
+    await expect(page.getByText('Choose the colours for your Midnight design.')).toBeVisible()
     await expect(main).toHaveValue(MIDNIGHT_ACCENT)
     expect((await publicVariable(page, restaurant.public_url, '--accent')).toUpperCase()).toBe(
       MIDNIGHT_ACCENT,
@@ -233,7 +233,7 @@ test.describe('appearance', () => {
     ).toBeVisible()
 
     await page.goto('/appearance')
-    await expect(page.getByRole('heading', { name: 'Classic' })).toBeVisible()
+    await expect(page.getByText('Choose the colours for your Classic design.')).toBeVisible()
     await expect(main).toHaveValue('#AA3355')
     expect((await publicVariable(page, restaurant.public_url, '--accent')).toUpperCase()).toBe(
       '#AA3355',

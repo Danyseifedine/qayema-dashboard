@@ -6,7 +6,7 @@ import { FormSection } from '@/shared/components/forms'
 import type { Locale } from '@/shared/constants/locales'
 import { changeBetween } from '@/shared/utils/format/change'
 import { formatMoney } from '@/shared/utils/format/money'
-import { formatNumber } from '@/shared/utils/format/number'
+import { formatNumber, formatShare } from '@/shared/utils/format/number'
 import { BusyTimesChart } from '@/features/analytics/components/charts/busy-times-chart'
 import { RankedList } from '@/features/analytics/components/charts/ranked-list'
 import type { AdvancedStats } from '@/features/analytics/schemas/analytics.schema'
@@ -31,7 +31,7 @@ export function MenuOrders({ orders, locale }: MenuOrdersProps) {
     { id: 'cancelled', value: statuses.cancelled },
   ] as const
   const placed = outcomes.reduce((sum, outcome) => sum + outcome.value, 0)
-  const share = (value: number, total: number) => `${Math.round((value / total) * 100)}%`
+  const share = (value: number, total: number) => formatShare(value / total)
   const delivered = orders.fulfilment.reduce((sum, row) => sum + row.count, 0)
 
   return (

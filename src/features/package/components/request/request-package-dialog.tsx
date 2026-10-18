@@ -1,13 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Form, FormActions, TextareaField } from '@/shared/components/forms'
+import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
+import { Form, TextareaField } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
-import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
 import { useRequestPackage } from '@/features/package/hooks/use-packages'
 import {
@@ -34,7 +34,6 @@ const EMPTY: RequestPackageFormValues = { message: '' }
  */
 export function RequestPackageDialog({ open, pkg, locale, onClose }: RequestPackageDialogProps) {
   const { t } = useTranslation('package')
-  const ref = useRef<HTMLDialogElement>(null)
   const send = useRequestPackage()
 
   const form = useForm<RequestPackageFormValues>({
@@ -50,13 +49,6 @@ export function RequestPackageDialog({ open, pkg, locale, onClose }: RequestPack
     clearFormError()
     form.reset(EMPTY)
   }, [open, form, clearFormError])
-
-  useEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
-    if (open && !dialog.open) dialog.showModal()
-    if (!open && dialog.open) dialog.close()
-  }, [open])
 
   const name = pkg === null ? '' : translated(pkg.name, locale)
   const label = pkg === null ? '' : name === '' || name.missing ? pkg.slug : name.text
@@ -76,28 +68,13 @@ export function RequestPackageDialog({ open, pkg, locale, onClose }: RequestPack
   })
 
   return (
-    <dialog
-      ref={ref}
-      onCancel={(event) => {
-        event.preventDefault()
-        if (!send.isPending) onClose()
-      }}
-      onClick={(event) => {
-        if (event.target === ref.current && !send.isPending) onClose()
-      }}
-      className={cn(
-        'm-auto w-[min(92vw,460px)] rounded-[16px] border-[0.5px] border-[var(--line)] p-0',
-        'bg-[var(--surface)] text-[var(--text)] shadow-pop',
-      )}
-    >
+    <Modal open={open} onClose={onClose} busy={send.isPending}>
       <Form onSubmit={onSubmit} className="gap-0">
         <div className="p-5 pb-0">
-          <h2 className="font-display text-[19px] leading-tight">
-            {t('request.title', { name: label })}
-          </h2>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--muted)]">
-            {t('request.description')}
-          </p>
+          <ModalHeader
+            title={t('request.title', { name: label })}
+            description={t('request.description')}
+          />
 
           {formError ? (
             <Alert variant="error" className="mt-3">
@@ -116,15 +93,15 @@ export function RequestPackageDialog({ open, pkg, locale, onClose }: RequestPack
           />
         </div>
 
-        <FormActions className="mt-4 border-t-[0.5px] border-[var(--line)] p-3.5">
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose} disabled={send.isPending}>
             {t('request.cancel')}
           </Button>
           <Button type="submit" loading={send.isPending} disabled={pkg === null}>
             {t('request.submit')}
           </Button>
-        </FormActions>
+        </ModalFooter>
       </Form>
-    </dialog>
+    </Modal>
   )
 }

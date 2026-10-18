@@ -540,7 +540,8 @@ test.describe('admin', () => {
 
     await asOwner(page, signIn, owner.user.email)
     await page.goto('/overview')
-    await expect(page.getByRole('definition').filter({ hasText: /0 \/ 45/ })).toBeVisible()
+    // Home's Dishes tile counts against the package with the slots added.
+    await expect(page.getByRole('button').filter({ hasText: /0 \/ 45/ })).toBeVisible()
   })
 
   test('Packages: each package carries its AI writing help a day', async ({ page, signIn }) => {

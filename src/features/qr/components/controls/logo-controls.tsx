@@ -1,18 +1,11 @@
-import { useWatch, type Control } from 'react-hook-form'
+import type { Control } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { ChoiceField, SwitchField, type ChoiceOption } from '@/shared/components/forms'
+import { ChoiceField, type ChoiceOption } from '@/shared/components/forms'
 import type { LogoSize, QrFormValues } from '@/features/qr/schemas/qr.schema'
 
-export function LogoControls({
-  control,
-  hasLogo,
-}: {
-  control: Control<QrFormValues>
-  /** Whether the restaurant has a logo to place at all. */
-  hasLogo: boolean
-}) {
+/** How much of the code the logo covers. Its switch is on the Logo tile. */
+export function LogoControls({ control }: { control: Control<QrFormValues> }) {
   const { t } = useTranslation('qr')
-  const on = useWatch({ control, name: 'logo' })
 
   const sizes: ChoiceOption<LogoSize>[] = [
     { value: 'small', label: t('logo.small') },
@@ -22,22 +15,14 @@ export function LogoControls({
 
   return (
     <>
-      <SwitchField
+      <p className="text-[13px] leading-snug text-[var(--muted)]">{t('logo.description')}</p>
+      <ChoiceField
         control={control}
-        name="logo"
-        label={t('logo.label')}
-        description={hasLogo ? t('logo.description') : t('logo.noLogo')}
-        disabled={!hasLogo}
+        name="logo_size"
+        label={t('logo.size')}
+        options={sizes}
+        hint={t('logo.sizeHint')}
       />
-      {on && hasLogo ? (
-        <ChoiceField
-          control={control}
-          name="logo_size"
-          label={t('logo.size')}
-          options={sizes}
-          hint={t('logo.sizeHint')}
-        />
-      ) : null}
     </>
   )
 }

@@ -1,11 +1,7 @@
 import { Trans, useTranslation } from 'react-i18next'
 import { Bar, BarChart, Cell, Tooltip, XAxis } from 'recharts'
 import type { Locale } from '@/shared/constants/locales'
-import {
-  AXIS_TICK,
-  CHART_COLORS,
-  TOOLTIP_STYLE,
-} from '@/features/analytics/components/charts/chart-style'
+import { AXIS_TICK, CHART_COLORS, TOOLTIP_STYLE } from '@/features/analytics/utils/chart-style'
 import { formatHour, weekdayNames } from '@/shared/utils/format/date'
 import { formatNumber } from '@/shared/utils/format/number'
 

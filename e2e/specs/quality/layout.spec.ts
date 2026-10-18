@@ -37,7 +37,11 @@ for (const language of ['en', 'ar'] as const) {
 
       for (const key of PAGES) {
         await page.goto(`/${key}`)
-        await expect(page.locator('main h2, main h1').first()).toBeVisible()
+        // Drawn: something shows, and no loading placeholder is left. Every
+        // page keeps its title in the topbar, so the page itself may have
+        // no heading at all.
+        await expect(page.locator('main > *').first()).toBeVisible()
+        await expect(page.locator('main .animate-pulse')).toHaveCount(0)
         await page.waitForLoadState('networkidle')
         await expect
           .poll(() => page.evaluate(() => window.innerWidth), { message: `/${key}` })

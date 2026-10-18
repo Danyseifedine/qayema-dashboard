@@ -230,7 +230,7 @@ export function ImageField<T extends FieldValues>({
             'border-[1.5px] border-dashed transition-all duration-200',
             '[background-image:repeating-linear-gradient(135deg,transparent_0_12px,var(--line-2)_12px_13px)]',
             'bg-[var(--field)]',
-            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+            'focus-ring',
             dragging
               ? 'border-gold bg-[var(--surface)] shadow-[0_0_0_4px_var(--ring-accent)]'
               : 'border-[var(--line-strong)] hover:border-gold hover:bg-[var(--surface)]',

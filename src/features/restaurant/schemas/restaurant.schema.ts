@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { imageFieldSchema } from '@/features/uploads'
-import { MAX_SHIFTS, shiftProblem } from '@/features/restaurant/components/hours/time-options'
+import { MAX_SHIFTS, shiftProblem } from '@/features/restaurant/utils/time-options'
 import { t } from '@/lib/i18n'
 import { CURRENCIES } from '@/shared/constants/currencies'
 import { COUNTRIES } from '@/shared/constants/countries'

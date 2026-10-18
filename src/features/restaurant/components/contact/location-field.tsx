@@ -67,7 +67,7 @@ export function LocationField<T extends FieldValues>({
             className={cn(
               'inline-flex items-center gap-1.5 text-[12.5px] text-[var(--muted)]',
               'hover:text-accent hover:underline',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+              'focus-ring',
             )}
           >
             {t('location.openInMaps')}

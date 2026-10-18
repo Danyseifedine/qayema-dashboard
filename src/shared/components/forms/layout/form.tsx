@@ -11,7 +11,8 @@ export function Form({ className, children, ...props }: ComponentProps<'form'>) 
 }
 
 /**
- * A titled group of fields inside a longer form.
+ * A titled group of fields inside a longer form, on the dashboard's glass
+ * card with its title as the other cards write theirs (`SectionCard`).
  *
  * It draws its own panel. A page of plain stacked fields gives an eye nothing
  * to hold on to: the heading of one group sits as close to the last field of
@@ -27,11 +28,11 @@ export function FormSection({
   children: ReactNode
 }) {
   return (
-    <section className="flex flex-col rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
-      <div className="flex flex-col gap-1 border-b-[0.5px] border-[var(--line-2)] pb-3.5">
-        <h3 className="label-caps text-[var(--muted)]">{title}</h3>
+    <section className="flex flex-col glass-card rounded-card p-3.5 sm:p-4">
+      <div className="flex flex-col gap-1 pb-1.5">
+        <h3 className="font-display text-[20px] leading-tight">{title}</h3>
         {description ? (
-          <p className="text-[13px] leading-snug text-[var(--muted)]">{description}</p>
+          <p className="text-[12.5px] leading-snug text-[var(--muted)]">{description}</p>
         ) : null}
       </div>
       {/* Fields bring their own top padding, so the gap here is the extra. */}

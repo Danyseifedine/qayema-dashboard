@@ -29,11 +29,13 @@
     "restaurant": "Restaurant",
     "features": "Features",
     "package": "Package",
-    "account": "Account"
+    "account": "Account",
+    "home": "Home",
+    "more": "More"
   },
   "layout": {
-    "openNavigation": "Open navigation",
-    "closeNavigation": "Close navigation"
+    "back": "Back",
+    "tabs": "Sections"
   },
   "impersonation": {
     "viewingAs": "You are viewing {{owner}}'s dashboard, signed in as {{admin}}.",
@@ -143,6 +145,9 @@
     "nothingToCompare": "Nothing to compare yet",
     "same": "Same as before",
     "vsBefore": "vs before"
+  },
+  "limitNotice": {
+    "onYourPackage": "on your package"
   },
   "colorField": {
     "picker": "{{label}}, picker"
@@ -261,5 +266,32 @@
     "renew": "Ask to renew",
     "soonTitle": "Your {{name}} package ended on {{date}}",
     "soonBody": "Your menu goes offline on {{date}} unless you renew. Everything you made is kept."
+  },
+  "more": {
+    "locked": "Pick a design first",
+    "hints": {
+      "overview": "Your menu at a glance",
+      "analytics": "Views, visitors and scans",
+      "orders": "Orders from your menu",
+      "table-orders": "Orders from your tables",
+      "categories": "The sections of your menu",
+      "dishes": "Everything you sell",
+      "design": "Pick how your menu looks",
+      "appearance": "Colours and fonts",
+      "qr": "Style it, download it",
+      "tables": "A QR code for each table",
+      "social-links": "Instagram, Facebook and more",
+      "restaurant": "Name, hours, location",
+      "features": "Turn parts of your menu on or off",
+      "package": "What your menu can do",
+      "account": "Manage your account and settings"
+    },
+    "subtitle": "Manage and customize everything about your restaurant."
+  },
+  "greeting": {
+    "morning": "Good morning,",
+    "afternoon": "Good afternoon,",
+    "evening": "Good evening,",
+    "subtitle": "Here's what's happening with your restaurant today."
   }
 }

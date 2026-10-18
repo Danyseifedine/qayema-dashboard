@@ -16,13 +16,20 @@ import { analyticsKeys } from '@/features/analytics/hooks/analytics-keys'
 // Numbers move while the owner watches, but not by the second.
 const STALE = 60_000
 
-/** The summary every package gets. The last range stays up while the next loads. */
-export function useStatsSummary(range: StatsRange): UseQueryResult<StatsSummary, ApiError> {
+/**
+ * The summary every package gets. The last range stays up while the next
+ * loads; `live` asks again every minute while it is on screen (Home).
+ */
+export function useStatsSummary(
+  range: StatsRange,
+  { live = false }: { live?: boolean } = {},
+): UseQueryResult<StatsSummary, ApiError> {
   return useQuery<StatsSummary, ApiError>({
     queryKey: analyticsKeys.summary(range),
     queryFn: ({ signal }) => fetchStatsSummary(range, signal),
     placeholderData: keepPreviousData,
     staleTime: STALE,
+    refetchInterval: live ? STALE : false,
   })
 }
 

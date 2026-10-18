@@ -1,6 +1,7 @@
 import { IconFolderPlus } from '@tabler/icons-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LimitNotice } from '@/shared/components/data-display'
 import { CategoryDialog } from '@/features/menu/categories/components/dialogs/category-dialog'
 import { CategoryCard } from '@/features/menu/categories/components/list/category-card'
 import {
@@ -10,8 +11,8 @@ import {
 } from '@/features/menu/categories/hooks/use-categories'
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
-import { LimitNotice } from '@/shared/components/data-display/badges/limit-notice'
-import { ConfirmDialog, EmptyState, ErrorState } from '@/shared/components/feedback'
+import { MenuSwitch } from '@/features/menu/components/switch/menu-switch'
+import { ConfirmDialog, EmptyState, ErrorState, Skeleton } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 
@@ -53,16 +54,16 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
+      <MenuSwitch value="categories" onChange={onOpenDishes} />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LimitNotice
-          label={t('categoriesPage.title')}
           used={categories.data?.meta.used ?? 0}
           limit={categories.data?.meta.limit ?? null}
-          description={t('categoriesPage.description')}
         />
         <Button
-          size="sm"
-          leadingIcon={<IconFolderPlus className="size-4" />}
+          className="ms-auto"
+          leadingIcon={<IconFolderPlus className="size-[18px]" />}
           disabled={atLimit}
           onClick={() => setDialog({ open: true, category: null })}
         >
@@ -73,9 +74,9 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
       {atLimit ? <Alert variant="warning">{t('categoriesPage.atLimit')}</Alert> : null}
 
       {categories.isPending ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {Array.from({ length: 3 }, (_, index) => (
-            <div key={index} className="h-16 animate-pulse rounded-[14px] bg-[var(--hover-wash)]" />
+            <Skeleton key={index} className="h-[78px]" />
           ))}
         </div>
       ) : categories.isError ? (
@@ -98,7 +99,7 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
       ) : (
         <>
           <SortableList items={list} layout="list" onReorder={(ordered) => reorder.mutate(ordered)}>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               {list.map((category) => (
                 <SortableCard key={category.id} id={category.id}>
                   {({ handle }) => (

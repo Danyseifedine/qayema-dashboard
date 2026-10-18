@@ -28,13 +28,15 @@ export type DishCardProps = {
 }
 
 /**
- * A dish as a card: photo, name, price, and the availability switch right on
- * the face of it, because marking something sold out is the thing an owner
- * does most often and usually from a phone mid-service.
+ * A dish as a row card: a small photo at the start, the name and price on
+ * one line so prices read down the list, the ingredients in full, and along
+ * the foot the availability switch, because marking something sold out is
+ * the thing an owner does most often and usually from a phone mid-service.
+ * Edit and delete sit at the other end of that foot, so the words keep the
+ * card's whole width even on a narrow phone.
  *
- * It fills the grid cell it is given (`h-full`) so a long description cannot
- * make one card taller than the one beside it, and the switch row lines up
- * across the row.
+ * It fills the grid cell it is given (`h-full`), so two cards side by side
+ * keep their switch rows level.
  */
 export const DishCard = memo(function DishCard({
   dish,
@@ -75,72 +77,86 @@ export const DishCard = memo(function DishCard({
   ].filter((part) => part !== null)
 
   return (
-    <article
-      className={cn(
-        'flex h-full flex-col overflow-hidden rounded-[14px] border-[0.5px] border-[var(--line)]',
-        'bg-[var(--surface)] transition-colors hover:border-[var(--line-strong)]',
-      )}
-    >
-      {/* Only the photo dims for a sold-out dish: its name, price and switch
-          stay readable (and editable) at full contrast. */}
-      <div className={cn('relative', !dish.is_available && '[&>:first-child]:opacity-60')}>
-        {dish.image_url ? (
-          <img
-            src={dish.image_url}
-            alt=""
-            loading="lazy"
-            // Off the main thread: a grid of photos decoding synchronously
-            // stutters the scroll on the phone this is edited from.
-            decoding="async"
-            className="aspect-[4/3] w-full bg-[var(--color-sand)] object-cover"
-          />
-        ) : (
-          <div className="grid aspect-[4/3] w-full place-items-center bg-[var(--hover-wash)] text-[var(--faint)]">
-            <IconPhotoOff aria-hidden className="size-6" />
-          </div>
-        )}
+    <article className="flex h-full glass-card rounded-card py-3 pe-3">
+      {/* The grip runs down the whole start edge, so the card reads as
+          something to drag; the rest of it stays a tap to edit. */}
+      {handle}
 
-        <div className="absolute inset-x-1 top-1 flex items-start justify-between">
-          {handle}
-          {!dish.is_available ? (
-            <span className="rounded-full bg-overlay-pill px-2 py-1 text-[10px] font-medium tracking-[0.08em] text-white uppercase">
-              {t('dishCard.soldOut')}
-            </span>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-col gap-1 p-3.5">
-        <div className="flex items-start justify-between gap-2">
-          <h3
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex flex-1 items-start gap-3">
+          {/* Only the photo dims for a sold-out dish: its name, price and switch
+            stay readable (and editable) at full contrast. */}
+          <div
             className={cn(
-              'min-w-0 flex-1 text-[15px] font-medium tracking-[-0.012em]',
-              name.missing && 'text-[var(--faint)] italic',
+              'size-[76px] shrink-0 overflow-hidden rounded-[12px] bg-[var(--hover-wash)]',
+              !dish.is_available && 'opacity-50',
             )}
           >
-            {name.missing ? t('dishCard.untitled') : name.text}
-          </h3>
-          {price !== null ? (
-            <Money
-              amount={price}
-              currency={currency}
-              locale={locale}
-              className="shrink-0 text-[15px] font-medium text-accent"
-            />
-          ) : null}
+            {dish.image_url ? (
+              <img
+                src={dish.image_url}
+                alt=""
+                loading="lazy"
+                // Off the main thread: a list of photos decoding synchronously
+                // stutters the scroll on the phone this is edited from.
+                decoding="async"
+                className="size-full object-cover"
+              />
+            ) : (
+              <div className="grid size-full place-items-center text-[var(--faint)]">
+                <IconPhotoOff aria-hidden className="size-5" />
+              </div>
+            )}
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5 pt-0.5">
+            <div className="flex items-start justify-between gap-2">
+              <h3
+                dir="auto"
+                className={cn(
+                  // The page's own font, not the headings': at this size the display
+                  // face crowds a name together.
+                  'min-w-0 flex-1 [font-family:inherit] text-[15px] leading-snug font-medium tracking-[-0.012em] break-words',
+                  name.missing && 'text-[var(--faint)] italic',
+                )}
+              >
+                {name.missing ? t('dishCard.untitled') : name.text}
+              </h3>
+              {price !== null ? (
+                <Money
+                  amount={price}
+                  currency={currency}
+                  locale={locale}
+                  className="shrink-0 text-[14px] font-semibold text-accent"
+                />
+              ) : null}
+            </div>
+
+            {!ingredients.missing ? (
+              // Two lines, so a long list of ingredients never walls the card in.
+              <p
+                dir="auto"
+                className="line-clamp-2 text-[12px] leading-snug break-words text-[var(--muted)]"
+              >
+                {ingredients.text}
+              </p>
+            ) : null}
+
+            {choices.length > 0 || !dish.is_available ? (
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] font-medium text-[var(--faint)]">
+                {!dish.is_available ? (
+                  <span className="rounded-full bg-status-danger-wash px-2 py-0.5 text-[10px] tracking-[0.06em] text-status-danger uppercase">
+                    {t('dishCard.soldOut')}
+                  </span>
+                ) : null}
+                {choices.length > 0 ? <span>{choices.join(' · ')}</span> : null}
+              </p>
+            ) : null}
+          </div>
         </div>
 
-        {!ingredients.missing ? (
-          <p className="line-clamp-2 text-[12.5px] leading-relaxed text-[var(--muted)]">
-            {ingredients.text}
-          </p>
-        ) : null}
-
-        {choices.length > 0 ? (
-          <p className="text-[12px] font-medium text-[var(--muted)]">{choices.join(' · ')}</p>
-        ) : null}
-
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2.5">
+        {/* The switch, then edit and delete at the far end. */}
+        <div className="mt-2 -mb-1 flex items-center gap-1">
           <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[var(--muted)]">
             <Switch
               checked={dish.is_available}
@@ -154,7 +170,7 @@ export const DishCard = memo(function DishCard({
             <span>{dish.is_available ? t('dishCard.available') : t('dishCard.hidden')}</span>
           </label>
 
-          <div className="flex items-center gap-0.5">
+          <div className="ms-auto flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
@@ -163,7 +179,7 @@ export const DishCard = memo(function DishCard({
                 name.text ? t('dishCard.edit', { name: name.text }) : t('dishCard.editUnnamed')
               }
             >
-              <IconPencil aria-hidden className="size-4" />
+              <IconPencil aria-hidden className="size-[18px]" stroke={1.7} />
             </Button>
             <Button
               variant="ghost"
@@ -174,7 +190,7 @@ export const DishCard = memo(function DishCard({
               }
               className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
             >
-              <IconTrash aria-hidden className="size-4" />
+              <IconTrash aria-hidden className="size-[18px]" stroke={1.7} />
             </Button>
           </div>
         </div>

@@ -1,8 +1,14 @@
 import {
   IconBrandFacebook,
   IconBrandInstagram,
+  IconBrandPinterest,
+  IconBrandSnapchat,
+  IconBrandTelegram,
+  IconBrandThreads,
   IconBrandTiktok,
+  IconBrandTripadvisor,
   IconBrandX,
+  IconBrandYoutube,
   type IconProps,
   type TablerIcon,
 } from '@tabler/icons-react'
@@ -19,6 +25,12 @@ const MARKS: Record<SocialPlatform, TablerIcon> = {
   x: IconBrandX,
   facebook: IconBrandFacebook,
   tiktok: IconBrandTiktok,
+  youtube: IconBrandYoutube,
+  snapchat: IconBrandSnapchat,
+  threads: IconBrandThreads,
+  telegram: IconBrandTelegram,
+  pinterest: IconBrandPinterest,
+  tripadvisor: IconBrandTripadvisor,
 }
 
 /** The mark for one platform, in the same stroked 24px style as the app's icons. */

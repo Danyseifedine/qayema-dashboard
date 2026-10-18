@@ -2,9 +2,12 @@ import type { Page } from '@playwright/test'
 import { either, expect, test } from '../../support/fixtures'
 import { fixtureFile } from '../../support/helpers'
 
-/** A count tile on the overview, found by its label. */
+/** A count tile under Quick, found by its label. */
 const tile = (page: Page, label: RegExp) =>
-  page.locator('dl > div').filter({ has: page.locator('dt').getByText(label) })
+  page
+    .getByRole('region', { name: either('Quick', 'اختصارات') })
+    .getByRole('button')
+    .filter({ has: page.getByText(label) })
 
 const STEPS = {
   restaurant: 'Your restaurant',
@@ -12,8 +15,14 @@ const STEPS = {
   share: 'Share your menu',
 } as const
 
-/** A set-up step's list of items, opening the step first when it is closed. */
+/** A set-up step's list of items: every step shown first, then the step opened when closed. */
 async function step(page: Page, which: keyof typeof STEPS) {
+  // The next-step card says when the checklist has loaded.
+  await expect(
+    page.getByRole('region', { name: either('Set up your menu', 'جهّز قائمتك') }),
+  ).toBeVisible()
+  const every = page.getByRole('button', { name: either('See every step', 'اعرض كل الخطوات') })
+  if (await every.isVisible()) await every.click()
   const toggle = page.getByRole('button', { name: new RegExp(STEPS[which]) })
   if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
   return page.getByRole('list', { name: STEPS[which] })
@@ -42,25 +51,33 @@ test.describe('overview', () => {
     await page.goto('/overview')
 
     const dishes = tile(page, either('Dishes', 'الأطباق'))
-    await expect(dishes.locator('dd').first()).toHaveText('3')
+    await expect(dishes.getByText('3', { exact: true })).toBeVisible()
     await expect(dishes.getByText('3 / 40')).toBeVisible()
 
     const categories = tile(page, either('Categories', 'الأقسام'))
-    await expect(categories.locator('dd').first()).toHaveText('2')
+    await expect(categories.getByText('2', { exact: true })).toBeVisible()
     await expect(categories.getByText('2 / 8')).toBeVisible()
 
-    const social = tile(page, either('Social links', 'روابط التواصل الاجتماعي'))
-    await expect(social.locator('dd').first()).toHaveText('1')
-    // A reached limit reads left to right in both languages.
-    await expect(social.getByText('1 / 1')).toHaveAttribute('dir', 'ltr')
+    // A count reads left to right in both languages.
+    await expect(categories.getByText('2 / 8')).toHaveAttribute('dir', 'ltr')
 
+    // The links show their count alone, never the package's limit.
+    const links = tile(page, either('Links', 'الروابط'))
+    await expect(links.getByText('1', { exact: true })).toBeVisible()
+    await expect(links).not.toContainText('/')
+
+    // Only the next thing to set up, with the way to add it.
+    const setUp = page.getByRole('region', { name: either('Set up your menu', 'جهّز قائمتك') })
+    await expect(setUp.getByText(either('Next: Your logo', 'التالي: شعارك'))).toBeVisible()
+    // The menu's link comes first, ready to share or preview.
     await expect(
-      page.getByRole('heading', { name: either('Set up your menu', 'جهّز قائمتك') }),
+      page.getByRole('button', { name: either('Share my menu', 'شارك قائمتي') }),
     ).toBeVisible()
-    // The menu's link comes first, ready to copy.
-    await expect(
-      page.getByRole('button', { name: either('Copy link', 'نسخ الرابط') }),
-    ).toBeVisible()
+    await expect(page.getByRole('button', { name: either('Preview', 'معاينة') })).toBeVisible()
+
+    // Each count opens its page.
+    await dishes.click()
+    await expect(page).toHaveURL(/\/dishes$/)
   })
 
   test('an unlimited package says so instead of showing a number', async ({ page, owner }) => {
@@ -70,16 +87,12 @@ test.describe('overview', () => {
     })
     await page.goto('/overview')
 
-    for (const label of ['Dishes', 'Categories', 'Social links']) {
+    for (const label of ['Dishes', 'Categories']) {
       const count = tile(page, new RegExp(`^${label}$`))
       await expect(count).toContainText('No limit on your package')
       await expect(count).not.toContainText('/')
     }
-    await expect(
-      tile(page, /^Dishes$/)
-        .locator('dd')
-        .first(),
-    ).toHaveText('1')
+    await expect(tile(page, /^Dishes$/).getByText('1', { exact: true })).toBeVisible()
   })
 
   test('a menu with only the basics lists what is left, first', async ({ page, owner }) => {
@@ -92,10 +105,14 @@ test.describe('overview', () => {
       'aria-valuenow',
       '2',
     )
-    await expect(page.getByText('Three steps, each with what is still missing.')).toBeVisible()
+    // The next thing first, with one button to go and add it.
+    await page.getByRole('button', { name: 'Add your logo' }).click()
+    await expect(page).toHaveURL(/\/restaurant$/)
+    await page.goBack()
 
-    // The first step is open: the restaurant, with its description and phone done.
+    // Every step on request: the first open, the restaurant, its description and phone done.
     const rows = (await step(page, 'restaurant')).getByRole('listitem')
+    await expect(page.getByText('Three steps, each with what is still missing.')).toBeVisible()
     await expect(rows).toHaveCount(6)
     // What is done comes last and has no button.
     await expect(rows.nth(4)).toContainText('(done)')
@@ -150,7 +167,7 @@ test.describe('overview', () => {
     await expect(page).toHaveURL(/\/dishes$/)
   })
 
-  test('the checklist completes once the menu is complete', async ({ page, owner }) => {
+  test('the set-up leaves Home once the menu is complete', async ({ page, owner }) => {
     await owner({
       package: 'free',
       logo: true,
@@ -191,20 +208,11 @@ test.describe('overview', () => {
     await dialog.getByRole('button', { name: 'Save dish' }).click()
     await expect(dialog).toBeHidden()
 
+    // Nothing left to set up: Home keeps the link, the numbers and the counts.
     await page.goto('/overview')
-    await expect(page.getByText('10 of 10 done')).toBeVisible()
-    await expect(
-      page.getByText('Your menu is ready: everything guests look for is on it.'),
-    ).toBeVisible()
-    await expect(page.getByRole('progressbar', { name: 'Menu set-up' })).toHaveAttribute(
-      'aria-valuenow',
-      '10',
-    )
-    for (const name of Object.values(STEPS)) {
-      await expect(page.getByRole('button', { name: new RegExp(name) })).toContainText('Done')
-    }
-    const dishes = await step(page, 'menu')
-    await expect(dishes.getByRole('button')).toHaveCount(0)
-    await expect(dishes.getByText('Every dish has a photo')).toBeVisible()
+    await expect(tile(page, /^Dishes$/)).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Your menu link' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Set up your menu' })).toHaveCount(0)
+    await expect(page.getByRole('progressbar', { name: 'Menu set-up' })).toHaveCount(0)
   })
 })

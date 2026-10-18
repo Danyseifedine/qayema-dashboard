@@ -4,6 +4,8 @@ export type LimitBadgeProps = {
   used: number
   /** Null means unlimited on this plan. */
   limit: number | null
+  /** A larger pill in a gold hairline, for the count beside a page's add button. */
+  outlined?: boolean
 }
 
 /**
@@ -11,7 +13,7 @@ export type LimitBadgeProps = {
  * Turns gold as the ceiling approaches and red once it is reached, so running
  * out is visible before a save is rejected.
  */
-export function LimitBadge({ used, limit }: LimitBadgeProps) {
+export function LimitBadge({ used, limit, outlined = false }: LimitBadgeProps) {
   if (limit === null) {
     return <span className="text-[12px] tabular-nums text-[var(--muted)]">{used}</span>
   }
@@ -25,10 +27,15 @@ export function LimitBadge({ used, limit }: LimitBadgeProps) {
     <span
       dir="ltr"
       className={cn(
-        'inline-flex items-center rounded-full px-2 py-0.5 text-[11.5px] font-medium tabular-nums',
-        full && 'bg-status-danger-wash text-status-danger',
-        near && 'bg-accent-wash text-accent',
-        !full && !near && 'bg-[var(--hover-wash)] text-[var(--muted)]',
+        'inline-flex items-center rounded-full font-medium tabular-nums',
+        outlined ? 'border-[0.5px] px-3 py-1 text-[13px]' : 'px-2 py-0.5 text-[11.5px]',
+        full && 'border-status-danger-border bg-status-danger-wash text-status-danger',
+        near && 'border-[var(--accent-border)] bg-accent-wash text-accent',
+        !full &&
+          !near &&
+          (outlined
+            ? 'border-[var(--accent-border)] bg-[var(--surface)] text-[var(--text)]'
+            : 'bg-[var(--hover-wash)] text-[var(--muted)]'),
       )}
     >
       {used} / {limit}

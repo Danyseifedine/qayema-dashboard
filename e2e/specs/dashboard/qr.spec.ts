@@ -35,6 +35,21 @@ const PLAIN = {
   backgroundOptions: { color: '#FFFFFF' },
 }
 
+/** Opens a tile's sheet: its choices are only there while it is open. */
+async function openSheet(page: Page, name: RegExp) {
+  await page.getByRole('button', { name }).click()
+  await expect(page.getByRole('dialog', { name })).toBeVisible()
+}
+
+async function closeSheet(page: Page) {
+  await page.getByRole('button', { name: either('Done', 'تم') }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+}
+
+const COLOURS = either('Colours', 'الألوان')
+const SHAPES = either('Shapes', 'الأشكال')
+const LOGO = either('Logo', 'الشعار')
+
 test.describe('QR code', () => {
   test('a premium owner styles the code, saves it and the menu follows @matrix', async ({
     page,
@@ -46,12 +61,16 @@ test.describe('QR code', () => {
     await expect(
       page.getByRole('img', { name: either("Your menu's QR code", 'رمز QR لقائمتك') }),
     ).toBeVisible()
+    await openSheet(page, SHAPES)
     const dots = page.getByRole('group', { name: either('Dots', 'النقاط') })
     await dots.getByText(either('Extra rounded', 'مستدير جدًا')).click()
     await expect(
       dots.getByRole('radio', { name: either('Extra rounded', 'مستدير جدًا') }),
     ).toBeChecked()
+    await closeSheet(page)
+    await openSheet(page, COLOURS)
     await page.getByRole('textbox', { name: either('Dots', 'النقاط') }).fill('#1F6FEB')
+    await closeSheet(page)
 
     const save = page.getByRole('button', { name: either('Save', 'حفظ') })
     await expect(save).toBeEnabled()
@@ -60,9 +79,12 @@ test.describe('QR code', () => {
     await expect(save).toBeDisabled()
 
     await page.reload()
+    await openSheet(page, SHAPES)
     await expect(
       dots.getByRole('radio', { name: either('Extra rounded', 'مستدير جدًا') }),
     ).toBeChecked()
+    await closeSheet(page)
+    await openSheet(page, COLOURS)
     await expect(page.getByRole('textbox', { name: either('Dots', 'النقاط') })).toHaveValue(
       '#1F6FEB',
     )
@@ -82,6 +104,7 @@ test.describe('QR code', () => {
     await page.goto('/qr')
 
     // Colours, with a radial gradient.
+    await openSheet(page, COLOURS)
     await page.getByRole('textbox', { name: 'Dots', exact: true }).fill('#123456')
     await page.getByRole('textbox', { name: 'Background', exact: true }).fill('#FFFDF5')
     await page.getByRole('textbox', { name: 'Corner frames', exact: true }).fill('#1A2B3C')
@@ -94,8 +117,10 @@ test.describe('QR code', () => {
       .getByRole('group', { name: 'Direction' })
       .getByText('From the centre', { exact: true })
       .click()
+    await closeSheet(page)
 
     // Shapes.
+    await openSheet(page, SHAPES)
     await page
       .getByRole('group', { name: 'Dots' })
       .getByText('Classy rounded', { exact: true })
@@ -109,17 +134,19 @@ test.describe('QR code', () => {
       .getByText('Circle', { exact: true })
       .click()
 
+    await closeSheet(page)
+
     // The logo, large.
     const logo = page.getByRole('switch', { name: 'Your logo in the middle' })
     await expect(logo).toBeEnabled()
     await logo.click()
+    await openSheet(page, LOGO)
     await page.getByRole('group', { name: 'Logo size' }).getByText('Large', { exact: true }).click()
+    await closeSheet(page)
 
     // The card.
-    await page
-      .getByRole('group', { name: 'Card', exact: true })
-      .getByText('Dark', { exact: true })
-      .click()
+    const cardColour = page.getByRole('radiogroup', { name: 'Printable card' })
+    await cardColour.getByRole('radio', { name: 'Dark' }).click()
     await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Table card title')
     await page.getByRole('textbox', { name: 'Subtitle' }).fill('Grills since 1990')
     await page.getByRole('textbox', { name: 'Call to action' }).fill('Point your camera here')
@@ -131,12 +158,13 @@ test.describe('QR code', () => {
     await expect(
       page.getByText('The card shows your saved design.', { exact: false }),
     ).toBeVisible()
-    await page.getByRole('button', { name: 'Save' }).click()
+    await page.getByRole('button', { name: 'Save', exact: true }).click()
     await expect(page.getByText('QR code saved')).toBeVisible()
     await expect(page.getByText('The card shows your saved design.', { exact: false })).toBeHidden()
 
     // A reload keeps every choice.
     await page.reload()
+    await openSheet(page, COLOURS)
     await expect(page.getByRole('textbox', { name: 'Dots', exact: true })).toHaveValue('#123456')
     await expect(page.getByRole('textbox', { name: 'Second colour', exact: true })).toHaveValue(
       '#5B21B6',
@@ -146,18 +174,21 @@ test.describe('QR code', () => {
         .getByRole('group', { name: 'Direction' })
         .getByRole('radio', { name: 'From the centre' }),
     ).toBeChecked()
+    await closeSheet(page)
+    await openSheet(page, SHAPES)
     await expect(
       page.getByRole('group', { name: 'Dots' }).getByRole('radio', { name: 'Classy rounded' }),
     ).toBeChecked()
     await expect(
       page.getByRole('group', { name: 'Corner frames' }).getByRole('radio', { name: 'Circle' }),
     ).toBeChecked()
+    await closeSheet(page)
+    await openSheet(page, LOGO)
     await expect(
       page.getByRole('group', { name: 'Logo size' }).getByRole('radio', { name: 'Large' }),
     ).toBeChecked()
-    await expect(
-      page.getByRole('group', { name: 'Card', exact: true }).getByRole('radio', { name: 'Dark' }),
-    ).toBeChecked()
+    await closeSheet(page)
+    await expect(cardColour.getByRole('radio', { name: 'Dark' })).toBeChecked()
     await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(
       'Table card title',
     )
@@ -232,15 +263,22 @@ test.describe('QR code', () => {
       },
     })
     await page.goto('/qr')
-    await expect(page.getByRole('textbox', { name: 'Dots', exact: true })).toHaveValue('#7C3AED')
+    const quick = page.getByRole('group', { name: 'Quick shapes' })
+    await expect(quick.getByRole('button', { name: 'Dots' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
 
-    const save = page.getByRole('button', { name: 'Save' })
+    const save = page.getByRole('button', { name: 'Save', exact: true })
     await expect(save).toBeDisabled()
     await page.getByRole('button', { name: 'Reset to simple' }).click()
+    await expect(quick.getByRole('button', { name: 'Square' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await openSheet(page, COLOURS)
     await expect(page.getByRole('textbox', { name: 'Dots', exact: true })).toHaveValue('#000000')
-    await expect(
-      page.getByRole('group', { name: 'Dots' }).getByRole('radio', { name: 'Square' }),
-    ).toBeChecked()
+    await closeSheet(page)
     await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(
       'Kept title',
     )
@@ -261,10 +299,13 @@ test.describe('QR code', () => {
     await page.goto('/qr')
     await expect(page.getByText(`127.0.0.1/${restaurant.slug}`)).toBeVisible()
 
-    for (const extension of ['png', 'svg'] as const) {
+    for (const [extension, name] of [
+      ['png', 'Save image'],
+      ['svg', 'Print file'],
+    ] as const) {
       const [download] = await Promise.all([
         page.waitForEvent('download'),
-        page.getByRole('button', { name: extension.toUpperCase(), exact: true }).click(),
+        page.getByRole('button', { name, exact: true }).click(),
       ])
       expect(download.suggestedFilename()).toBe(`${restaurant.slug}-qr.${extension}`)
       const file = await readFile((await download.path())!)
@@ -291,20 +332,26 @@ test.describe('QR code', () => {
 
     const warning = page.getByText('This may not scan')
     await expect(warning).toBeHidden()
+    await openSheet(page, COLOURS)
     await page.getByRole('textbox', { name: 'Dots', exact: true }).fill('#FFE066')
+    await closeSheet(page)
     await expect(warning).toBeVisible()
     await expect(
       page.getByText('The dots is too close to the background colour', { exact: false }),
     ).toBeVisible()
 
+    await openSheet(page, COLOURS)
     await page.getByRole('textbox', { name: 'Corner centres', exact: true }).fill('#EA4335')
+    await closeSheet(page)
     await expect(
       page.getByText('The dots and corner centres are too close', { exact: false }),
     ).toBeVisible()
 
     // Dark colours read again.
+    await openSheet(page, COLOURS)
     await page.getByRole('textbox', { name: 'Dots', exact: true }).fill('#111111')
     await page.getByRole('textbox', { name: 'Corner centres', exact: true }).fill('#111111')
+    await closeSheet(page)
     await expect(warning).toBeHidden()
   })
 
@@ -343,12 +390,14 @@ test.describe('QR code', () => {
     const gradients = preview.locator('linearGradient, radialGradient')
     const logos = preview.locator('image')
 
+    await openSheet(page, COLOURS)
     const gradient = page.getByRole('switch', { name: 'Gradient' })
     await gradient.click()
     await expect(gradients).not.toHaveCount(0)
     await gradient.click()
     await expect(gradient).toHaveAttribute('aria-checked', 'false')
     await expect(gradients).toHaveCount(0)
+    await closeSheet(page)
 
     const logo = page.getByRole('switch', { name: 'Your logo in the middle' })
     await logo.click()
@@ -379,10 +428,10 @@ test.describe('QR code', () => {
     await expect(page.getByRole('img', { name: "Your menu's QR code" })).toBeVisible()
     await expect(lockedCard(page, /Make the code your own/)).toContainText('Premium')
     await expect(page.getByText('Your logo in the middle')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Save' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0)
     await expect(page.getByText('Scans', { exact: true })).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'Open the printable table card' })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'PNG', exact: true })).toBeEnabled()
+    await expect(page.getByRole('button', { name: 'Save image', exact: true })).toBeEnabled()
     await expectAccessible()
 
     // Without the studio there is no printable card, and the menu draws the plain code.
@@ -401,7 +450,7 @@ test.describe('QR code', () => {
     await expect(page.getByText('Scans', { exact: true })).toBeVisible()
     await expect(page.locator('dl > div').filter({ hasText: 'All time' })).toContainText('4')
     await expect(lockedCard(page, /Make the code your own/)).toContainText('Premium')
-    await expect(page.getByRole('button', { name: 'Save' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0)
   })
 
   test('QR Studio switched off and on shows on the QR page at once, with no reload', async ({
@@ -413,8 +462,8 @@ test.describe('QR code', () => {
     await owner({ package: 'premium' })
     await page.goto('/qr')
     // The studio's own sections; "Make the code your own" is the locked one.
-    const studio = page.getByRole('heading', { name: 'Colours', exact: true })
-    const off = page.getByText('QR Studio is switched off')
+    const studio = page.getByRole('heading', { name: 'Customisation', exact: true })
+    const off = page.getByRole('heading', { name: 'QR Studio is off' })
     await expect(studio).toBeVisible()
 
     const open = async (name: string) => {
@@ -475,9 +524,9 @@ test.describe('QR code', () => {
     })
     await page.goto('/qr')
 
-    await expect(page.getByText('QR Studio is switched off')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'QR Studio is off' })).toBeVisible()
     await expect(page.getByRole('heading', { name: /Make the code your own/ })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Save' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0)
     // The design is kept, but the menu draws the plain code meanwhile.
     expect(await publicOptions(page, restaurant.slug)).toMatchObject(PLAIN)
 
@@ -495,6 +544,7 @@ test.describe('QR code', () => {
     )
 
     await page.goto('/qr')
+    await openSheet(page, COLOURS)
     await expect(page.getByRole('textbox', { name: 'Dots', exact: true })).toHaveValue('#7C3AED')
     expect((await publicOptions(page, restaurant.slug)).dotsOptions).toEqual({
       type: 'dots',

@@ -12,6 +12,8 @@ export type StatTileProps = {
    * when there is nothing to compare with; left out, no line is shown.
    */
   change?: number | null
+  /** On its own on the page, a glass card; inside a card (the default), a panel set into it. */
+  standalone?: boolean
 }
 
 /**
@@ -19,9 +21,9 @@ export type StatTileProps = {
  * `<div>` holding a `<dt>`/`<dd>` pair, so a group of tiles belongs inside a
  * `<dl>`.
  */
-export function StatTile({ label, value, hint, change }: StatTileProps) {
+export function StatTile({ label, value, hint, change, standalone = false }: StatTileProps) {
   return (
-    <div className="rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] px-3.5 py-3">
+    <div className={cn('px-3.5 py-3', standalone ? 'glass-card rounded-card' : 'inset-tile')}>
       <dt className="text-[12px] text-[var(--muted)]">{label}</dt>
       <dd className="mt-0.5 text-[20px] font-semibold tabular-nums tracking-[-0.02em]">{value}</dd>
       {change !== undefined ? (

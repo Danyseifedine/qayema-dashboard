@@ -15,6 +15,8 @@ import {
   IconToolsKitchen2,
   IconArmchair,
   IconBowlSpoon,
+  IconLayoutGrid,
+  IconHome,
 } from '@tabler/icons-react'
 import type { Plan } from '@/features/auth'
 import type common from '@/locales/en/common.json'
@@ -175,8 +177,18 @@ export const NAV_GROUPS: NavGroup[] = [
  */
 const ACCOUNT_ITEM: NavItem = { key: 'account', labelKey: 'nav.account', icon: IconUserCircle }
 
+/**
+ * On a phone the sidebar is four tabs at the bottom (`phoneTabs`); every
+ * section that is not a tab is a tile on this page, the last tab.
+ */
+const MORE_ITEM: NavItem = { key: 'more', labelKey: 'nav.more', icon: IconLayoutGrid }
+
 /** Every page, flattened, for lookups by key. */
-export const NAV_ITEMS: NavItem[] = [...NAV_GROUPS.flatMap((group) => group.items), ACCOUNT_ITEM]
+export const NAV_ITEMS: NavItem[] = [
+  ...NAV_GROUPS.flatMap((group) => group.items),
+  ACCOUNT_ITEM,
+  MORE_ITEM,
+]
 
 /** The sections an owner can switch off, in sidebar order. */
 const HIDEABLE_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.hideable)
@@ -225,3 +237,46 @@ export function navLock(key: string, access: NavAccess): NavLock {
 
 /** The pages an owner can still open while the menu is offline (an ended package past its grace days). */
 export const OPEN_WHILE_OFFLINE: readonly string[] = ['package', 'account']
+
+/** A tab in the phone's bottom bar: the page it opens and the pages it stands for. */
+export type PhoneTab = {
+  key: string
+  labelKey: NavLabelKey
+  icon: TablerIcon
+  /** The pages that light this tab up (Menu: its categories and dishes). */
+  covers: readonly string[]
+}
+
+/**
+ * The four tabs at the bottom of a phone: Home, Menu, the orders (or, for a
+ * restaurant that takes none, its analytics, else its QR code), and More,
+ * which holds every other section. A tab only names a section this owner
+ * has: one the package lacks or the owner switched off gives its place to
+ * the next.
+ */
+export function phoneTabs(access: NavAccess, off: readonly string[]): PhoneTab[] {
+  const shown = (key: string) => {
+    const item = NAV_ITEMS.find((candidate) => candidate.key === key)!
+    return !isNavItemHidden(key, off) && isOnPlan(item, access.plan)
+  }
+  const third = ['orders', 'table-orders', 'analytics'].find(shown) ?? 'qr'
+  const thirdItem = NAV_ITEMS.find((item) => item.key === third)!
+  const ordersCover = ['orders', 'table-orders'].filter(shown)
+
+  return [
+    { key: 'overview', labelKey: 'nav.home', icon: IconHome, covers: ['overview'] },
+    { key: 'dishes', labelKey: 'nav.menu', icon: IconBowlSpoon, covers: ['dishes', 'categories'] },
+    {
+      key: third,
+      labelKey: thirdItem.labelKey,
+      icon: thirdItem.icon,
+      covers: third === 'orders' || third === 'table-orders' ? ordersCover : [third],
+    },
+    { key: 'more', labelKey: 'nav.more', icon: IconLayoutGrid, covers: ['more'] },
+  ]
+}
+
+/** The tab a page belongs to on a phone: its own, or More for every other section. */
+export function phoneTabOf(key: string, tabs: readonly PhoneTab[]): string {
+  return tabs.find((tab) => tab.covers.includes(key))?.key ?? 'more'
+}

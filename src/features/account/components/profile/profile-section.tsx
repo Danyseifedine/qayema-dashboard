@@ -3,8 +3,8 @@ import { IconAt, IconMail, IconUserCircle } from '@tabler/icons-react'
 import { useEffect, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Form, FormActions, FormSection, TextField } from '@/shared/components/forms'
-import { Alert, Button } from '@/shared/components/ui'
+import { Form, FormActions, TextField } from '@/shared/components/forms'
+import { Alert, Button, SectionCard } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSaveProfile } from '@/features/account/hooks/use-account'
 import {
@@ -48,13 +48,20 @@ export function ProfileSection({ name, email, username }: ProfileSectionProps) {
 
   return (
     <Form onSubmit={onSubmit}>
-      <FormSection title={t('profile.title')} description={t('profile.description')}>
+      <SectionCard
+        icon={<IconUserCircle className="size-[18px]" stroke={1.8} />}
+        picture="/assets/images/dashboard/more/profile.webp"
+        bleed={false}
+        title={t('profile.title')}
+        description={t('profile.description')}
+      >
         {formError ? <Alert variant="error">{formError}</Alert> : null}
 
         <TextField
           control={form.control}
           name="name"
           label={t('profile.nameLabel')}
+          placeholder={t('profile.namePlaceholder')}
           required
           leadingIcon={<IconUserCircle />}
           maxLength={100}
@@ -78,12 +85,12 @@ export function ProfileSection({ name, email, username }: ProfileSectionProps) {
           />
         ) : null}
 
-        <FormActions>
+        <FormActions className="pt-0">
           <Button type="submit" loading={save.isPending} disabled={!form.formState.isDirty}>
             {t('profile.save')}
           </Button>
         </FormActions>
-      </FormSection>
+      </SectionCard>
     </Form>
   )
 }
@@ -101,8 +108,8 @@ function SignInName({
   value: string
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[13px] font-medium">{label}</span>
+    <div className="flex flex-col gap-2">
+      <span className="label-caps text-[var(--muted)]">{label}</span>
       <p className="force-ltr flex items-center gap-2 rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--field)] px-3.5 py-2.5 text-[14px] text-[var(--muted)]">
         {icon}
         {value}

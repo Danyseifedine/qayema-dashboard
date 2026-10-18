@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next'
 import { DesignSettingsCard } from '@/features/appearance/components/design/design-settings-card'
 import { FontsCard } from '@/features/appearance/components/fonts/fonts-card'
 import {
@@ -6,7 +5,7 @@ import {
   useSaveDesignSettings,
   useSaveFont,
 } from '@/features/appearance/hooks/use-appearance'
-import { ErrorState } from '@/shared/components/feedback'
+import { ErrorState, Skeleton } from '@/shared/components/feedback'
 import type { Locale } from '@/shared/constants/locales'
 import { translated, type TranslatableValue } from '@/shared/utils/string/translated'
 
@@ -21,7 +20,6 @@ export type AppearancePageProps = {
  * design.
  */
 export function AppearancePage({ locale }: AppearancePageProps) {
-  const { t } = useTranslation('appearance')
   const page = useAppearance()
   const saveSettings = useSaveDesignSettings()
   const saveFont = useSaveFont()
@@ -30,7 +28,7 @@ export function AppearancePage({ locale }: AppearancePageProps) {
     return (
       <div className="flex flex-1 flex-col gap-4">
         {Array.from({ length: 2 }, (_, index) => (
-          <div key={index} className="h-48 animate-pulse rounded-[14px] bg-[var(--hover-wash)]" />
+          <Skeleton key={index} className="h-48" />
         ))}
       </div>
     )
@@ -48,11 +46,6 @@ export function AppearancePage({ locale }: AppearancePageProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
-        <p className="mt-1 text-[13px] text-[var(--muted)]">{t('page.description')}</p>
-      </div>
-
       <DesignSettingsCard
         designName={designName.text}
         settings={page.data.settings}

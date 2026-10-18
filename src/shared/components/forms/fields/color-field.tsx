@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { Input } from '@/shared/components/ui'
 import { Field } from '@/shared/components/forms/layout/field'
+import { cn } from '@/shared/utils/dom/cn'
 
 const HEX = /^#[0-9a-fA-F]{6}$/
 
@@ -12,6 +13,11 @@ export type ColorFieldProps<T extends FieldValues> = {
   label: string
   /** A small control beside the label, e.g. a reset. */
   action?: ReactNode
+  /**
+   * `inline`: the label above, the swatch beside the text. `tile`: a large
+   * swatch beside the label, the text under both, for a colour on its own panel.
+   */
+  layout?: 'inline' | 'tile'
   className?: string
 }
 
@@ -27,6 +33,7 @@ export function ColorField<T extends FieldValues>({
   name,
   label,
   action,
+  layout = 'inline',
   className,
 }: ColorFieldProps<T>) {
   const { t } = useTranslation()
@@ -38,22 +45,36 @@ export function ColorField<T extends FieldValues>({
 
   const commit = (next: string) => field.onChange(next.toUpperCase())
 
+  const picker = (
+    <input
+      type="color"
+      value={value.toLowerCase()}
+      onChange={(event) => commit(event.target.value)}
+      aria-label={t('colorField.picker', { label })}
+      className={cn(
+        'shrink-0 cursor-pointer border-[0.5px] border-[var(--line)] bg-[var(--surface)] [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0',
+        layout === 'tile'
+          ? 'size-9 rounded-[9px] p-0 sm:size-11 [&::-moz-color-swatch]:rounded-[9px] [&::-webkit-color-swatch]:rounded-[9px]'
+          : 'size-10 rounded-[var(--radius-control)] p-1 [&::-moz-color-swatch]:rounded-[6px] [&::-webkit-color-swatch]:rounded-[6px]',
+      )}
+    />
+  )
+
   return (
-    <Field label={label} action={action} error={fieldState.error?.message} className={className}>
-      {({ id, describedBy, invalid }) => (
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={value.toLowerCase()}
-            onChange={(event) => commit(event.target.value)}
-            aria-label={t('colorField.picker', { label })}
-            className="size-11 shrink-0 cursor-pointer rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-1 [&::-moz-color-swatch]:rounded-[6px] [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-[6px] [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
-          />
+    <Field
+      label={layout === 'inline' ? label : undefined}
+      action={layout === 'inline' ? action : undefined}
+      error={fieldState.error?.message}
+      className={className}
+    >
+      {({ id, describedBy, invalid }) => {
+        const text = (
           <Input
             id={id}
             name={field.name}
             ref={field.ref}
             value={typing ?? value}
+            placeholder="#000000"
             onFocus={() => setTyping(value)}
             onChange={(event) => {
               const next = event.target.value.trim()
@@ -71,11 +92,33 @@ export function ColorField<T extends FieldValues>({
             aria-describedby={describedBy}
             aria-invalid={invalid || undefined}
             tone={invalid ? 'error' : 'default'}
-            shellClassName="min-w-0 flex-1"
-            className="font-mono uppercase"
+            shellClassName={layout === 'tile' ? 'w-full' : 'min-w-0 flex-1'}
+            // Compact on a tile: the swatch is what the eye goes to.
+            className={cn('font-mono uppercase', layout === 'tile' && 'py-2 text-[13px]')}
           />
-        </div>
-      )}
+        )
+
+        return layout === 'tile' ? (
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center gap-2.5">
+              {picker}
+              <label
+                htmlFor={id}
+                className="min-w-0 flex-1 text-[12.5px] leading-tight font-medium sm:text-[13.5px]"
+              >
+                {label}
+              </label>
+              {action}
+            </div>
+            {text}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            {picker}
+            {text}
+          </div>
+        )
+      }}
     </Field>
   )
 }

@@ -493,7 +493,7 @@ test.describe('public menu', () => {
     // Whether it was sent and served happens in WhatsApp, so the Orders page
     // says so instead of listing it.
     await page.goto(`${DASHBOARD_URL}/orders`)
-    await expect(page.getByText('Your orders go to WhatsApp')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Your orders go to WhatsApp' })).toBeVisible()
     await expect(page.getByRole('article')).toHaveCount(0)
 
     // And the guest's cart was emptied once the order went through.

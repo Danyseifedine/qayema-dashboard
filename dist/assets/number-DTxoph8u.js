@@ -1,1 +1,0 @@
-function e(e,t){return new Intl.NumberFormat(`${t}-u-nu-latn`).format(e)}export{e as t};

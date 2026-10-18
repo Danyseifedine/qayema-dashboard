@@ -41,7 +41,7 @@ export function PackageCard({ pkg, previous, current, locale, onRequest }: Packa
   return (
     <article
       className={cn(
-        'relative flex flex-col rounded-[14px] border-[0.5px] bg-[var(--surface)] p-4',
+        'relative flex flex-col rounded-card border-[0.5px] bg-[var(--surface)] p-4',
         current
           ? 'border-gold shadow-[0_0_0_1px_var(--color-gold)]'
           : pkg.is_featured

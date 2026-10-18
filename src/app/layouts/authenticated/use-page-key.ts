@@ -15,6 +15,17 @@ function pathOf(key: string): string {
 }
 
 /**
+ * Keeps the page as tall as it is while the next one draws: a page still
+ * loading is short, and the browser would cut the scroll to its end at once
+ * instead of letting it glide up from where the owner was.
+ */
+function holdHeight() {
+  if (window.scrollY === 0) return
+  const root = document.documentElement
+  root.style.minHeight = `${root.scrollHeight}px`
+}
+
+/**
  * Which page is open, kept in the URL: each nav key is a path
  * (`/categories`), so a refresh or a shared link opens the same page and the
  * browser's back and forward buttons move between pages.
@@ -31,8 +42,39 @@ export function usePageKey(landing: string) {
     }
   }, [key])
 
+  // Every page opens at its top, gliding there from wherever the last one
+  // was left, whether it was chosen or reached with back. The browser's own
+  // restoring would jump to an old offset instead, so it is switched off.
   useEffect(() => {
-    const onPop = () => setKey(pageKeyFromPath(window.location.pathname) ?? landing)
+    window.history.scrollRestoration = 'manual'
+  }, [])
+
+  useEffect(() => {
+    const release = () => {
+      document.documentElement.style.removeProperty('min-height')
+    }
+    if (window.scrollY === 0) {
+      release()
+      return
+    }
+
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' })
+    // The height is let go once the glide ends; a browser without the event
+    // lets it go after a second, longer than any glide.
+    window.addEventListener('scrollend', release, { once: true })
+    const fallback = window.setTimeout(release, 1000)
+    return () => {
+      window.removeEventListener('scrollend', release)
+      window.clearTimeout(fallback)
+    }
+  }, [key])
+
+  useEffect(() => {
+    const onPop = () => {
+      holdHeight()
+      setKey(pageKeyFromPath(window.location.pathname) ?? landing)
+    }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [landing])
@@ -40,6 +82,7 @@ export function usePageKey(landing: string) {
   /** `replace` swaps the current history entry, for a page handed over rather than chosen. */
   const open = useCallback((next: string, { replace = false } = {}) => {
     if (window.location.pathname !== pathOf(next)) {
+      holdHeight()
       window.history[replace ? 'replaceState' : 'pushState'](null, '', pathOf(next))
     }
     setKey(next)

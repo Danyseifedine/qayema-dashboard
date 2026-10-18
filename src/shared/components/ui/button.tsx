@@ -21,7 +21,7 @@ const button = cva(
     // never be shown.
     'enabled:active:translate-y-px',
     'disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress',
-    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+    'focus-ring',
   ],
   {
     variants: {
@@ -46,7 +46,12 @@ const button = cva(
         /** Small actions beside a field (the writing help). */
         xs: 'h-7 gap-1.5 px-2.5 text-[12.5px]',
         sm: 'h-9 px-3.5 text-[13px]',
-        md: 'h-11 px-5 text-[14px]',
+        /**
+         * As tall as a field: the same padding, line and hairline border as
+         * `controlClass` in its shell, so the two round to the same height
+         * on every screen and a row of both lines up.
+         */
+        md: 'px-5 py-2.5 text-[14px] leading-5',
         lg: 'h-[50px] px-6 text-[14.5px]',
         icon: 'size-10 px-0',
       },

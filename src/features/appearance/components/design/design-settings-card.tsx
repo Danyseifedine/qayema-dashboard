@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconRotate } from '@tabler/icons-react'
+import { IconAdjustmentsHorizontal, IconCheck, IconPalette, IconRotate } from '@tabler/icons-react'
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { useForm, useWatch, type UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -13,17 +13,22 @@ import {
   ColorField,
   Form,
   FormActions,
-  FormSection,
   SwitchField,
   TextField,
 } from '@/shared/components/forms'
-import { Button, HelperText } from '@/shared/components/ui'
+import { Button, HelperText, SectionCard } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { MIN_CONTRAST, contrast } from '@/shared/utils/color/contrast'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated, type TranslatableValue } from '@/shared/utils/string/translated'
 
 const HEX = /^#[0-9a-fA-F]{6}$/
+
+/** The photos behind each card's title. */
+const PICTURES = {
+  colors: '/assets/images/dashboard/preference/colors.webp',
+  options: '/assets/images/dashboard/preference/options.webp',
+} as const
 
 export type DesignSettingsCardProps = {
   /** The design in use, in the reader's language. */
@@ -118,29 +123,45 @@ export function DesignSettingsCard({
 
   if (settings.length === 0) {
     return (
-      <FormSection title={designName}>
-        <p className="py-2 text-[13px] text-[var(--muted)]">
-          {t('settings.none', { design: designName })}
-        </p>
-      </FormSection>
+      <SectionCard
+        icon={<IconPalette className="size-[18px]" stroke={1.8} />}
+        title={designName}
+        description={t('settings.none', { design: designName })}
+      />
     )
   }
 
   return (
-    <FormSection title={designName} description={t('settings.description', { design: designName })}>
-      <Form onSubmit={onSubmit}>
-        {colors.length > 0 ? (
-          <Group title={t('settings.colorsTitle')}>
-            {colors.map((setting) => (
-              <Tile key={setting.key}>
+    <Form onSubmit={onSubmit} className="gap-4">
+      {colors.length > 0 ? (
+        <SectionCard
+          icon={<IconPalette className="size-[18px]" stroke={1.8} />}
+          picture={PICTURES.colors}
+          title={t('settings.colorsTitle')}
+          description={t('settings.colorsDescription', { design: designName })}
+        >
+          <Tiles pairs>
+            {colors.map((setting, at) => (
+              <Tile
+                key={setting.key}
+                // An odd one out at the end takes the row, not half of it.
+                span={colors.length % 2 === 1 && at === colors.length - 1}
+              >
                 <ColorSetting form={form} setting={setting} colors={colors} locale={locale} />
               </Tile>
             ))}
-          </Group>
-        ) : null}
+          </Tiles>
+        </SectionCard>
+      ) : null}
 
-        {others.length > 0 ? (
-          <Group title={t('settings.optionsTitle')}>
+      {others.length > 0 ? (
+        <SectionCard
+          icon={<IconAdjustmentsHorizontal className="size-[18px]" stroke={1.8} />}
+          picture={PICTURES.options}
+          title={t('settings.optionsTitle')}
+          description={t('settings.optionsDescription')}
+        >
+          <Tiles>
             {others.map((setting) => {
               const name = `settings.${setting.key}` as const
               const label = labelOf(setting, locale)
@@ -177,39 +198,74 @@ export function DesignSettingsCard({
                 </Tile>
               )
             })}
-          </Group>
-        ) : null}
+          </Tiles>
+        </SectionCard>
+      ) : null}
 
-        <FormActions align="between">
-          <span className="text-[12.5px] text-[var(--muted)]">
-            {dirty ? t('settings.unsaved') : t('settings.saved')}
-          </span>
-          <Button type="submit" loading={saving} disabled={!dirty}>
+      {/* Quiet while nothing changed; a gold bar with Save once something did. */}
+      {dirty || saving ? (
+        <FormActions
+          align="between"
+          className="rounded-tile border-[0.5px] border-[var(--accent-border)] bg-accent-wash p-2.5 ps-3.5"
+        >
+          <span className="text-[13px] font-medium text-accent">{t('settings.unsaved')}</span>
+          <Button type="submit" size="sm" loading={saving}>
             {t('settings.save')}
           </Button>
         </FormActions>
-      </Form>
-    </FormSection>
+      ) : (
+        <p className="-mt-1 flex items-center justify-end gap-1.5 text-[12px] text-[var(--muted)]">
+          <IconCheck aria-hidden className="size-3.5" />
+          {t('settings.saved')}
+        </p>
+      )}
+    </Form>
   )
 }
 
-/** A titled grid of tiles: colours in one, the rest in another. */
-function Group({ title, children }: { title: string; children: ReactNode }) {
+/**
+ * The tiles of a card, in one column until two fit: colours pair up as soon
+ * as half the card holds a swatch and a name (most phones), the rest from a
+ * tablet up; three on a wide screen. Measured on the card, not the screen.
+ */
+function Tiles({ pairs = false, children }: { pairs?: boolean; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-2.5 pt-2">
-      <h4 className="text-[13px] font-medium text-[var(--text)]">{title}</h4>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{children}</div>
-    </section>
+    <div className="@container">
+      <div
+        className={cn(
+          'grid grid-cols-1 gap-2.5 sm:gap-3',
+          // On the card's own width, so a wide card takes three.
+          pairs
+            ? '@min-[20rem]:grid-cols-2 @min-[48rem]:grid-cols-3'
+            : '@min-[30rem]:grid-cols-2 @min-[48rem]:grid-cols-3',
+        )}
+      >
+        {children}
+      </div>
+    </div>
   )
 }
 
-/** One setting on its own quiet panel, so each reads as a unit. */
-function Tile({ wide = false, children }: { wide?: boolean; children: ReactNode }) {
+/** One setting on its own dark panel inside the card, so each reads as a unit. */
+function Tile({
+  wide = false,
+  span = false,
+  children,
+}: {
+  /** The whole row, always: a choice or a line of text. */
+  wide?: boolean
+  /** The whole row while tiles go two a row: the odd colour out. */
+  span?: boolean
+  children: ReactNode
+}) {
   return (
     <div
       className={cn(
-        'flex flex-col rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--bg)] px-3.5 py-3',
-        wide && 'sm:col-span-2 xl:col-span-3',
+        'flex flex-col rounded-tile border-[0.5px] border-[var(--line)] p-3',
+        // Frosted: the card's photo shows through it, blurred.
+        'bg-[color-mix(in_srgb,var(--bg)_45%,transparent)] backdrop-blur-md',
+        wide && 'col-span-full',
+        span && '@min-[20rem]:col-span-2 @min-[48rem]:col-span-1',
       )}
     >
       {children}
@@ -250,15 +306,19 @@ function ColorSetting({
         control={form.control}
         name={`settings.${setting.key}`}
         label={name}
+        layout="tile"
         className="pt-0"
         action={
           setting.default !== null && !isDefault(setting, value) ? (
+            // An icon only: half a phone's width leaves no room for a word
+            // beside the colour's name.
             <Button
               type="button"
-              variant="link"
-              size="sm"
-              className="h-5 shrink-0 gap-1 px-0 text-[12px]"
+              variant="ghost"
+              size="icon"
+              className="size-7 shrink-0 text-accent"
               aria-label={t('settings.resetLabel', { name })}
+              title={t('settings.reset')}
               onClick={() =>
                 form.setValue(`settings.${setting.key}`, String(setting.default).toUpperCase(), {
                   shouldDirty: true,
@@ -266,8 +326,7 @@ function ColorSetting({
                 })
               }
             >
-              <IconRotate aria-hidden className="size-3" />
-              {t('settings.reset')}
+              <IconRotate aria-hidden className="size-3.5" />
             </Button>
           ) : null
         }

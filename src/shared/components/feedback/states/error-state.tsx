@@ -15,7 +15,7 @@ export function ErrorState({ description, onRetry }: ErrorStateProps) {
   return (
     <div
       role="alert"
-      className="flex flex-col items-center gap-3 rounded-[14px] border-[0.5px] border-status-danger-border bg-status-danger-wash px-6 py-10 text-center"
+      className="flex flex-col items-center gap-3 rounded-card border-[0.5px] border-status-danger-border bg-status-danger-wash px-6 py-10 text-center"
     >
       <IconAlertTriangle aria-hidden className="size-5 text-status-danger" />
       <div className="flex flex-col gap-1">

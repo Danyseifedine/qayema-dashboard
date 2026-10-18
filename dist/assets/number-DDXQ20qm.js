@@ -1,0 +1,1 @@
+function e(e,t){return new Intl.NumberFormat(`${t}-u-nu-latn`).format(e)}function t(e){return`${Math.round(e*100)}%`}export{t as n,e as t};

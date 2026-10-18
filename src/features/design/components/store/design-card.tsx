@@ -41,8 +41,9 @@ export function DesignCard({
   return (
     <article
       className={cn(
-        'flex flex-col overflow-hidden rounded-[14px] border-[0.5px] bg-[var(--surface)] transition-colors',
-        active ? 'border-gold shadow-[0_0_0_1px_var(--color-gold)]' : 'border-[var(--line)]',
+        'flex flex-col overflow-hidden glass-card rounded-card transition-shadow',
+        // The design in use wears a gold ring.
+        active && 'shadow-[0_0_0_1.5px_var(--color-gold),var(--card-lift)]',
       )}
     >
       <div className="relative">
@@ -51,16 +52,17 @@ export function DesignCard({
             src={template.thumbnail_url}
             alt=""
             loading="lazy"
-            className="aspect-[4/3] w-full bg-[var(--color-sand)] object-cover"
+            // Fades into the card, as the photos on the More cards do.
+            className="aspect-[4/3] w-full bg-[var(--color-sand)] object-cover [mask-image:linear-gradient(to_bottom,#000_72%,transparent)]"
           />
         ) : (
-          <div className="grid aspect-[4/3] w-full place-items-center bg-[var(--hover-wash)] text-[var(--faint)]">
+          <div className="grid aspect-[4/3] w-full place-items-center bg-[var(--hover-wash)] text-[var(--faint)] [mask-image:linear-gradient(to_bottom,#000_72%,transparent)]">
             <IconPhotoOff aria-hidden className="size-6" />
           </div>
         )}
 
         {template.is_premium ? (
-          <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-[var(--surface)] px-2.5 py-1 text-[11px] font-medium text-accent shadow-sm">
+          <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-gold ring-[0.5px] ring-white/15 backdrop-blur-sm">
             <IconCrown aria-hidden className="size-3" />
             {t('card.premium')}
           </span>
@@ -76,8 +78,8 @@ export function DesignCard({
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3.5">
-        <h3 className="text-[15px] font-medium tracking-[-0.012em]">
+      <div className="flex flex-1 flex-col gap-1 p-3.5 pt-1">
+        <h3 className="font-display text-[19px] leading-tight">
           {name.missing ? template.slug : name.text}
         </h3>
         {!description.missing ? (

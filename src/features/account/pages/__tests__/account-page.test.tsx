@@ -1,0 +1,244 @@
+import { screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import MockAdapter from 'axios-mock-adapter'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { api } from '@/lib/api/client'
+import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
+import { renderWithProviders } from '@/test/render-with-providers'
+import { AccountPage } from '@/features/account/pages/account-page'
+
+let mock: MockAdapter
+
+function user(
+  hasPassword: boolean,
+  signIn: { email: string | null; username: string | null } = {
+    email: 'owner@example.com',
+    username: null,
+  },
+) {
+  return {
+    id: 1,
+    name: 'Dany',
+    ...signIn,
+    role: 'menu_owner',
+    has_completed_onboarding: true,
+    has_password: hasPassword,
+    restaurant: null,
+  }
+}
+
+function stub(hasPassword = true, signIn?: Parameters<typeof user>[1]) {
+  mock.onGet('/api/user').reply(200, { data: user(hasPassword, signIn) })
+}
+
+describe('AccountPage', () => {
+  beforeEach(() => {
+    mock = new MockAdapter(api)
+    resetCsrfToken(api)
+    installCsrfInterceptor(api)
+    mock.onGet('/api/csrf-token').reply(200, { token: 'csrf' })
+  })
+
+  afterEach(() => {
+    mock.restore()
+    api.interceptors.request.clear()
+    api.interceptors.response.clear()
+    resetCsrfToken(api)
+  })
+
+  it('shows the owner their name, with the email locked', async () => {
+    stub()
+    renderWithProviders(<AccountPage />)
+
+    expect(await screen.findByLabelText(/^Owner name/)).toHaveValue('Dany')
+    // The email is the identity, so it is text rather than an input.
+    expect(screen.getByText('owner@example.com')).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^Email/)).not.toBeInTheDocument()
+  })
+
+  it('shows an account made with a username its username, and no email', async () => {
+    stub(true, { email: null, username: 'beit.rami' })
+    renderWithProviders(<AccountPage />)
+
+    expect(await screen.findByText('beit.rami')).toBeInTheDocument()
+    expect(screen.getByText('Username')).toBeInTheDocument()
+    expect(screen.queryByText('Email')).not.toBeInTheDocument()
+  })
+
+  it('saves a new name', async () => {
+    stub()
+    mock.onPatch('/api/account').reply(200, { data: { ...user(true), name: 'Dany S' } })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage />)
+
+    await owner.type(await screen.findByLabelText(/^Owner name/), ' S')
+    await owner.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      const patch = mock.history.patch.find((r) => r.url === '/api/account')
+      expect(patch).toBeDefined()
+      expect(JSON.parse(patch!.data as string)).toEqual({ name: 'Dany S' })
+    })
+    expect(await screen.findByText('Profile saved')).toBeInTheDocument()
+  })
+
+  it('asks for the current password when there is one', async () => {
+    stub(true)
+    renderWithProviders(<AccountPage />)
+
+    expect(await screen.findByLabelText(/^Current password/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Change password' })).toBeInTheDocument()
+  })
+
+  it('asks for no current password on a Google-only account', async () => {
+    stub(false)
+    renderWithProviders(<AccountPage />)
+
+    expect(await screen.findByText('Set a password')).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^Current password/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Set password' })).toBeInTheDocument()
+  })
+
+  it('refuses two passwords that do not match, without asking the server', async () => {
+    stub(true)
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage />)
+
+    await owner.type(await screen.findByLabelText(/^Current password/), 'old-password')
+    await owner.type(screen.getByLabelText(/^New password/), 'a-long-new-one')
+    await owner.type(screen.getByLabelText(/^Confirm password/), 'a-different-one')
+    await owner.click(screen.getByRole('button', { name: 'Change password' }))
+
+    expect(await screen.findByText('The two passwords do not match.')).toBeInTheDocument()
+    expect(mock.history.put).toHaveLength(0)
+  })
+
+  it('changes the password and clears the fields afterwards', async () => {
+    stub(true)
+    mock.onPut('/api/password').reply(200, { message: 'Done.', has_password: true })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage />)
+
+    await owner.type(await screen.findByLabelText(/^Current password/), 'old-password')
+    await owner.type(screen.getByLabelText(/^New password/), 'a-long-new-one')
+    await owner.type(screen.getByLabelText(/^Confirm password/), 'a-long-new-one')
+    await owner.click(screen.getByRole('button', { name: 'Change password' }))
+
+    await waitFor(() => {
+      const put = mock.history.put.find((r) => r.url === '/api/password')
+      expect(put).toBeDefined()
+      expect(JSON.parse(put!.data as string)).toEqual({
+        current_password: 'old-password',
+        password: 'a-long-new-one',
+        password_confirmation: 'a-long-new-one',
+      })
+    })
+
+    // A typed password must never be left sitting in the form.
+    await waitFor(() => expect(screen.getByLabelText(/^New password/)).toHaveValue(''))
+    expect(screen.getByLabelText(/^Current password/)).toHaveValue('')
+  })
+
+  it('reports a wrong current password on its own field', async () => {
+    stub(true)
+    mock.onPut('/api/password').reply(422, {
+      message: 'The given data was invalid.',
+      code: 'validation_failed',
+      errors: { current_password: ['The current password is incorrect.'] },
+    })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage />)
+
+    await owner.type(await screen.findByLabelText(/^Current password/), 'wrong-password')
+    await owner.type(screen.getByLabelText(/^New password/), 'a-long-new-one')
+    await owner.type(screen.getByLabelText(/^Confirm password/), 'a-long-new-one')
+    await owner.click(screen.getByRole('button', { name: 'Change password' }))
+
+    expect(await screen.findByText('The current password is incorrect.')).toBeInTheDocument()
+  })
+
+  it('shows an error with a retry when the account cannot load', async () => {
+    mock.onGet('/api/user').replyOnce(500, { message: 'Server down', code: 'server_error' })
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage />)
+
+    expect(await screen.findByText('Server down')).toBeInTheDocument()
+
+    stub()
+    await owner.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByLabelText(/^Owner name/)).toHaveValue('Dany')
+  })
+
+  it('tells the owner when the name could not be saved', async () => {
+    stub()
+    mock.onPatch('/api/account').reply(500, { message: 'Server down', code: 'server_error' })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage />)
+
+    await owner.type(await screen.findByLabelText(/^Owner name/), ' S')
+    await owner.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Could not save your profile')).toBeInTheDocument()
+    // The form keeps a banner too, so the reason stays on screen after the toast.
+    expect(await screen.findByRole('alert')).toHaveTextContent('Server down')
+  })
+
+  it('sets a first password without sending a current one', async () => {
+    stub(false)
+    mock.onPut('/api/password').reply(200, { message: 'Done.', has_password: true })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage />)
+
+    await owner.type(await screen.findByLabelText(/^Password/), 'a-long-new-one')
+    await owner.type(screen.getByLabelText(/^Confirm password/), 'a-long-new-one')
+    await owner.click(screen.getByRole('button', { name: 'Set password' }))
+
+    await waitFor(() => {
+      const put = mock.history.put.find((r) => r.url === '/api/password')
+      expect(put).toBeDefined()
+      expect(JSON.parse(put!.data as string)).toEqual({
+        password: 'a-long-new-one',
+        password_confirmation: 'a-long-new-one',
+      })
+    })
+    expect(await screen.findByText('Password set')).toBeInTheDocument()
+  })
+
+  it('says a first password could not be set', async () => {
+    stub(false)
+    mock.onPut('/api/password').reply(500, { message: 'Server down', code: 'server_error' })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage />)
+
+    await owner.type(await screen.findByLabelText(/^Password/), 'a-long-new-one')
+    await owner.type(screen.getByLabelText(/^Confirm password/), 'a-long-new-one')
+    await owner.click(screen.getByRole('button', { name: 'Set password' }))
+
+    expect(await screen.findByText('Could not set a password')).toBeInTheDocument()
+  })
+
+  it('says a password could not be changed', async () => {
+    stub(true)
+    mock.onPut('/api/password').reply(500, { message: 'Server down', code: 'server_error' })
+
+    const owner = userEvent.setup()
+    renderWithProviders(<AccountPage />)
+
+    await owner.type(await screen.findByLabelText(/^Current password/), 'old-password')
+    await owner.type(screen.getByLabelText(/^New password/), 'a-long-new-one')
+    await owner.type(screen.getByLabelText(/^Confirm password/), 'a-long-new-one')
+    // Earlier tests' toasts can still be on the shared toaster, so count the new one.
+    const before = screen.queryAllByText('Could not change your password').length
+    await owner.click(screen.getByRole('button', { name: 'Change password' }))
+
+    await waitFor(() =>
+      expect(screen.queryAllByText('Could not change your password')).toHaveLength(before + 1),
+    )
+  })
+})

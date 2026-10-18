@@ -23,7 +23,9 @@ export type CategoryCardProps = {
 
 /**
  * One category, as a card rather than a table row: on a phone a row of cells
- * forces a horizontal scroll, while a card stacks and stays tappable.
+ * forces a horizontal scroll, while a card stacks and stays tappable. Laid
+ * out like a social link's card: what it is, then its actions behind a
+ * hairline.
  */
 export const CategoryCard = memo(function CategoryCard({
   category,
@@ -38,23 +40,21 @@ export const CategoryCard = memo(function CategoryCard({
   const count = category.dishes_count ?? 0
 
   return (
-    <div
-      className={cn(
-        'flex items-center gap-1 rounded-[14px] border-[0.5px] border-[var(--line)]',
-        'bg-[var(--surface)] ps-1 pe-2 transition-colors hover:border-[var(--line-strong)]',
-      )}
-    >
+    <div className="flex items-center gap-1 glass-card rounded-card py-2.5 ps-1 pe-2 sm:pe-2.5">
       {handle}
 
       <button
         type="button"
         onClick={() => onEdit(category)}
-        className="min-w-0 flex-1 py-3 text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]"
+        className="min-w-0 flex-1 py-1 ps-1 text-start focus-ring"
       >
         <span className="flex items-center gap-2">
+          {/* The text's own direction: an English name on an Arabic page
+              truncates at its end, not its start. */}
           <span
+            dir="auto"
             className={cn(
-              'truncate text-[15px] font-medium tracking-[-0.012em]',
+              'truncate text-[14.5px] font-medium tracking-[-0.012em]',
               name.missing && 'text-[var(--faint)] italic',
             )}
           >
@@ -70,15 +70,20 @@ export const CategoryCard = memo(function CategoryCard({
           ) : null}
         </span>
         {!description.missing ? (
-          <span className="mt-0.5 block truncate text-[12.5px] text-[var(--muted)]">
+          <span
+            dir="auto"
+            className="mt-0.5 block text-[12px] leading-snug break-words text-[var(--muted)]"
+          >
             {description.text}
           </span>
         ) : null}
-        <span className="mt-0.5 block text-[12px] text-[var(--faint)]">
+        <span className="mt-0.5 block text-[11.5px] text-[var(--faint)]">
           {t('categoryCard.dishCount', { count })}
         </span>
       </button>
 
+      {/* The actions apart from what the category is, behind a hairline. */}
+      <span aria-hidden className="ms-1 h-9 w-px shrink-0 bg-[var(--line)] sm:ms-2" />
       <Button
         variant="ghost"
         size="icon"
@@ -87,7 +92,7 @@ export const CategoryCard = memo(function CategoryCard({
           name.text ? t('categoryCard.edit', { name: name.text }) : t('categoryCard.editUnnamed')
         }
       >
-        <IconPencil aria-hidden className="size-4" />
+        <IconPencil aria-hidden className="size-[18px]" stroke={1.7} />
       </Button>
       <Button
         variant="ghost"
@@ -100,7 +105,7 @@ export const CategoryCard = memo(function CategoryCard({
         }
         className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
       >
-        <IconTrash aria-hidden className="size-4" />
+        <IconTrash aria-hidden className="size-[18px]" stroke={1.7} />
       </Button>
     </div>
   )

@@ -39,21 +39,30 @@ export const TableCard = memo(function TableCard({
   const { t } = useTranslation('tables')
 
   return (
-    <article className="flex min-w-0 flex-col items-center gap-3 rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-3 transition-colors hover:border-[var(--line-strong)] sm:p-4">
+    <article className="flex min-w-0 flex-col items-center gap-3 glass-card rounded-card p-3 sm:p-4">
+      {/* The code as it will print, on its own colour. */}
       <div
-        className="w-full max-w-[132px] rounded-[12px] p-2.5"
+        className="w-full rounded-tile p-1.5"
         style={{ background: options.backgroundOptions?.color ?? '#FFFFFF' }}
       >
         <TableQr
           options={{ ...options, data: table.url }}
-          size={112}
+          size={240}
+          fill
           label={t('card.qrLabel', { name: table.name })}
         />
       </div>
-      <h3 className="w-full truncate text-center text-[15px] font-semibold" title={table.name}>
-        {table.name}
-      </h3>
-      <div className="flex flex-wrap justify-center gap-0.5">
+      <div className="flex w-full flex-col items-center gap-1.5">
+        <h3
+          className="w-full truncate text-center font-display text-[20px] leading-tight"
+          title={table.name}
+        >
+          {table.name}
+        </h3>
+        <span aria-hidden className="h-px w-6 bg-gold" />
+      </div>
+      {/* One even row of five, whatever the card's width. */}
+      <div className="grid w-full grid-cols-5 gap-1">
         <Action
           icon={IconExternalLink}
           label={t('card.open')}
@@ -63,6 +72,9 @@ export const TableCard = memo(function TableCard({
         <Action icon={IconPrinter} label={t('card.print')} onClick={() => onPrint(table)} />
         <Action icon={IconPencil} label={t('card.rename')} onClick={() => onRename(table)} />
         <Action icon={IconRefresh} label={t('card.newCode')} onClick={() => onNewCode(table)} />
+      </div>
+      {/* Removing stands apart, under a hairline: it cannot be taken back. */}
+      <div className="grid w-full grid-cols-5 gap-1 border-t-[0.5px] border-[var(--line)] pt-3 [&>*]:col-start-3">
         <Action icon={IconTrash} label={t('card.remove')} danger onClick={() => onRemove(table)} />
       </div>
     </article>
@@ -98,11 +110,13 @@ function Action({
       aria-label={label}
       title={label}
       className={cn(
-        'size-8 text-[var(--muted)] hover:text-[var(--text)]',
-        danger && 'hover:bg-status-danger-wash hover:text-status-danger',
+        'aspect-square h-auto w-full max-w-9 justify-self-center rounded-tile border-[0.5px] px-0',
+        danger
+          ? 'border-status-danger-border bg-status-danger-wash text-status-danger hover:brightness-110'
+          : 'border-[var(--line)] bg-[color-mix(in_srgb,var(--bg)_45%,transparent)] text-[var(--text)] hover:bg-[var(--hover-wash)]',
       )}
     >
-      <Icon aria-hidden className="size-4" />
+      <Icon aria-hidden className="size-3.5 sm:size-4" />
     </Button>
   )
 }

@@ -34,8 +34,8 @@ export function PlanLockedPage({ item, locale, onOpenPackage, children }: PlanLo
   const key = isLockable(item.key) ? item.key : null
 
   return (
+    // The section's name is the topbar's heading.
     <div className="flex flex-col gap-4">
-      <h2 className="font-display text-[19px] leading-tight">{t(item.labelKey)}</h2>
       <LockedState
         icon={item.icon}
         title={key ? t(`planLocked.${key}.title`) : t(item.labelKey)}

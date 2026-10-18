@@ -2,11 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
 import {
   ComboboxField,
   FieldGroup,
   Form,
-  FormActions,
   PriceField,
   SwitchField,
   TranslatableTextField,
@@ -64,7 +64,6 @@ export function DishDialog({
   onOpenCategories,
 }: DishDialogProps) {
   const { t } = useTranslation('menu')
-  const ref = useRef<HTMLDialogElement>(null)
   const save = useSaveDish(dish?.id ?? null)
   const languages = useMenuLanguages()
   const show = useDishChoices()
@@ -145,13 +144,6 @@ export function DishDialog({
     form.setValue('category_id', defaultCategoryId ?? firstCategoryId, { shouldValidate: false })
   }, [open, firstCategoryId, defaultCategoryId, form])
 
-  useEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
-    if (open && !dialog.open) dialog.showModal()
-    if (!open && dialog.open) dialog.close()
-  }, [open])
-
   const once = useSubmitOnce()
 
   const onSubmit = form.handleSubmit((values) =>
@@ -184,28 +176,19 @@ export function DishDialog({
   })
 
   return (
-    <dialog
-      ref={ref}
-      onCancel={(event) => {
-        event.preventDefault()
-        if (!save.isPending) onClose()
-      }}
-      onClick={(event) => {
-        if (event.target === ref.current && !save.isPending) onClose()
-      }}
+    <Modal
+      open={open}
+      onClose={onClose}
+      busy={save.isPending}
       className={cn(
-        'm-auto max-h-[90dvh] overflow-y-auto rounded-[16px] p-0',
+        'max-h-[90dvh] overflow-y-auto',
         // Variant and add-on rows want the room for a name and a price.
         withChoices ? 'w-[min(94vw,640px)]' : 'w-[min(94vw,560px)]',
-        'border-[0.5px] border-[var(--line)] bg-[var(--surface)] text-[var(--text)]',
-        'shadow-pop',
       )}
     >
       <Form onSubmit={onSubmit} className="gap-0">
         <div className="p-5 pb-0">
-          <h2 className="font-display text-[19px] leading-tight">
-            {dish ? t('dishDialog.titleEdit') : t('dishDialog.titleNew')}
-          </h2>
+          <ModalHeader title={dish ? t('dishDialog.titleEdit') : t('dishDialog.titleNew')} />
 
           {formError ? (
             <Alert variant="error" className="mt-3">
@@ -251,6 +234,7 @@ export function DishDialog({
             maxLength={2000}
             optionalText={t('shared.optional')}
             hint={t('dishDialog.ingredientsHint')}
+            placeholder={{ en: 'Lamb, rice, almonds, yoghurt', ar: 'لحم غنم، أرز، لوز، لبن' }}
           />
 
           <FieldGroup>
@@ -307,7 +291,7 @@ export function DishDialog({
           />
         </div>
 
-        <FormActions className="mt-4 border-t-[0.5px] border-[var(--line)] p-3.5">
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose} disabled={save.isPending}>
             {t('shared.cancel')}
           </Button>
@@ -319,8 +303,8 @@ export function DishDialog({
           >
             {dish ? t('dishDialog.save') : t('dishDialog.add')}
           </Button>
-        </FormActions>
+        </ModalFooter>
       </Form>
-    </dialog>
+    </Modal>
   )
 }

@@ -39,7 +39,7 @@ export function SidebarItem({
       className={cn(
         'group relative flex w-full items-center gap-3 rounded-[var(--radius-control)]',
         'text-[14px] transition-colors duration-200 [transition-timing-function:var(--ease-qayema)]',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+        'focus-ring',
         collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
         active
           ? 'bg-accent-wash font-medium text-accent'

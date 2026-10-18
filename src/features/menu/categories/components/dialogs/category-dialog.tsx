@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Form, FormActions, TranslatableTextField } from '@/shared/components/forms'
+import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
+import { Form, TranslatableTextField } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
-import { cn } from '@/shared/utils/dom/cn'
 import {
   categoryFormSchema,
   type Category,
@@ -34,7 +34,6 @@ function toFormValues(category: Category | null, languages: readonly string[]): 
 /** Create or edit a category. The name is needed in English; the description is optional. */
 export function CategoryDialog({ open, category, onClose }: CategoryDialogProps) {
   const { t } = useTranslation('menu')
-  const ref = useRef<HTMLDialogElement>(null)
   const save = useSaveCategory(category?.id ?? null)
   const languages = useMenuLanguages()
 
@@ -54,13 +53,6 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
     form.reset(toFormValues(category, languages))
   }, [open, category, languages, form, clearFormError])
 
-  useEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
-    if (open && !dialog.open) dialog.showModal()
-    if (!open && dialog.open) dialog.close()
-  }, [open])
-
   const once = useSubmitOnce()
 
   const onSubmit = form.handleSubmit((values) =>
@@ -75,25 +67,12 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
   )
 
   return (
-    <dialog
-      ref={ref}
-      onCancel={(event) => {
-        event.preventDefault()
-        if (!save.isPending) onClose()
-      }}
-      onClick={(event) => {
-        if (event.target === ref.current && !save.isPending) onClose()
-      }}
-      className={cn(
-        'm-auto w-[min(92vw,460px)] rounded-[16px] border-[0.5px] border-[var(--line)] p-0',
-        'bg-[var(--surface)] text-[var(--text)] shadow-pop',
-      )}
-    >
+    <Modal open={open} onClose={onClose} busy={save.isPending}>
       <Form onSubmit={onSubmit} className="gap-0">
         <div className="p-5 pb-0">
-          <h2 className="font-display text-[19px] leading-tight">
-            {category ? t('categoryDialog.titleEdit') : t('categoryDialog.titleNew')}
-          </h2>
+          <ModalHeader
+            title={category ? t('categoryDialog.titleEdit') : t('categoryDialog.titleNew')}
+          />
 
           {formError ? (
             <Alert variant="error" className="mt-3">
@@ -130,15 +109,15 @@ export function CategoryDialog({ open, category, onClose }: CategoryDialogProps)
           />
         </div>
 
-        <FormActions className="mt-4 border-t-[0.5px] border-[var(--line)] p-3.5">
+        <ModalFooter>
           <Button variant="ghost" onClick={onClose} disabled={save.isPending}>
             {t('shared.cancel')}
           </Button>
           <Button type="submit" loading={save.isPending}>
             {category ? t('categoryDialog.save') : t('categoryDialog.add')}
           </Button>
-        </FormActions>
+        </ModalFooter>
       </Form>
-    </dialog>
+    </Modal>
   )
 }

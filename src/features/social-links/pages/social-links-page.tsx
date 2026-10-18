@@ -1,10 +1,10 @@
 import { IconShare } from '@tabler/icons-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LimitNotice } from '@/shared/components/data-display/badges/limit-notice'
-import { ConfirmDialog, EmptyState, ErrorState } from '@/shared/components/feedback'
+import { LimitNotice } from '@/shared/components/data-display'
+import { ConfirmDialog, EmptyState, ErrorState, Skeleton } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
-import { SocialLinkDialog } from '@/features/social-links/components/form/social-link-dialog'
+import { SocialLinkDialog } from '@/features/social-links/components/dialogs/social-link-dialog'
 import { SocialLinkCard } from '@/features/social-links/components/list/social-link-card'
 import { useDeleteSocialLink, useSocialLinks } from '@/features/social-links/hooks/use-social-links'
 import {
@@ -48,15 +48,10 @@ export function SocialLinksPage() {
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <LimitNotice
-          label={t('page.limitLabel')}
-          used={links.data?.meta.used ?? 0}
-          limit={links.data?.meta.limit ?? null}
-          description={t('page.limitDescription')}
-        />
+        <LimitNotice used={links.data?.meta.used ?? 0} limit={links.data?.meta.limit ?? null} />
         <Button
-          size="sm"
-          leadingIcon={<IconShare className="size-4" />}
+          className="ms-auto"
+          leadingIcon={<IconShare className="size-[18px]" />}
           // Not before the list arrives: the dialog picks its platform from
           // the ones still free, and would otherwise start on a taken one.
           disabled={links.data === undefined || atLimit || allPlatformsUsed}
@@ -66,14 +61,13 @@ export function SocialLinksPage() {
         </Button>
       </div>
 
+      {/* With every platform used, Add is simply off: nothing to warn about. */}
       {atLimit && !allPlatformsUsed ? <Alert variant="warning">{t('page.atLimit')}</Alert> : null}
 
-      {allPlatformsUsed ? <Alert variant="info">{t('page.allPlatformsUsed')}</Alert> : null}
-
       {links.isPending ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {Array.from({ length: 2 }, (_, index) => (
-            <div key={index} className="h-16 animate-pulse rounded-[14px] bg-[var(--hover-wash)]" />
+            <Skeleton key={index} className="h-[82px]" />
           ))}
         </div>
       ) : links.isError ? (
@@ -84,7 +78,8 @@ export function SocialLinksPage() {
           icon={IconShare}
           title={t('page.emptyTitle')}
           description={t('page.emptyDescription', {
-            platforms: Object.values(PLATFORM_LABELS).join(', '),
+            // The best known few; "or wherever else" covers the rest.
+            platforms: Object.values(PLATFORM_LABELS).slice(0, 4).join(', '),
           })}
           action={
             <Button disabled={atLimit} onClick={() => setDialog({ open: true, link: null })}>
@@ -93,7 +88,7 @@ export function SocialLinksPage() {
           }
         />
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {list.map((link) => (
             <SocialLinkCard key={link.id} link={link} onEdit={openEdit} onDelete={confirmDelete} />
           ))}

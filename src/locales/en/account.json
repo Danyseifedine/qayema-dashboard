@@ -1,14 +1,13 @@
 {
   "page": {
-    "title": "Account",
     "description": "You, the person: your name and how you sign in. Nothing here reaches your menu.",
-    "editRestaurant": "Edit your restaurant instead",
     "loadFailed": "We could not load your account."
   },
   "profile": {
     "title": "You",
     "description": "Who you are. Not what your restaurant is called.",
-    "nameLabel": "Your name",
+    "nameLabel": "Owner name",
+    "namePlaceholder": "e.g. Rami Haddad",
     "nameHint": "Shown in the dashboard and on emails we send you. Guests never see it.",
     "emailLabel": "Email",
     "emailHint": "You sign in with this address, so it cannot be changed here.",
@@ -22,10 +21,14 @@
     "changeDescription": "Changing this signs out every other browser you stayed signed in on.",
     "setDescription": "You signed up with Google. Adding a password gives you a second way in.",
     "currentLabel": "Current password",
+    "currentPlaceholder": "Enter your current password",
     "newLabel": "New password",
+    "newPlaceholder": "Choose a new password",
     "passwordLabel": "Password",
+    "passwordPlaceholder": "Choose a password",
     "hint": "At least 8 characters.",
     "confirmLabel": "Confirm password",
+    "confirmPlaceholder": "Type the same password again",
     "changeSubmit": "Change password",
     "setSubmit": "Set password"
   },
@@ -39,9 +42,9 @@
     "passwordSetFailed": "Could not set a password"
   },
   "validation": {
-    "nameTooShort": "Your name must be at least 2 characters.",
-    "nameTooLong": "Your name may not be longer than 100 characters.",
-    "nameInvalidChars": "Your name contains characters that are not allowed.",
+    "nameTooShort": "The owner name must be at least 2 characters.",
+    "nameTooLong": "The owner name may not be longer than 100 characters.",
+    "nameInvalidChars": "The owner name contains characters that are not allowed.",
     "passwordTooShort_one": "Use at least {{count}} character.",
     "passwordTooShort_other": "Use at least {{count}} characters.",
     "passwordTooLong": "That password is too long.",

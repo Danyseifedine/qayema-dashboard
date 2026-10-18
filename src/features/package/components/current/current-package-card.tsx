@@ -42,6 +42,9 @@ export function CurrentPackageCard({
   }
   const name = nameOf(pkg.name, pkg.slug)
   const endingSoon = pkg.days_left !== null && pkg.days_left <= ENDING_SOON_DAYS
+  // What a request would ask for: this package again, or the one that ended.
+  const extendSlug = endingSoon ? pkg.slug : null
+  const renewSlug = lapsed?.slug ?? null
 
   const limitRows = [
     { id: 'dishes', label: t('current.dishes'), value: limits.dishes },
@@ -50,7 +53,7 @@ export function CurrentPackageCard({
   ]
 
   return (
-    <section className="flex flex-col gap-4 rounded-[14px] border-[0.5px] border-accent-border bg-accent-wash p-4 sm:p-5">
+    <section className="flex flex-col gap-4 rounded-card border-[0.5px] border-accent-border bg-accent-wash p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[12px] tracking-[0.08em] text-[var(--muted)] uppercase">
@@ -96,30 +99,30 @@ export function CurrentPackageCard({
         </div>
       </div>
 
-      {endingSoon && pkg.slug ? (
+      {extendSlug ? (
         <Alert variant="warning" title={t('current.endingSoon')}>
           <Button
             variant="secondary"
             size="sm"
             className="mt-2"
-            onClick={() => onAskFor(pkg.slug!)}
+            onClick={() => onAskFor(extendSlug)}
           >
             {t('current.extend')}
           </Button>
         </Alert>
       ) : null}
 
-      {lapsed?.slug ? (
+      {lapsed && renewSlug ? (
         <Alert
           variant={lapsed.offline ? 'error' : 'warning'}
           title={t('current.lapsedTitle', {
-            name: nameOf(lapsed.name, lapsed.slug),
+            name: nameOf(lapsed.name, renewSlug),
             date: lapsed.ended_at ? formatDate(lapsed.ended_at, locale) : '',
           })}
         >
           <p>
             {lapsed.offline || !lapsed.offline_at ? (
-              t('current.lapsedOffline', { name: nameOf(lapsed.name, lapsed.slug) })
+              t('current.lapsedOffline', { name: nameOf(lapsed.name, renewSlug) })
             ) : (
               <Trans
                 ns="package"
@@ -133,7 +136,7 @@ export function CurrentPackageCard({
             variant="secondary"
             size="sm"
             className="mt-2"
-            onClick={() => onAskFor(lapsed.slug!)}
+            onClick={() => onAskFor(renewSlug)}
           >
             {t('current.renew')}
           </Button>

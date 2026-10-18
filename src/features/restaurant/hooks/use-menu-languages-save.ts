@@ -15,7 +15,10 @@ import {
 
 /** The menu's languages, with what still has no name in the main one. */
 export function useMenuLanguagesState() {
-  return useQuery({ queryKey: restaurantKeys.languages(), queryFn: fetchMenuLanguages })
+  return useQuery<MenuLanguages, ApiError>({
+    queryKey: restaurantKeys.languages(),
+    queryFn: ({ signal }) => fetchMenuLanguages(signal),
+  })
 }
 
 /**

@@ -10,7 +10,7 @@ import {
   periodOf,
   splitTime,
   type Meridiem,
-} from '@/features/restaurant/components/hours/time-options'
+} from '@/features/restaurant/utils/time-options'
 
 const HOURS = Array.from({ length: 12 }, (_, index) => String(index + 1)).map((hour) => ({
   value: hour,
@@ -113,6 +113,7 @@ export function TimePicker({
             <Combobox
               options={minutes.map((value) => ({ value, label: value }))}
               value={minute}
+              placeholder="00"
               onChange={(value) => value && set({ minute: value })}
               searchable={false}
               size="sm"

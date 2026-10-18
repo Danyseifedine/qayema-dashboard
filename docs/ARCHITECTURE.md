@@ -104,17 +104,23 @@ qayema-dashboard/
     ├── app/
     │   ├── providers/               app-providers, query-provider, toast-provider
     │   └── layouts/authenticated/   authenticated-layout, nav-items (the sidebar table), use-page-key (the URL),
-    │       │                        plan-locked-page (a section the package lacks)
+    │       │                        more-page (the phone's More tab), plan-locked-page (a section the package
+    │       │                        lacks), menu-offline (page and grace-days banner), impersonation-banner
+    │       ├── bottom-tabs/         the phone's four tabs
     │       ├── sidebar/             sidebar, sidebar-group, sidebar-item
-    │       └── topbar/              topbar, user-menu, package-pill, language-switcher
+    │       └── topbar/              topbar (every page's heading), use-page-hero (its words), user-menu,
+    │                                package-pill, package-tier, language-switcher
     ├── shared/                      Used by more than one feature; knows nothing about features
-    │   ├── components/ui/           Primitives: button, input, switch, combobox, segmented, alert…
+    │   ├── components/ui/           Primitives: button, input, switch, combobox, segmented, alert,
+    │   │                            action-menu (the ⋮), filter-chips…
     │   ├── components/forms/        fields/ (text, price, color, choice…), layout/ (Form, FormSection, Field),
-    │   │                            translatable/ (TranslatableTextField, LocaleTabs), index.ts
-    │   ├── components/feedback/     dialogs/confirm, skeletons, states/{empty,error,error-boundary,locked}, toasts, index.ts
+    │   │                            translatable/ (TranslatableTextField, LocaleTabs, writing help), index.ts
+    │   ├── components/feedback/     dialogs/{modal,confirm-dialog}, skeletons/{skeleton,card-grid,page},
+    │   │                            states/{empty,picture-empty,error,error-boundary,locked,gold-notice},
+    │   │                            toasts/{toast,copy-with-toast}, index.ts
     │   ├── components/data-display/ badges/{limit-badge,limit-notice}, formatters/money, stats/stat-tile
     │   ├── constants/               countries, currencies, locales (UI languages), menu-languages
-    │   ├── hooks/                   use-api-form-errors
+    │   ├── hooks/                   use-api-form-errors, use-dismiss, use-submit-once, use-writing-help
     │   ├── types/                   api.ts
     │   └── utils/                   dom/cn, color/contrast, format/{money,change,date,number}, string/{menu-text,translated}
     ├── features/                    One folder per row of the vocabulary table (§3)
@@ -134,7 +140,7 @@ features/restaurant/
 ├── schemas/      restaurant.schema.ts                                        # response + form schemas
 ├── hooks/        restaurant-keys.ts, use-restaurant.ts, use-features.ts, …   # queries and mutations
 ├── components/   identity/ contact/ hours/ branding/                          # grouped by area
-├── pages/        restaurant-page.tsx, features-page.tsx (+ .test.tsx),        # what App.tsx renders
+├── pages/        restaurant-page.tsx, features-page.tsx, __tests__/,          # what App.tsx renders
 │                 index.ts (the pages, for App.tsx only)
 └── index.ts      the ONLY path other features may import from (never a page)
 ```
@@ -147,17 +153,18 @@ features/restaurant/
 - Mutations invalidate by key prefix, and use optimistic updates with rollback
   where the UX needs it (reorder, availability, the Features switches).
 - Components are grouped by area subfolder; adding a component is adding a
-  file. A file that is not a component (`qr/utils/qr-options.ts`) lives in
-  `utils/`, not under `components/`.
+  file. Dialogs always sit in `dialogs/`, filters in `filters/`. A file that
+  is not a component (`qr/utils/qr-options.ts`, `analytics/utils/chart-style.ts`)
+  lives in `utils/`, not under `components/`.
 - The barrel exports only what someone outside actually imports: hooks, key
   factories and a few types; never a whole folder and **never a page**. A
   page in a barrel comes along with every hook another feature imports from
   it (it once put Menu, Package and drag and drop in the first download).
   Pages are exported by `pages/index.ts`, which only `App.tsx` imports, as a
-  `lazy()` chunk (`src/App.pages.test.ts` holds both rules).
+  `lazy()` chunk (`src/__tests__/App.pages.test.ts` holds both rules).
 - `menu` is the one composite feature: `categories/` and `dishes/` are
   sub-features with the same shape, and `menu/components/` holds what both
-  share (drag-and-drop, the category filter). Its two pages sit in `menu/pages`.
+  share (`dnd/`, and `filters/` with the category filter). Its two pages sit in `menu/pages`.
   `dishes/components/` has `dialogs/` (the dish form), `list/` (the card) and
   `options/` (the dish form's variants and add-ons section).
 
@@ -247,7 +254,7 @@ Sanctum stateful auth. The SPA's responsibilities:
   components), `overview`, `analytics`, `menu`, `design`, `appearance`, `orders`, `qr`,
   `social-links`, `restaurant`, `features`, `package`, `account`. A new
   namespace is registered once in `lib/i18n/resources.ts`, which types the keys.
-- `lib/i18n/translations.test.ts` fails on any key missing from a language or
+- `lib/i18n/__tests__/translations.test.ts` fails on any key missing from a language or
   any plural form missing (Arabic needs zero/one/two/few/many/other).
 - Preference stored by `stores/preferences.store.ts` and mirrored onto
   `<html lang dir>`; the API is told through `Accept-Language`.
@@ -267,12 +274,12 @@ Sanctum stateful auth. The SPA's responsibilities:
 
 ## 7. Testing
 
-| Layer                        | Tool                                              | Where                    |
-| ---------------------------- | ------------------------------------------------- | ------------------------ |
-| Unit (utils, schemas, items) | Vitest                                            | co-located `*.test.ts`   |
-| Component / page             | Vitest + Testing Library + `axios-mock-adapter`   | co-located `*.test.tsx`  |
-| Translations                 | `lib/i18n/translations.test.ts` (parity, plurals) | `lib/i18n`               |
-| End-to-end                   | Playwright + `@axe-core/playwright`               | `e2e/specs/**/*.spec.ts` |
+| Layer                        | Tool                                            | Where                    |
+| ---------------------------- | ----------------------------------------------- | ------------------------ |
+| Unit (utils, schemas, items) | Vitest                                          | `__tests__/*.test.ts`    |
+| Component / page             | Vitest + Testing Library + `axios-mock-adapter` | `__tests__/*.test.tsx`   |
+| Translations                 | `translations.test.ts` (parity, plurals)        | `lib/i18n/__tests__`     |
+| End-to-end                   | Playwright + `@axe-core/playwright`             | `e2e/specs/**/*.spec.ts` |
 
 Fixtures: `test/factories/` (`makeSessionUser`, `FULL_PLAN`, `EMPTY_PLAN`,
 `makePackage`, `PACKAGE_CATALOGUE`, menu factories),
@@ -354,7 +361,8 @@ Do not add a dependency without the owner's approval.
 
 - **Files:** `kebab-case.ts(x)` for everything, components included;
   `use-*.ts` for hooks, `*-keys.ts` for query keys, `*.schema.ts`, `*.api.ts`,
-  `*.store.ts`, and `*.test.ts(x)` co-located with what it tests.
+  `*.store.ts`, and `*.test.ts(x)` in a `__tests__` folder inside the folder
+  of what it tests, so a folder lists its code and one folder of tests.
 - **Identifiers** use American `color`; English copy stays British ("colour").
 - **Exports:** named only; each feature exposes an `index.ts` barrel.
 - **Imports:** always `@/…`, never relative, even within a feature.

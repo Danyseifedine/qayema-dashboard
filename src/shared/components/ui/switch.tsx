@@ -34,7 +34,7 @@ export function Switch({
       className={cn(
         'relative h-[22px] w-[38px] shrink-0 rounded-full border-0 p-0',
         'transition-colors duration-200 [transition-timing-function:var(--ease-qayema)]',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+        'focus-ring',
         'disabled:cursor-not-allowed disabled:opacity-40',
         checked ? 'bg-accent-fill' : 'bg-[var(--line-strong)]',
         className,
