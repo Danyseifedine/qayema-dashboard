@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { AdvancedStats } from '@/features/analytics/schemas/analytics.schema'
-import { formatNumber } from '@/shared/utils/format/number'
+import { formatNumber, formatShare } from '@/shared/utils/format/number'
 import { usePreferencesStore } from '@/stores/preferences.store'
 
 export type OrderFunnelProps = {
@@ -33,9 +33,7 @@ export function OrderFunnel({ funnel }: OrderFunnelProps) {
             <div className="flex items-baseline justify-between gap-3 text-[13px]">
               <span>{step.label}</span>
               <span className="shrink-0 tabular-nums">
-                <span className="me-2 text-[12px] text-[var(--muted)]">
-                  {Math.round(share * 100)}%
-                </span>
+                <span className="me-2 text-[12px] text-[var(--muted)]">{formatShare(share)}</span>
                 <span className="font-semibold">{formatNumber(step.value, locale)}</span>
               </span>
             </div>

@@ -35,19 +35,19 @@ export function DesignPage({ locale, onOpenPackage }: DesignPageProps) {
   const chosen =
     current !== null && shown !== current ? list.find((d) => d.id === current) : undefined
   const fallback = list.find((d) => d.id === shown)
+  // Nothing is said about the design in use until the list says what it is:
+  // while it loads, "no design yet" would flash at an owner who has one.
+  const needsDesign = designs.isSuccess && current === null
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
-          <p className="mt-1 text-[13px] text-[var(--muted)]">
-            {current === null ? t('page.pickPrompt') : t('page.switchFree')}
-          </p>
-        </div>
-      </div>
+      {designs.isSuccess ? (
+        <p className="text-[13px] text-[var(--muted)]">
+          {needsDesign ? t('page.pickPrompt') : t('page.switchFree')}
+        </p>
+      ) : null}
 
-      {current === null ? (
+      {needsDesign ? (
         <Alert variant="info" title={t('needsDesign.title')}>
           {t('needsDesign.description')}
         </Alert>

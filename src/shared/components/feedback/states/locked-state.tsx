@@ -30,7 +30,7 @@ export function LockedState({
   children,
 }: LockedStateProps) {
   return (
-    <section className="flex flex-col gap-4 rounded-[14px] border-[0.5px] border-[var(--accent-border)] bg-[var(--accent-wash)] p-5">
+    <section className="flex flex-col gap-4 rounded-card border-[0.5px] border-[var(--accent-border)] bg-[var(--accent-wash)] p-5">
       {/* On a phone the description takes the card's width; from sm up it
           lines up under the title, beside the icon. */}
       <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2">

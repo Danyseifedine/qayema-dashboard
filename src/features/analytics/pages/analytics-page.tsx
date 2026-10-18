@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ErrorState } from '@/shared/components/feedback'
+import { ErrorState, Skeleton } from '@/shared/components/feedback'
 import { FormSection } from '@/shared/components/forms'
 import type { Locale } from '@/shared/constants/locales'
 import { BusyTimesChart } from '@/features/analytics/components/charts/busy-times-chart'
@@ -8,7 +8,7 @@ import { RankedList } from '@/features/analytics/components/charts/ranked-list'
 import { VisitsChart } from '@/features/analytics/components/charts/visits-chart'
 import { RangePicker } from '@/features/analytics/components/range/range-picker'
 import { AdvancedLocked } from '@/features/analytics/components/stats/advanced-locked'
-import { languageItems } from '@/features/analytics/components/stats/breakdown-labels'
+import { languageItems } from '@/features/analytics/utils/breakdown-labels'
 import { GuestActions } from '@/features/analytics/components/stats/guest-actions'
 import { MenuOrders } from '@/features/analytics/components/stats/menu-orders'
 import { OrderFunnel } from '@/features/analytics/components/stats/order-funnel'
@@ -19,6 +19,7 @@ import type {
   StatsRange,
   StatsSummary,
 } from '@/features/analytics/schemas/analytics.schema'
+import { formatShare } from '@/shared/utils/format/number'
 
 export type AnalyticsPageProps = {
   locale: Locale
@@ -32,7 +33,6 @@ export type AnalyticsPageProps = {
  * and the daily chart; advanced analytics add the rest underneath.
  */
 export function AnalyticsPage({ locale, advanced, onOpenPackage }: AnalyticsPageProps) {
-  const { t } = useTranslation('analytics')
   // Today first: what an owner opens the page to see.
   const [range, setRange] = useState<StatsRange>('today')
   const summary = useStatsSummary(range)
@@ -40,11 +40,7 @@ export function AnalyticsPage({ locale, advanced, onOpenPackage }: AnalyticsPage
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="font-display text-[19px] leading-tight">{t('title')}</h2>
-          <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">{t('description')}</p>
-        </div>
+      <div className="flex flex-wrap items-end justify-end gap-3">
         <RangePicker value={range} onChange={setRange} advanced={advanced} />
       </div>
 
@@ -64,7 +60,7 @@ export function AnalyticsPage({ locale, advanced, onOpenPackage }: AnalyticsPage
       {!advanced ? (
         <AdvancedLocked locale={locale} onOpenPackage={onOpenPackage} />
       ) : insights.isPending ? (
-        <div className="h-[420px] animate-pulse rounded-[14px] bg-[var(--hover-wash)]" />
+        <Skeleton className="h-[420px]" />
       ) : insights.isError ? (
         <ErrorState description={insights.error.message} onRetry={() => void insights.refetch()} />
       ) : (
@@ -120,13 +116,13 @@ function Summary({
                       id: 'qr',
                       label: t('arrive.qr'),
                       value: totals.qr_scans,
-                      detail: `${Math.round((totals.qr_scans / totals.views) * 100)}%`,
+                      detail: formatShare(totals.qr_scans / totals.views),
                     },
                     {
                       id: 'link',
                       label: t('arrive.link'),
                       value: links,
-                      detail: `${Math.round((links / totals.views) * 100)}%`,
+                      detail: formatShare(links / totals.views),
                     },
                   ]
             }
@@ -222,13 +218,10 @@ function SummarySkeleton() {
     <>
       <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <div
-            key={index}
-            className="h-[84px] animate-pulse rounded-[12px] bg-[var(--hover-wash)]"
-          />
+          <Skeleton key={index} className="h-[84px] rounded-[12px]" />
         ))}
       </div>
-      <div className="h-[300px] animate-pulse rounded-[14px] bg-[var(--hover-wash)]" />
+      <Skeleton className="h-[300px]" />
     </>
   )
 }

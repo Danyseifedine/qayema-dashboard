@@ -1,10 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconKey } from '@tabler/icons-react'
+import { IconKey, IconLock } from '@tabler/icons-react'
 import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Form, FormActions, FormSection, TextField } from '@/shared/components/forms'
-import { Alert, Button } from '@/shared/components/ui'
+import { Form, FormActions, TextField } from '@/shared/components/forms'
+import { Alert, Button, SectionCard } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSavePassword } from '@/features/account/hooks/use-account'
 import {
@@ -55,7 +55,11 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
 
   return (
     <Form onSubmit={onSubmit}>
-      <FormSection
+      <SectionCard
+        icon={<IconLock className="size-[18px]" stroke={1.8} />}
+        // The same photo whether they change a password or set their first.
+        picture="/assets/images/dashboard/more/password.webp"
+        bleed={false}
         title={hasPassword ? t('password.changeTitle') : t('password.setTitle')}
         description={hasPassword ? t('password.changeDescription') : t('password.setDescription')}
       >
@@ -66,6 +70,7 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
             control={form.control}
             name="current_password"
             label={t('password.currentLabel')}
+            placeholder={t('password.currentPlaceholder')}
             required
             password
             autoComplete="current-password"
@@ -77,6 +82,9 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
           control={form.control}
           name="password"
           label={hasPassword ? t('password.newLabel') : t('password.passwordLabel')}
+          placeholder={
+            hasPassword ? t('password.newPlaceholder') : t('password.passwordPlaceholder')
+          }
           required
           password
           autoComplete="new-password"
@@ -87,17 +95,18 @@ export function PasswordSection({ hasPassword }: PasswordSectionProps) {
           control={form.control}
           name="password_confirmation"
           label={t('password.confirmLabel')}
+          placeholder={t('password.confirmPlaceholder')}
           required
           password
           autoComplete="new-password"
         />
 
-        <FormActions>
+        <FormActions className="pt-0">
           <Button type="submit" loading={save.isPending}>
             {hasPassword ? t('password.changeSubmit') : t('password.setSubmit')}
           </Button>
         </FormActions>
-      </FormSection>
+      </SectionCard>
     </Form>
   )
 }

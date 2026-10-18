@@ -63,6 +63,7 @@ export function LinkSection({ slug, publicUrl }: LinkSectionProps) {
           control={form.control}
           name="slug"
           label={t('link.label')}
+          placeholder={t('link.placeholder')}
           hint={formError ?? t('link.hint')}
           leadingIcon={<span className="text-[13px] text-[var(--muted)]">{host}</span>}
           forceLtr

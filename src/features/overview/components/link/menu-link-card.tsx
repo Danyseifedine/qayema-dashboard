@@ -1,6 +1,6 @@
 import { IconEye, IconQrcode, IconShare } from '@tabler/icons-react'
 import { Trans, useTranslation } from 'react-i18next'
-import { toast } from '@/shared/components/feedback'
+import { copyWithToast } from '@/shared/components/feedback'
 import { Button } from '@/shared/components/ui'
 
 export type MenuLinkCardProps = {
@@ -21,14 +21,8 @@ export function MenuLinkCard({ publicUrl, onOpenQr }: MenuLinkCardProps) {
   const { t } = useTranslation('overview')
   const shown = publicUrl.replace(/^https?:\/\//, '')
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(publicUrl)
-      toast.success(t('link.copied'))
-    } catch {
-      toast.error(t('link.copyFailed'))
-    }
-  }
+  const copy = () =>
+    copyWithToast(publicUrl, { copied: t('link.copied'), failed: t('link.copyFailed') })
 
   // A computer without a share menu copies the link instead. Closing the
   // phone's share menu is not an error.
@@ -46,7 +40,7 @@ export function MenuLinkCard({ publicUrl, onOpenQr }: MenuLinkCardProps) {
   return (
     <section
       aria-label={t('link.label')}
-      className="glass-card relative mt-10 rounded-[22px] bg-[linear-gradient(160deg,var(--accent-wash),transparent_55%)] p-3.5 sm:p-4"
+      className="glass-card relative mt-10 rounded-card bg-[linear-gradient(160deg,var(--accent-wash),transparent_55%)] p-3.5 sm:p-4"
     >
       {/* The phone rises out of the card's top, its outer edge on the card's,
           and sinks into a shadow behind the buttons; mirrored in Arabic. */}
@@ -80,7 +74,7 @@ export function MenuLinkCard({ publicUrl, onOpenQr }: MenuLinkCardProps) {
             target="_blank"
             rel="noreferrer noopener"
             dir="ltr"
-            className="block truncate text-[13px] text-[var(--muted)] sm:text-[14px] rtl:text-right hover:text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]"
+            className="block truncate text-[13px] text-[var(--muted)] sm:text-[14px] rtl:text-right hover:text-accent hover:underline focus-ring"
           >
             {shown}
           </a>

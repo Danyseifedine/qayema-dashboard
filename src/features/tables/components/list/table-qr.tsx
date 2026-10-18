@@ -6,13 +6,15 @@ export type TableQrProps = {
   /** Drawn size in pixels; an SVG, so it stays sharp when printed larger. */
   size: number
   label: string
+  /** Fills the width it is given instead of stopping at `size` (a table card). */
+  fill?: boolean
 }
 
 /**
  * A table's code, drawn by the same library and from the same design as the
  * QR page, so a table card matches the menu's own code.
  */
-export function TableQr({ options, size, label }: TableQrProps) {
+export function TableQr({ options, size, label, fill = false }: TableQrProps) {
   const host = useRef<HTMLDivElement>(null)
 
   // Drawn afresh on every change: the library's update() merges, so a logo
@@ -32,7 +34,7 @@ export function TableQr({ options, size, label }: TableQrProps) {
       role="img"
       aria-label={label}
       // Shrinks to fit a narrow card (a phone's two columns); an SVG stays sharp.
-      style={{ width: size, maxWidth: '100%', aspectRatio: '1' }}
+      style={{ width: fill ? '100%' : size, maxWidth: '100%', aspectRatio: '1' }}
       className="[&>svg]:block [&>svg]:h-full [&>svg]:w-full"
     />
   )

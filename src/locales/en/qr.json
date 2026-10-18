@@ -1,29 +1,32 @@
 {
   "page": {
-    "title": "QR code",
-    "description": "Guests scan this to open your menu. Download it as it is, or make it your own.",
-    "png": "PNG",
-    "svg": "SVG",
-    "formatHint": "PNG for sharing and most printers. SVG stays sharp at any size, so use it for a large print.",
+    "description": "Guests scan this to open your menu. Customise it, download it, or print it for your tables.",
+    "downloadImage": "Save image",
+    "downloadPrint": "Print file",
     "copyLink": "Copy link",
     "linkCopied": "Link copied",
     "copyFailed": "Could not copy the link",
     "downloadFailed": "Could not download the QR code",
     "openCard": "Open the printable table card",
     "cardUnsaved": "The card shows your saved design. Save to see these changes on it.",
+    "linkTitle": "Menu link",
     "scansTitle": "Scans",
     "scansDescription": "Menu visits that came through this QR code.",
+    "customiseTitle": "Customisation",
+    "customiseDescription": "Change how your QR code and table card look.",
+    "textTitle": "Text & content",
+    "textDescription": "Customise the text shown on your table card.",
     "shapes": "Shapes",
     "logo": "Logo",
     "card": "Printable card",
-    "cardDescription": "The table card around the code. It does not change how the code scans.",
     "resetToSimple": "Reset to simple",
     "save": "Save",
     "lockedTitle": "Make the code your own",
     "lockedDescription": "Your QR code works as it is. The studio lets you style it and print a card for your tables.",
-    "offTitle": "QR Studio is switched off",
-    "offDescription": "Your QR code works as it is. Switch the studio on in Features to style it, add your logo and print a table card.",
+    "offTitle": "<gold>QR Studio</gold> is off",
+    "offDescription": "Your QR code still works. Turn on QR Studio in Features to customise it, add your logo, and create a printable table card.",
     "openFeatures": "Open Features",
+    "simpleMode": "Simple mode active",
     "colors": "Colours",
     "lockedIncludes": {
       "colors": "Your colours, even a gradient",
@@ -31,7 +34,8 @@
       "logo": "Your logo in the middle",
       "card": "A printable card with your name"
     },
-    "seePackages": "See packages"
+    "seePackages": "See packages",
+    "done": "Done"
   },
   "contrast": {
     "title": "This may not scan",
@@ -65,6 +69,12 @@
     "classyRounded": "Classy rounded",
     "circle": "Circle"
   },
+  "presets": {
+    "label": "Quick shapes",
+    "square": "Square",
+    "dots": "Dots",
+    "round": "Round"
+  },
   "logo": {
     "label": "Your logo in the middle",
     "description": "The code is made stronger so it still scans with your logo in the middle.",
@@ -76,12 +86,11 @@
     "large": "Large"
   },
   "card": {
-    "theme": "Card",
-    "themeHint": "“Your colour” uses your menu's main colour.",
     "light": "Light",
     "dark": "Dark",
     "brand": "Your colour",
     "title": "Title",
+    "titlePlaceholder": "Your restaurant's name",
     "subtitle": "Subtitle",
     "subtitlePlaceholder": "Scan · Browse · Order",
     "cta": "Call to action",

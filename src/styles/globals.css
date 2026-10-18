@@ -180,6 +180,21 @@
   text-transform: uppercase;
 }
 
+/* A panel inside a card (a number, a group of settings): no border, a
+   shade darker than the card, so it reads as set into it. */
+@utility inset-tile {
+  border-radius: var(--radius-tile);
+  background-color: var(--inset-fill);
+}
+
+/* Keyboard focus on anything that can be pressed: a gold ring just outside it. */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--gold-on);
+    outline-offset: 2px;
+  }
+}
+
 /* The fine grain over Home's page; the phone's bottom bar carries it too. */
 :root {
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
@@ -221,12 +236,322 @@
   }
 }
 
-/* Home's cards: a see-through fill with a lit top edge, no border.
-   Someone who asked for less transparency gets the solid card. */
+/* A section's icon on a More card (more-page.tsx): a small block of dark,
+   gold-tinted glass with a quiet rim, a touch lighter on top. The same in
+   both themes, like the package's metals, since it often sits on a photo. */
+@layer components {
+  .gold-chip {
+    border: 1px solid transparent;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(248, 211, 141, 0.12), transparent 70%) padding-box,
+      linear-gradient(180deg, #221b12, #100c07) padding-box,
+      linear-gradient(180deg, rgba(248, 211, 141, 0.5), rgba(248, 211, 141, 0.14)) border-box;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 236, 196, 0.12),
+      0 2px 6px -2px rgba(0, 0, 0, 0.5);
+    color: var(--color-gold);
+  }
+}
+
+/* A social link's card (social-link-card.tsx) is the plain glass card; its
+   platform is told by the mark alone, on a block of the brand's colours as
+   on a phone's home screen. Each platform sets three stops. */
+@layer components {
+  .social-card {
+    --brand-a: var(--color-gold);
+    --brand-b: var(--color-gold);
+    --brand-c: var(--color-gold);
+  }
+
+  .social-card[data-platform='instagram'] {
+    --brand-a: #f58529;
+    --brand-b: #dd2a7b;
+    --brand-c: #8134af;
+  }
+
+  .social-card[data-platform='tiktok'] {
+    --brand-a: #25f4ee;
+    --brand-b: #fe2c55;
+    --brand-c: #fe2c55;
+  }
+
+  .social-card[data-platform='facebook'] {
+    --brand-a: #4a90f7;
+    --brand-b: #1877f2;
+    --brand-c: #1877f2;
+  }
+
+  .social-card[data-platform='x'] {
+    --brand-a: #9ca3af;
+    --brand-b: #6b7280;
+    --brand-c: #9ca3af;
+  }
+
+  .social-card[data-platform='youtube'] {
+    --brand-a: #ff3d3d;
+    --brand-b: #ff0000;
+    --brand-c: #d90000;
+  }
+
+  .social-card[data-platform='snapchat'] {
+    --brand-a: #fffc00;
+    --brand-b: #fff200;
+    --brand-c: #f5e400;
+  }
+
+  .social-card[data-platform='threads'] {
+    --brand-a: #9ca3af;
+    --brand-b: #6b7280;
+    --brand-c: #9ca3af;
+  }
+
+  .social-card[data-platform='telegram'] {
+    --brand-a: #2aabee;
+    --brand-b: #229ed9;
+    --brand-c: #1c8ac2;
+  }
+
+  .social-card[data-platform='pinterest'] {
+    --brand-a: #ff2d4b;
+    --brand-b: #e60023;
+    --brand-c: #c8001e;
+  }
+
+  .social-card[data-platform='tripadvisor'] {
+    --brand-a: #5ef0b8;
+    --brand-b: #34e0a1;
+    --brand-c: #20c98b;
+  }
+
+  .social-chip {
+    background: linear-gradient(135deg, var(--brand-a), var(--brand-b) 55%, var(--brand-c));
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 6px 16px -8px color-mix(in srgb, var(--brand-b) 80%, transparent);
+  }
+
+  /* TikTok's, X's and Threads' marks sit on black, TikTok's with its cyan
+     and pink offset behind the white. */
+  .social-card[data-platform='tiktok'] .social-chip,
+  .social-card[data-platform='x'] .social-chip,
+  .social-card[data-platform='threads'] .social-chip {
+    background: linear-gradient(180deg, #1c1c1c, #000);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 6px 16px -8px color-mix(in srgb, var(--brand-b) 80%, transparent);
+  }
+
+  /* Snapchat's and Tripadvisor's blocks are light, so their marks are dark. */
+  .social-card[data-platform='snapchat'] .social-chip,
+  .social-card[data-platform='tripadvisor'] .social-chip {
+    color: #000;
+  }
+
+  .social-card[data-platform='tiktok'] .social-chip > svg {
+    filter: drop-shadow(-1px -1px 0 #25f4ee) drop-shadow(1px 1px 0 #fe2c55);
+  }
+}
+
+/* A panel lit in gold from its top corner, inside a gold rim brightest at
+   the corners (the QR page while QR Studio is off). The glow starts on the
+   reading side, so it moves to the right in Arabic. */
+@property --glow-drift {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+@layer components {
+  .gold-panel {
+    --glow-x: 0%;
+    --glow-dir: 1;
+    border: 1px solid transparent;
+    background:
+      radial-gradient(
+          90% 75% at calc(var(--glow-x) + var(--glow-drift) * var(--glow-dir)) 0%,
+          var(--gold-panel-glow),
+          transparent 62%
+        )
+        padding-box,
+      linear-gradient(160deg, var(--gold-panel-from), var(--gold-panel-to)) padding-box,
+      linear-gradient(
+          160deg,
+          var(--gold-panel-rim),
+          rgba(233, 189, 102, 0.12) 45%,
+          var(--gold-panel-rim)
+        )
+        border-box;
+    box-shadow:
+      var(--card-lift),
+      0 0 28px -14px rgba(248, 211, 141, 0.45);
+  }
+
+  [dir='rtl'] .gold-panel {
+    --glow-x: 100%;
+    --glow-dir: -1;
+  }
+
+  /* Slowly, like a candle shifting: the glow drifts along the top and back. */
+  .gold-panel {
+    animation: gold-panel-drift 9s ease-in-out infinite alternate;
+  }
+
+  /* Now and then a glint crosses the metal, then it rests. On a layer of
+     its own inside the block, so the block's badge is not clipped. */
+  .gold-sheen {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .gold-sheen::after {
+    content: '';
+    position: absolute;
+    inset: -20% auto -20% 0;
+    width: 45%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(255, 240, 210, 0.22) 45%,
+      rgba(255, 240, 210, 0.32) 50%,
+      rgba(255, 240, 210, 0.22) 55%,
+      transparent
+    );
+    transform: translateX(-120%) skewX(-12deg);
+    animation: gold-sheen 7s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gold-panel,
+    .gold-sheen::after {
+      animation: none;
+    }
+  }
+}
+
+/* A section card's photo (SectionCard), in its top corner: it fades out
+   toward the words and down into the card. A light page gets a softer,
+   shorter fade, so the dark photo never sits behind the words. */
+@layer components {
+  .card-picture {
+    mask-image:
+      linear-gradient(to left, #000 55%, transparent),
+      linear-gradient(to bottom, #000 58%, transparent);
+    mask-composite: intersect;
+  }
+
+  :root:not([data-theme='dark']) .card-picture {
+    opacity: 0.9;
+    mask-image:
+      linear-gradient(to left, #000 20%, transparent 75%),
+      linear-gradient(to bottom, #000 35%, transparent);
+  }
+
+  /* A photo kept inside the card meets its edge: that side fades too, so a
+     subject near it dissolves instead of being cut by the card's edge. */
+  .card-picture-inside {
+    mask-image:
+      linear-gradient(to left, transparent, #000 14%, #000 55%, transparent),
+      linear-gradient(to bottom, #000 58%, transparent);
+  }
+
+  :root:not([data-theme='dark']) .card-picture-inside {
+    mask-image:
+      linear-gradient(to left, transparent, #000 14%, #000 24%, transparent 75%),
+      linear-gradient(to bottom, #000 35%, transparent);
+  }
+}
+
+/* A photo on black (PictureEmptyState). On a dark page its edges fade into
+   the page and the title rises into the fade; on a light one that would
+   leave a dark smudge, so it sits in a rounded frame cropped close to its
+   subject instead. */
+@layer components {
+  .night-picture {
+    width: 88%;
+    max-width: 420px;
+    margin-bottom: -1rem;
+  }
+
+  .night-picture > img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    mask-image: radial-gradient(ellipse closest-side, #000 55%, transparent);
+  }
+
+  :root:not([data-theme='dark']) .night-picture {
+    width: 72%;
+    max-width: 340px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    box-shadow: var(--card-lift);
+  }
+
+  :root:not([data-theme='dark']) .night-picture > img {
+    mask-image: none;
+    scale: 1.45;
+  }
+}
+
+@keyframes gold-panel-drift {
+  to {
+    --glow-drift: 22%;
+  }
+}
+
+@keyframes gold-sheen {
+  0%,
+  62% {
+    transform: translateX(-120%) skewX(-12deg);
+  }
+  82%,
+  100% {
+    transform: translateX(260%) skewX(-12deg);
+  }
+}
+
+/* A form's Save bar pinned above the phone's tabs (the QR code, Restaurant).
+   It runs on under the tabs' rounded top, so no page shows in their corners,
+   and at the end of the page it sinks into main's bottom padding (5rem and
+   the inset, authenticated-layout.tsx) to sit as low as while scrolling.
+   From lg there are no tabs and it rests on the window's edge. */
+@layer components {
+  .sticky-actions {
+    position: sticky;
+    z-index: 10;
+    bottom: calc(var(--tabbar-height, 0px) - 20px);
+    padding-bottom: calc(0.75rem + 20px);
+    margin-bottom: calc(var(--tabbar-height, 0px) - 20px - 5rem - env(safe-area-inset-bottom));
+    background-color: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  @media (min-width: 64rem) {
+    .sticky-actions {
+      bottom: 0;
+      padding-bottom: 0.75rem;
+      margin-bottom: 0;
+    }
+  }
+}
+
+/* An open dialog holds the page still: what is behind it does not scroll. */
+:root:has(dialog:modal) {
+  overflow: hidden;
+}
+
+/* Every card: a see-through fill and a soft shadow, no border and no lit
+   edge. Someone who asked for less transparency gets the solid card. */
 @layer components {
   .glass-card {
     background-color: var(--glass-fill);
-    box-shadow: var(--glass-edge), var(--card-lift);
+    box-shadow: var(--card-lift);
   }
 
   @media (prefers-reduced-transparency: reduce) {

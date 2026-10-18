@@ -115,11 +115,6 @@ export function FeaturesPage({
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div>
-        <h2 className="font-display text-[19px] leading-tight">{t('title')}</h2>
-        <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">{t('description')}</p>
-      </div>
-
       {GROUPS.map((group) => (
         <FormSection
           key={group.key}
@@ -203,7 +198,7 @@ function FeatureRow({
   return (
     <li key={key} className="py-3.5">
       <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-[var(--hover-wash)] text-[var(--muted)]">
+        <span className="grid size-9 shrink-0 place-items-center inset-tile text-accent">
           <Icon aria-hidden className="size-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
@@ -285,7 +280,7 @@ function DineInChoice({
   const noNumber = !ordering.whatsapp_number
 
   return (
-    <div className="mt-3 grid gap-3 rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-3.5">
+    <div className="mt-3 grid gap-3 inset-tile p-3.5">
       <Field
         label={t('dine_in.modeLabel')}
         hint={t(mode === 'whatsapp' ? 'dine_in.whatsappHint' : 'dine_in.dashboardHint')}
@@ -409,7 +404,7 @@ function PackageChip({ flag, onOpenPackage }: { flag: PackageFlag; onOpenPackage
       className={cn(
         'ms-2 inline-flex items-center gap-1 rounded-full bg-accent-wash px-2 py-0.5 align-[1px]',
         'text-[11px] font-medium whitespace-nowrap text-accent transition-colors hover:bg-accent-wash-hover',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+        'focus-ring',
       )}
     >
       <IconLock aria-hidden className="size-3" />
@@ -452,7 +447,7 @@ function OrderingChoice({
   }
 
   return (
-    <div className="mt-3 grid gap-4 rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-3.5">
+    <div className="mt-3 grid gap-4 inset-tile p-3.5">
       <Field
         label={t('orders.modeLabel')}
         hint={t(mode === 'menu' ? 'orders.menuHint' : 'orders.whatsappHint')}
@@ -602,6 +597,7 @@ function MainLanguageField({
             aria-describedby={describedBy}
             options={options}
             value={mainLocale}
+            placeholder={t('mainLanguage.placeholder')}
             emptyText={t('languages.searchEmpty')}
             disabled={save.isPending}
             onChange={choose}
@@ -669,7 +665,7 @@ function LanguageChoice({
   const opening = secondLocale && defaultLocale === secondLocale ? secondLocale : mainLocale
 
   return (
-    <div className="mt-3 grid gap-4 rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-3.5 sm:grid-cols-2">
+    <div className="mt-3 grid gap-4 inset-tile p-3.5 sm:grid-cols-2">
       <Field label={t('languages.secondLabel')} hint={t('languages.secondHint')} className="pt-0">
         {({ id, describedBy }) => (
           <Combobox

@@ -9,7 +9,7 @@ import {
   type ChecklistItem,
   type ChecklistTarget,
   type SetupStepId,
-} from '@/features/overview/components/checklist/menu-checklist-items'
+} from '@/features/overview/utils/menu-checklist-items'
 
 export type SetupStepperProps = {
   items: ChecklistItem[]
@@ -88,7 +88,7 @@ export function SetupStepper({ items, onOpen }: SetupStepperProps) {
                   onClick={() => setOpen(expanded ? null : step.id)}
                   className={cn(
                     'flex w-full items-start justify-between gap-3 rounded-md text-start',
-                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+                    'focus-ring',
                   )}
                 >
                   <span className="min-w-0">

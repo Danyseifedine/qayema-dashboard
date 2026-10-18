@@ -7,8 +7,8 @@ import { DragHandle } from '@/features/menu/components/dnd/drag-handle'
 
 export type SortableCardProps = {
   id: UniqueIdentifier
-  /** True when the handle lands on a photo and needs its own background. */
-  overlayHandle?: boolean
+  /** Reshapes the grip for its card, such as a slim strip down one edge. */
+  handleClassName?: string
   /** Receives the handle to place wherever the card wants it. */
   children: (parts: { handle: ReactNode }) => ReactNode
 }
@@ -19,7 +19,7 @@ export type SortableCardProps = {
  * dnd-kit's keyboard sensor drives the same handle, so reordering works
  * without a pointer.
  */
-export function SortableCard({ id, overlayHandle = false, children }: SortableCardProps) {
+export function SortableCard({ id, handleClassName, children }: SortableCardProps) {
   const {
     attributes,
     listeners,
@@ -36,12 +36,12 @@ export function SortableCard({ id, overlayHandle = false, children }: SortableCa
     () => (
       <DragHandle
         ref={setActivatorNodeRef}
-        overlay={overlayHandle}
+        className={handleClassName}
         {...attributes}
         {...listeners}
       />
     ),
-    [setActivatorNodeRef, overlayHandle, attributes, listeners],
+    [setActivatorNodeRef, handleClassName, attributes, listeners],
   )
 
   return (

@@ -146,6 +146,9 @@
     "same": "Same as before",
     "vsBefore": "vs before"
   },
+  "limitNotice": {
+    "onYourPackage": "on your package"
+  },
   "colorField": {
     "picker": "{{label}}, picker"
   },

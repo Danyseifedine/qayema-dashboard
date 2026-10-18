@@ -2,11 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts'
 import type { Locale } from '@/shared/constants/locales'
 import type { StatsSummary } from '@/features/analytics/schemas/analytics.schema'
-import {
-  AXIS_TICK,
-  CHART_COLORS,
-  TOOLTIP_STYLE,
-} from '@/features/analytics/components/charts/chart-style'
+import { AXIS_TICK, CHART_COLORS, TOOLTIP_STYLE } from '@/features/analytics/utils/chart-style'
 import { formatDay, formatHour } from '@/shared/utils/format/date'
 import { formatNumber } from '@/shared/utils/format/number'
 

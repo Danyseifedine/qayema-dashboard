@@ -396,7 +396,7 @@ test.describe('dishes', () => {
     await expect(page.getByRole('button', { name: 'Add dish' })).toBeDisabled()
     await page.getByRole('button', { name: 'Go to categories' }).click()
     await expect(page).toHaveURL(/\/categories$/)
-    await expect(page.getByRole('heading', { name: 'Categories', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Categories', level: 1 })).toBeVisible()
   })
 
   test('the free package stops at forty dishes', async ({ page, owner }) => {

@@ -1,4 +1,4 @@
-import { startTransition, useState, type CSSProperties } from 'react'
+import { startTransition, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { phoneTabOf, type PhoneTab } from '@/app/layouts/authenticated/nav-items'
 import { cn } from '@/shared/utils/dom/cn'
@@ -33,8 +33,27 @@ export function BottomTabs({ tabs, activeKey, onSelect, counts = NO_COUNTS }: Bo
     startTransition(() => onSelect(key))
   }
 
+  // The bar's height, the phone's bottom inset included, as --tabbar-height:
+  // a Save bar pinned above it (.sticky-actions) sits on it exactly. Hidden
+  // from lg, it measures 0 there.
+  const bar = useRef<HTMLElement>(null)
+  useEffect(() => {
+    // Set by the time effects run: the bar is always drawn.
+    const element = bar.current!
+    const root = document.documentElement
+    const observer = new ResizeObserver(() =>
+      root.style.setProperty('--tabbar-height', `${element.offsetHeight}px`),
+    )
+    observer.observe(element)
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty('--tabbar-height')
+    }
+  }, [])
+
   return (
     <nav
+      ref={bar}
       aria-label={t('layout.tabs')}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 rounded-t-[20px] lg:hidden',
@@ -47,14 +66,13 @@ export function BottomTabs({ tabs, activeKey, onSelect, counts = NO_COUNTS }: Bo
             moved a tab and a gap at a time; the other way in Arabic). */}
         <span
           aria-hidden
-          style={{ '--tab': Math.max(index, 0) } as CSSProperties}
+          style={{ '--tab': index } as CSSProperties}
           className={cn(
             'pointer-events-none absolute inset-y-0 start-0 w-[calc((100%-1.125rem)/4)] rounded-[14px]',
             'bg-[image:var(--tab-on)] shadow-[var(--tab-on-edge)]',
             '[transform:translateX(calc(var(--tab)*(100%+0.375rem)))]',
             'rtl:[transform:translateX(calc(var(--tab)*-1*(100%+0.375rem)))]',
             'transition-[transform,opacity] duration-[260ms] ease-[cubic-bezier(0.2,0.9,0.3,1)] will-change-transform motion-reduce:transition-none',
-            index < 0 && 'opacity-0',
           )}
         />
         {tabs.map((tab) => {
@@ -70,7 +88,7 @@ export function BottomTabs({ tabs, activeKey, onSelect, counts = NO_COUNTS }: Bo
               className={cn(
                 'relative grid justify-items-center gap-0.5 rounded-[14px] py-1.5 text-[11px]',
                 'transition-colors duration-200',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+                'focus-ring',
                 active ? 'font-semibold text-accent' : 'font-medium text-[var(--muted)]',
               )}
             >

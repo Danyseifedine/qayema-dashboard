@@ -79,9 +79,9 @@ export function ContentCounts({ limits, onOpen }: ContentCountsProps) {
               type="button"
               onClick={() => onOpen(page)}
               className={cn(
-                '@container flex min-w-0 flex-col gap-2 glass-card rounded-[16px] p-2 text-start min-[380px]:p-2.5',
+                '@container flex min-w-0 flex-col gap-2 glass-card rounded-card p-2 text-start min-[380px]:p-2.5',
                 'transition-colors hover:bg-[var(--hover-wash)]',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+                'focus-ring',
               )}
             >
               {/* The label and the number beside the icon, the arrow at the end of

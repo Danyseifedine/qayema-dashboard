@@ -1,10 +1,12 @@
 {
   "page": {
-    "title": "Tables",
     "description": "Give every table its own QR code. Guests who scan it order straight to that table, and the order arrives saying which one.",
     "add": "Add tables",
     "addFirst": "Add your tables",
     "printAll": "Print all cards",
+    "count_one": "{{count}} table",
+    "count_other": "{{count}} tables",
+    "manage": "Manage your table QR codes",
     "emptyTitle": "No tables yet",
     "emptyDescription": "Add your tables to get a QR code for each one. Print the cards and put one on every table.",
     "notOrderingTitle": "Ordering at the table is switched off",

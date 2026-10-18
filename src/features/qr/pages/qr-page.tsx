@@ -1,24 +1,39 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { TFunction } from 'i18next'
 import {
+  IconChartBar,
+  IconChevronRight,
+  IconCircleDotFilled,
   IconCopy,
   IconDownload,
   IconExternalLink,
+  IconLink,
   IconPalette,
+  IconLetterT,
   IconRotate,
 } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { usePackageFor } from '@/features/package'
-import { ErrorState, LockedState, toast } from '@/shared/components/feedback'
+import {
+  copyWithToast,
+  ErrorState,
+  LockedState,
+  Skeleton,
+  toast,
+} from '@/shared/components/feedback'
 import type { Locale } from '@/shared/constants/locales'
-import { Form, FormActions, FormSection } from '@/shared/components/forms'
+import { Form, FormActions } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
-import { CardControls } from '@/features/qr/components/controls/card-controls'
+import { CardTextControls } from '@/features/qr/components/controls/card-text-controls'
 import { ColorControls } from '@/features/qr/components/controls/color-controls'
 import { LogoControls } from '@/features/qr/components/controls/logo-controls'
 import { ShapeControls } from '@/features/qr/components/controls/shape-controls'
+import { ControlSheet } from '@/features/qr/components/studio/control-sheet'
+import { CustomiseTiles, type StudioSheet } from '@/features/qr/components/studio/customise-tiles'
+import { StudioCard } from '@/features/qr/components/studio/studio-card'
+import { StudioOff } from '@/features/qr/components/studio/studio-off'
 import { downloadQr } from '@/features/qr/utils/qr-download'
 import { qrOptions, weakParts, type WeakPart } from '@/features/qr/utils/qr-options'
 import { QrPreview } from '@/features/qr/components/preview/qr-preview'
@@ -31,6 +46,9 @@ import {
   type Qr,
   type QrFormValues,
 } from '@/features/qr/schemas/qr.schema'
+
+/** A dark marble table under warm lights: the stage the live code stands on. */
+const GROUND = '/assets/images/dashboard/qr-ground.webp'
 
 /** Everything that changes how the code looks: what "Reset to simple" puts back. */
 const LOOK_FIELDS = [
@@ -61,27 +79,19 @@ export type QrPageProps = {
 }
 
 export function QrPage(props: QrPageProps) {
-  const { t } = useTranslation('qr')
   const qr = useQr()
 
-  return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div>
-        <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
-        <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">{t('page.description')}</p>
-      </div>
-
-      {qr.isPending ? (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
-          <div className="h-[380px] animate-pulse rounded-[18px] bg-[var(--hover-wash)]" />
-          <div className="h-[520px] animate-pulse rounded-[18px] bg-[var(--hover-wash)]" />
-        </div>
-      ) : qr.isError ? (
-        <ErrorState description={qr.error.message} onRetry={() => void qr.refetch()} />
-      ) : (
-        <QrStudio qr={qr.data} {...props} />
-      )}
+  // The page's title and what it is for are in the topbar's heading.
+  return qr.isPending ? (
+    <div className="flex w-full flex-col gap-3">
+      <Skeleton className="h-[300px]" />
+      <Skeleton className="h-[140px]" />
+      <Skeleton className="h-[140px]" />
     </div>
+  ) : qr.isError ? (
+    <ErrorState description={qr.error.message} onRetry={() => void qr.refetch()} />
+  ) : (
+    <QrStudio qr={qr.data} {...props} />
   )
 }
 
@@ -89,6 +99,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
   const { t } = useTranslation('qr')
   const save = useSaveQr()
   const [downloading, setDownloading] = useState<'png' | 'svg' | null>(null)
+  const [sheet, setSheet] = useState<StudioSheet | null>(null)
 
   const form = useForm<QrFormValues>({
     resolver: zodResolver(qrFormSchema),
@@ -123,12 +134,10 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
   const copyLink = async () => {
     const link = new URL(qr.url)
     link.searchParams.delete('qr')
-    try {
-      await navigator.clipboard.writeText(link.toString())
-      toast.success(t('page.linkCopied'))
-    } catch {
-      toast.error(t('page.copyFailed'))
-    }
+    await copyWithToast(link.toString(), {
+      copied: t('page.linkCopied'),
+      failed: t('page.copyFailed'),
+    })
   }
 
   const resetToSimple = () => {
@@ -144,27 +153,34 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
     })
   })
 
+  const closeSheet = () => setSheet(null)
+  const sheetPreview = <QrPreview options={options} />
+
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start">
-      <aside className="flex flex-col gap-3 lg:sticky lg:top-4">
-        <div className="flex justify-center rounded-[18px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-5">
-          <QrPreview options={options} />
+    <div className="flex w-full flex-col gap-3">
+      {/* The code, live, standing on a table; the buttons sit on its dark front edge. */}
+      <div className="relative isolate overflow-hidden glass-card rounded-card p-3 sm:p-4">
+        <img
+          src={GROUND}
+          alt=""
+          aria-hidden
+          decoding="async"
+          className="pointer-events-none absolute inset-0 -z-10 size-full object-cover"
+        />
+        <div className="flex justify-center pt-2 pb-1 sm:pt-4">
+          <QrPreview
+            options={options}
+            className="w-[52%] max-w-[240px] shadow-[0_18px_30px_-12px_rgba(0,0,0,0.85)]"
+          />
         </div>
-
-        {weak.length > 0 ? (
-          <Alert variant="warning" title={t('contrast.title')}>
-            {t('contrast.warning', { count: weak.length, parts: listParts(weak, t) })}
-          </Alert>
-        ) : null}
-
-        <div className="grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2">
           <Button
             leadingIcon={<IconDownload aria-hidden className="size-4" />}
             loading={downloading === 'png'}
             disabled={downloading !== null}
             onClick={() => void download('png')}
           >
-            {t('page.png')}
+            {t('page.downloadImage')}
           </Button>
           <Button
             variant="secondary"
@@ -173,89 +189,132 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
             disabled={downloading !== null}
             onClick={() => void download('svg')}
           >
-            {t('page.svg')}
+            {t('page.downloadPrint')}
           </Button>
         </div>
-        <p className="text-[12px] leading-snug text-[var(--muted)]">{t('page.formatHint')}</p>
+      </div>
 
-        <div className="flex items-center gap-2 rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] py-1.5 ps-3.5 pe-1.5">
-          <span dir="ltr" className="min-w-0 flex-1 truncate text-[13px] text-[var(--muted)]">
+      {weak.length > 0 ? (
+        <Alert variant="warning" title={t('contrast.title')}>
+          {t('contrast.warning', { count: weak.length, parts: listParts(weak, t) })}
+        </Alert>
+      ) : null}
+
+      <StudioCard icon={IconCircleDotFilled} title={t('page.linkTitle')}>
+        <div className="flex h-11 items-center rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--hover-wash)]">
+          <IconLink aria-hidden className="mx-3 size-4 shrink-0 text-[var(--muted)]" />
+          <span aria-hidden className="h-5 w-px shrink-0 bg-[var(--line)]" />
+          <span dir="ltr" className="min-w-0 flex-1 truncate px-3 text-start text-[13.5px]">
             {qr.display_url}
           </span>
+          <span aria-hidden className="h-5 w-px shrink-0 bg-[var(--line)]" />
           <Button
             variant="ghost"
             size="sm"
+            className="mx-1 shrink-0"
             leadingIcon={<IconCopy aria-hidden className="size-4" />}
             onClick={() => void copyLink()}
           >
             {t('page.copyLink')}
           </Button>
         </div>
-
         {qr.card_url ? (
           <a
             href={qr.card_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-accent underline-offset-4 hover:underline"
+            className="flex items-center gap-2.5 rounded-[8px] text-[13.5px] font-medium text-accent underline-offset-4 hover:underline focus-ring"
           >
-            <IconExternalLink aria-hidden className="size-4" />
-            {t('page.openCard')}
+            <IconExternalLink aria-hidden className="size-[18px] shrink-0" />
+            <span className="min-w-0 flex-1">{t('page.openCard')}</span>
+            <IconChevronRight aria-hidden className="size-4 shrink-0 rtl:rotate-180" />
           </a>
         ) : null}
         {qr.card_url && dirty ? (
           <p className="text-[12px] leading-snug text-[var(--muted)]">{t('page.cardUnsaved')}</p>
         ) : null}
-      </aside>
+      </StudioCard>
 
-      <div className="flex min-w-0 flex-col gap-4">
-        {qr.stats ? (
-          <FormSection title={t('page.scansTitle')} description={t('page.scansDescription')}>
-            <QrStats stats={qr.stats} />
-          </FormSection>
-        ) : null}
+      {qr.stats ? (
+        <StudioCard
+          icon={IconChartBar}
+          title={t('page.scansTitle')}
+          description={t('page.scansDescription')}
+        >
+          <QrStats stats={qr.stats} />
+        </StudioCard>
+      ) : null}
 
-        {qr.unlocked ? (
-          <Form onSubmit={onSubmit}>
-            <FormSection title={t('page.colors')}>
-              <ColorControls form={form} />
-            </FormSection>
-            <FormSection title={t('page.shapes')}>
-              <ShapeControls control={form.control} />
-            </FormSection>
-            <FormSection title={t('page.logo')}>
-              <LogoControls control={form.control} hasLogo={qr.logo_data_url !== null} />
-            </FormSection>
-            <FormSection title={t('page.card')} description={t('page.cardDescription')}>
-              <CardControls control={form.control} brandColor={qr.brand_color} />
-            </FormSection>
+      {qr.unlocked ? (
+        <Form onSubmit={onSubmit} className="gap-3">
+          <StudioCard
+            icon={IconPalette}
+            title={t('page.customiseTitle')}
+            description={t('page.customiseDescription')}
+          >
+            <CustomiseTiles
+              form={form}
+              logoUrl={qr.logo_data_url}
+              brandColor={qr.brand_color}
+              onOpen={setSheet}
+            />
+          </StudioCard>
+          <StudioCard
+            icon={IconLetterT}
+            title={t('page.textTitle')}
+            description={t('page.textDescription')}
+          >
+            <CardTextControls control={form.control} />
+          </StudioCard>
 
-            <FormActions align="between">
-              <Button
-                variant="ghost"
-                leadingIcon={<IconRotate aria-hidden className="size-4" />}
-                onClick={resetToSimple}
-                disabled={save.isPending}
-              >
-                {t('page.resetToSimple')}
-              </Button>
-              <Button type="submit" loading={save.isPending} disabled={!dirty}>
-                {t('page.save')}
-              </Button>
-            </FormActions>
-          </Form>
-        ) : qr.switched_off ? (
-          // The owner's own switch, not the package: send them to it.
-          <Alert variant="info" title={t('page.offTitle')}>
-            <p>{t('page.offDescription')}</p>
-            <Button variant="secondary" size="sm" className="mt-3" onClick={onOpenFeatures}>
-              {t('page.openFeatures')}
+          {/* Pinned above the phone's tabs, so Save is in reach from any card. */}
+          <FormActions
+            align="between"
+            className="sticky-actions -mx-4 border-t-[0.5px] border-[var(--line)] px-4 pt-3 sm:-mx-6 sm:px-6"
+          >
+            <Button
+              variant="ghost"
+              leadingIcon={<IconRotate aria-hidden className="size-4" />}
+              onClick={resetToSimple}
+              disabled={save.isPending}
+            >
+              {t('page.resetToSimple')}
             </Button>
-          </Alert>
-        ) : (
-          <StudioLocked locale={locale} onOpenPackage={onOpenPackage} />
-        )}
-      </div>
+            <Button type="submit" loading={save.isPending} disabled={!dirty}>
+              {t('page.save')}
+            </Button>
+          </FormActions>
+
+          <ControlSheet
+            open={sheet === 'colors'}
+            title={t('page.colors')}
+            onClose={closeSheet}
+            preview={sheetPreview}
+          >
+            <ColorControls form={form} />
+          </ControlSheet>
+          <ControlSheet
+            open={sheet === 'shapes'}
+            title={t('page.shapes')}
+            onClose={closeSheet}
+            preview={sheetPreview}
+          >
+            <ShapeControls control={form.control} />
+          </ControlSheet>
+          <ControlSheet
+            open={sheet === 'logo'}
+            title={t('page.logo')}
+            onClose={closeSheet}
+            preview={sheetPreview}
+          >
+            <LogoControls control={form.control} />
+          </ControlSheet>
+        </Form>
+      ) : qr.switched_off ? (
+        <StudioOff onOpenFeatures={onOpenFeatures} />
+      ) : (
+        <StudioLocked locale={locale} onOpenPackage={onOpenPackage} />
+      )}
     </div>
   )
 }

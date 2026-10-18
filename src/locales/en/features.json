@@ -1,5 +1,4 @@
 {
-  "title": "Features",
   "description": "Switch off what you don't use. Nothing is deleted, and switching it back on brings it all back.",
   "groups": {
     "ordering": {
@@ -21,6 +20,7 @@
   },
   "mainLanguage": {
     "label": "Your menu is written in",
+    "placeholder": "Choose a language",
     "hint": "Every name needs it. While a second language is off, it is the only one guests see.",
     "missing": "{{categories}} and {{dishes}} have no {{language}} name yet. Guests see their old name until you write one.",
     "categories_one": "{{count}} category",

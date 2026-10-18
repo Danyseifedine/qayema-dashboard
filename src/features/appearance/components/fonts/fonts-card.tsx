@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FontOptions } from '@/features/appearance/components/fonts/font-options'
 import type { FontScript } from '@/features/appearance/schemas/appearance.schema'
-import { FormSection } from '@/shared/components/forms'
+import { SectionCard } from '@/shared/components/ui'
 import { languageName } from '@/shared/constants/menu-languages'
 
 export type FontsCardProps = {
@@ -44,7 +44,12 @@ export function FontsCard({ fonts, onPick }: FontsCardProps) {
   useStylesheet(samplesHref(fonts))
 
   return (
-    <FormSection title={t('fonts.title')} description={t('fonts.description')}>
+    <SectionCard
+      icon={<span className="font-display text-[16px] leading-none">Aa</span>}
+      picture="/assets/images/dashboard/preference/font.webp"
+      title={t('fonts.title')}
+      description={t('fonts.description')}
+    >
       <div className="flex flex-col gap-4">
         {fonts.map((script) => (
           <FontOptions
@@ -55,6 +60,6 @@ export function FontsCard({ fonts, onPick }: FontsCardProps) {
           />
         ))}
       </div>
-    </FormSection>
+    </SectionCard>
   )
 }

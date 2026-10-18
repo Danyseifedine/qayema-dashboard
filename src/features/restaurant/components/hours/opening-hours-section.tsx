@@ -10,11 +10,7 @@ import {
   type RestaurantFormValues,
   type Weekday,
 } from '@/features/restaurant/schemas/restaurant.schema'
-import {
-  MAX_SHIFTS,
-  nextShift,
-  runsPastMidnight,
-} from '@/features/restaurant/components/hours/time-options'
+import { MAX_SHIFTS, nextShift, runsPastMidnight } from '@/features/restaurant/utils/time-options'
 import { TimePicker } from '@/features/restaurant/components/hours/time-picker'
 
 export type OpeningHoursSectionProps = {

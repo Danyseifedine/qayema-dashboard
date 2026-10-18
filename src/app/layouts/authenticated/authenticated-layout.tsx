@@ -4,10 +4,10 @@ import { BottomTabs } from '@/app/layouts/authenticated/bottom-tabs/bottom-tabs'
 import { ImpersonationBanner } from '@/app/layouts/authenticated/impersonation-banner'
 import { Sidebar } from '@/app/layouts/authenticated/sidebar/sidebar'
 import type { PackageTier } from '@/app/layouts/authenticated/topbar/package-tier'
-import { Topbar, type TopbarHero } from '@/app/layouts/authenticated/topbar/topbar'
+import { Topbar } from '@/app/layouts/authenticated/topbar/topbar'
+import { usePageHero } from '@/app/layouts/authenticated/topbar/use-page-hero'
 import type { AuthUser } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
-import { cn } from '@/shared/utils/dom/cn'
 import { useUiStore } from '@/stores/ui.store'
 import {
   NAV_ITEMS,
@@ -78,17 +78,7 @@ export function AuthenticatedLayout({
     if (item) onNavigate(item)
   }
 
-  // Home greets the owner by name; More says what it holds. Both have no bar.
-  const hero: TopbarHero | undefined =
-    activeKey === 'overview'
-      ? {
-          eyebrow: t(`greeting.${partOfDay(new Date().getHours())}`),
-          title: user.name,
-          subtitle: t('greeting.subtitle'),
-        }
-      : activeKey === 'more'
-        ? { eyebrow: t('nav.more'), title: t('nav.more'), subtitle: t('more.subtitle') }
-        : undefined
+  const hero = usePageHero(activeKey, user.name)
 
   // A section that is not a tab was opened from More (or from the package
   // pill or the account menu): back leads there.
@@ -111,13 +101,9 @@ export function AuthenticatedLayout({
       </div>
 
       {/* Content column */}
-      <div
-        className={cn(
-          'flex min-w-0 flex-1 flex-col',
-          // Home and More: a soft light from the top, a fine grain and a fading dot grid.
-          hero && 'home-backdrop',
-        )}
-      >
+      {/* Under the heading: a soft light from the top, a fine grain and a
+          fading dot grid. */}
+      <div className="home-backdrop flex min-w-0 flex-1 flex-col">
         {impersonation ? (
           <ImpersonationBanner owner={user.name} impersonation={impersonation} />
         ) : null}
@@ -140,7 +126,7 @@ export function AuthenticatedLayout({
             every pixel. A page that needs a narrower measure caps itself.
             A flex column so a page can hand its empty state the leftover
             height instead of leaving it stranded under the heading. */}
-        <main className="flex min-w-0 flex-1 flex-col px-4 pt-6 pb-28 sm:px-6 sm:pt-8 lg:pb-8">
+        <main className="flex min-w-0 flex-1 flex-col px-4 pt-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-8 lg:pb-8">
           {children}
         </main>
       </div>
@@ -148,11 +134,4 @@ export function AuthenticatedLayout({
       <BottomTabs tabs={tabs} activeKey={activeKey} onSelect={goTo} counts={counts} />
     </div>
   )
-}
-
-/** The part of the day on the owner's own clock, for Home's greeting. */
-function partOfDay(hour: number): 'morning' | 'afternoon' | 'evening' {
-  if (hour >= 5 && hour < 12) return 'morning'
-  if (hour >= 12 && hour < 17) return 'afternoon'
-  return 'evening'
 }

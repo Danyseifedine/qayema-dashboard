@@ -16,10 +16,7 @@ import {
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
-import type {
-  ChecklistItem,
-  ChecklistTarget,
-} from '@/features/overview/components/checklist/menu-checklist-items'
+import type { ChecklistItem, ChecklistTarget } from '@/features/overview/utils/menu-checklist-items'
 
 export type NextStepProps = {
   items: ChecklistItem[]
@@ -61,19 +58,19 @@ export function NextStep({ items, onOpen, stepsShown, onToggleSteps }: NextStepP
   return (
     <section
       aria-labelledby="setup-title"
-      className="flex flex-col gap-4 glass-card rounded-[22px] p-4 sm:p-5"
+      className="flex flex-col gap-3 glass-card rounded-card p-3.5 sm:gap-4 sm:p-5"
     >
       <div className="flex items-center gap-3">
         <span
           aria-hidden
-          className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-wash text-accent"
+          className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-wash text-accent sm:size-11"
         >
-          <IconCircleCheck className="size-[22px]" stroke={1.6} />
+          <IconCircleCheck className="size-[18px] sm:size-[22px]" stroke={1.6} />
         </span>
-        <h3 id="setup-title" className="min-w-0 flex-1 text-[22px] leading-tight">
+        <h3 id="setup-title" className="min-w-0 flex-1 text-[18px] leading-tight sm:text-[22px]">
           {t('setup.title')}
         </h3>
-        <span className="shrink-0 text-[13px] text-[var(--muted)] tabular-nums">
+        <span className="shrink-0 text-[12px] text-[var(--muted)] tabular-nums sm:text-[13px]">
           {t('setup.progress', { done, total: items.length })}
         </span>
       </div>
@@ -83,7 +80,7 @@ export function NextStep({ items, onOpen, stepsShown, onToggleSteps }: NextStepP
         aria-valuemin={0}
         aria-valuemax={items.length}
         aria-valuenow={done}
-        className="h-2 overflow-hidden rounded-full bg-[var(--hover-wash)]"
+        className="h-1.5 overflow-hidden rounded-full bg-[var(--hover-wash)] sm:h-2"
       >
         <div
           className="h-full rounded-full bg-gold transition-[width] duration-500"
@@ -93,19 +90,19 @@ export function NextStep({ items, onOpen, stepsShown, onToggleSteps }: NextStepP
       <button
         type="button"
         onClick={() => onOpen(next.action.target)}
-        className="flex items-center gap-3 rounded-[16px] border-[0.5px] border-[var(--line)] bg-[var(--hover-wash)] p-3 text-start transition-colors hover:bg-[var(--hover-wash)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]"
+        className="flex items-center gap-3 rounded-tile border-[0.5px] border-[var(--line)] bg-[var(--hover-wash)] p-2.5 text-start sm:p-3 transition-colors hover:bg-[var(--hover-wash)] focus-ring"
       >
         <span
           aria-hidden
-          className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-wash text-accent"
+          className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-wash text-accent sm:size-11"
         >
-          <Icon className="size-5" stroke={1.7} />
+          <Icon className="size-[18px] sm:size-5" stroke={1.7} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold">
+          <span className="block text-[13.5px] font-semibold sm:text-[15px]">
             {t('next.title', { item: next.label })}
           </span>
-          <span className="mt-0.5 block text-[13px] leading-snug text-[var(--muted)]">
+          <span className="mt-0.5 block text-[12px] leading-snug text-[var(--muted)] sm:text-[13px]">
             {next.hint}
           </span>
         </span>
@@ -114,13 +111,18 @@ export function NextStep({ items, onOpen, stepsShown, onToggleSteps }: NextStepP
           className="size-4 shrink-0 text-[var(--faint)] rtl:rotate-180"
         />
       </button>
-      <Button variant="primary" block className="h-12" onClick={() => onOpen(next.action.target)}>
+      <Button
+        variant="primary"
+        block
+        className="h-11 text-[13.5px] sm:h-12 sm:text-[14px]"
+        onClick={() => onOpen(next.action.target)}
+      >
         {t('next.cta', { action: next.action.label, item: lower })}
       </Button>
       <Button
         variant="link"
         size="sm"
-        className="-mt-1 gap-1.5 self-center"
+        className="-mt-1 gap-1.5 self-center text-[12.5px] sm:text-[13px]"
         onClick={onToggleSteps}
       >
         {stepsShown ? t('next.hideSteps') : t('next.showSteps')}

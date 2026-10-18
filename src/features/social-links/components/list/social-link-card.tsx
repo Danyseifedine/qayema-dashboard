@@ -20,6 +20,9 @@ export type SocialLinkCardProps = {
  * One social link: which platform, where it points, and the two things an
  * owner does to it. The address itself opens in a new tab, because the most
  * common reason to look at this page is to check the link still works.
+ *
+ * The plain glass card; its platform's colours are on the mark's block
+ * alone (`.social-card`, `.social-chip`).
  */
 export const SocialLinkCard = memo(function SocialLinkCard({
   link,
@@ -31,25 +34,23 @@ export const SocialLinkCard = memo(function SocialLinkCard({
 
   return (
     <div
-      className={cn(
-        'flex items-center gap-3 rounded-[14px] border-[0.5px] border-[var(--line)]',
-        'bg-[var(--surface)] p-3 transition-colors hover:border-[var(--line-strong)]',
-      )}
+      data-platform={link.platform}
+      className="social-card glass-card flex items-center gap-3.5 rounded-card p-3.5 sm:p-4"
     >
-      <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-accent-wash text-accent">
-        <PlatformIcon platform={link.platform} />
+      <span className="social-chip grid size-12 shrink-0 place-items-center rounded-[12px]">
+        <PlatformIcon platform={link.platform} className="size-6" stroke={1.6} />
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="text-[15px] font-medium tracking-[-0.012em]">{label}</p>
+        <p className="text-[14.5px] font-medium tracking-[-0.012em]">{label}</p>
         <a
           href={link.url}
           target="_blank"
           rel="noreferrer noopener"
           className={cn(
-            'force-ltr mt-0.5 inline-flex max-w-full items-center gap-1 truncate align-top',
-            'text-[12.5px] text-[var(--muted)] hover:text-accent hover:underline',
-            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+            'force-ltr mt-0.5 inline-flex max-w-full items-center gap-1.5 truncate align-top',
+            'text-[12px] text-[var(--muted)] hover:text-accent hover:underline',
+            'focus-ring',
           )}
         >
           <span className="truncate">{link.url.replace(/^https?:\/\//, '')}</span>
@@ -57,14 +58,15 @@ export const SocialLinkCard = memo(function SocialLinkCard({
         </a>
       </div>
 
-      <div className="flex shrink-0 items-center gap-0.5">
+      {/* The actions apart from what the link is, behind a hairline. */}
+      <div className="flex shrink-0 items-center gap-0.5 self-stretch border-s-[0.5px] border-[var(--line)] ps-2">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onEdit(link)}
           aria-label={t('card.edit', { platform: label })}
         >
-          <IconPencil aria-hidden className="size-4" />
+          <IconPencil aria-hidden className="size-[18px]" stroke={1.7} />
         </Button>
         <Button
           variant="ghost"
@@ -73,7 +75,7 @@ export const SocialLinkCard = memo(function SocialLinkCard({
           aria-label={t('card.remove', { platform: label })}
           className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
         >
-          <IconTrash aria-hidden className="size-4" />
+          <IconTrash aria-hidden className="size-[18px]" stroke={1.7} />
         </Button>
       </div>
     </div>

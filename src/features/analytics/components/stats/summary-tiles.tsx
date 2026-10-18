@@ -31,6 +31,7 @@ export function SummaryTiles({ totals, channel, previous, showToday = true }: Su
   return (
     <dl className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
       <StatTile
+        standalone
         label={t('summary.views')}
         value={formatNumber(totals.views, locale)}
         change={change('views', totals.views)}
@@ -41,11 +42,13 @@ export function SummaryTiles({ totals, channel, previous, showToday = true }: Su
         }
       />
       <StatTile
+        standalone
         label={t('summary.visitors')}
         value={formatNumber(totals.unique_visitors, locale)}
         change={change('unique_visitors', totals.unique_visitors)}
       />
       <StatTile
+        standalone
         label={t('summary.qrScans')}
         value={formatNumber(totals.qr_scans, locale)}
         change={change('qr_scans', totals.qr_scans)}
@@ -54,6 +57,7 @@ export function SummaryTiles({ totals, channel, previous, showToday = true }: Su
         // A WhatsApp order is a guest who opened WhatsApp with it, which
         // is all we can know; the tile says exactly that.
         <StatTile
+          standalone
           label={t(channel === 'whatsapp' ? 'summary.sentToWhatsapp' : 'summary.orders')}
           value={formatNumber(totals.orders, locale)}
           hint={

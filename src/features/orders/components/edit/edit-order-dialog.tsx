@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconX } from '@tabler/icons-react'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
 import { useDishChoices } from '@/features/auth'
 import { useDishes } from '@/features/menu'
 import { Money } from '@/shared/components/data-display'
-import { Form, FormActions } from '@/shared/components/forms'
+import { Form } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
@@ -37,7 +38,6 @@ export type EditOrderDialogProps = {
  */
 export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
   const { t } = useTranslation('orders')
-  const ref = useRef<HTMLDialogElement>(null)
   const locale = usePreferencesStore((state) => state.locale)
   const choices = useDishChoices()
   const dishes = useDishes()
@@ -60,17 +60,12 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
     })
   }, [order, form, clearFormError])
 
-  useEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
-    if (open && !dialog.open) dialog.showModal()
-    if (!open && dialog.open) dialog.close()
-  }, [open])
-
   const lines = form.watch('lines')
   const adds = form.watch('add')
   const menu = useMemo(() => dishes.data?.data ?? [], [dishes.data])
-  const dishOf = (id: number) => menu.find((dish) => dish.id === id)
+  // Looked up for every added line on every keystroke: a map, not a search.
+  const byId = useMemo(() => new Map(menu.map((dish) => [dish.id, dish])), [menu])
+  const dishOf = (id: number) => byId.get(id)
 
   const total =
     (order?.items ?? []).reduce(
@@ -107,33 +102,18 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
     form.formState.errors.lines?.root?.message ?? form.formState.errors.lines?.message
 
   return (
-    <dialog
-      ref={ref}
-      onCancel={(event) => {
-        event.preventDefault()
-        if (!edit.isPending) onClose()
-      }}
-      onClick={(event) => {
-        if (event.target === ref.current && !edit.isPending) onClose()
-      }}
-      className={cn(
-        'm-auto w-[min(94vw,520px)] rounded-[16px] border-[0.5px] border-[var(--line)] p-0',
-        'bg-[var(--surface)] text-[var(--text)] shadow-pop',
-      )}
-    >
+    <Modal open={open} onClose={onClose} busy={edit.isPending} size="lg">
       {order ? (
         // Never taller than the screen: the middle scrolls, so the total and
         // Save stay in view on a short phone.
         <Form onSubmit={onSubmit} className="max-h-[calc(100dvh-2.5rem)] gap-0">
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 pb-0 sm:p-5 sm:pb-0">
-            <div>
-              <h2 className="font-display text-[19px] leading-tight">
-                {t('edit.title', { reference: order.reference })}
-              </h2>
-              <p className="mt-1.5 text-[13px] leading-snug text-[var(--muted)]">
-                {order.status === 'placed' ? t('edit.descriptionNew') : t('edit.description')}
-              </p>
-            </div>
+            <ModalHeader
+              title={t('edit.title', { reference: order.reference })}
+              description={
+                order.status === 'placed' ? t('edit.descriptionNew') : t('edit.description')
+              }
+            />
 
             {formError ? <Alert variant="error">{formError}</Alert> : null}
             {emptyError ? <Alert variant="error">{emptyError}</Alert> : null}
@@ -242,10 +222,7 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
             </div>
           </div>
 
-          <FormActions
-            align="between"
-            className="mt-4 shrink-0 items-center border-t-[0.5px] border-[var(--line)] p-3.5"
-          >
+          <ModalFooter align="between" className="shrink-0 items-center">
             <p className="text-[13px] text-[var(--muted)]">
               {t('edit.total')}{' '}
               <Money
@@ -269,9 +246,9 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
                 {t('edit.save')}
               </Button>
             </div>
-          </FormActions>
+          </ModalFooter>
         </Form>
       ) : null}
-    </dialog>
+    </Modal>
   )
 }

@@ -62,8 +62,8 @@ export function CompareTable({ packages, current, locale }: CompareTableProps) {
         // Paint containment keeps the table's min-width inside this box: without
         // it a phone's layout viewport grew to fit the table, so the whole page
         // scrolled sideways (and in Arabic opened shifted).
-        'overflow-x-auto contain-paint rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)]',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+        'overflow-x-auto contain-paint rounded-card border-[0.5px] border-[var(--line)] bg-[var(--surface)]',
+        'focus-ring',
       )}
     >
       <table className="w-full min-w-[560px] border-collapse text-[13px]">

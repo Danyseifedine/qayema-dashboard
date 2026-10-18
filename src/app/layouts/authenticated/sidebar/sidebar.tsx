@@ -127,7 +127,7 @@ export function Sidebar({
             'flex w-full items-center gap-3 rounded-[var(--radius-control)] px-3 py-2.5',
             'text-[13px] text-[var(--muted)] transition-colors duration-200',
             'hover:bg-[var(--hover-wash)] hover:text-[var(--text)]',
-            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+            'focus-ring',
             collapsed && 'justify-center px-0',
           )}
         >

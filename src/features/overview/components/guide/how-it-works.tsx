@@ -30,7 +30,7 @@ export function HowItWorks() {
   return (
     <section
       aria-labelledby="how-it-works"
-      className="rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5"
+      className="rounded-card border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5"
     >
       <div className="flex items-start justify-between gap-3 border-b-[0.5px] border-[var(--line-2)] pb-3.5">
         <div>

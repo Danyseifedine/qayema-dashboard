@@ -1,0 +1,145 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useRef } from 'react'
+import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
+import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
+import { ComboboxField, Form, UrlField } from '@/shared/components/forms'
+import { Alert, Button } from '@/shared/components/ui'
+import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
+import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
+import { useSaveSocialLink } from '@/features/social-links/hooks/use-social-links'
+import {
+  PLATFORM_LABELS,
+  SOCIAL_PLATFORMS,
+  socialLinkFormSchema,
+  type SocialLink,
+  type SocialLinkFormValues,
+  type SocialPlatform,
+} from '@/features/social-links/schemas/social-link.schema'
+
+export type SocialLinkDialogProps = {
+  open: boolean
+  /** Null adds a new link. */
+  link: SocialLink | null
+  /** Platforms already in use, so the same one cannot be added twice. */
+  taken: SocialPlatform[]
+  onClose: () => void
+}
+
+/** Where each platform's address usually starts, so the field is not a blank page. */
+const PLACEHOLDERS: Record<SocialPlatform, string> = {
+  instagram: 'https://instagram.com/your-restaurant',
+  x: 'https://x.com/your-restaurant',
+  facebook: 'https://facebook.com/your-restaurant',
+  tiktok: 'https://tiktok.com/@your-restaurant',
+  youtube: 'https://youtube.com/@your-restaurant',
+  snapchat: 'https://snapchat.com/add/your-restaurant',
+  threads: 'https://threads.net/@your-restaurant',
+  telegram: 'https://t.me/your-restaurant',
+  pinterest: 'https://pinterest.com/your-restaurant',
+  tripadvisor: 'https://tripadvisor.com/Restaurant_Review-your-restaurant',
+}
+
+export function SocialLinkDialog({ open, link, taken, onClose }: SocialLinkDialogProps) {
+  const { t } = useTranslation('social-links')
+  const save = useSaveSocialLink(link?.id ?? null)
+
+  // The platform being edited stays on the list; every other one already in
+  // use comes off it, because the server allows one link per platform.
+  const available = SOCIAL_PLATFORMS.filter(
+    (platform) => platform === link?.platform || !taken.includes(platform),
+  )
+
+  const form = useForm<SocialLinkFormValues>({
+    resolver: zodResolver(socialLinkFormSchema),
+    defaultValues: { platform: available[0] ?? 'instagram', url: '' },
+  })
+
+  const { formError, applyApiError, clearFormError } = useApiFormErrors(form.setError)
+
+  // Which platforms are free changes identity on every parent render, so the
+  // reset below reads it through a ref. Depending on it directly would re-run
+  // the reset mid-typing and wipe the field.
+  const takenRef = useRef(taken)
+  useEffect(() => {
+    takenRef.current = taken
+  })
+
+  // Reset whenever the dialog opens, so a previous edit never leaks in.
+  useEffect(() => {
+    if (!open) return
+    clearFormError()
+
+    const free = SOCIAL_PLATFORMS.filter(
+      (platform) => platform === link?.platform || !takenRef.current.includes(platform),
+    )
+
+    form.reset(
+      link
+        ? { platform: link.platform, url: link.url }
+        : { platform: free[0] ?? 'instagram', url: '' },
+    )
+  }, [open, link, form, clearFormError])
+
+  const platform = form.watch('platform')
+
+  const once = useSubmitOnce()
+
+  const onSubmit = form.handleSubmit((values) =>
+    once((done) => {
+      clearFormError()
+      save.mutate(values, {
+        onSuccess: onClose,
+        onError: (error) => applyApiError(error),
+        onSettled: done,
+      })
+    }),
+  )
+
+  return (
+    <Modal open={open} onClose={onClose} busy={save.isPending}>
+      <Form onSubmit={onSubmit} className="gap-0">
+        <div className="p-5 pb-0">
+          <ModalHeader
+            title={link ? t('dialog.editTitle') : t('dialog.addTitle')}
+            description={t('dialog.description')}
+          />
+
+          {formError ? (
+            <Alert variant="error" className="mt-3">
+              {formError}
+            </Alert>
+          ) : null}
+
+          <ComboboxField
+            control={form.control}
+            name="platform"
+            label={t('dialog.platformLabel')}
+            required
+            searchable={false}
+            options={available.map((value) => ({ value, label: PLATFORM_LABELS[value] }))}
+            placeholder={t('dialog.platformPlaceholder')}
+          />
+
+          <UrlField
+            control={form.control}
+            name="url"
+            label={t('dialog.linkLabel')}
+            required
+            placeholder={PLACEHOLDERS[platform] ?? 'https://'}
+            hint={t('dialog.linkHint')}
+          />
+        </div>
+
+        <ModalFooter>
+          <Button variant="ghost" onClick={onClose} disabled={save.isPending}>
+            {t('dialog.cancel')}
+          </Button>
+          <Button type="submit" loading={save.isPending}>
+            {link ? t('dialog.saveSubmit') : t('dialog.addSubmit')}
+          </Button>
+        </ModalFooter>
+      </Form>
+    </Modal>
+  )
+}

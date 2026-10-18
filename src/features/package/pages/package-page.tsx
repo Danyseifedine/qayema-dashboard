@@ -35,11 +35,6 @@ export function PackagePage({ locale }: PackagePageProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
-        <p className="mt-1 text-[13px] text-[var(--muted)]">{t('page.description')}</p>
-      </div>
-
       {restaurant !== null ? (
         <CurrentPackageCard
           restaurant={restaurant}

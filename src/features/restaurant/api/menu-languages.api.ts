@@ -15,10 +15,11 @@ const menuLanguagesResponseSchema = z.object({ data: menuLanguagesSchema })
 export type MenuLanguages = z.infer<typeof menuLanguagesSchema>
 
 /** GET /api/menu-languages: the languages, and what still needs writing in the main one. */
-export async function fetchMenuLanguages(): Promise<MenuLanguages> {
+export async function fetchMenuLanguages(signal?: AbortSignal): Promise<MenuLanguages> {
   const { data } = await request(menuLanguagesResponseSchema, {
     method: 'GET',
     url: '/api/menu-languages',
+    signal,
   })
   return data
 }

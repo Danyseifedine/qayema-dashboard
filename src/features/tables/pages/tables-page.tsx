@@ -4,11 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { downloadQr, qrOptions, useQr } from '@/features/qr'
-import { ConfirmDialog, EmptyState, ErrorState } from '@/shared/components/feedback'
+import { ConfirmDialog, EmptyState, ErrorState, Skeleton } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
-import { AddTablesDialog } from '@/features/tables/components/form/add-tables-dialog'
+import { AddTablesDialog } from '@/features/tables/components/dialogs/add-tables-dialog'
 import { PrintSheet } from '@/features/tables/components/print/print-sheet'
-import { RenameTableDialog } from '@/features/tables/components/form/rename-table-dialog'
+import { RenameTableDialog } from '@/features/tables/components/dialogs/rename-table-dialog'
 import { TableCard } from '@/features/tables/components/list/table-card'
 import { useDeleteTable, useNewTableCode, useTables } from '@/features/tables/hooks/use-tables'
 import type { DiningTable } from '@/features/tables/schemas/table.schema'
@@ -87,33 +87,26 @@ export function TablesPage({ onOpenFeatures }: TablesPageProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
-          <p className="mt-1 max-w-[560px] text-[13px] leading-snug text-[var(--muted)]">
-            {t('page.description')}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {list.length > 0 ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              leadingIcon={<IconPrinter className="size-4" />}
-              onClick={() => print(list)}
-            >
-              {t('page.printAll')}
-            </Button>
-          ) : null}
+      {/* Side by side across a phone; at their own width from a tablet up. */}
+      <div className="flex gap-2.5 sm:justify-end">
+        {list.length > 0 ? (
           <Button
-            size="sm"
-            leadingIcon={<IconPlus className="size-4" />}
-            disabled={tables.data === undefined || list.length >= limit}
-            onClick={() => setAdding(true)}
+            variant="secondary"
+            className="flex-1 sm:flex-none"
+            leadingIcon={<IconPrinter className="size-[18px]" />}
+            onClick={() => print(list)}
           >
-            {t('page.add')}
+            {t('page.printAll')}
           </Button>
-        </div>
+        ) : null}
+        <Button
+          className="flex-1 sm:flex-none"
+          leadingIcon={<IconPlus className="size-[18px]" />}
+          disabled={tables.data === undefined || list.length >= limit}
+          onClick={() => setAdding(true)}
+        >
+          {t('page.add')}
+        </Button>
       </div>
 
       {tables.data && !takesOrders ? (
@@ -132,10 +125,7 @@ export function TablesPage({ onOpenFeatures }: TablesPageProps) {
       {tables.isPending ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (
-            <div
-              key={index}
-              className="h-[232px] animate-pulse rounded-[14px] bg-[var(--hover-wash)]"
-            />
+            <Skeleton key={index} className="h-[232px]" />
           ))}
         </div>
       ) : tables.isError ? (
@@ -149,20 +139,30 @@ export function TablesPage({ onOpenFeatures }: TablesPageProps) {
           action={<Button onClick={() => setAdding(true)}>{t('page.addFirst')}</Button>}
         />
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-          {list.map((table) => (
-            <TableCard
-              key={table.id}
-              table={table}
-              options={options}
-              onDownload={download}
-              onPrint={printOne}
-              onRename={setRenaming}
-              onNewCode={setRecoding}
-              onRemove={setRemoving}
-            />
-          ))}
-        </div>
+        <>
+          {/* How many, on a hairline, with what the cards are for. */}
+          <div className="flex items-center gap-3 text-[12px]">
+            <span className="shrink-0 font-semibold text-accent">
+              {t('page.count', { count: list.length })}
+            </span>
+            <span aria-hidden className="h-px flex-1 bg-[var(--line)]" />
+            <span className="shrink-0 text-[var(--muted)]">{t('page.manage')}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+            {list.map((table) => (
+              <TableCard
+                key={table.id}
+                table={table}
+                options={options}
+                onDownload={download}
+                onPrint={printOne}
+                onRename={setRenaming}
+                onNewCode={setRecoding}
+                onRemove={setRemoving}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       <AddTablesDialog

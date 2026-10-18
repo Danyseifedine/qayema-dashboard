@@ -4,14 +4,14 @@ import { useTranslation } from 'react-i18next'
 import { useSession, type AuthRestaurant } from '@/features/auth'
 import { useDishes } from '@/features/menu'
 import { useRestaurant } from '@/features/restaurant'
-import { ErrorState } from '@/shared/components/feedback'
+import { ErrorState, Skeleton } from '@/shared/components/feedback'
 import { ContentCounts } from '@/features/overview/components/counts/content-counts'
 import { SetupStepper } from '@/features/overview/components/checklist/setup-stepper'
 import { HowItWorks } from '@/features/overview/components/guide/how-it-works'
 import { MenuLinkCard } from '@/features/overview/components/link/menu-link-card'
 import { NextStep } from '@/features/overview/components/next/next-step'
 import { TodayNumbers } from '@/features/overview/components/today/today-numbers'
-import { menuChecklist } from '@/features/overview/components/checklist/menu-checklist-items'
+import { menuChecklist } from '@/features/overview/utils/menu-checklist-items'
 
 export type OverviewPageProps = {
   limits: AuthRestaurant['limits']
@@ -55,7 +55,7 @@ export function OverviewPage({
         <button
           type="button"
           onClick={() => onOpen(ordersWaiting.orders > 0 ? 'orders' : 'table-orders')}
-          className="flex items-center gap-3 rounded-[16px] bg-[var(--status-warn-wash)] px-4 py-3.5 text-start font-semibold text-[var(--status-warn)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]"
+          className="flex items-center gap-3 rounded-card bg-[var(--status-warn-wash)] px-4 py-3.5 text-start font-semibold text-[var(--status-warn)] focus-ring"
         >
           <span aria-hidden className="size-2.5 rounded-full bg-current" />
           <span className="flex-1">{t('waiting', { count: waiting })}</span>
@@ -66,7 +66,7 @@ export function OverviewPage({
       {showToday ? <TodayNumbers onOpen={() => onOpen('analytics')} /> : null}
 
       {settings.isPending || dishes.isPending ? (
-        <div className="h-[220px] animate-pulse rounded-[18px] bg-[var(--hover-wash)]" />
+        <Skeleton className="h-[220px]" />
       ) : settings.isError || dishes.isError ? (
         <ErrorState
           description={(settings.error ?? dishes.error)?.message}

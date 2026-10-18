@@ -11,7 +11,6 @@
     "label": "Reorder"
   },
   "categoriesPage": {
-    "title": "Categories",
     "description": "Categories group your dishes on the menu. Drag to change the order guests see.",
     "add": "Add category",
     "atLimit": "You have used every category your plan allows. Delete one to add another.",
@@ -62,7 +61,6 @@
     "nameRequired": "A category name is required in {{language}}."
   },
   "dishesPage": {
-    "title": "Dishes",
     "description": "Everything guests can order. Drag to change the order they appear in.",
     "add": "Add dish",
     "atLimit": "You have used every dish your plan allows. Delete one to add another.",

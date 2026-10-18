@@ -8,9 +8,9 @@ import {
   type UseFormReturn,
 } from 'react-hook-form'
 import { Trans, useTranslation } from 'react-i18next'
+import { LocaleTabs } from '@/shared/components/forms'
 import type { DishChoices } from '@/features/auth'
 import { Money } from '@/shared/components/data-display'
-import { LocaleTabs } from '@/shared/components/forms/translatable/locale-tabs'
 import { Button, Combobox, HelperText } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { mainLanguageOf } from '@/shared/constants/menu-languages'

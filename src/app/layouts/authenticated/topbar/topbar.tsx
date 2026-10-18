@@ -1,5 +1,4 @@
 import { IconArrowLeft } from '@tabler/icons-react'
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
@@ -24,18 +23,18 @@ export type TopbarProps = {
   onLocaleChange: (locale: Locale) => void
   /** On a phone, a section opened from More shows the way back to it. */
   onBack?: () => void
-  /** Home and More: no bar but a heading of their own, the crown and the
-   *  avatar on its title's line. */
-  hero?: TopbarHero
+  /** The page's heading: a small label, its name and what it is for. */
+  hero: TopbarHero
   onOpenPackage: () => void
   onOpenAccount: () => void
   onLogout: () => void
 }
 
 /**
- * Sticky header over the content column. Mirrors the portal navbar's treatment
- * when it scrolls: the page colour at 78% behind a heavy blur, over a hairline
- * border. On Home and More it is no bar at all: their heading, in the page's flow.
+ * Every page's heading, the same on all of them, in the page's flow rather
+ * than a bar: a small label, the page's name in large type with the crown
+ * and the avatar on its line, and what the page is for. On a phone, a
+ * section opened from More adds its way back on a row of its own above.
  */
 export function Topbar({
   title,
@@ -73,63 +72,40 @@ export function Topbar({
     </>
   )
 
-  return (
-    <header
+  const back = onBack ? (
+    <button
+      type="button"
+      onClick={onBack}
+      aria-label={t('layout.back')}
       className={cn(
-        hero
-          ? 'relative z-30'
-          : [
-              'sticky top-0 z-30 border-b-[0.5px] border-[var(--line-2)]',
-              'bg-[color-mix(in_srgb,var(--bg)_78%,transparent)]',
-              'backdrop-blur-[22px] backdrop-saturate-[160%]',
-            ],
+        'grid size-10 shrink-0 place-items-center rounded-[var(--radius-control)] lg:hidden',
+        'text-[var(--text)] transition-colors hover:bg-[var(--hover-wash)]',
+        'focus-ring',
       )}
     >
-      <div
-        className={cn('flex gap-3 px-4 sm:px-6', hero ? 'pt-4 sm:pt-8' : 'h-[68px] items-center')}
-      >
-        {onBack ? (
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label={t('layout.back')}
-            className={cn(
-              'grid size-10 shrink-0 place-items-center rounded-[var(--radius-control)] lg:hidden',
-              'text-[var(--text)] transition-colors hover:bg-[var(--hover-wash)]',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
-            )}
-          >
-            <IconArrowLeft aria-hidden className="size-5 rtl:rotate-180" />
-          </button>
-        ) : null}
+      <IconArrowLeft aria-hidden className="size-5 rtl:rotate-180" />
+    </button>
+  ) : null
 
-        <h1 className="sr-only">{title}</h1>
-        {/* On Home and More they sit on the title's line, centred with it. */}
-        {hero ? (
-          <Hero {...hero}>{actions}</Hero>
-        ) : (
-          <div className="ms-auto flex shrink-0 items-center gap-3">{actions}</div>
-        )}
+  return (
+    <header className="relative z-30 px-4 pt-4 sm:px-6 sm:pt-8">
+      <h1 className="sr-only">{title}</h1>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3">
+        {back ? (
+          // The arrow, not its tap target, lines up with the heading.
+          <div className="col-span-2 row-start-1 mb-1 -ms-2.5 lg:hidden">{back}</div>
+        ) : null}
+        <p className="col-span-2 row-start-2 text-[9px] font-medium tracking-[0.18em] text-[var(--muted)] uppercase sm:text-[10px]">
+          {hero.eyebrow}
+        </p>
+        <p className="col-start-1 row-start-3 mt-1.5 truncate font-display text-[28px] leading-[1.05] font-semibold sm:text-[32px]">
+          {hero.title}
+        </p>
+        <div className="col-start-2 row-start-3 mt-1.5 flex items-center gap-3">{actions}</div>
+        <p className="col-span-2 row-start-4 mt-1.5 pe-24 text-[11.5px] leading-[1.35] text-[var(--muted)] sm:pe-0 sm:text-[13px]">
+          {hero.subtitle}
+        </p>
       </div>
     </header>
-  )
-}
-
-function Hero({ eyebrow, title, subtitle, children }: TopbarHero & { children: ReactNode }) {
-  return (
-    <div className="min-w-0 flex-1">
-      <p className="text-[9px] font-medium tracking-[0.18em] text-[var(--muted)] uppercase sm:text-[10px]">
-        {eyebrow}
-      </p>
-      <div className="mt-1.5 flex items-center gap-3">
-        <p className="min-w-0 flex-1 truncate font-display text-[28px] leading-[1.05] font-semibold sm:text-[32px]">
-          {title}
-        </p>
-        <div className="flex shrink-0 items-center gap-3">{children}</div>
-      </div>
-      <p className="mt-1.5 pe-24 text-[11.5px] leading-[1.35] text-[var(--muted)] sm:pe-0 sm:text-[13px]">
-        {subtitle}
-      </p>
-    </div>
   )
 }

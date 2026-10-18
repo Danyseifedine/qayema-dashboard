@@ -26,7 +26,7 @@ test.describe('account', () => {
     await expect(page.getByText(user.email)).toBeVisible()
     await expect(page.getByRole('textbox', { name: /Email|البريد/ })).toHaveCount(0)
 
-    const name = page.getByRole('textbox', { name: either('Your name', 'اسمك') })
+    const name = page.getByRole('textbox', { name: either('Owner name', 'اسم المالك') })
     await expect(name).toHaveValue('E2E Owner')
     const save = page.getByRole('button', { name: either('Save', 'حفظ') })
     await expect(save).toBeDisabled()
@@ -45,10 +45,10 @@ test.describe('account', () => {
     await owner()
     await page.goto('/account')
 
-    const name = page.getByRole('textbox', { name: 'Your name' })
+    const name = page.getByRole('textbox', { name: 'Owner name' })
     await name.fill('R')
     await page.getByRole('button', { name: 'Save' }).click()
-    await expect(page.getByText('Your name must be at least 2 characters.')).toBeVisible()
+    await expect(page.getByText('The owner name must be at least 2 characters.')).toBeVisible()
   })
 
   test('changing the password needs the current one, and the new one signs in', async ({

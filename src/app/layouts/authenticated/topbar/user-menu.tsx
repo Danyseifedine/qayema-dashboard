@@ -5,10 +5,11 @@ import {
   IconMoon,
   IconUserCircle,
 } from '@tabler/icons-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Switch } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
+import { useDismiss } from '@/shared/hooks/use-dismiss'
 import { cn } from '@/shared/utils/dom/cn'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { LanguageSwitcher } from '@/app/layouts/authenticated/topbar/language-switcher'
@@ -47,26 +48,8 @@ export function UserMenu({
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => {
-    if (!open) return
-
-    const onPointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false)
-    }
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false)
-        triggerRef.current?.focus()
-      }
-    }
-
-    document.addEventListener('mousedown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open])
+  const close = useCallback(() => setOpen(false), [])
+  useDismiss({ open, onDismiss: close, container: containerRef, trigger: triggerRef })
 
   const initial = name.trim().charAt(0).toUpperCase() || '?'
 
@@ -82,7 +65,7 @@ export function UserMenu({
         className={cn(
           'grid size-9 place-items-center rounded-full bg-gold text-[13px] font-medium text-ink',
           'transition-[box-shadow] duration-200 hover:shadow-[0_0_0_3px_var(--ring-accent)]',
-          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+          'focus-ring',
           open && 'shadow-[0_0_0_3px_var(--ring-accent)]',
         )}
       >

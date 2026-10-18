@@ -1,10 +1,8 @@
 {
   "page": {
-    "title": "Appearance",
-    "description": "How your menu looks: what your design lets you change, and a font for each language."
+    "description": "Customise how your menu looks: colours, fonts and small details to match your brand."
   },
   "settings": {
-    "description": "What {{design}} lets you change. Each design keeps its own, so switching designs and back brings yours back.",
     "none": "{{design}} has a fixed look: there is nothing to change.",
     "reset": "Reset",
     "resetLabel": "Reset {{name}} to the design's colour",
@@ -15,11 +13,13 @@
     "invalidColor": "Use a colour like #F8D38D.",
     "tooLong": "Keep it under 255 characters.",
     "colorsTitle": "Colours",
-    "optionsTitle": "Options"
+    "colorsDescription": "Choose the colours for your {{design}} design.",
+    "optionsTitle": "Options",
+    "optionsDescription": "Additional settings for your menu."
   },
   "fonts": {
     "title": "Fonts",
-    "description": "One font for each writing system your menu uses. Languages that share letters share a font. A tap saves it.",
+    "description": "Pick one font for each writing system your menu uses.",
     "default": "Default",
     "categories": {
       "sans": "Sans serif",

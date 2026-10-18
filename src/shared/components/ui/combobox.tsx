@@ -272,7 +272,7 @@ export function Combobox({
         {...inputProps}
         className={cn(
           controlClass,
-          size === 'sm' ? 'py-2 ps-2.5 pe-7 text-[14px]' : 'pe-10',
+          size === 'sm' ? 'py-1.5 ps-2.5 pe-7 text-[13.5px]' : 'pe-10',
           selected?.leading && 'ps-2',
           searchable ? 'cursor-text' : 'cursor-pointer',
         )}

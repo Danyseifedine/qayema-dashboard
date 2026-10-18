@@ -152,7 +152,17 @@ test.describe('social links', () => {
     const platform = page.getByRole('dialog').getByRole('combobox', { name: /Platform/ })
     await expect(platform).toHaveValue('X')
     await platform.click()
-    await expect(page.getByRole('option')).toHaveText(['X', 'Facebook', 'TikTok'])
+    await expect(page.getByRole('option')).toHaveText([
+      'X',
+      'Facebook',
+      'TikTok',
+      'YouTube',
+      'Snapchat',
+      'Threads',
+      'Telegram',
+      'Pinterest',
+      'Tripadvisor',
+    ])
   })
 
   test('a free package allows one link: Add is disabled at the limit', async ({
@@ -189,20 +199,23 @@ test.describe('social links', () => {
     await owner({
       package: 'premium',
       social_links: [
-        { platform: 'instagram', url: 'https://instagram.com/e2e' },
-        { platform: 'x', url: 'https://x.com/e2e' },
-        { platform: 'facebook', url: 'https://facebook.com/e2e' },
-        { platform: 'tiktok', url: 'https://tiktok.com/@e2e' },
-      ],
+        'instagram',
+        'x',
+        'facebook',
+        'tiktok',
+        'youtube',
+        'snapchat',
+        'threads',
+        'telegram',
+        'pinterest',
+        'tripadvisor',
+      ].map((platform) => ({ platform, url: `https://${platform}.com/e2e` })),
     })
     await page.goto('/social-links')
 
-    await expect(page.getByText('4 / 10')).toBeVisible()
+    await expect(page.getByText('10 / 10')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Add link' })).toBeDisabled()
-    await expect(
-      page.getByText('Every platform your menu can show already has a link.', { exact: false }),
-    ).toBeVisible()
-    // Not the package limit, so that warning stays away.
+    // Nothing to warn about: not even the package limit's warning.
     await expect(
       page.getByText('You have used every social link your plan allows.', { exact: false }),
     ).toBeHidden()

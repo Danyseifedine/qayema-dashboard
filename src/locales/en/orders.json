@@ -1,6 +1,5 @@
 {
   "page": {
-    "title": "Orders",
     "description": "Orders guests placed in your menu. Call them back, then mark each one done."
   },
   "status": {
@@ -34,7 +33,7 @@
     "accept": "Accept",
     "startPreparing": "Start preparing",
     "markDone": "Done",
-    "cancel": "Cancel",
+    "cancel": "Cancel order",
     "delivery": "Delivery",
     "pickup": "Pickup",
     "dine_in": "At the table",
@@ -49,6 +48,7 @@
     "editShort": "Edit",
     "delete": "Delete order {{reference}}",
     "deleteShort": "Delete",
+    "actions": "More for order {{reference}}",
     "ownerChanged": "Changed by you at {{time}}"
   },
   "toast": {
@@ -60,9 +60,10 @@
     "deleteFailed": "Could not delete that order"
   },
   "whatsapp": {
-    "title": "Your orders go to WhatsApp",
+    "title": "Your orders go to <gold>WhatsApp</gold>",
     "description": "Guests send each order to your WhatsApp, so you handle it there and it doesn't show here. To get orders here instead, with the guest's phone and address and a sound when one arrives, let guests order in your menu.",
     "action": "Open Features",
+    "mode": "WhatsApp mode active",
     "earlier": "New orders open in WhatsApp. Below are the ones guests placed in your menu before."
   },
   "alert": {
@@ -72,16 +73,13 @@
     "changedDescription": "A guest changed an order they placed. Check it before you accept it."
   },
   "tables": {
-    "title": "Table orders",
     "description": "Orders guests placed from the QR code on their table, by table, waiting longest first.",
     "emptyTitle": "No table orders yet",
-    "emptyDescription": "When a guest scans the QR code on their table and orders, it shows here with the table's name and a sound.",
+    "emptyDescription": "When a guest scans the QR code on their table and places an order, it shows here with the table's name and a sound.",
     "openTables": "Set up your tables",
-    "whatsappTitle": "Your table orders go to WhatsApp",
+    "whatsappTitle": "Table orders go to <gold>WhatsApp</gold>",
     "whatsappDescription": "Guests send each table order to your WhatsApp with the table's name, so you handle it there and it doesn't show here. To get them here instead, with a sound when one arrives, choose Dashboard for table orders on the Features page.",
-    "whatsappEarlier": "New table orders open in WhatsApp. Below are the ones guests placed here before.",
-    "count_one": "{{count}} order",
-    "count_other": "{{count}} orders"
+    "whatsappEarlier": "New table orders open in WhatsApp. Below are the ones guests placed here before."
   },
   "deleteDialog": {
     "title": "Delete order {{reference}}?",

@@ -74,7 +74,7 @@ cookies, five a page load at most), and from there to Grafana.
 - Feature-first: `src/features/<name>/{api,schemas,hooks,components/<area>,pages}`
   plus an `index.ts` barrel that exports only what outsiders import, never a
   page: pages are exported by `pages/index.ts`, which only `App.tsx` imports
-  (`App.pages.test.ts`).
+  (`__tests__/App.pages.test.ts`).
 - Import direction: `app → features → shared → lib → config`. Cross-feature
   imports only through the other feature's `index.ts`; `shared` never imports
   from `features` or `app`. Always `@/…`, never relative.
@@ -112,7 +112,9 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
 
 - Files: `kebab-case.ts(x)` for everything, components included; hooks
   `use-*.ts`, keys `*-keys.ts`, `*.schema.ts`, `*.api.ts`, `*.store.ts`,
-  `*.test.ts(x)` co-located. Identifiers use `color`; English copy "colour".
+  `*.test.ts(x)` in a `__tests__` folder inside the folder of what they test
+  (`topbar/__tests__/topbar.test.tsx`), so a folder lists its code and one
+  folder of tests. Identifiers use `color`; English copy "colour".
 - Named exports only. `@/` alias for all imports.
 - Query keys come from the feature's key factory; never hand-written arrays.
 - Toasts live in the mutation hook, not the call site, so every caller gets
@@ -280,11 +282,18 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   list that is off is left out of the form and of the save, so the server
   keeps it. Limits mirror `../qayema/config/menu.php`.
 - **Table orders** (`table-orders` page inside `features/orders`,
-  `GET /api/orders?kind=table`): orders to a table, grouped by table, the
+  `GET /api/orders?kind=table`): orders to a table, a table at a time, the
   one waiting longest first, with the same cards and actions as Orders
   (`useOrderActions`, `CancelOrderDialog`). The Orders page asks
-  `kind=away`. While table orders go to WhatsApp the page says so, as the
-  Orders page does, and still lists those placed here before. The pulse
+  `kind=away`. A card shows its one next step as a button; edit, cancel
+  and delete wait behind its ⋮ (`ActionMenu` in shared/ui). A table order
+  leads with the table and a drawn tent card with its number
+  (`TableTent`). The filter is round pills, and "still waiting" a bar
+  that shows only the new ones (`WaitingBar`). Before the first table order
+  the page shows `PictureEmptyState` (`no-orders.webp`, straight on the
+  page, its black edges faded out) with the way to the Tables page. While orders go to WhatsApp
+  either page says so with `WhatsAppNotice`, the same `GoldNotice` as QR
+  Studio switched off, and still lists those placed here before. The pulse
   runs while orders or table orders are taken in the menu, and returns
   `{orders, tables}`: one sidebar count each, both in the tab title.
 - **Tables** (`features/tables`, `/api/tables`, needs `plan.dine_in`):
@@ -296,6 +305,17 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   table's name). Print uses a portal sheet (`components/print/print-sheet.tsx`)
   that `globals.css` shows only on paper. `meta.takes_orders` is false while
   ordering at the table is switched off, with a way to Features.
+- **The QR page** is a column of glass cards (`StudioCard`): the live code
+  standing on a marble table (`qr-ground.webp`) with PNG and SVG, the menu link, the scans, then
+  Customisation (four tiles: Colours, Shapes with three quick looks, Logo
+  with its switch, the card's colour; `customise-tiles.tsx`) and Text &
+  content, with Save pinned above the phone's tabs (`.sticky-actions` in
+  globals.css, shared with Restaurant, sitting on the bar's measured
+  `--tabbar-height`). An open dialog stops the page behind it scrolling
+  (`:root:has(dialog:modal)`). A tile's chevron opens
+  every choice of its kind in a `ControlSheet` (a native `<dialog>`, a
+  bottom sheet on a phone) with a small live preview. Its fields mount only
+  while it is open, so tests open the sheet first.
 - The QR preview mirrors the printable card: `features/qr/utils/qr-options.ts`
   is the twin of `QrStyle::options()` in `../qayema`, tested against the same
   cases. Change one, change both. `qr-code-styling` needs a real canvas, so
@@ -371,13 +391,35 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   Home, Menu, the orders, More; a restaurant without orders gets Analytics,
   else the QR code, in third place; the tab wears the orders waiting; one
   gold card slides to the open tab, moved at once while the page follows as
-  a transition). Home and More have no bar but a heading of their own
-  (`hero` on `Topbar`) over the textured backdrop (`home-backdrop` in
-  globals.css). More (`more` page, `more-page.tsx`) is every other section
+  a transition).
+- **Every page opens on the same heading**, Home's layout: no bar, but a
+  small label, the page's name in large type with the crown and the avatar
+  on its line, and what the page is for (`Topbar`, text from
+  `usePageHero`: Home greets the owner, other pages give their name and
+  their namespace's description), over the textured backdrop
+  (`home-backdrop` in globals.css). On a phone, a section opened from More
+  adds its back button on a row of its own above. Pages draw no title of
+  their own (a page's usage is `LimitNotice`, "6 / 40 on your package",
+  beside its add button); a new page adds its line to `usePageHero`.
+- **Shared pieces worth knowing:** every dialog is `Modal` (with
+  `ModalHeader` / `ModalFooter`; the native `<dialog>`, its open state, Escape
+  and the backdrop handled once); a loading block is `Skeleton`; a row of
+  filter chips is `FilterChips`; a popover closes through `useDismiss`;
+  keyboard focus is the `focus-ring` utility (globals.css); a panel inside a card (a number, a group of settings) is the `inset-tile` utility, never a bordered box, and a titled group of fields is `FormSection`, on the same glass card as `SectionCard`; copying a link is
+  `copyWithToast`; a part of a whole reads through `formatShare`. Orders and
+  Table orders are one `OrderBoard` with their own wording, empty state and
+  sorting.
+- **Corners and fields:** every card, dialog and sheet is `rounded-card`
+  (12px), a box inside one `rounded-tile` (8px), and fields and buttons
+  `--radius-field` / `--radius-control` (8px), all tokens in `tokens.css`;
+  nothing picks its own radius. Every field is one height, about 41px
+  (`controlClass`: 10px padding, 14px text). More (`more` page, `more-page.tsx`) is every other section
   as a glass card with a hint line (`more.hints` in `common.json`) and its
-  picture (`src/assets/images/more/<nav key>.webp`, shown once the file
-  exists), in the sidebar's order, locked and left out exactly as the
-  sidebar does, then Account across the width. A section opened
+  picture (`public/assets/images/dashboard/more`, mapped by nav key in
+  `ART`; a half-width card shows it whole as a band on top, with no icon
+  but a lock when locked; Package and Account keep theirs on dark gold
+  glass, `.gold-chip` in globals.css), in the sidebar's order, locked and
+  left out exactly as the sidebar does, then Account across the width. A section opened
   from More shows a back button in the topbar. E2E reaches sections through
   `openSidebar()` (support/helpers), which opens More on a phone.
 - **Overview** (`features/overview`, Home): the topbar greets the owner by
@@ -404,7 +446,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `GET /api/analytics/teaser`); `GET /api/analytics/advanced` only when
   `restaurant.plan.advanced_analytics` is on (the hook is disabled otherwise,
   never fired and caught). Charts are recharts with `responsive`; colours are
-  theme tokens (`components/charts/chart-style.ts`), date helpers are
+  theme tokens (`utils/chart-style.ts`), date helpers are
   `shared/utils/format/date.ts`, and every count goes through `formatNumber`
   (`format/number.ts`: the reader's language, Western digits). jsdom has no ResizeObserver, so the test
   setup stubs it and chart tests read the words around a chart, not its bars.

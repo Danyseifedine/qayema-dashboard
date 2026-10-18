@@ -9,6 +9,7 @@ import {
   type TablerIcon,
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
+import { Skeleton } from '@/shared/components/feedback'
 import { useStatsSummary } from '@/features/analytics'
 import { changeBetween } from '@/shared/utils/format/change'
 import { formatNumber } from '@/shared/utils/format/number'
@@ -45,7 +46,7 @@ export function TodayNumbers({ onOpen }: TodayNumbersProps) {
   const summary = useStatsSummary('today', { live: true })
 
   if (summary.isPending) {
-    return <div className="h-[118px] animate-pulse rounded-[16px] bg-[var(--hover-wash)]" />
+    return <Skeleton className="h-[118px]" />
   }
   if (summary.isError) return null
 
@@ -119,9 +120,9 @@ function TodayTile({ tile, locale, onOpen }: { tile: Tile; locale: Locale; onOpe
       type="button"
       onClick={onOpen}
       className={cn(
-        '@container flex min-w-0 flex-col gap-2 glass-card rounded-[16px] p-2 text-start min-[380px]:p-2.5',
+        '@container flex min-w-0 flex-col gap-2 glass-card rounded-card p-2 text-start min-[380px]:p-2.5',
         'transition-colors hover:bg-[var(--hover-wash)]',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+        'focus-ring',
       )}
     >
       {/* The label and the number beside the icon; in a narrow tile the icon

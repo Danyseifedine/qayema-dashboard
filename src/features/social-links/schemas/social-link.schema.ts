@@ -3,10 +3,22 @@ import { t } from '@/lib/i18n'
 
 /**
  * The platforms the public menu can render an icon for. Mirrors
- * `RestaurantSocialLink::PLATFORMS` in ../qayema; adding one is a change in
- * both places plus a glyph in `components/platform`.
+ * `RestaurantSocialLink::LABELS` in ../qayema; adding one is a change in
+ * both places plus a mark in `components/platform`, its colours on the card
+ * (`.social-card` in globals.css) and an example address in the dialog.
  */
-export const SOCIAL_PLATFORMS = ['instagram', 'x', 'facebook', 'tiktok'] as const
+export const SOCIAL_PLATFORMS = [
+  'instagram',
+  'x',
+  'facebook',
+  'tiktok',
+  'youtube',
+  'snapchat',
+  'threads',
+  'telegram',
+  'pinterest',
+  'tripadvisor',
+] as const
 
 const platformSchema = z.enum(SOCIAL_PLATFORMS)
 
@@ -16,6 +28,12 @@ export const PLATFORM_LABELS: Record<(typeof SOCIAL_PLATFORMS)[number], string> 
   x: 'X',
   facebook: 'Facebook',
   tiktok: 'TikTok',
+  youtube: 'YouTube',
+  snapchat: 'Snapchat',
+  threads: 'Threads',
+  telegram: 'Telegram',
+  pinterest: 'Pinterest',
+  tripadvisor: 'Tripadvisor',
 }
 
 /** Mirrors ../qayema/app/Http/Resources/SocialLinkResource.php. */

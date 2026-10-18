@@ -7,3 +7,8 @@ import type { Locale } from '@/shared/constants/locales'
 export function formatNumber(value: number, locale: Locale): string {
   return new Intl.NumberFormat(`${locale}-u-nu-latn`).format(value)
 }
+
+/** A part of a whole as a whole percent: 0.374 reads "37%". */
+export function formatShare(ratio: number): string {
+  return `${Math.round(ratio * 100)}%`
+}

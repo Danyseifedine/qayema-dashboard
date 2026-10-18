@@ -14,4 +14,5 @@ export { TextareaField } from '@/shared/components/forms/fields/textarea-field'
 export { UrlField } from '@/shared/components/forms/fields/url-field'
 
 // Translatable
+export { LocaleTabs } from '@/shared/components/forms/translatable/locale-tabs'
 export { TranslatableTextField } from '@/shared/components/forms/translatable/translatable-text-field'

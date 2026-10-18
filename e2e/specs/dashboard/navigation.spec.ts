@@ -180,7 +180,7 @@ test.describe('navigation', () => {
     await expect(nav(page).getByRole('button', { name: 'Dishes', exact: true })).toBeEnabled()
     await nav(page).getByRole('button', { name: 'Dishes', exact: true }).click()
     await expect(page).toHaveURL(/\/dishes$/)
-    await expect(page.getByRole('heading', { name: 'Dishes', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Dishes', level: 1 })).toBeVisible()
   })
 
   test('a section switched off hands over to the overview', async ({ page, owner }) => {

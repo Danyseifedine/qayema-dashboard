@@ -21,7 +21,7 @@ import { useOrderPulse } from '@/features/orders'
 import { OrdersPage, TableOrdersPage } from '@/features/orders/pages'
 import { ErrorBoundary, PageSkeleton } from '@/shared/components/feedback'
 // Straight from its file: the forms barrel would bring every field into the shell.
-import { WritingHelpProvider } from '@/shared/components/forms/translatable/writing-help'
+import { WritingHelpProvider } from '@/shared/components/forms/translatable/writing-help-provider'
 import { Alert, Button } from '@/shared/components/ui'
 import { translated } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
@@ -258,7 +258,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                 onOpen={setActiveKey}
               />
             ) : activeKey === 'account' ? (
-              <AccountPage onOpenRestaurant={() => setActiveKey('restaurant')} />
+              <AccountPage />
             ) : (
               <Alert variant="info" title={t('app.notBuiltTitle')}>
                 {t('app.notBuiltBody')}

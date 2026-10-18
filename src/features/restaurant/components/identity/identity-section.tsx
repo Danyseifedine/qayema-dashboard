@@ -22,7 +22,7 @@ export function IdentitySection({ control, languages }: IdentitySectionProps) {
         label={t('identity.nameLabel')}
         required
         maxLength={255}
-        placeholder={{ en: 'Beit Qayema' }}
+        placeholder={{ en: 'Beit Qayema', ar: 'بيت قائمة' }}
         hint={t('identity.nameHint')}
       />
 
@@ -36,7 +36,10 @@ export function IdentitySection({ control, languages }: IdentitySectionProps) {
         rows={3}
         maxLength={2000}
         write={{ kind: 'restaurant' }}
-        placeholder={{ en: 'A sentence or two about your food.' }}
+        placeholder={{
+          en: 'A sentence or two about your food.',
+          ar: 'جملة أو جملتان عن طعامك.',
+        }}
       />
     </FormSection>
   )

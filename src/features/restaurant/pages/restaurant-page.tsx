@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { imageChanges } from '@/features/uploads'
 import { useSession } from '@/features/auth'
 import { Form, FormActions } from '@/shared/components/forms'
-import { ErrorState } from '@/shared/components/feedback'
+import { ErrorState, Skeleton } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { cn } from '@/shared/utils/dom/cn'
@@ -150,7 +150,7 @@ export function RestaurantPage() {
     return (
       <div className="flex flex-1 flex-col gap-4">
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="h-40 animate-pulse rounded-[14px] bg-[var(--hover-wash)]" />
+          <Skeleton key={index} className="h-40" />
         ))}
       </div>
     )
@@ -168,13 +168,7 @@ export function RestaurantPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="font-display text-[19px] leading-tight">{t('page.title')}</h2>
-          <p className="mt-1 text-[13px] leading-snug text-[var(--muted)]">
-            {t('page.description')}
-          </p>
-        </div>
+      <div className="flex flex-wrap items-end justify-end gap-3">
         {data ? (
           <a
             href={publicUrl ?? `/${data.slug}`}
@@ -183,7 +177,7 @@ export function RestaurantPage() {
             className={cn(
               'force-ltr inline-flex items-center gap-1.5 text-[12.5px] text-[var(--muted)]',
               'hover:text-accent hover:underline',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gold-on)]',
+              'focus-ring',
             )}
           >
             /{data.slug}
@@ -236,11 +230,7 @@ export function RestaurantPage() {
             button at its end would be off screen while editing the first field. */}
         <FormActions
           align="between"
-          className={cn(
-            // Above the phone's tabs, which sit 4.5rem tall at the bottom.
-            'sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 -mx-4 mt-1 lg:bottom-0 border-t-[0.5px] border-[var(--line)] px-4 py-3 sm:-mx-6 sm:px-6',
-            'bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] backdrop-blur-[16px]',
-          )}
+          className="sticky-actions -mx-4 mt-1 border-t-[0.5px] border-[var(--line)] px-4 pt-3 sm:-mx-6 sm:px-6"
         >
           <span className="text-[12.5px] text-[var(--muted)]">
             {dirty ? t('page.unsavedChanges') : t('page.allSaved')}
