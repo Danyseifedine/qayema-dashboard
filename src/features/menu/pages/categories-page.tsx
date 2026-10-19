@@ -1,7 +1,7 @@
 import { IconFolderPlus } from '@tabler/icons-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LimitNotice } from '@/shared/components/data-display'
+import { isAtLimit, LimitNotice } from '@/shared/components/data-display'
 import { CategoryDialog } from '@/features/menu/categories/components/dialogs/category-dialog'
 import { CategoryCard } from '@/features/menu/categories/components/list/category-card'
 import {
@@ -11,9 +11,8 @@ import {
 } from '@/features/menu/categories/hooks/use-categories'
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
-import { MenuSwitch } from '@/features/menu/components/switch/menu-switch'
-import { ConfirmDialog, EmptyState, ErrorState, Skeleton } from '@/shared/components/feedback'
-import { Alert, Button } from '@/shared/components/ui'
+import { ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
+import { Alert, Button, PageSwitch } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 
 export type CategoriesPageProps = {
@@ -46,15 +45,19 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
   const confirmDelete = useCallback((category: Category) => setPendingDelete(category), [])
 
   const list = categories.data?.data ?? []
-  // An unlimited package reports a null limit, which is never reached.
-  const atLimit =
-    categories.data !== undefined &&
-    categories.data.meta.limit !== null &&
-    categories.data.meta.used >= categories.data.meta.limit
+  const atLimit = isAtLimit(categories.data?.meta)
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <MenuSwitch value="categories" onChange={onOpenDishes} />
+      <PageSwitch
+        label={t('nav.menu', { ns: 'common' })}
+        value="categories"
+        options={[
+          { value: 'dishes', label: t('nav.dishes', { ns: 'common' }) },
+          { value: 'categories', label: t('nav.categories', { ns: 'common' }) },
+        ]}
+        onOpen={onOpenDishes}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LimitNotice
@@ -74,11 +77,7 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
       {atLimit ? <Alert variant="warning">{t('categoriesPage.atLimit')}</Alert> : null}
 
       {categories.isPending ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 3 }, (_, index) => (
-            <Skeleton key={index} className="h-[78px]" />
-          ))}
-        </div>
+        <SkeletonList count={3} className="flex flex-col gap-3" itemClassName="h-[78px]" />
       ) : categories.isError ? (
         <ErrorState
           description={categories.error.message}

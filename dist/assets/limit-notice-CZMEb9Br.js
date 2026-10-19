@@ -1,1 +1,0 @@
-import{t as e}from"./react-CCIEwYL0.js";import{t}from"./i18n-DkQUf1V4.js";import{t as n}from"./limit-badge-Bg7wvoZB.js";var r=e();function i({used:e,limit:i}){let{t:a}=t();return i===null?null:(0,r.jsxs)(`p`,{className:`flex items-center gap-2.5 text-[13px] text-[var(--muted)]`,children:[(0,r.jsx)(n,{used:e,limit:i,outlined:!0}),a(`limitNotice.onYourPackage`)]})}export{i as t};

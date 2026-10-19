@@ -22,7 +22,7 @@ export const MAX_IMAGE_BYTES = 20 * 1024 * 1024
 /** `dimensions:max_width=6000,max_height=6000`. */
 export const MAX_IMAGE_EDGE = 6000
 
-export type FileRejection = { code: 'type' | 'size' | 'dimensions' }
+type FileRejection = { code: 'type' | 'size' | 'dimensions' }
 
 /**
  * Returns null when the file passes, or the reason it does not.

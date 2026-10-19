@@ -1,4 +1,5 @@
 export { LimitBadge } from '@/shared/components/data-display/badges/limit-badge'
+export { isAtLimit } from '@/shared/components/data-display/badges/is-at-limit'
 export { LimitNotice } from '@/shared/components/data-display/badges/limit-notice'
 export { Money } from '@/shared/components/data-display/formatters/money'
 export { StatTile } from '@/shared/components/data-display/stats/stat-tile'

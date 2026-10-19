@@ -1,8 +1,8 @@
 import { IconShare } from '@tabler/icons-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LimitNotice } from '@/shared/components/data-display'
-import { ConfirmDialog, EmptyState, ErrorState, Skeleton } from '@/shared/components/feedback'
+import { isAtLimit, LimitNotice } from '@/shared/components/data-display'
+import { ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
 import { SocialLinkDialog } from '@/features/social-links/components/dialogs/social-link-dialog'
 import { SocialLinkCard } from '@/features/social-links/components/list/social-link-card'
@@ -38,11 +38,7 @@ export function SocialLinksPage() {
   const list = links.data?.data ?? []
   const taken = list.map((link) => link.platform)
 
-  // An unlimited package reports a null limit, which is never reached.
-  const atLimit =
-    links.data !== undefined &&
-    links.data.meta.limit !== null &&
-    links.data.meta.used >= links.data.meta.limit
+  const atLimit = isAtLimit(links.data?.meta)
   const allPlatformsUsed = taken.length >= SOCIAL_PLATFORMS.length
 
   return (
@@ -65,11 +61,7 @@ export function SocialLinksPage() {
       {atLimit && !allPlatformsUsed ? <Alert variant="warning">{t('page.atLimit')}</Alert> : null}
 
       {links.isPending ? (
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 2 }, (_, index) => (
-            <Skeleton key={index} className="h-[82px]" />
-          ))}
-        </div>
+        <SkeletonList count={2} className="flex flex-col gap-3" itemClassName="h-[82px]" />
       ) : links.isError ? (
         <ErrorState description={links.error.message} onRetry={() => void links.refetch()} />
       ) : list.length === 0 ? (

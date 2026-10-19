@@ -129,8 +129,12 @@ test.describe('orders', () => {
     // The dashboard noticed it before the Orders page was opened.
     await expect(nav.getByLabel(either('1 order waiting', 'طلب واحد بانتظارك'))).toBeVisible()
     await expect(page).toHaveTitle(/^\(1\) /)
-    // The count is part of the button's name: "Orders, 1 order waiting".
-    await nav.getByRole('button', { name: /^(Orders|الطلبات)/ }).click()
+    // The count is part of the button's name: "Delivery and pickup, 1 order
+    // waiting" in the sidebar, the Orders tab on a phone.
+    await nav
+      .getByRole('button', { name: /^(Delivery and pickup|التوصيل والاستلام|Orders|الطلبات)/ })
+      .first()
+      .click()
     await expect(page).toHaveURL(/\/orders$/)
 
     const card = page.getByRole('article').filter({ hasText: data.reference })
@@ -407,7 +411,7 @@ test.describe('orders', () => {
       (response) =>
         response.url().endsWith('/api/features/ordering') && response.request().method() === 'PUT',
     )
-    const sendWay = page.getByRole('tablist', { name: 'Guests send their order' })
+    const sendWay = page.getByRole('tablist', { name: 'How guests send orders' })
     await sendWay.getByRole('tab', { name: 'In your menu' }).click()
     expect((await saved).ok()).toBeTruthy()
     await expect(sendWay.getByRole('tab', { name: 'In your menu' })).toHaveAttribute(
@@ -430,7 +434,7 @@ test.describe('orders', () => {
 
     // The owner switches while the guest still has the menu open.
     await page.goto('/features')
-    const sendWay = page.getByRole('tablist', { name: 'Guests send their order' })
+    const sendWay = page.getByRole('tablist', { name: 'How guests send orders' })
     await sendWay.getByRole('tab', { name: 'WhatsApp' }).click()
     await expect(sendWay.getByRole('tab', { name: 'WhatsApp' })).toHaveAttribute(
       'aria-selected',
@@ -550,7 +554,7 @@ test.describe('orders', () => {
       await page.goto('/overview')
 
       const nav = await openSidebar(page)
-      await expect(nav.getByRole('button', { name: /Orders/ })).toHaveCount(0)
+      await expect(nav.getByRole('button', { name: /^Delivery and pickup/ })).toHaveCount(0)
       await page.goto('/orders')
 
       await expect(page.getByRole('heading', { name: /Take orders from the menu/ })).toBeVisible()
@@ -579,9 +583,9 @@ test.describe('orders', () => {
 
     await page.goto('/features')
     const nav = page.getByRole('navigation', { name: 'Dashboard' })
-    await expect(nav.getByRole('button', { name: /Orders/ })).toBeVisible()
+    await expect(nav.getByRole('button', { name: /^Delivery and pickup/ })).toBeVisible()
 
-    const toggle = page.getByRole('switch', { name: 'Orders on' })
+    const toggle = page.getByRole('switch', { name: 'Delivery and pickup on' })
     await expect(toggle).toHaveAttribute('aria-checked', 'true')
     const saved = page.waitForResponse(
       (response) =>
@@ -590,10 +594,8 @@ test.describe('orders', () => {
     await toggle.click()
     await expect(toggle).toHaveAttribute('aria-checked', 'false')
     expect((await saved).ok()).toBeTruthy()
-    await expect(nav.getByRole('button', { name: /Orders/ })).toHaveCount(0)
-    await expect(
-      page.getByText("Guests can't order from your menu while this is off."),
-    ).toBeVisible()
+    await expect(nav.getByRole('button', { name: /^Delivery and pickup/ })).toHaveCount(0)
+    await expect(page.getByText("Guests can't order for delivery or pickup.")).toBeVisible()
 
     // An open Orders page hands over to the overview.
     await page.goto('/orders')

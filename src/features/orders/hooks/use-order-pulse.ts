@@ -135,4 +135,4 @@ export function useOrderPulse(enabled: boolean, restaurantId: number): OrdersWai
 }
 
 /** Orders waiting to be accepted: on the Orders page, and on Table orders. */
-export type OrdersWaiting = { orders: number; tables: number }
+type OrdersWaiting = { orders: number; tables: number }

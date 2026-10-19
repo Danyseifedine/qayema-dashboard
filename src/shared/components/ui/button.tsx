@@ -52,7 +52,6 @@ const button = cva(
          * on every screen and a row of both lines up.
          */
         md: 'px-5 py-2.5 text-[14px] leading-5',
-        lg: 'h-[50px] px-6 text-[14.5px]',
         icon: 'size-10 px-0',
       },
       block: { true: 'w-full', false: '' },

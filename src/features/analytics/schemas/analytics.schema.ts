@@ -32,7 +32,7 @@ const statsSummarySchema = z.object({
   order_channel: z.enum(['whatsapp', 'menu']).nullable().default(null),
   /** The same totals for the period before (today: yesterday up to now); null for "All time". */
   previous: z
-    .object({ views: count, qr_scans: count, orders: count.nullable() })
+    .object({ views: count, unique_visitors: count, qr_scans: count, orders: count.nullable() })
     .nullable()
     .default(null),
   /** One point a day ("2026-10-13"); for today, one an hour so far ("2026-10-13T14:00"). */
@@ -61,15 +61,6 @@ const GUEST_ACTIONS = [
 export type GuestAction = (typeof GUEST_ACTIONS)[number]
 
 const advancedStatsSchema = z.object({
-  /** The same totals for the period before; null for "All time". */
-  previous: z
-    .object({
-      views: count,
-      unique_visitors: count,
-      qr_scans: count,
-      orders: count.nullable(),
-    })
-    .nullable(),
   /** Views by hour of day, 0 to 23, in the restaurant's timezone. */
   hours: z.array(count).length(24),
   /** Views by weekday, Monday first. */

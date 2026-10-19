@@ -1,6 +1,6 @@
 {
   "page": {
-    "description": "Orders guests placed in your menu. Call them back, then mark each one done."
+    "description": "Orders guests place from home, for delivery or pickup. Call them back, then mark each one done."
   },
   "status": {
     "placed": "New",

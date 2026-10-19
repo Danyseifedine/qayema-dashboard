@@ -1,1 +1,0 @@
-import{s as e}from"./keys-BbpuPPGj.js";async function t(t,n){try{await navigator.clipboard.writeText(t),e.success(n.copied)}catch{e.error(n.failed)}}export{t};

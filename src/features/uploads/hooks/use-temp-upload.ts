@@ -5,7 +5,7 @@ import { ApiError } from '@/shared/types/api'
 import { uploadTempImage } from '@/features/uploads/api/temp-upload.api'
 import type { TempUpload, UploadContext } from '@/features/uploads/schemas/temp-upload.schema'
 
-export type UploadState = {
+type UploadState = {
   uploading: boolean
   /** 0-100 while the bytes are in flight, null when the size is unknown. */
   progress: number | null

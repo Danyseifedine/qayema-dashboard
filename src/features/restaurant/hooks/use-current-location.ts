@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { t } from '@/lib/i18n'
 
-export type Coordinates = { lat: number; lng: number }
+type Coordinates = { lat: number; lng: number }
 
 /** A Google Maps link that opens exactly this point. */
 export function googleMapsUrlFor({ lat, lng }: Coordinates): string {
@@ -67,7 +67,7 @@ export function parseMapCoordinates(url: string | null | undefined): Coordinates
   return null
 }
 
-export type CurrentLocationState = {
+type CurrentLocationState = {
   locating: boolean
   error: string | null
   /** Asks the browser where we are and hands back a point. */

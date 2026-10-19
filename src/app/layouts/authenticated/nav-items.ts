@@ -7,6 +7,7 @@ import {
   IconPalette,
   IconQrcode,
   IconReceipt,
+  IconShoppingBag,
   IconBuildingStore,
   IconColorSwatch,
   IconShare,
@@ -52,7 +53,7 @@ export type NavItem = {
   switchKey?: string
 }
 
-export type NavGroup = {
+type NavGroup = {
   key: string
   /** Omitted for the first group, which needs no heading. */
   labelKey?: NavLabelKey
@@ -89,7 +90,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         key: 'orders',
         labelKey: 'nav.orders',
-        icon: IconReceipt,
+        icon: IconShoppingBag,
         requiresTemplate: true,
         requiresPlan: 'ordering',
         hideable: true,
@@ -190,6 +191,11 @@ export const NAV_ITEMS: NavItem[] = [
   MORE_ITEM,
 ]
 
+/** A page by its key, or undefined for a key that is none. */
+export function navItem(key: string): NavItem | undefined {
+  return NAV_ITEMS.find((item) => item.key === key)
+}
+
 /** The sections an owner can switch off, in sidebar order. */
 const HIDEABLE_ITEMS: NavItem[] = NAV_ITEMS.filter((item) => item.hideable)
 
@@ -221,10 +227,10 @@ export type NavAccess = {
  * next to a rendered page, which is exactly the mismatch that let the app open
  * on a section the owner could not use.
  */
-export type NavLock = 'template' | 'plan' | null
+type NavLock = 'template' | 'plan' | null
 
 export function navLock(key: string, access: NavAccess): NavLock {
-  const item = NAV_ITEMS.find((candidate) => candidate.key === key)
+  const item = navItem(key)
   if (!item) return null
 
   if (item.requiresTemplate === true && !access.hasTemplate) return 'template'
@@ -256,22 +262,20 @@ export type PhoneTab = {
  */
 export function phoneTabs(access: NavAccess, off: readonly string[]): PhoneTab[] {
   const shown = (key: string) => {
-    const item = NAV_ITEMS.find((candidate) => candidate.key === key)!
+    const item = navItem(key)!
     return !isNavItemHidden(key, off) && isOnPlan(item, access.plan)
   }
   const third = ['orders', 'table-orders', 'analytics'].find(shown) ?? 'qr'
-  const thirdItem = NAV_ITEMS.find((item) => item.key === third)!
+  const thirdItem = navItem(third)!
   const ordersCover = ['orders', 'table-orders'].filter(shown)
 
   return [
     { key: 'overview', labelKey: 'nav.home', icon: IconHome, covers: ['overview'] },
     { key: 'dishes', labelKey: 'nav.menu', icon: IconBowlSpoon, covers: ['dishes', 'categories'] },
-    {
-      key: third,
-      labelKey: thirdItem.labelKey,
-      icon: thirdItem.icon,
-      covers: third === 'orders' || third === 'table-orders' ? ordersCover : [third],
-    },
+    // One tab for both kinds of order: "Orders", the receipt.
+    third === 'orders' || third === 'table-orders'
+      ? { key: third, labelKey: 'nav.ordersGroup', icon: IconReceipt, covers: ordersCover }
+      : { key: third, labelKey: thirdItem.labelKey, icon: thirdItem.icon, covers: [third] },
     { key: 'more', labelKey: 'nav.more', icon: IconLayoutGrid, covers: ['more'] },
   ]
 }

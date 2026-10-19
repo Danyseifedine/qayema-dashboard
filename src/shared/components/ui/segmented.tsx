@@ -59,10 +59,12 @@ export function Segmented<T extends string>({
             onClick={() => onChange(option.value)}
             className={cn(
               'inline-flex items-center gap-1.5 whitespace-nowrap rounded-[8px] font-medium',
-              block && 'flex-1 justify-center',
               'transition-[background-color,color,border-color] duration-200',
               'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--gold-on)]',
               size === 'sm' ? 'px-3 py-1 text-[12px]' : 'px-4 py-2 text-[13px]',
+              // Sharing the width evenly, with room for every option on a
+              // narrow phone.
+              block && 'min-w-0 flex-1 justify-center gap-1 px-1.5',
               active
                 ? 'bg-accent-wash text-accent'
                 : 'text-[var(--muted)] hover:text-[var(--text)]',

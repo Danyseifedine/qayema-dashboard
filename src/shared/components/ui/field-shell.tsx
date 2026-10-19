@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
 
-export type FieldTone = 'default' | 'error' | 'success'
+export type FieldTone = 'default' | 'error'
 
 /**
  * The bordered box every text-like control sits in.
@@ -36,10 +36,6 @@ export function FieldShell({
         ],
         tone === 'error' && [
           'border-danger shadow-[0_0_0_3px_var(--ring-danger)]',
-          'focus-within:bg-[var(--surface)]',
-        ],
-        tone === 'success' && [
-          'border-status-success shadow-[0_0_0_3px_var(--ring-success)]',
           'focus-within:bg-[var(--surface)]',
         ],
         disabled && 'pointer-events-none bg-[var(--disabled-wash)] opacity-55',

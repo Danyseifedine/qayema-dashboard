@@ -4,6 +4,7 @@ import { useTableOrderingMode } from '@/features/auth'
 import { PictureEmptyState } from '@/shared/components/feedback'
 import { Button } from '@/shared/components/ui'
 import { OrderBoard } from '@/features/orders/components/list/order-board'
+import { OrdersSwitch } from '@/features/orders/components/list/orders-switch'
 import type { Order } from '@/features/orders/schemas/order.schema'
 
 /** A tent card waiting on an empty table: before the first table order. */
@@ -14,6 +15,8 @@ export type TableOrdersPageProps = {
   onOpenTables: () => void
   /** Opens the Features page, where table orders can come here instead of WhatsApp. */
   onOpenFeatures: () => void
+  /** Opens Delivery and pickup, while the restaurant takes those too. */
+  onOpenOrders?: () => void
 }
 
 /**
@@ -21,39 +24,46 @@ export type TableOrdersPageProps = {
  * floor sees at a glance which table is waiting. A page of its own, with
  * its own way in, whichever way delivery and pickup come in.
  */
-export function TableOrdersPage({ onOpenTables, onOpenFeatures }: TableOrdersPageProps) {
+export function TableOrdersPage({
+  onOpenTables,
+  onOpenFeatures,
+  onOpenOrders,
+}: TableOrdersPageProps) {
   const { t } = useTranslation('orders')
   const onWhatsApp = useTableOrderingMode() === 'whatsapp'
 
   return (
-    <OrderBoard
-      kind="table"
-      onWhatsApp={onWhatsApp}
-      whatsApp={{
-        titleKey: 'tables.whatsappTitle',
-        alone: t('tables.whatsappDescription'),
-        earlier: t('tables.whatsappEarlier'),
-      }}
-      onOpenFeatures={onOpenFeatures}
-      filteredIcon={IconToolsKitchen2}
-      sort={byTable}
-      empty={
-        <PictureEmptyState
-          picture={NO_ORDERS}
-          title={t('tables.emptyTitle')}
-          description={t('tables.emptyDescription')}
-          action={
-            <Button
-              block
-              leadingIcon={<IconPlus aria-hidden className="size-4" />}
-              onClick={onOpenTables}
-            >
-              {t('tables.openTables')}
-            </Button>
-          }
-        />
-      }
-    />
+    <div className="flex flex-1 flex-col gap-4">
+      {onOpenOrders ? <OrdersSwitch value="table-orders" onOpen={onOpenOrders} /> : null}
+      <OrderBoard
+        kind="table"
+        onWhatsApp={onWhatsApp}
+        whatsApp={{
+          titleKey: 'tables.whatsappTitle',
+          alone: t('tables.whatsappDescription'),
+          earlier: t('tables.whatsappEarlier'),
+        }}
+        onOpenFeatures={onOpenFeatures}
+        filteredIcon={IconToolsKitchen2}
+        sort={byTable}
+        empty={
+          <PictureEmptyState
+            picture={NO_ORDERS}
+            title={t('tables.emptyTitle')}
+            description={t('tables.emptyDescription')}
+            action={
+              <Button
+                block
+                leadingIcon={<IconPlus aria-hidden className="size-4" />}
+                onClick={onOpenTables}
+              >
+                {t('tables.openTables')}
+              </Button>
+            }
+          />
+        }
+      />
+    </div>
   )
 }
 

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { downloadQr, qrOptions, useQr } from '@/features/qr'
-import { ConfirmDialog, EmptyState, ErrorState, Skeleton } from '@/shared/components/feedback'
+import { ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
 import { AddTablesDialog } from '@/features/tables/components/dialogs/add-tables-dialog'
 import { PrintSheet } from '@/features/tables/components/print/print-sheet'
@@ -123,11 +123,11 @@ export function TablesPage({ onOpenFeatures }: TablesPageProps) {
       ) : null}
 
       {tables.isPending ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-[232px]" />
-          ))}
-        </div>
+        <SkeletonList
+          count={4}
+          className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4"
+          itemClassName="h-[232px]"
+        />
       ) : tables.isError ? (
         <ErrorState description={tables.error.message} onRetry={() => void tables.refetch()} />
       ) : list.length === 0 ? (

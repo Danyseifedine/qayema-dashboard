@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { NAV_ITEMS } from '@/app/layouts/authenticated/nav-items'
+import { navItem } from '@/app/layouts/authenticated/nav-items'
 import type { TopbarHero } from '@/app/layouts/authenticated/topbar/topbar'
 
 /**
@@ -21,7 +21,7 @@ export function usePageHero(key: string, ownerName: string): TopbarHero {
     return { eyebrow: t('nav.more'), title: t('nav.more'), subtitle: t('more.subtitle') }
   }
 
-  const item = NAV_ITEMS.find((candidate) => candidate.key === key)
+  const item = navItem(key)
   const name = item ? t(item.labelKey) : t('app.dashboard')
   return { eyebrow: name, title: name, subtitle: subtitleOf(key) }
 

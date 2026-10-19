@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useSession } from '@/features/auth'
-import { ErrorState, Skeleton } from '@/shared/components/feedback'
+import { ErrorState, SkeletonList } from '@/shared/components/feedback'
 import { PasswordSection } from '@/features/account/components/password/password-section'
 import { ProfileSection } from '@/features/account/components/profile/profile-section'
 
@@ -19,11 +19,11 @@ export function AccountPage() {
   return (
     <div className="flex flex-1 flex-col gap-5">
       {session.isPending ? (
-        <div className="grid items-start gap-4 xl:grid-cols-2">
-          {Array.from({ length: 2 }, (_, index) => (
-            <Skeleton key={index} className="h-56" />
-          ))}
-        </div>
+        <SkeletonList
+          count={2}
+          className="grid items-start gap-4 xl:grid-cols-2"
+          itemClassName="h-56"
+        />
       ) : session.isError || user === undefined ? (
         <ErrorState
           description={session.error?.message ?? t('page.loadFailed')}

@@ -10,7 +10,7 @@ import {
 } from '@/shared/hooks/use-writing-help'
 
 /** What "Write with AI" writes: a category's line about `subject` (its name), or the restaurant's. */
-export type DescriptionToWrite = { kind: 'category'; subject: string } | { kind: 'restaurant' }
+type DescriptionToWrite = { kind: 'category'; subject: string } | { kind: 'restaurant' }
 
 export type WritingHelpButtonsProps = {
   /** The open tab. */

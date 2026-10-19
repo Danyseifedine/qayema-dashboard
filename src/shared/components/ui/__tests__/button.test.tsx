@@ -49,7 +49,6 @@ describe('Button', () => {
   it.each([
     ['xs', 'h-7'],
     ['sm', 'h-9'],
-    ['lg', 'h-[50px]'],
     ['icon', 'size-10'],
   ] as const)('sizes to %s', (size, className) => {
     render(<Button size={size}>Go</Button>)

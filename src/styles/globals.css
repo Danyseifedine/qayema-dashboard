@@ -251,6 +251,13 @@
       0 2px 6px -2px rgba(0, 0, 0, 0.5);
     color: var(--color-gold);
   }
+
+  /* Its shadow on a light page: the warm shade the cards use, not black. */
+  :root:not([data-theme='dark']) .gold-chip {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 236, 196, 0.12),
+      0 2px 6px -3px rgba(20, 17, 9, 0.3);
+  }
 }
 
 /* A social link's card (social-link-card.tsx) is the plain glass card; its
@@ -392,9 +399,11 @@
     --glow-dir: -1;
   }
 
-  /* Slowly, like a candle shifting: the glow drifts along the top and back. */
+  /* Slowly, like a candle shifting: the glow drifts along the top and back
+     a few times, then rests. Not for ever: a background gradient cannot be
+     moved by the graphics chip, so each frame is a repaint of the panel. */
   .gold-panel {
-    animation: gold-panel-drift 9s ease-in-out infinite alternate;
+    animation: gold-panel-drift 9s ease-in-out 4 alternate;
   }
 
   /* Now and then a glint crosses the metal, then it rests. On a layer of
@@ -458,10 +467,12 @@
       linear-gradient(to bottom, #000 58%, transparent);
   }
 
+  /* On a light page too it keeps its subject: the words never reach it
+     (the card keeps its share of the row free), so only the edges fade. */
   :root:not([data-theme='dark']) .card-picture-inside {
     mask-image:
-      linear-gradient(to left, transparent, #000 14%, #000 24%, transparent 75%),
-      linear-gradient(to bottom, #000 35%, transparent);
+      linear-gradient(to left, transparent, #000 14%, #000 48%, transparent),
+      linear-gradient(to bottom, #000 50%, transparent);
   }
 }
 
@@ -528,8 +539,20 @@
     bottom: calc(var(--tabbar-height, 0px) - 20px);
     padding-bottom: calc(0.75rem + 20px);
     margin-bottom: calc(var(--tabbar-height, 0px) - 20px - 5rem - env(safe-area-inset-bottom));
-    background-color: color-mix(in srgb, var(--bg) 88%, transparent);
-    backdrop-filter: blur(16px);
+    /* Out to the page's edges, past main's gutter, under a hairline. Nearly
+       opaque rather than blurred: a blur under a sticky bar is redrawn on
+       every frame of a scroll. */
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    border-top: 0.5px solid var(--line);
+    background-color: color-mix(in srgb, var(--bg) 95%, transparent);
+  }
+
+  @media (min-width: 40rem) {
+    .sticky-actions {
+      margin-inline: -1.5rem;
+      padding-inline: 1.5rem;
+    }
   }
 
   @media (min-width: 64rem) {

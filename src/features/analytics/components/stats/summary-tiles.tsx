@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { StatTile } from '@/shared/components/data-display'
 import { changeBetween } from '@/shared/utils/format/change'
 import { formatNumber } from '@/shared/utils/format/number'
-import type { AdvancedStats, StatsSummary } from '@/features/analytics/schemas/analytics.schema'
+import type { StatsSummary } from '@/features/analytics/schemas/analytics.schema'
 import { usePreferencesStore } from '@/stores/preferences.store'
 
 export type SummaryTilesProps = {
@@ -10,10 +10,11 @@ export type SummaryTilesProps = {
   /** What the orders tile counts (StatsSummary['order_channel']). */
   channel: StatsSummary['order_channel']
   /**
-   * The period before, from advanced analytics. Left out, the tiles show no
-   * change line at all; null ("All time") says there is nothing to compare.
+   * The period before (shown with advanced analytics). Left out, the tiles
+   * show no change line at all; null ("All time") says there is nothing to
+   * compare.
    */
-  previous?: AdvancedStats['previous']
+  previous?: StatsSummary['previous']
   /** "N today" under the views; left out when the range is today itself. */
   showToday?: boolean
 }

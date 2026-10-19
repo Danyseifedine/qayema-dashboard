@@ -5,7 +5,7 @@ import { t } from '@/lib/i18n'
  * Mirrors ../qayema/app/Http/Resources/DiningTableResource.php and the meta
  * of DiningTableController::index().
  */
-export const diningTableSchema = z.object({
+const diningTableSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   /** What the table's QR code carries. Random, so it cannot be guessed. */

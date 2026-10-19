@@ -27,7 +27,6 @@ export type TimePickerProps = {
   title: string
   /** "Monday opens": what a screen reader hears before each part. */
   label: string
-  disabled: boolean
 }
 
 /**
@@ -36,15 +35,7 @@ export type TimePickerProps = {
  * falls in beside it. Stored as "HH:MM" as before. A part picked before the
  * hour waits for it; a saved time on other minutes (07:20) keeps them.
  */
-export function TimePicker({
-  control,
-  day,
-  shift,
-  which,
-  title,
-  label,
-  disabled,
-}: TimePickerProps) {
+export function TimePicker({ control, day, shift, which, title, label }: TimePickerProps) {
   const { t } = useTranslation('restaurant')
   const { field, fieldState } = useController({
     control,
@@ -78,7 +69,7 @@ export function TimePicker({
       label={
         <span className="normal-case tracking-normal">
           {title}
-          {period && !disabled ? (
+          {period ? (
             <span className="text-[var(--muted)]"> · {t(`openingHours.periods.${period}`)}</span>
           ) : null}
         </span>
@@ -87,7 +78,9 @@ export function TimePicker({
       className="pt-0"
     >
       {({ id, describedBy, invalid }) => (
-        <div className="flex items-center gap-1" dir="ltr">
+        // Read left to right like a clock in every language, but kept on the
+        // reading side, under its label, in Arabic too.
+        <div className="flex items-center gap-1 self-start" dir="ltr">
           <div className="w-[62px] shrink-0">
             <Combobox
               options={HOURS}
@@ -99,7 +92,6 @@ export function TimePicker({
               searchable={false}
               size="sm"
               placeholder="--"
-              disabled={disabled}
               aria-label={t('openingHours.hourOf', { what: label })}
               aria-describedby={describedBy}
               aria-invalid={invalid || undefined}
@@ -117,7 +109,6 @@ export function TimePicker({
               onChange={(value) => value && set({ minute: value })}
               searchable={false}
               size="sm"
-              disabled={disabled}
               aria-label={t('openingHours.minutesOf', { what: label })}
             />
           </div>
@@ -126,8 +117,8 @@ export function TimePicker({
             value={meridiem}
             onChange={(value) => set({ meridiem: value })}
             options={[
-              { value: 'am', label: t('openingHours.am'), disabled },
-              { value: 'pm', label: t('openingHours.pm'), disabled },
+              { value: 'am', label: t('openingHours.am') },
+              { value: 'pm', label: t('openingHours.pm') },
             ]}
             aria-label={t('openingHours.meridiemOf', { what: label })}
           />

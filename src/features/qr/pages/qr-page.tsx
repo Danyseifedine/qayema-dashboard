@@ -35,7 +35,7 @@ import { CustomiseTiles, type StudioSheet } from '@/features/qr/components/studi
 import { StudioCard } from '@/features/qr/components/studio/studio-card'
 import { StudioOff } from '@/features/qr/components/studio/studio-off'
 import { downloadQr } from '@/features/qr/utils/qr-download'
-import { qrOptions, weakParts, type WeakPart } from '@/features/qr/utils/qr-options'
+import { qrOptions, weakParts, type QrLook, type WeakPart } from '@/features/qr/utils/qr-options'
 import { QrPreview } from '@/features/qr/components/preview/qr-preview'
 import { QrStats } from '@/features/qr/components/stats/qr-stats'
 import { useQr, useSaveQr } from '@/features/qr/hooks/use-qr'
@@ -46,9 +46,9 @@ import {
   type Qr,
   type QrFormValues,
 } from '@/features/qr/schemas/qr.schema'
+import { QR_GROUND } from '@/shared/constants/pictures'
 
 /** A dark marble table under warm lights: the stage the live code stands on. */
-const GROUND = '/assets/images/dashboard/qr-ground.webp'
 
 /** Everything that changes how the code looks: what "Reset to simple" puts back. */
 const LOOK_FIELDS = [
@@ -63,7 +63,7 @@ const LOOK_FIELDS = [
   'background',
   'logo',
   'logo_size',
-] as const satisfies readonly (keyof QrFormValues)[]
+] as const satisfies readonly (keyof QrLook)[]
 
 /**
  * The menu's QR code: a plain one that works as it is, and everything needed
@@ -106,14 +106,18 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
     defaultValues: toFormValues(qr.settings),
   })
 
-  // The preview follows what is on screen, saved or not.
-  const values = useWatch({ control: form.control }) as QrFormValues
-  const design = useMemo(() => toDesign(values), [values])
-  const options = useMemo(
-    () => qrOptions(design, qr.url, qr.logo_data_url),
-    [design, qr.url, qr.logo_data_url],
+  // The preview follows what is on screen, saved or not: only the fields
+  // that change the code, so typing the card's words never redraws it.
+  const watched = useWatch({ control: form.control, name: LOOK_FIELDS })
+  const look = useMemo(
+    () => Object.fromEntries(LOOK_FIELDS.map((field, index) => [field, watched[index]])) as QrLook,
+    [watched],
   )
-  const weak = weakParts(design)
+  const options = useMemo(
+    () => qrOptions(look, qr.url, qr.logo_data_url),
+    [look, qr.url, qr.logo_data_url],
+  )
+  const weak = weakParts(look)
   const dirty = form.formState.isDirty
 
   const fileName = `${qr.display_url.split('/').pop() || 'menu'}-qr`
@@ -161,7 +165,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
       {/* The code, live, standing on a table; the buttons sit on its dark front edge. */}
       <div className="relative isolate overflow-hidden glass-card rounded-card p-3 sm:p-4">
         <img
-          src={GROUND}
+          src={QR_GROUND}
           alt=""
           aria-hidden
           decoding="async"
@@ -201,7 +205,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
       ) : null}
 
       <StudioCard icon={IconCircleDotFilled} title={t('page.linkTitle')}>
-        <div className="flex h-11 items-center rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--hover-wash)]">
+        <div className="flex h-11 items-center rounded-card border-[0.5px] border-[var(--line)] bg-[var(--hover-wash)]">
           <IconLink aria-hidden className="mx-3 size-4 shrink-0 text-[var(--muted)]" />
           <span aria-hidden className="h-5 w-px shrink-0 bg-[var(--line)]" />
           <span dir="ltr" className="min-w-0 flex-1 truncate px-3 text-start text-[13.5px]">
@@ -223,7 +227,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
             href={qr.card_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2.5 rounded-[8px] text-[13.5px] font-medium text-accent underline-offset-4 hover:underline focus-ring"
+            className="flex items-center gap-2.5 rounded-tile text-[13.5px] font-medium text-accent underline-offset-4 hover:underline focus-ring"
           >
             <IconExternalLink aria-hidden className="size-[18px] shrink-0" />
             <span className="min-w-0 flex-1">{t('page.openCard')}</span>
@@ -268,10 +272,7 @@ function QrStudio({ qr, locale, onOpenFeatures, onOpenPackage }: QrPageProps & {
           </StudioCard>
 
           {/* Pinned above the phone's tabs, so Save is in reach from any card. */}
-          <FormActions
-            align="between"
-            className="sticky-actions -mx-4 border-t-[0.5px] border-[var(--line)] px-4 pt-3 sm:-mx-6 sm:px-6"
-          >
+          <FormActions align="between" className="sticky-actions pt-3">
             <Button
               variant="ghost"
               leadingIcon={<IconRotate aria-hidden className="size-4" />}

@@ -18,10 +18,7 @@ describe('Alert', () => {
     expect(screen.getByRole('alert')).toHaveClass('text-status-danger')
   })
 
-  it.each([
-    ['warning', 'text-status-warn'],
-    ['success', 'text-status-success'],
-  ] as const)('shows a %s as a status', (variant, className) => {
+  it.each([['warning', 'text-status-warn']] as const)('shows a %s as a status', (variant, className) => {
     render(<Alert variant={variant}>Note</Alert>)
 
     expect(screen.getByRole('status')).toHaveClass(className)

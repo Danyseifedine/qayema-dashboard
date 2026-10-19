@@ -15,8 +15,8 @@ export type SidebarItemProps = {
 }
 
 /**
- * One row in the sidebar. Active state is a gold wash with a gold rail on the
- * leading edge, echoing the sliding gold underline on the portal's navbar.
+ * One row in the sidebar. The open page sits on the same gold card as the
+ * open tab in the phone's bottom bar.
  */
 export function SidebarItem({
   icon: Icon,
@@ -42,17 +42,11 @@ export function SidebarItem({
         'focus-ring',
         collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
         active
-          ? 'bg-accent-wash font-medium text-accent'
+          ? 'bg-[image:var(--tab-on)] font-medium text-accent shadow-[var(--tab-on-edge)]'
           : 'text-[var(--muted)] hover:bg-[var(--hover-wash)] hover:text-[var(--text)]',
         locked && 'cursor-not-allowed opacity-40 hover:bg-transparent',
       )}
     >
-      {active ? (
-        <span
-          aria-hidden
-          className="absolute inset-y-1.5 start-0 w-[3px] rounded-full bg-accent-fill"
-        />
-      ) : null}
       <Icon aria-hidden className="size-[18px] shrink-0" />
       {collapsed ? null : <span className="truncate text-start">{label}</span>}
       {!collapsed && badge ? <span className="ms-auto shrink-0">{badge}</span> : null}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ErrorState, Skeleton } from '@/shared/components/feedback'
+import { ErrorState, Skeleton, SkeletonList } from '@/shared/components/feedback'
 import { FormSection } from '@/shared/components/forms'
 import type { Locale } from '@/shared/constants/locales'
 import { BusyTimesChart } from '@/features/analytics/components/charts/busy-times-chart'
@@ -52,7 +52,8 @@ export function AnalyticsPage({ locale, advanced, onOpenPackage }: AnalyticsPage
         <Summary
           summary={summary.data}
           today={range === 'today'}
-          previous={advanced ? insights.data?.previous : undefined}
+          // The change against the period before is part of advanced analytics.
+          previous={advanced ? summary.data.previous : undefined}
           locale={locale}
         />
       )}
@@ -79,7 +80,7 @@ function Summary({
   summary: StatsSummary
   /** The range is today: the views tile needs no "N today" under it. */
   today: boolean
-  previous: AdvancedStats['previous'] | undefined
+  previous: StatsSummary['previous'] | undefined
   locale: Locale
 }) {
   const { t } = useTranslation('analytics')
@@ -216,11 +217,11 @@ function Advanced({ insights, locale }: { insights: AdvancedStats; locale: Local
 function SummarySkeleton() {
   return (
     <>
-      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-        {Array.from({ length: 4 }, (_, index) => (
-          <Skeleton key={index} className="h-[84px] rounded-[12px]" />
-        ))}
-      </div>
+      <SkeletonList
+        count={4}
+        className="grid grid-cols-2 gap-2.5 lg:grid-cols-4"
+        itemClassName="h-[84px]"
+      />
       <Skeleton className="h-[300px]" />
     </>
   )

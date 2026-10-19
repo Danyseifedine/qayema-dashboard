@@ -1,8 +1,8 @@
-import { IconPhotoOff, IconPencil, IconTrash } from '@tabler/icons-react'
+import { IconPhotoOff } from '@tabler/icons-react'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Money } from '@/shared/components/data-display'
-import { Button, Switch } from '@/shared/components/ui'
+import { RowActions, Switch } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
@@ -88,7 +88,7 @@ export const DishCard = memo(function DishCard({
             stay readable (and editable) at full contrast. */}
           <div
             className={cn(
-              'size-[76px] shrink-0 overflow-hidden rounded-[12px] bg-[var(--hover-wash)]',
+              'size-[76px] shrink-0 overflow-hidden rounded-card bg-[var(--hover-wash)]',
               !dish.is_available && 'opacity-50',
             )}
           >
@@ -171,27 +171,16 @@ export const DishCard = memo(function DishCard({
           </label>
 
           <div className="ms-auto flex items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(dish)}
-              aria-label={
+            <RowActions
+              editLabel={
                 name.text ? t('dishCard.edit', { name: name.text }) : t('dishCard.editUnnamed')
               }
-            >
-              <IconPencil aria-hidden className="size-[18px]" stroke={1.7} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(dish)}
-              aria-label={
+              deleteLabel={
                 name.text ? t('dishCard.delete', { name: name.text }) : t('dishCard.deleteUnnamed')
               }
-              className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
-            >
-              <IconTrash aria-hidden className="size-[18px]" stroke={1.7} />
-            </Button>
+              onEdit={() => onEdit(dish)}
+              onDelete={() => onDelete(dish)}
+            />
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import type { Package, PackageFlag, PackageLimit } from '@/features/package/schemas/package.schema'
 
-export type PackageGroup = 'menu' | 'look' | 'guests' | 'numbers'
+type PackageGroup = 'menu' | 'look' | 'guests' | 'numbers'
 
 export type PackageRow =
   | { kind: 'limit'; key: PackageLimit; group: PackageGroup }

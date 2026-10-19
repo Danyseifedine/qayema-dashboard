@@ -62,8 +62,8 @@ const SECTIONS = [
   },
   {
     key: 'orders',
-    en: 'Orders',
-    ar: 'الطلبات',
+    en: 'Delivery and pickup',
+    ar: 'التوصيل والاستلام',
     locked: startsWith('Take orders from the menu', 'استقبل الطلبات من القائمة'),
   },
 ] as const
@@ -242,7 +242,7 @@ test.describe('packages: the Package page', () => {
       page.getByRole('button', { name: 'Free package. Open your package.' }),
     ).toBeVisible()
     const nav = await sidebar(page)
-    await expect(row(nav, 'Orders', 'الطلبات')).toHaveCount(0)
+    await expect(row(nav, 'Delivery and pickup', 'التوصيل والاستلام')).toHaveCount(0)
   })
 
   test('the cards: popular, what each adds, and who can ask', async ({ page, owner }) => {
@@ -402,7 +402,7 @@ test.describe('packages: moving down and back up', () => {
         ),
       )
       await page.goto('/orders')
-      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Orders')
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Delivery and pickup')
       await expect(page.getByRole('heading', { name: SECTIONS[2].locked })).toHaveCount(0)
       await page.goto('/design')
       await expect(page.getByText('Currently in use')).toBeVisible()
@@ -425,7 +425,7 @@ test.describe('packages: moving down and back up', () => {
     // The sections Free lacks leave the sidebar; a link still opens their page.
     await expect(row(nav, 'Analytics', 'الإحصاءات')).toHaveCount(0)
     await expect(row(nav, 'Appearance', 'المظهر')).toHaveCount(0)
-    await expect(row(nav, 'Orders', 'الطلبات')).toHaveCount(0)
+    await expect(row(nav, 'Delivery and pickup', 'التوصيل والاستلام')).toHaveCount(0)
     await inOrder(SECTIONS, async (section) => {
       await page.goto(`/${section.key}`)
       await expect(page.getByRole('heading', { name: section.locked })).toBeVisible()

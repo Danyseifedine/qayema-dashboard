@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { imageChanges } from '@/features/uploads'
 import { useSession } from '@/features/auth'
 import { Form, FormActions } from '@/shared/components/forms'
-import { ErrorState, Skeleton } from '@/shared/components/feedback'
+import { ErrorState, SkeletonList } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { cn } from '@/shared/utils/dom/cn'
@@ -147,13 +147,7 @@ export function RestaurantPage() {
   })
 
   if (settings.isPending) {
-    return (
-      <div className="flex flex-1 flex-col gap-4">
-        {Array.from({ length: 4 }, (_, index) => (
-          <Skeleton key={index} className="h-40" />
-        ))}
-      </div>
-    )
+    return <SkeletonList count={4} className="flex flex-1 flex-col gap-4" itemClassName="h-40" />
   }
 
   if (settings.isError) {
@@ -228,10 +222,7 @@ export function RestaurantPage() {
 
         {/* Pinned to the bottom of the viewport: the form is long enough that a
             button at its end would be off screen while editing the first field. */}
-        <FormActions
-          align="between"
-          className="sticky-actions -mx-4 mt-1 border-t-[0.5px] border-[var(--line)] px-4 pt-3 sm:-mx-6 sm:px-6"
-        >
+        <FormActions align="between" className="sticky-actions mt-1 pt-3">
           <span className="text-[12.5px] text-[var(--muted)]">
             {dirty ? t('page.unsavedChanges') : t('page.allSaved')}
           </span>

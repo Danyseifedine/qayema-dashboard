@@ -15,7 +15,7 @@ export type ChecklistItem = {
   action: { label: string; target: ChecklistTarget }
 }
 
-export type ChecklistInput = {
+type ChecklistInput = {
   settings: Restaurant
   dishes: Dish[]
   limits: AuthRestaurant['limits']
@@ -114,7 +114,7 @@ export function menuChecklist({ settings, dishes, limits }: ChecklistInput): Che
 /** The three stages of setting up a menu, in the order an owner goes through them. */
 export type SetupStepId = 'restaurant' | 'menu' | 'share'
 
-export type SetupStep = {
+type SetupStep = {
   id: SetupStepId
   items: ChecklistItem[]
   done: boolean

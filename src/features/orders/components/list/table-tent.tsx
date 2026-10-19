@@ -1,8 +1,8 @@
 import { useId } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
+import { QR_GROUND } from '@/shared/constants/pictures'
 
 /** The dark marble table the QR page's code stands on. */
-const GROUND = '/assets/images/dashboard/qr-ground.webp'
 
 /**
  * What a table's tent card shows: the number in its name ("Table 12" → 12),
@@ -23,7 +23,7 @@ export function TableTent({ name, className }: { name: string; className?: strin
   return (
     <div aria-hidden className={cn('relative isolate overflow-hidden rounded-tile', className)}>
       <img
-        src={GROUND}
+        src={QR_GROUND}
         alt=""
         decoding="async"
         loading="lazy"

@@ -1,7 +1,8 @@
-import { IconExternalLink, IconPencil, IconTrash } from '@tabler/icons-react'
+import { IconExternalLink } from '@tabler/icons-react'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/components/ui'
+import { RowActions } from '@/shared/components/ui'
+import { withoutScheme } from '@/shared/utils/string/url'
 import { cn } from '@/shared/utils/dom/cn'
 import {
   PLATFORM_LABELS,
@@ -37,7 +38,7 @@ export const SocialLinkCard = memo(function SocialLinkCard({
       data-platform={link.platform}
       className="social-card glass-card flex items-center gap-3.5 rounded-card p-3.5 sm:p-4"
     >
-      <span className="social-chip grid size-12 shrink-0 place-items-center rounded-[12px]">
+      <span className="social-chip grid size-12 shrink-0 place-items-center rounded-card">
         <PlatformIcon platform={link.platform} className="size-6" stroke={1.6} />
       </span>
 
@@ -53,30 +54,19 @@ export const SocialLinkCard = memo(function SocialLinkCard({
             'focus-ring',
           )}
         >
-          <span className="truncate">{link.url.replace(/^https?:\/\//, '')}</span>
+          <span className="truncate">{withoutScheme(link.url)}</span>
           <IconExternalLink aria-hidden className="size-3 shrink-0" />
         </a>
       </div>
 
       {/* The actions apart from what the link is, behind a hairline. */}
       <div className="flex shrink-0 items-center gap-0.5 self-stretch border-s-[0.5px] border-[var(--line)] ps-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onEdit(link)}
-          aria-label={t('card.edit', { platform: label })}
-        >
-          <IconPencil aria-hidden className="size-[18px]" stroke={1.7} />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(link)}
-          aria-label={t('card.remove', { platform: label })}
-          className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
-        >
-          <IconTrash aria-hidden className="size-[18px]" stroke={1.7} />
-        </Button>
+        <RowActions
+          editLabel={t('card.edit', { platform: label })}
+          deleteLabel={t('card.remove', { platform: label })}
+          onEdit={() => onEdit(link)}
+          onDelete={() => onDelete(link)}
+        />
       </div>
     </div>
   )

@@ -417,7 +417,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `ModalHeader` / `ModalFooter`; the native `<dialog>`, its open state, Escape
   and the backdrop handled once); a loading block is `Skeleton`; a row of
   filter chips is `FilterChips`; a popover closes through `useDismiss`;
-  keyboard focus is the `focus-ring` utility (globals.css); a panel inside a card (a number, a group of settings) is the `inset-tile` utility, never a bordered box, and a titled group of fields is `FormSection`, on the same glass card as `SectionCard`; copying a link is
+  a list still loading is `SkeletonList`; a row card's edit and delete are `RowActions`; whether a package's allowance is used up is `isAtLimit` (beside `LimitNotice`); keyboard focus is the `focus-ring` utility (globals.css); a panel inside a card (a number, a group of settings) is the `inset-tile` utility, never a bordered box, and a titled group of fields is `FormSection`, on the same glass card as `SectionCard`; copying a link is
   `copyWithToast`; a part of a whole reads through `formatShare`. Orders and
   Table orders are one `OrderBoard` with their own wording, empty state and
   sorting.
@@ -430,8 +430,17 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   picture (`public/assets/images/dashboard/more`, mapped by nav key in
   `ART`; a half-width card shows it whole as a band on top, with no icon
   but a lock when locked; Package and Account keep theirs on dark gold
-  glass, `.gold-chip` in globals.css), in the sidebar's order, locked and
-  left out exactly as the sidebar does, then Account across the width. A section opened
+  glass, `.gold-chip` in globals.css), under More's own headings (`GROUPS`
+  in more-page.tsx: Menu (Categories, Dishes), Look, Sharing (QR code,
+  Social links), Orders (Delivery and pickup, Table orders, Tables),
+  Insights (Analytics), Settings): every section but Home, the tabs' own
+  included, locked and left out exactly as the sidebar does, a heading with
+  nothing left going too, then Account across the width. The two kinds of
+  order have names that say which is which: the `orders` page is "Delivery
+  and pickup" (a bag), `table-orders` is "Table orders" (fork and knife); the
+  phone's tab for them is "Orders" (a receipt), and while both are taken
+  their pages switch between each other at the top (`OrdersSwitch`, on the
+  shared `PageSwitch`, like Dishes and Categories under Menu). A section opened
   from More shows a back button in the topbar. E2E reaches sections through
   `openSidebar()` (support/helpers), which opens More on a phone.
 - **Overview** (`features/overview`, Home): the topbar greets the owner by

@@ -278,14 +278,16 @@ test.describe('public menu', () => {
     await expect(label).toHaveText('Open now')
     await expect(label).toHaveClass(/fact-open/)
 
-    // Wednesday 00:30: Tuesday's shift runs past midnight, and Wednesday has none.
+    // Wednesday 00:30: Tuesday's shift runs past midnight and is still
+    // going, so it is the one shown, never "Closed today" beside "Open now".
     await at('2026-10-13T21:30:00Z')
     await expect(label).toHaveText('Open now')
-    await expect(value).toHaveText('Closed today')
+    await expect(value).toHaveText('18:00 - 01:00')
 
-    // Wednesday 02:00: that shift is over.
+    // Wednesday 02:00: that shift is over, and Wednesday has none.
     await at('2026-10-13T23:00:00Z')
     await expect(label).toHaveText('Closed now')
+    await expect(value).toHaveText('Closed today')
   })
 
   test('ordering in the menu waits for the opening hours on the same clock', async ({

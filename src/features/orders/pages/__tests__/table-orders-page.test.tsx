@@ -65,6 +65,33 @@ describe('TableOrdersPage', () => {
     expect(within(cards[1]!).getByRole('button', { name: 'Served' })).toBeInTheDocument()
   })
 
+  it('switches to delivery and pickup while the restaurant takes both, and only then', async () => {
+    mock
+      .onGet('/api/orders', { params: { kind: 'table' } })
+      .reply(200, { data: [], meta: { open: 0 } })
+    const onOpenOrders = vi.fn()
+    const user = userEvent.setup()
+    const { unmount } = renderWithProviders(
+      <TableOrdersPage
+        onOpenTables={() => {}}
+        onOpenFeatures={() => {}}
+        onOpenOrders={onOpenOrders}
+      />,
+    )
+
+    const both = await screen.findByRole('tablist', { name: 'Orders' })
+    expect(within(both).getByRole('tab', { name: 'Table orders' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    await user.click(within(both).getByRole('tab', { name: 'Delivery and pickup' }))
+    expect(onOpenOrders).toHaveBeenCalledOnce()
+    unmount()
+
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
+    expect(screen.queryByRole('tablist', { name: 'Orders' })).not.toBeInTheDocument()
+  })
+
   it('puts tables with nothing waiting in name order, and says nothing is waiting', async () => {
     mock.onGet('/api/orders', { params: { kind: 'table' } }).reply(200, {
       data: [

@@ -1,8 +1,5 @@
 import {
-  IconChartHistogram,
-  IconCirclePlus,
   IconLanguage,
-  IconListCheck,
   IconLock,
   type TablerIcon,
   IconQrcode,
@@ -21,8 +18,8 @@ import type {
 } from '@/features/auth'
 import { usePackageFor, type PackageFlag } from '@/features/package'
 import { ConfirmDialog } from '@/shared/components/feedback'
-import { Field, FormSection } from '@/shared/components/forms'
-import { Alert, Button, Combobox, Segmented, Switch } from '@/shared/components/ui'
+import { Field } from '@/shared/components/forms'
+import { Alert, Button, Combobox, SectionCard, Segmented, Switch } from '@/shared/components/ui'
 import { MENU_LANGUAGES, languageName } from '@/shared/constants/menu-languages'
 import {
   useMenuLanguagesState,
@@ -62,28 +59,45 @@ export type FeaturesPageProps = {
   onOpenDishes: () => void
 }
 
-const ROWS: Record<FeatureKey, { icon: TablerIcon; plan: PackageFlag }> = {
-  orders: { icon: IconReceipt, plan: 'ordering' },
-  dine_in: { icon: IconToolsKitchen2, plan: 'dine_in' },
-  variants: { icon: IconListCheck, plan: 'variants' },
-  addons: { icon: IconCirclePlus, plan: 'addons' },
-  languages: { icon: IconLanguage, plan: 'multiple_languages' },
-  qr: { icon: IconQrcode, plan: 'qr_studio' },
-  analytics: { icon: IconChartHistogram, plan: 'analytics' },
+const ROWS: Record<FeatureKey, { plan: PackageFlag }> = {
+  orders: { plan: 'ordering' },
+  dine_in: { plan: 'dine_in' },
+  variants: { plan: 'variants' },
+  addons: { plan: 'addons' },
+  languages: { plan: 'multiple_languages' },
+  qr: { plan: 'qr_studio' },
+  analytics: { plan: 'analytics' },
 }
 
 type GroupKey = 'ordering' | 'dishes' | 'languages' | 'sharing'
 
+const PICTURES = '/assets/images/dashboard/features'
+
 /**
  * Related features together, in the sidebar's order: how orders come in,
  * the choices on a dish, the menu's languages, then sharing and what guests
- * do on the menu.
+ * do on the menu. Each card has its mark and its photo, as on Appearance.
  */
-const GROUPS: { key: GroupKey; rows: FeatureKey[] }[] = [
-  { key: 'ordering', rows: ['orders', 'dine_in'] },
-  { key: 'dishes', rows: ['variants', 'addons'] },
-  { key: 'languages', rows: ['languages'] },
-  { key: 'sharing', rows: ['qr', 'analytics'] },
+const GROUPS: { key: GroupKey; icon: TablerIcon; picture: string; rows: FeatureKey[] }[] = [
+  {
+    key: 'ordering',
+    icon: IconReceipt,
+    picture: `${PICTURES}/orders.webp`,
+    rows: ['orders', 'dine_in'],
+  },
+  {
+    key: 'dishes',
+    icon: IconToolsKitchen2,
+    picture: `${PICTURES}/dish.webp`,
+    rows: ['variants', 'addons'],
+  },
+  { key: 'languages', icon: IconLanguage, picture: `${PICTURES}/lang.webp`, rows: ['languages'] },
+  {
+    key: 'sharing',
+    icon: IconQrcode,
+    picture: `${PICTURES}/analytics-qr.webp`,
+    rows: ['qr', 'analytics'],
+  },
 ]
 
 /**
@@ -116,45 +130,53 @@ export function FeaturesPage({
   return (
     <div className="flex flex-1 flex-col gap-4">
       {GROUPS.map((group) => (
-        <FormSection
+        <SectionCard
           key={group.key}
+          icon={<group.icon className="size-[18px]" stroke={1.8} />}
+          picture={group.picture}
+          // Small and whole in the corner: the switches start right under
+          // the title, and each photo's subject stands in its middle.
+          bleed={false}
+          smallPicture
           title={t(`groups.${group.key}.title`)}
           description={t(`groups.${group.key}.description`)}
         >
-          {group.key === 'languages' ? (
-            <MainLanguageField
-              mainLocale={mainLocale}
-              secondLocale={secondLocale}
-              defaultLocale={defaultLocale}
-              canHaveSecond={plan.multiple_languages}
-              onOpenDishes={onOpenDishes}
-            />
-          ) : null}
-          <ul
-            className={cn(
-              'flex flex-col divide-y-[0.5px] divide-[var(--line-2)]',
-              // Apart from the main language above it.
-              group.key === 'languages' && 'border-t-[0.5px] border-[var(--line-2)]',
-            )}
-          >
-            {group.rows.map((key) => (
-              <FeatureRow
-                key={key}
-                feature={key}
-                plan={plan}
-                off={off}
-                ordering={ordering}
+          <div className="flex flex-col gap-3">
+            {group.key === 'languages' ? (
+              <MainLanguageField
                 mainLocale={mainLocale}
                 secondLocale={secondLocale}
                 defaultLocale={defaultLocale}
-                onToggle={toggle}
-                onOpenPackage={onOpenPackage}
-                onOpenTables={onOpenTables}
-                onOpenRestaurant={onOpenRestaurant}
+                canHaveSecond={plan.multiple_languages}
+                onOpenDishes={onOpenDishes}
               />
-            ))}
-          </ul>
-        </FormSection>
+            ) : null}
+            <ul
+              className={cn(
+                'flex flex-col divide-y-[0.5px] divide-[var(--line-2)]',
+                // Apart from the main language above it.
+                group.key === 'languages' && 'border-t-[0.5px] border-[var(--line-2)]',
+              )}
+            >
+              {group.rows.map((key) => (
+                <FeatureRow
+                  key={key}
+                  feature={key}
+                  plan={plan}
+                  off={off}
+                  ordering={ordering}
+                  mainLocale={mainLocale}
+                  secondLocale={secondLocale}
+                  defaultLocale={defaultLocale}
+                  onToggle={toggle}
+                  onOpenPackage={onOpenPackage}
+                  onOpenTables={onOpenTables}
+                  onOpenRestaurant={onOpenRestaurant}
+                />
+              ))}
+            </ul>
+          </div>
+        </SectionCard>
       ))}
     </div>
   )
@@ -187,7 +209,6 @@ function FeatureRow({
 > & { feature: FeatureKey; onToggle: (key: FeatureKey, on: boolean) => void }) {
   const { t } = useTranslation('features')
   const row = ROWS[key]
-  const Icon = row.icon
   // Without the package a feature is off whatever the owner chose; their
   // choice is kept and applies again once the package has it.
   const included = plan[row.plan]
@@ -196,28 +217,25 @@ function FeatureRow({
   const offNote = key === 'analytics' ? null : t(`${key}.offNote`)
 
   return (
-    <li key={key} className="py-3.5">
+    <li key={key} className="py-3">
       <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center inset-tile text-accent">
-          <Icon aria-hidden className="size-[18px]" />
-        </span>
         <div className="min-w-0 flex-1">
           <p className="text-[14px] font-medium">
             {label}
             {included ? null : <PackageChip flag={row.plan} onOpenPackage={onOpenPackage} />}
           </p>
-          <p className="text-[12.5px] leading-snug text-[var(--muted)]">
+          <p className="mt-0.5 text-[12px] leading-snug text-[var(--muted)]">
             {t(`${key}.description`)}
           </p>
           {included && !on && offNote ? (
-            <p className="mt-1 text-[12.5px] leading-snug text-[var(--status-warn)]">{offNote}</p>
+            <p className="mt-1 text-[12px] leading-snug text-[var(--status-warn)]">{offNote}</p>
           ) : null}
           {key === 'dine_in' && on ? (
             <Button
               variant="link"
               size="sm"
               onClick={onOpenTables}
-              className="mt-1 h-auto px-0 text-[12.5px] font-medium"
+              className="mt-1 h-auto px-0 text-[12px] font-medium"
             >
               {t('dine_in.openTables')}
             </Button>
@@ -228,14 +246,13 @@ function FeatureRow({
           disabled={!included}
           onChange={(next) => toggle(key, next)}
           aria-label={t('toggle', { feature: label })}
-          className="mt-1.5"
+          className="mt-0.5"
         />
       </div>
-      {/* Under the row, not beside the switch: the whole width on a
-            phone, under the text from a tablet up. The pickers need the
-            package: the server refuses a second language without it. */}
+      {/* Under the row, across its width. The pickers need the package:
+          the server refuses a second language without it. */}
       {key === 'orders' && on ? (
-        <div className="sm:ms-12">
+        <div>
           <OrderingChoice
             ordering={ordering}
             menuIncluded={plan.menu_ordering}
@@ -244,12 +261,12 @@ function FeatureRow({
         </div>
       ) : null}
       {key === 'dine_in' && on ? (
-        <div className="sm:ms-12">
+        <div>
           <DineInChoice ordering={ordering} onOpenRestaurant={onOpenRestaurant} />
         </div>
       ) : null}
       {key === 'languages' && on ? (
-        <div className="sm:ms-12">
+        <div>
           <LanguageChoice
             mainLocale={mainLocale}
             secondLocale={secondLocale}
@@ -280,7 +297,7 @@ function DineInChoice({
   const noNumber = !ordering.whatsapp_number
 
   return (
-    <div className="mt-3 grid gap-3 inset-tile p-3.5">
+    <div className="mt-2.5 grid gap-3 inset-tile p-3">
       <Field
         label={t('dine_in.modeLabel')}
         hint={t(mode === 'whatsapp' ? 'dine_in.whatsappHint' : 'dine_in.dashboardHint')}
@@ -351,7 +368,7 @@ function AskGuestsFor({ set, fields }: { set: keyof WhatsAppFields; fields: What
 
   return (
     <fieldset className="grid gap-3">
-      <legend className="pb-2 text-[13px] font-medium text-[var(--text)]">
+      <legend className="pb-2 text-[12.5px] font-medium text-[var(--text)]">
         {t('askFor.label')}
       </legend>
       {keys.map((key) => {
@@ -359,7 +376,7 @@ function AskGuestsFor({ set, fields }: { set: keyof WhatsAppFields; fields: What
         return (
           <div key={key} className="grid gap-1">
             <div className="flex flex-wrap items-center justify-between gap-x-3.5 gap-y-1.5">
-              <span className="min-w-0 text-[13.5px] text-[var(--text)]">{label}</span>
+              <span className="min-w-0 text-[13px] text-[var(--text)]">{label}</span>
               <Segmented
                 size="sm"
                 aria-label={t('askFor.what', { field: label })}
@@ -372,14 +389,14 @@ function AskGuestsFor({ set, fields }: { set: keyof WhatsAppFields; fields: What
               />
             </div>
             {key === 'address' ? (
-              <span className="text-[12px] leading-[1.45] text-[var(--muted)]">
+              <span className="text-[11.5px] leading-[1.45] text-[var(--muted)]">
                 {t('askFor.addressHint')}
               </span>
             ) : null}
           </div>
         )
       })}
-      <p className="text-[12px] leading-[1.45] text-[var(--muted)]">{t('askFor.hint')}</p>
+      <p className="text-[11.5px] leading-[1.45] text-[var(--muted)]">{t('askFor.hint')}</p>
     </fieldset>
   )
 }
@@ -447,7 +464,7 @@ function OrderingChoice({
   }
 
   return (
-    <div className="mt-3 grid gap-4 inset-tile p-3.5">
+    <div className="mt-2.5 grid gap-3 inset-tile p-3">
       <Field
         label={t('orders.modeLabel')}
         hint={t(mode === 'menu' ? 'orders.menuHint' : 'orders.whatsappHint')}
@@ -480,7 +497,7 @@ function OrderingChoice({
 
       {asksType ? (
         <fieldset className="grid gap-2.5">
-          <legend className="pb-2 text-[13px] font-medium text-[var(--text)]">
+          <legend className="pb-2 text-[12.5px] font-medium text-[var(--text)]">
             {t('orders.typesLabel')}
           </legend>
           {ORDER_TYPES.map((type) => {
@@ -490,10 +507,10 @@ function OrderingChoice({
             return (
               <div key={type} className="flex items-start justify-between gap-3.5">
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <span id={labelId} className="text-[13.5px] text-[var(--text)]">
+                  <span id={labelId} className="text-[13px] text-[var(--text)]">
                     {t(`orders.types.${type}`)}
                   </span>
-                  <span id={hintId} className="text-[12px] leading-[1.45] text-[var(--muted)]">
+                  <span id={hintId} className="text-[11.5px] leading-[1.45] text-[var(--muted)]">
                     {t(
                       mode === 'menu'
                         ? `orders.typeHints.${type}`
@@ -665,7 +682,7 @@ function LanguageChoice({
   const opening = secondLocale && defaultLocale === secondLocale ? secondLocale : mainLocale
 
   return (
-    <div className="mt-3 grid gap-4 inset-tile p-3.5 sm:grid-cols-2">
+    <div className="mt-2.5 grid gap-3 inset-tile p-3 sm:grid-cols-2">
       <Field label={t('languages.secondLabel')} hint={t('languages.secondHint')} className="pt-0">
         {({ id, describedBy }) => (
           <Combobox

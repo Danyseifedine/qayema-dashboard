@@ -2,6 +2,7 @@ import { IconEye, IconQrcode, IconShare } from '@tabler/icons-react'
 import { Trans, useTranslation } from 'react-i18next'
 import { copyWithToast } from '@/shared/components/feedback'
 import { Button } from '@/shared/components/ui'
+import { withoutScheme } from '@/shared/utils/string/url'
 
 export type MenuLinkCardProps = {
   /** Where guests open the menu, e.g. "https://qayema.com/cedar-and-salt". */
@@ -19,7 +20,7 @@ const BANNER = '/assets/images/dashboard/overview-banner.webp'
  */
 export function MenuLinkCard({ publicUrl, onOpenQr }: MenuLinkCardProps) {
   const { t } = useTranslation('overview')
-  const shown = publicUrl.replace(/^https?:\/\//, '')
+  const shown = withoutScheme(publicUrl)
 
   const copy = () =>
     copyWithToast(publicUrl, { copied: t('link.copied'), failed: t('link.copyFailed') })
@@ -51,8 +52,8 @@ export function MenuLinkCard({ publicUrl, onOpenQr }: MenuLinkCardProps) {
         <img
           src={BANNER}
           alt=""
-          width={1254}
-          height={1254}
+          width={960}
+          height={960}
           decoding="async"
           className="absolute top-0 end-[calc(1rem-min(56%,260px)*0.16)] w-[min(56%,260px)] drop-shadow-[var(--phone-shadow)] rtl:-scale-x-100 sm:end-[calc(1.5rem-min(56%,260px)*0.16)]"
         />

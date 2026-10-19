@@ -23,10 +23,10 @@ export type OpeningHoursSectionProps = {
  *
  * Each time is picked like a clock reads it (TimePicker: hour, minutes,
  * AM or PM), with the part of the day beside it, and a day whose last shift
- * closes after midnight says so. A closed day keeps whatever shifts it had
- * rather than clearing them, so an owner who shuts on Mondays for a month
- * can switch it back on without picking again. Only the switch decides what
- * is saved.
+ * closes after midnight says so. A closed day shows only its name and
+ * switch, but keeps whatever shifts it had in the form rather than clearing
+ * them, so an owner who shuts on Mondays for a month can switch it back on
+ * without picking again. Only the switch decides what is saved.
  */
 export function OpeningHoursSection({ control }: OpeningHoursSectionProps) {
   const { t } = useTranslation('restaurant')
@@ -53,7 +53,7 @@ function DayRow({ control, day }: { control: Control<RestaurantFormValues>; day:
   const last = picked.at(-1)
 
   return (
-    <div className="flex flex-col gap-2 rounded-[10px] border-[0.5px] border-[var(--line)] bg-[var(--field)] px-3 py-2.5">
+    <div className="@container flex flex-col gap-2 inset-tile px-3 py-2.5">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[13.5px] font-medium">{label}</span>
         <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-[var(--muted)]">
@@ -66,67 +66,67 @@ function DayRow({ control, day }: { control: Control<RestaurantFormValues>; day:
         </label>
       </div>
 
-      {shifts.fields.map((shift, index) => {
-        const number = index + 1
-        return (
-          <div
-            key={shift.id}
-            className={
-              split ? 'flex flex-col gap-2 border-t-[0.5px] border-[var(--line)] pt-2' : ''
-            }
-          >
-            {split ? (
-              <div className="flex min-h-9 items-center justify-between gap-2">
-                <span className="text-[12px] font-medium text-[var(--muted)]">
-                  {t('openingHours.shift', { number })}
-                </span>
-                {index > 0 && !closed ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t('openingHours.removeShift', { number, day: label })}
-                    onClick={() => shifts.remove(index)}
-                    className="size-9"
-                  >
-                    <IconX aria-hidden className="size-4" />
-                  </Button>
+      {/* A closed day is its name and switch alone; its times wait in the form. */}
+      {closed
+        ? null
+        : shifts.fields.map((shift, index) => {
+            const number = index + 1
+            return (
+              <div
+                key={shift.id}
+                className={
+                  split ? 'flex flex-col gap-2 border-t-[0.5px] border-[var(--line)] pt-2' : ''
+                }
+              >
+                {split ? (
+                  <div className="flex min-h-9 items-center justify-between gap-2">
+                    <span className="text-[12px] font-medium text-[var(--muted)]">
+                      {t('openingHours.shift', { number })}
+                    </span>
+                    {index > 0 ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t('openingHours.removeShift', { number, day: label })}
+                        onClick={() => shifts.remove(index)}
+                        className="size-9"
+                      >
+                        <IconX aria-hidden className="size-4" />
+                      </Button>
+                    ) : null}
+                  </div>
                 ) : null}
+                {/* One under the other on a phone; side by side once the day
+                has the room for both, so a week is not a long scroll. */}
+                <div className="grid gap-3 @min-[32rem]:grid-cols-2 @min-[32rem]:gap-6">
+                  <TimePicker
+                    control={control}
+                    day={day}
+                    shift={index}
+                    which="open"
+                    title={t('openingHours.opens')}
+                    label={
+                      split
+                        ? t('openingHours.shiftOpens', { day: label, number })
+                        : t('openingHours.dayOpens', { day: label })
+                    }
+                  />
+                  <TimePicker
+                    control={control}
+                    day={day}
+                    shift={index}
+                    which="close"
+                    title={t('openingHours.closes')}
+                    label={
+                      split
+                        ? t('openingHours.shiftCloses', { day: label, number })
+                        : t('openingHours.dayCloses', { day: label })
+                    }
+                  />
+                </div>
               </div>
-            ) : null}
-            {/* One under the other: side by side they would not fit the card.
-                A closed day keeps its times greyed, so turning it back on
-                restores them. */}
-            <div className="flex flex-col gap-3">
-              <TimePicker
-                control={control}
-                day={day}
-                shift={index}
-                which="open"
-                title={t('openingHours.opens')}
-                label={
-                  split
-                    ? t('openingHours.shiftOpens', { day: label, number })
-                    : t('openingHours.dayOpens', { day: label })
-                }
-                disabled={closed}
-              />
-              <TimePicker
-                control={control}
-                day={day}
-                shift={index}
-                which="close"
-                title={t('openingHours.closes')}
-                label={
-                  split
-                    ? t('openingHours.shiftCloses', { day: label, number })
-                    : t('openingHours.dayCloses', { day: label })
-                }
-                disabled={closed}
-              />
-            </div>
-          </div>
-        )
-      })}
+            )
+          })}
 
       {!closed && last && runsPastMidnight(last.open, last.close) ? (
         <p className="text-[12px] text-[var(--muted)]">{t('openingHours.pastMidnight')}</p>

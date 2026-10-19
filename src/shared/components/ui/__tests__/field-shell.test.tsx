@@ -26,12 +26,6 @@ describe('FieldShell', () => {
     expect(shell).not.toHaveClass('border-[var(--line)]')
   })
 
-  it('draws the success tone', () => {
-    render(<FieldShell tone="success">inside</FieldShell>)
-
-    expect(screen.getByText('inside')).toHaveClass('border-status-success')
-  })
-
   it('dims and marks itself when disabled', () => {
     render(
       <FieldShell disabled className="w-10">

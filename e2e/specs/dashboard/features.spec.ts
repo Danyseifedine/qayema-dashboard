@@ -12,13 +12,13 @@ async function flip(page: Page, name: RegExp | string) {
 }
 
 const SWITCHES = [
-  'Orders on',
+  'Delivery and pickup on',
   'Ordering at the table on',
   'Variants on',
   'Add-ons on',
   'QR Studio on',
   'Analytics on',
-  'Multiple languages on',
+  'Second language on',
 ]
 
 test.describe('features', () => {
@@ -58,12 +58,12 @@ test.describe('features', () => {
     expect(await arabicIn('Dishes')).toBeGreaterThan(0)
 
     await open('Features')
-    await flip(page, 'Multiple languages on')
+    await flip(page, 'Second language on')
     expect(await arabicIn('Categories')).toBe(0)
     expect(await arabicIn('Dishes')).toBe(0)
 
     await open('Features')
-    await flip(page, 'Multiple languages on')
+    await flip(page, 'Second language on')
     expect(await arabicIn('Categories')).toBeGreaterThan(0)
     expect(await arabicIn('Dishes')).toBeGreaterThan(0)
   })
@@ -119,22 +119,26 @@ test.describe('features', () => {
     }
 
     // What each one leaves behind.
-    await expect(nav.getByRole('button', { name: /^Orders/ })).toHaveCount(0)
+    await expect(nav.getByRole('button', { name: /^Delivery and pickup/ })).toHaveCount(0)
     await expect(nav.getByRole('button', { name: /^Analytics/ })).toHaveCount(0)
     // The plain QR code keeps its page.
     await expect(nav.getByRole('button', { name: /^QR code/ })).toBeVisible()
     await expect(
-      page.getByText("Guests can't order from your menu while this is off.", { exact: false }),
+      page.getByText("Guests can't order for delivery or pickup.", { exact: false }),
     ).toBeVisible()
     await expect(
-      page.getByText('Your plain black QR code stays on the QR code page', { exact: false }),
+      page.getByText('Guests still scan your plain QR code', { exact: false }),
     ).toBeVisible()
     await expect(
-      page.getByText('Your menu shows its main language only.', { exact: false }),
+      page.getByText('Your menu shows only its main language.', { exact: false }),
     ).toBeVisible()
-    await expect(page.getByText('Your variants are kept.', { exact: false })).toBeVisible()
-    await expect(page.getByText('Your add-ons are kept.', { exact: false })).toBeVisible()
-    await expect(page.getByRole('combobox', { name: 'Second language' })).toHaveCount(0)
+    await expect(
+      page.getByText('Your dishes show without their options.', { exact: false }),
+    ).toBeVisible()
+    await expect(
+      page.getByText('Your dishes show without their extras.', { exact: false }),
+    ).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'Which language' })).toHaveCount(0)
     await expectAccessible()
 
     await page.reload()
@@ -149,10 +153,10 @@ test.describe('features', () => {
     for (const name of SWITCHES) {
       await expect(page.getByRole('switch', { name })).toHaveAttribute('aria-checked', 'true')
     }
-    await expect(nav.getByRole('button', { name: /^Orders/ })).toBeVisible()
+    await expect(nav.getByRole('button', { name: /^Delivery and pickup/ })).toBeVisible()
     await expect(nav.getByRole('button', { name: /^Analytics/ })).toBeVisible()
     // The second language was kept while languages were off.
-    await expect(page.getByRole('combobox', { name: 'Second language' })).toHaveValue(
+    await expect(page.getByRole('combobox', { name: 'Which language' })).toHaveValue(
       'Arabic · العربية',
     )
   })
@@ -165,9 +169,9 @@ test.describe('features', () => {
     const restaurant = await owner({ package: 'pro', second_locale: 'ar' })
     await page.goto('/features')
 
-    const second = page.getByRole('combobox', { name: 'Second language' })
+    const second = page.getByRole('combobox', { name: 'Which language' })
     await expect(second).toHaveValue('Arabic · العربية')
-    const opening = page.getByRole('tablist', { name: 'The menu opens in' })
+    const opening = page.getByRole('tablist', { name: 'Menu opens in' })
     await expect(opening.getByRole('tab', { name: 'English' })).toHaveAttribute(
       'aria-selected',
       'true',
@@ -253,12 +257,12 @@ test.describe('features', () => {
     await owner({ package: 'pro' })
     await page.goto('/features')
 
-    await expect(page.getByRole('combobox', { name: 'Second language' })).toHaveValue('')
-    await expect(page.getByRole('combobox', { name: 'Second language' })).toHaveAttribute(
+    await expect(page.getByRole('combobox', { name: 'Which language' })).toHaveValue('')
+    await expect(page.getByRole('combobox', { name: 'Which language' })).toHaveAttribute(
       'placeholder',
       'Choose a language',
     )
-    await expect(page.getByRole('tablist', { name: 'The menu opens in' })).toHaveCount(0)
+    await expect(page.getByRole('tablist', { name: 'Menu opens in' })).toHaveCount(0)
     // Pro has everything on this page except Orders, Ordering at the table and
     // QR Studio, which come with Premium.
     await expect(
@@ -291,8 +295,8 @@ test.describe('features', () => {
       await expect(page.getByRole('switch', { name })).toHaveAttribute('aria-checked', 'false')
       await expect(page.getByRole('switch', { name })).toBeDisabled()
     }
-    await expect(page.getByRole('combobox', { name: 'Second language' })).toHaveCount(0)
-    await expect(page.getByRole('tablist', { name: 'The menu opens in' })).toHaveCount(0)
+    await expect(page.getByRole('combobox', { name: 'Which language' })).toHaveCount(0)
+    await expect(page.getByRole('tablist', { name: 'Menu opens in' })).toHaveCount(0)
     await expectAccessible()
 
     await page

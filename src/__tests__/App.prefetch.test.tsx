@@ -108,6 +108,40 @@ describe('App, loading the other pages ahead', () => {
     },
   )
 
+  it('waits while the page on screen is still loading its own data', async () => {
+    let idle: (() => void) | undefined
+    vi.stubGlobal(
+      'requestIdleCallback',
+      vi.fn((callback: () => void) => {
+        idle = callback
+        return 3
+      }),
+    )
+    vi.stubGlobal('cancelIdleCallback', vi.fn())
+
+    const { queryClient, unmount } = renderWithProviders(<App />)
+    expect(
+      await screen.findByRole('region', { name: 'overview page' }, { timeout: 4000 }),
+    ).toBeInTheDocument()
+
+    // A request of the page's own is still on its way when the browser idles.
+    void queryClient.fetchQuery({
+      queryKey: ['still-loading'],
+      queryFn: () => new Promise(() => {}),
+    })
+    const later = vi.spyOn(window, 'setTimeout')
+    idle!()
+
+    // Nothing more is downloaded yet: it asks again in a second.
+    expect(later).toHaveBeenCalledWith(expect.any(Function), 1000)
+    expect(asked).not.toContain('tables')
+
+    // Leaving drops that second wait too.
+    const clear = vi.spyOn(window, 'clearTimeout')
+    unmount()
+    expect(clear).toHaveBeenCalled()
+  })
+
   it('fetches every page once the browser is idle, and survives one that fails to load', async () => {
     let idle: (() => void) | undefined
     const requestIdleCallback = vi.fn((callback: () => void) => {

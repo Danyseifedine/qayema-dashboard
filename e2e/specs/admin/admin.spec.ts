@@ -606,11 +606,13 @@ test.describe('admin', () => {
 
     await asOwner(page, signIn, owner.user.email)
     await page.goto('/orders')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Orders')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Delivery and pickup')
     await expect(page.getByRole('heading', { name: /^Take orders from the menu/ })).toHaveCount(0)
     await expect(
-      page.getByRole('navigation', { name: 'Dashboard' }).getByRole('button', { name: 'Orders' }),
-    ).toHaveAccessibleName('Orders')
+      page
+        .getByRole('navigation', { name: 'Dashboard' })
+        .getByRole('button', { name: 'Delivery and pickup' }),
+    ).toHaveAccessibleName('Delivery and pickup')
   })
 
   test('A package request from the dashboard is applied from Contact Messages', async ({

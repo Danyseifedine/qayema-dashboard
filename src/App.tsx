@@ -3,11 +3,11 @@ import { lazy, Suspense, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthenticatedLayout } from '@/app/layouts/authenticated/authenticated-layout'
 import {
-  NAV_ITEMS,
+  navItem,
   isNavItemHidden,
+  isOnPlan,
   navLock,
   OPEN_WHILE_OFFLINE,
-  phoneTabs,
   type NavItem,
 } from '@/app/layouts/authenticated/nav-items'
 import { MenuGoingOffline, MenuOfflinePage } from '@/app/layouts/authenticated/menu-offline'
@@ -144,7 +144,11 @@ function Dashboard({ user }: { user: AuthUser }) {
   // offline: every page but Package and Account asks to renew.
   const lapsed = restaurant.lapsed
   const offline = lapsed?.offline === true && !OPEN_WHILE_OFFLINE.includes(activeKey)
-  const activeItem = NAV_ITEMS.find((item) => item.key === activeKey)
+  const activeItem = navItem(activeKey)
+  // Both kinds of order taken: their two pages switch between each other.
+  const bothOrders = ['orders', 'table-orders'].every(
+    (key) => !isNavItemHidden(key, switchedOff) && isOnPlan(navItem(key)!, plan),
+  )
 
   // Each AI answer says how many uses are left; the session keeps the count.
   const setWritingHelpLeft = useWritingHelpLeft()
@@ -244,11 +248,15 @@ function Dashboard({ user }: { user: AuthUser }) {
                 onOpenCategories={() => setActiveKey('categories')}
               />
             ) : activeKey === 'orders' ? (
-              <OrdersPage onOpenFeatures={() => setActiveKey('features')} />
+              <OrdersPage
+                onOpenFeatures={() => setActiveKey('features')}
+                onOpenTableOrders={bothOrders ? () => setActiveKey('table-orders') : undefined}
+              />
             ) : activeKey === 'table-orders' ? (
               <TableOrdersPage
                 onOpenTables={() => setActiveKey('tables')}
                 onOpenFeatures={() => setActiveKey('features')}
+                onOpenOrders={bothOrders ? () => setActiveKey('orders') : undefined}
               />
             ) : activeKey === 'tables' ? (
               <TablesPage onOpenFeatures={() => setActiveKey('features')} />
@@ -279,7 +287,6 @@ function Dashboard({ user }: { user: AuthUser }) {
               />
             ) : activeKey === 'more' ? (
               <MorePage
-                tabs={phoneTabs({ hasTemplate, plan }, switchedOff)}
                 hasTemplate={hasTemplate}
                 plan={plan}
                 off={switchedOff}

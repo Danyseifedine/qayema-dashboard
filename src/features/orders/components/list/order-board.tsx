@@ -1,7 +1,7 @@
 import type { TablerIcon } from '@tabler/icons-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { EmptyState, ErrorState, Skeleton } from '@/shared/components/feedback'
+import { EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
 import { StatusFilter } from '@/features/orders/components/filters/status-filter'
 import { WaitingBar } from '@/features/orders/components/notices/waiting-bar'
 import { WhatsAppNotice } from '@/features/orders/components/notices/whatsapp-notice'
@@ -80,11 +80,11 @@ export function OrderBoard({
       <StatusFilter value={filter} onChange={setFilter} openCount={openCount} kind={kind} />
 
       {orders.isPending ? (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {Array.from({ length: 2 }, (_, index) => (
-            <Skeleton key={index} className="h-48" />
-          ))}
-        </div>
+        <SkeletonList
+          count={2}
+          className="grid grid-cols-1 gap-3 lg:grid-cols-2"
+          itemClassName="h-48"
+        />
       ) : orders.isError ? (
         <ErrorState description={orders.error.message} onRetry={() => void orders.refetch()} />
       ) : list.length === 0 && filter === null ? (

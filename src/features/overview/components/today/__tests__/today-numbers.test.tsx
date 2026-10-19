@@ -21,7 +21,7 @@ function today(overrides: Record<string, unknown> = {}, totals: Record<string, u
         ...totals,
       },
       order_channel: 'menu',
-      previous: { views: 20, qr_scans: 4, orders: 0 },
+      previous: { views: 20, unique_visitors: 12, qr_scans: 4, orders: 0 },
       series: [],
       ...overrides,
     },

@@ -244,7 +244,7 @@ describe('AuthenticatedLayout', () => {
     const items = [
       'Overview',
       'Analytics',
-      'Orders',
+      'Delivery and pickup',
       'Table orders',
       'Categories',
       'Dishes',
@@ -375,8 +375,9 @@ describe('AuthenticatedLayout', () => {
         'aria-current',
         'page',
       )
+      // The Orders tab opens delivery and pickup, the page named for what it holds.
       await user.click(within(tabs()).getByRole('button', { name: 'Orders' }))
-      expect(screen.getByRole('heading', { name: 'Orders' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Delivery and pickup' })).toBeInTheDocument()
     })
 
     it('counts the orders waiting on the Orders tab, table orders included', () => {

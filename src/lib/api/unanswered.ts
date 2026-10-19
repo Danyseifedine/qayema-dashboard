@@ -31,7 +31,16 @@ function readQueue(): Note[] {
   }
 }
 
+/**
+ * Whether the stored queue may hold notes: true until it has been read once
+ * (notes from a page load before this one wait there), then only after a
+ * note is written. Every answered request asks, and this keeps that from
+ * reading storage each time.
+ */
+let mayHoldNotes = true
+
 function writeQueue(notes: Note[]): void {
+  mayHoldNotes = notes.length > 0
   try {
     if (notes.length === 0) localStorage.removeItem(QUEUE_KEY)
     else localStorage.setItem(QUEUE_KEY, JSON.stringify(notes.slice(-QUEUE_LIMIT)))
@@ -79,7 +88,8 @@ export function noteBlocked(path: string): void {
  * happened to them goes to the backend's log (the only time it can).
  */
 export function noteAnswered(): void {
-  const notes = readQueue()
+  const notes = mayHoldNotes ? readQueue() : []
+  if (notes.length === 0) mayHoldNotes = false
   if (last !== null) {
     last = null
     listeners.forEach((listener) => listener())
@@ -110,4 +120,6 @@ export function resetUnanswered(): void {
   last = null
   checking = null
   writeQueue([])
+  // As a fresh page load: a note a test planted in storage is read.
+  mayHoldNotes = true
 }

@@ -11,7 +11,7 @@ const SECTIONS: [key: string, english: string, arabic: string][] = [
   ['dishes', 'Dishes', 'الأطباق'],
   ['design', 'Design', 'التصميم'],
   ['appearance', 'Appearance', 'المظهر'],
-  ['orders', 'Orders', 'الطلبات'],
+  ['orders', 'Delivery and pickup', 'التوصيل والاستلام'],
   ['qr', 'QR code', 'رمز QR'],
   ['social-links', 'Social links', 'روابط التواصل'],
   ['restaurant', 'Restaurant', 'المطعم'],
@@ -158,7 +158,14 @@ test.describe('navigation', () => {
     await page.goto('/design')
     await expect(title(page)).toHaveText('Design')
 
-    for (const name of ['Categories', 'Dishes', 'Appearance', 'Orders', 'QR code', 'Restaurant']) {
+    for (const name of [
+      'Categories',
+      'Dishes',
+      'Appearance',
+      'Delivery and pickup',
+      'QR code',
+      'Restaurant',
+    ]) {
       await expect(nav(page).getByRole('button', { name, exact: true })).toBeDisabled()
     }
     for (const name of ['Overview', 'Analytics', 'Design', 'Social links', 'Features', 'Package']) {
@@ -214,7 +221,9 @@ test.describe('navigation', () => {
 
     await page.goto('/orders')
     await expect(page).toHaveURL(/\/overview$/)
-    await expect(nav(page).getByRole('button', { name: 'Orders', exact: true })).toHaveCount(0)
+    await expect(
+      nav(page).getByRole('button', { name: 'Delivery and pickup', exact: true }),
+    ).toHaveCount(0)
     await expect(nav(page).getByRole('button', { name: 'Analytics', exact: true })).toHaveCount(0)
     await expect(nav(page).getByRole('button', { name: 'QR code', exact: true })).toBeVisible()
   })

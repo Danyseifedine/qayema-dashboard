@@ -1,14 +1,12 @@
 import { IconChevronRight, IconLock } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import {
-  NAV_GROUPS,
-  NAV_ITEMS,
+  navItem,
   isNavItemHidden,
   isOnPlan,
   navLock,
   type NavAccess,
   type NavItem,
-  type PhoneTab,
 } from '@/app/layouts/authenticated/nav-items'
 import { cn } from '@/shared/utils/dom/cn'
 import type common from '@/locales/en/common.json'
@@ -27,6 +25,9 @@ const ART: Record<string, string> = {
   categories: `${ART_DIR}/category.webp`,
   design: `${ART_DIR}/design.webp`,
   appearance: `${ART_DIR}/Appearance.webp`,
+  // From the Features page's pictures: no picture of their own here.
+  dishes: '/assets/images/dashboard/features/dish.webp',
+  orders: '/assets/images/dashboard/features/orders.webp',
   qr: `${ART_DIR}/qr-studio.webp`,
   tables: `${ART_DIR}/table-order.webp`,
   'social-links': `${ART_DIR}/links.webp`,
@@ -36,9 +37,30 @@ const ART: Record<string, string> = {
   account: `${ART_DIR}/profile.webp`,
 }
 
+/**
+ * More's own groups, not the sidebar's: the menu first, then how it looks
+ * and how it is shared, the two kinds of order with the tables, what guests
+ * do, and the settings last. Every section is here but Home, the tabs' own
+ * included, so More is the whole dashboard on one page.
+ */
+const GROUPS: { key: string; label: GroupLabel; items: string[] }[] = [
+  { key: 'menu', label: 'nav.menu', items: ['categories', 'dishes'] },
+  { key: 'look', label: 'nav.look', items: ['design', 'appearance'] },
+  { key: 'sharing', label: 'nav.sharing', items: ['qr', 'social-links'] },
+  { key: 'orders', label: 'nav.ordersGroup', items: ['orders', 'table-orders', 'tables'] },
+  { key: 'insights', label: 'more.groups.insights', items: ['analytics'] },
+  { key: 'settings', label: 'nav.settings', items: ['restaurant', 'features', 'package'] },
+]
+
+type GroupLabel =
+  | 'nav.menu'
+  | 'nav.look'
+  | 'nav.sharing'
+  | 'nav.ordersGroup'
+  | 'more.groups.insights'
+  | 'nav.settings'
+
 export type MorePageProps = {
-  /** The phone's tabs: the pages they open are not repeated here. */
-  tabs: readonly PhoneTab[]
   hasTemplate: boolean
   plan: NavAccess['plan']
   /** Sections the owner switched off; left out, as in the sidebar. */
@@ -48,34 +70,40 @@ export type MorePageProps = {
 
 /**
  * The last tab on a phone, under its heading in the topbar: every section
- * that is not a tab, as a card with its picture, in the sidebar's order,
- * then the owner's account across the width. A section waiting for a design
- * is shown locked, one the package lacks or the owner switched off is left
- * out, exactly as the sidebar does.
+ * but Home, as a card with its picture, in More's groups (`GROUPS`), then
+ * the owner's account across the width. A section waiting for a design is shown locked, one the package
+ * lacks or the owner switched off is left out, and a heading with nothing
+ * left under it goes too, exactly as the sidebar does.
  */
-export function MorePage({ tabs, hasTemplate, plan, off, onOpen }: MorePageProps) {
+export function MorePage({ hasTemplate, plan, off, onOpen }: MorePageProps) {
   const { t } = useTranslation()
-  // Only the pages the tabs open: Categories and Table orders, which light
-  // their tab up, still need a way in from here.
-  const inTabs = new Set(tabs.map((tab) => tab.key))
-  const account = NAV_ITEMS.find((item) => item.key === 'account')!
-  // One grid in the sidebar's order: a group of one would leave half a row empty.
-  const sections = NAV_GROUPS.flatMap((group) => group.items).filter(
-    (item) => !inTabs.has(item.key) && !isNavItemHidden(item.key, off) && isOnPlan(item, plan),
-  )
+  const account = navItem('account')!
+  const groups = GROUPS.map((group) => ({
+    group,
+    items: group.items
+      .map((key) => navItem(key)!)
+      .filter((item) => !isNavItemHidden(item.key, off) && isOnPlan(item, plan)),
+  })).filter(({ items }) => items.length > 0)
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <nav aria-label={t('app.dashboard')} className="grid grid-cols-2 gap-2.5">
-        {sections.map((item, at) => (
-          <MoreCard
-            key={item.key}
-            item={item}
-            locked={navLock(item.key, { hasTemplate, plan }) === 'template'}
-            // A card left alone on the last row takes the whole row.
-            wide={sections.length % 2 === 1 && at === sections.length - 1}
-            onOpen={onOpen}
-          />
+    <div className="flex flex-col gap-5">
+      <nav aria-label={t('app.dashboard')} className="flex flex-col gap-5">
+        {groups.map(({ group, items }) => (
+          <div key={group.key} className="flex flex-col gap-2">
+            <h2 className="label-caps px-1 text-[var(--faint)]">{t(group.label)}</h2>
+            <div className="grid grid-cols-2 gap-2.5">
+              {items.map((item, at) => (
+                <MoreCard
+                  key={item.key}
+                  item={item}
+                  locked={navLock(item.key, { hasTemplate, plan }) === 'template'}
+                  // A card left alone on its last row takes the whole row.
+                  wide={items.length % 2 === 1 && at === items.length - 1}
+                  onOpen={onOpen}
+                />
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
       <MoreCard item={account} wide onOpen={onOpen} />

@@ -297,7 +297,7 @@ test.describe('restaurant', () => {
     const lastNight = DAY_NAMES[yesterday]
     const lastNightOpen = page.getByRole('switch', { name: `${lastNight} is open` })
     await expect(lastNightOpen).toHaveAttribute('aria-checked', 'false')
-    await expect(page.getByRole('combobox', { name: `${lastNight} opens: hour` })).toBeDisabled()
+    await expect(page.getByRole('combobox', { name: `${lastNight} opens: hour` })).toHaveCount(0)
     await lastNightOpen.click()
     await pickTime(page, `${lastNight} opens`, '20:00')
     await expect(page.getByRole('combobox', { name: `${lastNight} opens: hour` })).toHaveValue('8')

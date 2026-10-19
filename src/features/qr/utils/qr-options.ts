@@ -13,7 +13,23 @@ import { MIN_CONTRAST, contrast } from '@/shared/utils/color/contrast'
 /** How much of the code the logo covers, by the owner's size choice. */
 const LOGO_SHARE: Record<LogoSize, number> = { small: 0.25, medium: 0.35, large: 0.45 }
 
-export function qrOptions(design: QrDesign, data: string, logo: string | null): Options {
+/** What the code looks like: all a preview, a download or `weakParts()` read. */
+export type QrLook = Pick<
+  QrDesign,
+  | 'dot_style'
+  | 'dot_color'
+  | 'dot_gradient'
+  | 'gradient_type'
+  | 'corner_style'
+  | 'corner_color'
+  | 'eye_style'
+  | 'eye_color'
+  | 'background'
+  | 'logo'
+  | 'logo_size'
+>
+
+export function qrOptions(design: QrLook, data: string, logo: string | null): Options {
   const withLogo = design.logo && logo !== null
 
   const options: Options = {
@@ -40,7 +56,7 @@ export function qrOptions(design: QrDesign, data: string, logo: string | null): 
   return options
 }
 
-function fill(design: QrDesign): Pick<NonNullable<Options['dotsOptions']>, 'color' | 'gradient'> {
+function fill(design: QrLook): Pick<NonNullable<Options['dotsOptions']>, 'color' | 'gradient'> {
   if (design.dot_gradient === null) return { color: design.dot_color }
 
   return {
@@ -71,7 +87,7 @@ function fill(design: QrDesign): Pick<NonNullable<Options['dotsOptions']>, 'colo
 export type WeakPart = 'dots' | 'gradient' | 'corner frames' | 'corner centres'
 
 /** The parts of the code too close in colour to the background to be safe. */
-export function weakParts(design: QrDesign): WeakPart[] {
+export function weakParts(design: QrLook): WeakPart[] {
   const parts: [WeakPart, string | null][] = [
     ['dots', design.dot_color],
     ['gradient', design.dot_gradient],

@@ -5,7 +5,7 @@ import {
   useSaveDesignSettings,
   useSaveFont,
 } from '@/features/appearance/hooks/use-appearance'
-import { ErrorState, Skeleton } from '@/shared/components/feedback'
+import { ErrorState, SkeletonList } from '@/shared/components/feedback'
 import type { Locale } from '@/shared/constants/locales'
 import { translated, type TranslatableValue } from '@/shared/utils/string/translated'
 
@@ -25,13 +25,7 @@ export function AppearancePage({ locale }: AppearancePageProps) {
   const saveFont = useSaveFont()
 
   if (page.isPending) {
-    return (
-      <div className="flex flex-1 flex-col gap-4">
-        {Array.from({ length: 2 }, (_, index) => (
-          <Skeleton key={index} className="h-48" />
-        ))}
-      </div>
-    )
+    return <SkeletonList count={2} className="flex flex-1 flex-col gap-4" itemClassName="h-48" />
   }
 
   if (page.isError) {

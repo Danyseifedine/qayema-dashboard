@@ -12,7 +12,7 @@ import { initReactI18next } from 'react-i18next'
  * falls back to English, and `translations.test.ts` lists what is missing.
  */
 
-export type LanguageMeta = {
+type LanguageMeta = {
   /** The language's own name for itself, shown in the switcher's title. */
   name: string
   /** What the switcher shows: "EN", "ع". */

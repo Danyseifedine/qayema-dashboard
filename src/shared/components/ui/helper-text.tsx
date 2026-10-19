@@ -3,12 +3,12 @@ import { cn } from '@/shared/utils/dom/cn'
 
 export type HelperTextProps = {
   children: ReactNode
-  tone?: 'muted' | 'error' | 'success' | 'warning'
+  tone?: 'muted' | 'error' | 'warning'
   id?: string
   className?: string
 }
 
-/** The 12px line under a field: hint, validation error, caution or confirmation. */
+/** The 12px line under a field: hint, validation error or caution. */
 export function HelperText({ children, tone = 'muted', id, className }: HelperTextProps) {
   return (
     <p
@@ -17,7 +17,6 @@ export function HelperText({ children, tone = 'muted', id, className }: HelperTe
         'text-[12px] leading-[1.45]',
         tone === 'muted' && 'text-[var(--muted)]',
         tone === 'error' && 'text-status-danger',
-        tone === 'success' && 'text-status-success',
         tone === 'warning' && 'text-status-warn',
         className,
       )}

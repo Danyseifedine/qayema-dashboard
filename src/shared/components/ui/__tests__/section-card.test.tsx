@@ -35,4 +35,18 @@ describe('SectionCard', () => {
     expect(photo()).toHaveClass('end-0')
     expect(photo()).not.toHaveClass('-end-[16%]')
   })
+
+  it('can carry a smaller photo, whole in its corner', () => {
+    const { container } = render(
+      <SectionCard
+        icon={<span>Aa</span>}
+        title="Orders"
+        picture="/orders.webp"
+        bleed={false}
+        smallPicture
+      />,
+    )
+
+    expect(container.querySelector('img')).toHaveClass('end-0', 'w-[40%]', 'h-[100px]', 'object-center')
+  })
 })

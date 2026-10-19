@@ -10,7 +10,7 @@ import type { AuthUser } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
 import { useUiStore } from '@/stores/ui.store'
 import {
-  NAV_ITEMS,
+  navItem,
   phoneTabs,
   type NavAccess,
   type NavItem,
@@ -70,11 +70,11 @@ export function AuthenticatedLayout({
   const toggleSidebar = useUiStore((state) => state.toggleSidebar)
   const { t } = useTranslation()
 
-  const activeItem = NAV_ITEMS.find((item) => item.key === activeKey)
+  const activeItem = navItem(activeKey)
   const tabs = phoneTabs({ hasTemplate, plan }, switchedOff)
 
   const goTo = (key: string) => {
-    const item = NAV_ITEMS.find((candidate) => candidate.key === key)
+    const item = navItem(key)
     if (item) onNavigate(item)
   }
 
@@ -85,9 +85,11 @@ export function AuthenticatedLayout({
   const fromMore = !tabs.some((tab) => tab.key === activeKey)
 
   return (
-    <div className="flex min-h-dvh bg-[var(--bg)] text-[var(--text)]">
-      {/* Desktop rail */}
-      <div className="sticky top-0 hidden h-dvh shrink-0 lg:block">
+    // Under it all: a soft light from the top, a fine grain and a fading dot
+    // grid, behind the sidebar's card as behind the page's.
+    <div className="home-backdrop flex min-h-dvh bg-[var(--bg)] text-[var(--text)]">
+      {/* Desktop rail: a card floating off the window's edge. */}
+      <div className="sticky top-0 hidden h-dvh shrink-0 py-3 ps-3 lg:block">
         <Sidebar
           activeKey={activeKey}
           onSelect={onNavigate}
@@ -101,9 +103,7 @@ export function AuthenticatedLayout({
       </div>
 
       {/* Content column */}
-      {/* Under the heading: a soft light from the top, a fine grain and a
-          fading dot grid. */}
-      <div className="home-backdrop flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         {impersonation ? (
           <ImpersonationBanner owner={user.name} impersonation={impersonation} />
         ) : null}

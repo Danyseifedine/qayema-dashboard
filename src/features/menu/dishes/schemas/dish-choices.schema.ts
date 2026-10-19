@@ -30,7 +30,7 @@ export const variantSchema = z.object({
 
 export const addonsSchema = z.array(choiceSchema)
 
-export type Choice = z.infer<typeof choiceSchema>
+type Choice = z.infer<typeof choiceSchema>
 export type Variant = z.infer<typeof variantSchema>
 
 /** What one dish can carry, as ../qayema/config/menu.php has it. */
@@ -71,8 +71,8 @@ export const variantsField = z
 
 export const addonsField = z.array(choiceRow).max(CHOICE_LIMITS.addons)
 
-export type ChoiceRowForm = z.input<typeof choiceRow>
-export type VariantForm = z.input<typeof variantsField>[number]
+type ChoiceRowForm = z.input<typeof choiceRow>
+type VariantForm = z.input<typeof variantsField>[number]
 
 type ChoicesForm = { variants: VariantForm[]; addons: ChoiceRowForm[] }
 

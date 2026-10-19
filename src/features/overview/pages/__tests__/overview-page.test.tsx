@@ -313,7 +313,7 @@ describe('OverviewPage', () => {
           orders_done: 2,
         },
         order_channel: 'menu',
-        previous: { views: 21, qr_scans: 0, orders: 7 },
+        previous: { views: 21, unique_visitors: 15, qr_scans: 0, orders: 7 },
         series: [{ date: '2026-10-13T09:00', views: 42, qr_scans: 18 }],
       },
     })

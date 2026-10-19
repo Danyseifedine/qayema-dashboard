@@ -63,7 +63,6 @@ html[data-theme='light'] {
   --disabled-wash: rgba(20, 17, 9, 0.04);
   --ring-accent: rgba(248, 211, 141, 0.35);
   --ring-danger: rgba(180, 80, 64, 0.1);
-  --ring-success: rgba(92, 122, 79, 0.12);
 
   /* ---- Accent, theme-aware ----
      `--accent-text` is gold dark enough to read on a pale surface, and on
@@ -99,17 +98,21 @@ html[data-theme='light'] {
   --tint-violet-wash: rgba(90, 70, 168, 0.1);
   /* Home's cards: lifted off the page by a small shadow instead of a
      border, and the phone picture's own shadow, light on a pale page. */
-  --card-lift: 0 4px 14px -6px rgba(20, 17, 9, 0.16);
-  --phone-shadow: -6px 12px 12px rgba(20, 17, 9, 0.16);
+  /* On a light page a card rests close to it: a hairline of shade right
+     under it and a wide, faint fall-off, never a dark band at its foot. */
+  --card-lift: 0 1px 2px rgba(20, 17, 9, 0.05), 0 8px 24px -14px rgba(20, 17, 9, 0.14);
+  --phone-shadow: -4px 10px 14px rgba(20, 17, 9, 0.12);
   /* Home: a soft light falling from the top of the screen, and cards with a
      see-through fill and light catching their top edge. */
   --top-light: rgba(255, 255, 255, 0.7);
   /* The phone's bottom bar, finished like Home's cards (.tab-bar): light on
      its top edge, no border; the open tab a gold-tinted card with a small
      shadow. */
-  --tabbar-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 -3px 12px -2px rgba(20, 17, 9, 0.14);
+  --tabbar-edge:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 -1px 0 rgba(20, 17, 9, 0.04),
+    0 -10px 24px -16px rgba(20, 17, 9, 0.16);
   --tab-on: linear-gradient(160deg, rgba(233, 189, 102, 0.3), rgba(233, 189, 102, 0.14));
-  --tab-on-edge: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 8px -5px rgba(20, 17, 9, 0.25);
+  --tab-on-edge: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 6px -4px rgba(20, 17, 9, 0.16);
   --home-dot: rgba(20, 17, 9, 0.09);
   --glass-fill: rgba(255, 255, 255, 0.55);
   /* A gold-lit panel (.gold-panel): a warm fill, lighter where the glow
@@ -142,7 +145,6 @@ html[data-theme='dark'] {
   --disabled-wash: rgba(245, 241, 232, 0.04);
   --ring-accent: rgba(248, 211, 141, 0.28);
   --ring-danger: rgba(180, 80, 64, 0.22);
-  --ring-success: rgba(163, 196, 145, 0.22);
 
   /* On black the bright gold is the loudest thing on screen, so fills step
      down to a muted gold. The primary button keeps --color-gold. */
@@ -187,10 +189,8 @@ html[data-theme='dark'] {
   --lift-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 2px 8px -2px rgba(0, 0, 0, 0.5);
 }
 
-/* Expose the theme surfaces to Tailwind utilities (bg-field, text-accent…). */
+/* Expose the theme colours to Tailwind utilities (text-accent, bg-status-…). */
 @theme inline {
-  --color-field: var(--field);
-
   /* Accent: text-accent, bg-accent-fill, bg-accent-wash, border-accent-border */
   --color-accent: var(--accent-text);
   --color-accent-fill: var(--accent-fill);

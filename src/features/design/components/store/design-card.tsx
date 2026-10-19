@@ -46,23 +46,23 @@ export function DesignCard({
         active && 'shadow-[0_0_0_1.5px_var(--color-gold),var(--card-lift)]',
       )}
     >
-      <div className="relative">
+      {/* Fades into the card, as the photos on the More cards do. */}
+      <div className="relative [mask-image:linear-gradient(to_bottom,#000_72%,transparent)]">
         {template.thumbnail_url ? (
           <img
             src={template.thumbnail_url}
             alt=""
             loading="lazy"
-            // Fades into the card, as the photos on the More cards do.
-            className="aspect-[4/3] w-full bg-[var(--color-sand)] object-cover [mask-image:linear-gradient(to_bottom,#000_72%,transparent)]"
+            className="aspect-[4/3] w-full bg-[var(--color-sand)] object-cover"
           />
         ) : (
-          <div className="grid aspect-[4/3] w-full place-items-center bg-[var(--hover-wash)] text-[var(--faint)] [mask-image:linear-gradient(to_bottom,#000_72%,transparent)]">
+          <div className="grid aspect-[4/3] w-full place-items-center bg-[var(--hover-wash)] text-[var(--faint)]">
             <IconPhotoOff aria-hidden className="size-6" />
           </div>
         )}
 
         {template.is_premium ? (
-          <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-gold ring-[0.5px] ring-white/15 backdrop-blur-sm">
+          <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-medium text-gold ring-[0.5px] ring-white/15">
             <IconCrown aria-hidden className="size-3" />
             {t('card.premium')}
           </span>

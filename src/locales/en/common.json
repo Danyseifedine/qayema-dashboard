@@ -19,7 +19,7 @@
     "look": "Look",
     "design": "Design",
     "appearance": "Appearance",
-    "orders": "Orders",
+    "orders": "Delivery and pickup",
     "tableOrders": "Table orders",
     "sharing": "Sharing",
     "tables": "Tables",
@@ -269,11 +269,13 @@
   },
   "more": {
     "locked": "Pick a design first",
+    "groups": {
+      "insights": "Insights"
+    },
     "hints": {
-      "overview": "Your menu at a glance",
       "analytics": "Views, visitors and scans",
-      "orders": "Orders from your menu",
-      "table-orders": "Orders from your tables",
+      "orders": "Orders guests place from home",
+      "table-orders": "Orders guests place at their table",
       "categories": "The sections of your menu",
       "dishes": "Everything you sell",
       "design": "Pick how your menu looks",

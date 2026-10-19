@@ -2,7 +2,7 @@ export { ConfirmDialog } from '@/shared/components/feedback/dialogs/confirm-dial
 export { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback/dialogs/modal'
 export { CardGridSkeleton } from '@/shared/components/feedback/skeletons/card-grid-skeleton'
 export { PageSkeleton } from '@/shared/components/feedback/skeletons/page-skeleton'
-export { Skeleton } from '@/shared/components/feedback/skeletons/skeleton'
+export { Skeleton, SkeletonList } from '@/shared/components/feedback/skeletons/skeleton'
 export { ErrorBoundary } from '@/shared/components/feedback/states/error-boundary'
 export { EmptyState } from '@/shared/components/feedback/states/empty-state'
 export { GoldNotice } from '@/shared/components/feedback/states/gold-notice'

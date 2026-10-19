@@ -1,10 +1,10 @@
 import { IconArrowLeft } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import type { Locale } from '@/shared/constants/locales'
-import { cn } from '@/shared/utils/dom/cn'
 import { PackagePill } from '@/app/layouts/authenticated/topbar/package-pill'
 import type { PackageTier } from '@/app/layouts/authenticated/topbar/package-tier'
 import { UserMenu } from '@/app/layouts/authenticated/topbar/user-menu'
+import { Button } from '@/shared/components/ui'
 
 /** A small label over a big title, then a line under it. */
 export type TopbarHero = { eyebrow: string; title: string; subtitle: string }
@@ -73,18 +73,15 @@ export function Topbar({
   )
 
   const back = onBack ? (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={onBack}
       aria-label={t('layout.back')}
-      className={cn(
-        'grid size-10 shrink-0 place-items-center rounded-[var(--radius-control)] lg:hidden',
-        'text-[var(--text)] transition-colors hover:bg-[var(--hover-wash)]',
-        'focus-ring',
-      )}
+      className="shrink-0 lg:hidden"
     >
       <IconArrowLeft aria-hidden className="size-5 rtl:rotate-180" />
-    </button>
+    </Button>
   ) : null
 
   return (

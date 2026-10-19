@@ -1,5 +1,5 @@
 /** The part of the day a time falls in, named beside the picker. */
-export type DayPeriod = 'morning' | 'afternoon' | 'evening' | 'night'
+type DayPeriod = 'morning' | 'afternoon' | 'evening' | 'night'
 
 /** AM or PM, as the picker's switch shows it. */
 export type Meridiem = 'am' | 'pm'
@@ -60,7 +60,7 @@ export function runsPastMidnight(open: string, close: string): boolean {
 export const MAX_SHIFTS = 3
 
 /** One opening range of a day, as "HH:MM". */
-export type Shift = { open: string; close: string }
+type Shift = { open: string; close: string }
 
 /**
  * What is wrong with a day's shifts, as the server's

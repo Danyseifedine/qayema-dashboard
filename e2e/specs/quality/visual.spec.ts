@@ -67,7 +67,7 @@ const DASHBOARD_PAGES = [
   ['dishes', 'Dishes'],
   ['design', 'Design'],
   ['appearance', 'Appearance'],
-  ['orders', 'Orders'],
+  ['orders', 'Delivery and pickup'],
   ['qr', 'QR code'],
   ['social-links', 'Social links'],
   ['restaurant', 'Restaurant'],

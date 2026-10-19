@@ -90,7 +90,7 @@ export function NextStep({ items, onOpen, stepsShown, onToggleSteps }: NextStepP
       <button
         type="button"
         onClick={() => onOpen(next.action.target)}
-        className="flex items-center gap-3 rounded-tile border-[0.5px] border-[var(--line)] bg-[var(--hover-wash)] p-2.5 text-start sm:p-3 transition-colors hover:bg-[var(--hover-wash)] focus-ring"
+        className="flex items-center gap-3 rounded-tile border-[0.5px] border-[var(--line)] bg-[var(--hover-wash)] p-2.5 text-start sm:p-3 focus-ring"
       >
         <span
           aria-hidden

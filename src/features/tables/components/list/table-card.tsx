@@ -8,7 +8,7 @@ import {
   type TablerIcon,
 } from '@tabler/icons-react'
 import type { Options } from 'qr-code-styling'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
@@ -38,6 +38,10 @@ export const TableCard = memo(function TableCard({
 }: TableCardProps) {
   const { t } = useTranslation('tables')
 
+  // Its own link on the page's look, kept between renders: TableQr redraws
+  // the code whenever this changes.
+  const qrOptions = useMemo(() => ({ ...options, data: table.url }), [options, table.url])
+
   return (
     <article className="flex min-w-0 flex-col items-center gap-3 glass-card rounded-card p-3 sm:p-4">
       {/* The code as it will print, on its own colour. */}
@@ -46,7 +50,7 @@ export const TableCard = memo(function TableCard({
         style={{ background: options.backgroundOptions?.color ?? '#FFFFFF' }}
       >
         <TableQr
-          options={{ ...options, data: table.url }}
+          options={qrOptions}
           size={240}
           fill
           label={t('card.qrLabel', { name: table.name })}

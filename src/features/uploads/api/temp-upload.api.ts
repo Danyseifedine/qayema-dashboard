@@ -6,7 +6,7 @@ import {
 } from '@/features/uploads/schemas/temp-upload.schema'
 import { shrinkImage } from '@/features/uploads/utils/shrink-image'
 
-export type UploadTempImageOptions = {
+type UploadTempImageOptions = {
   context: UploadContext
   /** 0-100, or null while the total size is unknown. */
   onProgress?: (percent: number | null) => void

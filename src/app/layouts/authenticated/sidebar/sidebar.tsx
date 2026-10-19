@@ -35,8 +35,9 @@ export type SidebarProps = {
 const NO_COUNTS: Partial<Record<string, number>> = {}
 
 /**
- * The dashboard's primary navigation. Collapses to an icon rail on desktop and
- * is rendered inside a drawer on small screens by the layout.
+ * The dashboard's primary navigation, on desktop: a glass card like every
+ * other, floating beside the page, that collapses to an icon rail. A phone
+ * has the bottom tabs and More instead.
  */
 export function Sidebar({
   activeKey,
@@ -55,14 +56,14 @@ export function Sidebar({
     <nav
       aria-label={t('app.dashboard')}
       className={cn(
-        'flex h-full flex-col border-e-[0.5px] border-[var(--line)] bg-[var(--surface)]',
+        'flex h-full flex-col glass-card rounded-card',
         'transition-[width] duration-300 [transition-timing-function:var(--ease-qayema)]',
         collapsed ? 'w-[72px]' : 'w-[248px]',
       )}
     >
       <div
         className={cn(
-          'flex h-[68px] shrink-0 items-center justify-center border-b-[0.5px] border-[var(--line)]',
+          'flex h-[64px] shrink-0 items-center justify-center',
           collapsed ? 'px-2' : 'px-4',
         )}
       >
@@ -73,7 +74,9 @@ export function Sidebar({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-3">
+      {/* Fades at its foot, so a list longer than the window reads as one to
+          scroll, never as sections of the Collapse button below. */}
+      <div className="flex-1 overflow-y-auto px-3 pb-6 [mask-image:linear-gradient(to_bottom,#000_calc(100%-1.5rem),transparent)]">
         {NAV_GROUPS.map((group) => {
           // A section the package does not include is left out, not shown
           // locked: the Package page is where the owner sees what more
@@ -118,7 +121,7 @@ export function Sidebar({
         })}
       </div>
 
-      <div className="hidden shrink-0 border-t-[0.5px] border-[var(--line)] p-3 lg:block">
+      <div className="hidden shrink-0 p-3 pt-1 lg:block">
         <button
           type="button"
           onClick={onToggleCollapse}

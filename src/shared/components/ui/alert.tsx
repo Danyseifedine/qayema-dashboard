@@ -1,24 +1,22 @@
-import { IconAlertTriangle, IconCircleCheck, IconInfoCircle, IconCircleX, IconX } from '@tabler/icons-react'
+import { IconAlertTriangle, IconInfoCircle, IconCircleX, IconX } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 
-type AlertVariant = 'error' | 'warning' | 'success' | 'info'
+type AlertVariant = 'error' | 'warning' | 'info'
 
 const ICONS: Record<AlertVariant, typeof IconInfoCircle> = {
   error: IconCircleX,
   warning: IconAlertTriangle,
-  success: IconCircleCheck,
   info: IconInfoCircle,
 }
 
 const STYLES: Record<AlertVariant, string> = {
-  // One alpha convention across all four (wash .10 light / .14 dark, border
-  // .30 / .38), and four distinct hues. Info is blue rather than gold so it
+  // One alpha convention across all three (wash .10 light / .14 dark, border
+  // .30 / .38), and three distinct hues. Info is blue rather than gold so it
   // can never be mistaken for a warning.
   error: 'border-status-danger-border bg-status-danger-wash text-status-danger',
   warning: 'border-status-warn-border bg-status-warn-wash text-status-warn',
-  success: 'border-status-success-border bg-status-success-wash text-status-success',
   info: 'border-status-info-border bg-status-info-wash text-status-info',
 }
 

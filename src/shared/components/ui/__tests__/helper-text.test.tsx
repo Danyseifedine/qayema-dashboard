@@ -14,7 +14,6 @@ describe('HelperText', () => {
 
   it.each([
     ['error', 'text-status-danger'],
-    ['success', 'text-status-success'],
     ['warning', 'text-status-warn'],
   ] as const)('shows the %s tone', (tone, className) => {
     render(<HelperText tone={tone}>Line</HelperText>)

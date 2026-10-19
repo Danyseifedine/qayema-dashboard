@@ -19,21 +19,29 @@ export function RangePicker({ value, onChange, advanced }: RangePickerProps) {
   const { t } = useTranslation('analytics')
 
   return (
-    <Segmented
-      aria-label={t('range.label')}
-      size="sm"
-      value={value}
-      onChange={onChange}
-      options={STATS_RANGES.map((range) => {
-        const locked = !advanced && !BASIC_RANGES.includes(range)
-        return {
-          value: range,
-          label: t(`range.options.${range}`),
-          disabled: locked,
-          icon: locked ? <IconLock aria-hidden className="size-3" /> : undefined,
-          title: locked ? t('range.locked') : undefined,
-        }
-      })}
-    />
+    // The whole width on a phone, five options sharing it; its own width
+    // from a tablet up.
+    <div className="w-full sm:w-auto">
+      <Segmented
+        block
+        aria-label={t('range.label')}
+        size="sm"
+        value={value}
+        onChange={onChange}
+        options={STATS_RANGES.map((range) => {
+          const locked = !advanced && !BASIC_RANGES.includes(range)
+          return {
+            value: range,
+            label: t(`range.options.${range}`),
+            disabled: locked,
+            // Faded already says locked; the smallest phones have no room for the lock too.
+            icon: locked ? (
+              <IconLock aria-hidden className="size-3 max-[359px]:hidden" />
+            ) : undefined,
+            title: locked ? t('range.locked') : undefined,
+          }
+        })}
+      />
+    </div>
   )
 }

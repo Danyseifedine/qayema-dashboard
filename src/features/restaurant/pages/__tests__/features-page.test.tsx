@@ -36,7 +36,7 @@ function tabOf(group: string, name: string) {
 
 /** How delivery and pickup come in (the table's choice has a WhatsApp too). */
 function orderTab(name: string) {
-  return tabOf('Guests send their order', name)
+  return tabOf('How guests send orders', name)
 }
 
 function page(props: Partial<FeaturesPageProps> = {}) {
@@ -125,25 +125,24 @@ describe('FeaturesPage', () => {
   it('groups related features in sections, each feature a switch', () => {
     renderWithProviders(page({ off: ['orders'] }))
 
-    const section = (title: string) =>
-      screen.getByRole('heading', { level: 3, name: title }).closest('section')!
+    const section = (title: string) => screen.getByRole('region', { name: title })
     const switchesIn = (title: string) =>
       within(section(title))
         .getAllByRole('switch')
         .map((element) => element.getAttribute('aria-label'))
 
     expect(
-      screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent),
+      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent),
     ).toEqual(['Orders', 'Dishes', 'Menu languages', 'QR code and analytics'])
-    expect(switchesIn('Orders')).toEqual(['Orders on', 'Ordering at the table on'])
+    expect(switchesIn('Orders')).toEqual(['Delivery and pickup on', 'Ordering at the table on'])
     expect(switchesIn('Dishes')).toEqual(['Variants on', 'Add-ons on'])
     expect(switchesIn('QR code and analytics')).toEqual(['QR Studio on', 'Analytics on'])
     // The main language and the second one, together.
-    expect(switchesIn('Menu languages')).toEqual(['Multiple languages on'])
+    expect(switchesIn('Menu languages')).toEqual(['Second language on'])
     expect(
       within(section('Menu languages')).getByRole('combobox', { name: 'Your menu is written in' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('switch', { name: 'Orders on' })).not.toBeChecked()
+    expect(screen.getByRole('switch', { name: 'Delivery and pickup on' })).not.toBeChecked()
     expect(screen.getByRole('switch', { name: 'Analytics on' })).toBeChecked()
   })
 
@@ -163,8 +162,8 @@ describe('FeaturesPage', () => {
   it('says what switching orders and the QR studio off means', () => {
     renderWithProviders(page({ off: ['orders', 'qr'] }))
 
-    expect(screen.getByText(/Guests can't order from your menu/)).toBeInTheDocument()
-    expect(screen.getByText(/plain black QR code stays/)).toBeInTheDocument()
+    expect(screen.getByText(/Guests can't order for delivery or pickup/)).toBeInTheDocument()
+    expect(screen.getByText(/plain QR code/)).toBeInTheDocument()
   })
 
   it('chooses the second language inside the languages row', async () => {
@@ -174,7 +173,7 @@ describe('FeaturesPage', () => {
     const user = userEvent.setup()
     renderWithProviders(page())
 
-    await user.click(screen.getByRole('combobox', { name: /Second language/ }))
+    await user.click(screen.getByRole('combobox', { name: /Which language/ }))
     await user.click(await screen.findByRole('option', { name: /French/ }))
 
     await waitFor(() => expect(mock.history.put).toHaveLength(1))
@@ -205,8 +204,8 @@ describe('FeaturesPage', () => {
   it('hides the language choice while multiple languages are off', () => {
     renderWithProviders(page({ off: ['languages'] }))
 
-    expect(screen.queryByRole('combobox', { name: /Second language/ })).not.toBeInTheDocument()
-    expect(screen.getByText(/Your menu shows its main language only/)).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: /Which language/ })).not.toBeInTheDocument()
+    expect(screen.getByText(/Your menu shows only its main language/)).toBeInTheDocument()
   })
 
   it('marks a feature the package does not include', () => {
@@ -225,7 +224,7 @@ describe('FeaturesPage', () => {
     expect(qr).toBeDisabled()
     // Its "while this is off" warning is about switching it off yourself.
     expect(screen.queryByText(/QR code goes back to plain/)).not.toBeInTheDocument()
-    expect(screen.getByRole('switch', { name: 'Orders on' })).toBeEnabled()
+    expect(screen.getByRole('switch', { name: 'Delivery and pickup on' })).toBeEnabled()
   })
 
   it('names the package each missing feature comes with', async () => {
@@ -259,7 +258,7 @@ describe('FeaturesPage', () => {
     renderWithProviders(page({ plan: { ...ALL, multiple_languages: false } }))
 
     expect(screen.getByText('Not on your package')).toBeInTheDocument()
-    expect(screen.queryByRole('combobox', { name: /Second language/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: /Which language/ })).not.toBeInTheDocument()
   })
 
   it('switches a feature back on by taking it off the list', async () => {
@@ -267,7 +266,7 @@ describe('FeaturesPage', () => {
     const user = userEvent.setup()
     renderWithProviders(page({ off: ['orders'] }))
 
-    await user.click(screen.getByRole('switch', { name: 'Orders on' }))
+    await user.click(screen.getByRole('switch', { name: 'Delivery and pickup on' }))
 
     await waitFor(() => expect(mock.history.put).toHaveLength(1))
     expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({ off: [] })
@@ -319,7 +318,7 @@ describe('FeaturesPage', () => {
     const user = userEvent.setup()
     renderWithProviders(<FromSession />)
 
-    await user.click(await screen.findByRole('combobox', { name: /Second language/ }))
+    await user.click(await screen.findByRole('combobox', { name: /Which language/ }))
     // Earlier tests' toasts can still be up, so count the new one.
     const toasts = screen.queryAllByText('Menu languages saved').length
     await user.click(await screen.findByRole('option', { name: /French/ }))
@@ -349,7 +348,7 @@ describe('FeaturesPage', () => {
     renderWithProviders(page({ defaultLocale: 'ar' }))
 
     expect(screen.getByRole('tab', { name: 'Arabic' })).toHaveAttribute('aria-selected', 'true')
-    await user.click(screen.getByRole('combobox', { name: /Second language/ }))
+    await user.click(screen.getByRole('combobox', { name: /Which language/ }))
     await user.click(await screen.findByRole('option', { name: /French/ }))
 
     await waitFor(() => expect(mock.history.put).toHaveLength(1))
@@ -363,8 +362,8 @@ describe('FeaturesPage', () => {
   it('offers no opening language before a second one is chosen', () => {
     renderWithProviders(page({ secondLocale: null }))
 
-    expect(screen.getByRole('combobox', { name: /Second language/ })).toBeInTheDocument()
-    expect(screen.queryByRole('tablist', { name: 'The menu opens in' })).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: /Which language/ })).toBeInTheDocument()
+    expect(screen.queryByRole('tablist', { name: 'Menu opens in' })).not.toBeInTheDocument()
   })
 
   it('chooses the main language for every package, a second one not needed', async () => {
@@ -519,7 +518,7 @@ describe('FeaturesPage', () => {
     const user = userEvent.setup()
     renderWithProviders(page())
 
-    const box = screen.getByRole('combobox', { name: /Second language/ })
+    const box = screen.getByRole('combobox', { name: /Which language/ })
     box.focus()
     await user.keyboard('{Escape}')
 
@@ -533,7 +532,7 @@ describe('FeaturesPage', () => {
     const user = userEvent.setup()
     renderWithProviders(page({ mainLocale: 'ar', secondLocale: 'en', defaultLocale: 'ar' }))
 
-    await user.click(screen.getByRole('combobox', { name: /Second language/ }))
+    await user.click(screen.getByRole('combobox', { name: /Which language/ }))
     expect(screen.queryByRole('option', { name: /Arabic/ })).not.toBeInTheDocument()
     expect(screen.getByRole('option', { name: /English/ })).toBeInTheDocument()
   })
@@ -564,7 +563,7 @@ describe('FeaturesPage', () => {
       const user = userEvent.setup()
       renderWithProviders(page())
 
-      expect(screen.getByText(/won't show on your Orders page/)).toBeInTheDocument()
+      expect(screen.getByText(/won't appear on your Orders page/)).toBeInTheDocument()
       await user.click(orderTab('In your menu'))
 
       await waitFor(() => expect(mock.history.put).toHaveLength(1))
@@ -582,7 +581,7 @@ describe('FeaturesPage', () => {
         page({ ordering: { ...ORDERING, mode: 'menu', types: ['delivery', 'pickup'] } }),
       )
 
-      expect(screen.getByText(/Orders arrive on your Orders page with a sound/)).toBeInTheDocument()
+      expect(screen.getByText(/Orders appear on your Orders page with a sound/)).toBeInTheDocument()
       expect(screen.getByRole('switch', { name: 'Delivery' })).toHaveAttribute(
         'aria-checked',
         'true',
@@ -659,7 +658,7 @@ describe('FeaturesPage', () => {
       renderWithProviders(page({ off: ['orders'] }))
 
       expect(
-        screen.queryByRole('tablist', { name: 'Guests send their order' }),
+        screen.queryByRole('tablist', { name: 'How guests send orders' }),
       ).not.toBeInTheDocument()
     })
 
@@ -699,9 +698,7 @@ describe('FeaturesPage', () => {
       ).toEqual(['Name: what to ask', 'Phone: what to ask', 'Delivery address: what to ask'])
       expect(askTab('Name', 'Off')).toHaveAttribute('aria-selected', 'true')
       expect(within(group).getByText(/before WhatsApp opens/)).toBeInTheDocument()
-      expect(
-        within(group).getByText(/the address is only asked for a delivery/),
-      ).toBeInTheDocument()
+      expect(within(group).getByText(/The address is only asked for delivery/)).toBeInTheDocument()
       unmount()
 
       renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu' } }))
@@ -753,9 +750,7 @@ describe('FeaturesPage', () => {
       await user.click(askTab('Delivery address', 'Optional'))
 
       const types = await screen.findByRole('group', { name: 'You take' })
-      expect(
-        within(types).getByText('Guests who choose it give their address.'),
-      ).toBeInTheDocument()
+      expect(within(types).getByText('Guests give their address.')).toBeInTheDocument()
       await user.click(within(types).getByRole('switch', { name: 'Pickup' }))
 
       await waitFor(() => expect(mock.history.put).toHaveLength(2))
@@ -837,11 +832,11 @@ describe('FeaturesPage', () => {
     it('says what switching it off means', () => {
       renderWithProviders(page({ off: ['dine_in'] }))
 
-      expect(
-        screen.getByText(/guests can't order to their table while this is off/),
-      ).toBeInTheDocument()
+      expect(screen.getByText(/but can't order/)).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Set up your tables' })).not.toBeInTheDocument()
-      expect(screen.queryByRole('tablist', { name: 'Table orders arrive' })).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('tablist', { name: 'Where table orders go' }),
+      ).not.toBeInTheDocument()
     })
 
     it('sends table orders to WhatsApp, apart from delivery and pickup', async () => {
@@ -852,14 +847,14 @@ describe('FeaturesPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<FromSession />)
 
-      expect(await screen.findByText(/Orders arrive on your Table orders page/)).toBeInTheDocument()
-      await user.click(tabOf('Table orders arrive', 'WhatsApp'))
+      expect(await screen.findByText(/They appear on your Table orders page/)).toBeInTheDocument()
+      await user.click(tabOf('Where table orders go', 'WhatsApp'))
 
       await waitFor(() => expect(mock.history.put).toHaveLength(1))
       expect(mock.history.put[0]!.url).toBe('/api/features/dine-in')
       expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({ mode: 'whatsapp' })
-      expect(tabOf('Table orders arrive', 'WhatsApp')).toHaveAttribute('aria-selected', 'true')
-      expect(screen.getByText(/with the table's name at the top/)).toBeInTheDocument()
+      expect(tabOf('Where table orders go', 'WhatsApp')).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByText(/with the table's name/)).toBeInTheDocument()
       // Delivery and pickup keep their own way in.
       expect(orderTab('In your menu')).toHaveAttribute('aria-selected', 'true')
     })
@@ -868,7 +863,7 @@ describe('FeaturesPage', () => {
       const user = userEvent.setup()
       renderWithProviders(page())
 
-      await user.click(tabOf('Table orders arrive', 'Dashboard'))
+      await user.click(tabOf('Where table orders go', 'Dashboard'))
 
       expect(mock.history.put).toHaveLength(0)
     })
@@ -880,7 +875,7 @@ describe('FeaturesPage', () => {
         page({ ordering: { ...ORDERING, whatsapp_number: false }, onOpenRestaurant }),
       )
 
-      expect(tabOf('Table orders arrive', 'WhatsApp')).toBeDisabled()
+      expect(tabOf('Where table orders go', 'WhatsApp')).toBeDisabled()
       expect(screen.getByText(/WhatsApp needs your restaurant's phone number/)).toBeInTheDocument()
       await user.click(screen.getByRole('button', { name: 'Add it on the Restaurant page' }))
       expect(onOpenRestaurant).toHaveBeenCalledOnce()
@@ -893,11 +888,9 @@ describe('FeaturesPage', () => {
         page({ ordering: { ...ORDERING, dine_in: 'whatsapp', whatsapp_number: false } }),
       )
 
-      expect(
-        screen.getByText(/so table orders arrive on your dashboard until you add one/),
-      ).toBeInTheDocument()
-      expect(tabOf('Table orders arrive', 'WhatsApp')).toBeEnabled()
-      await user.click(tabOf('Table orders arrive', 'Dashboard'))
+      expect(screen.getByText(/so table orders come to your dashboard/)).toBeInTheDocument()
+      expect(tabOf('Where table orders go', 'WhatsApp')).toBeEnabled()
+      await user.click(tabOf('Where table orders go', 'Dashboard'))
 
       await waitFor(() => expect(mock.history.put).toHaveLength(1))
       expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({ mode: 'menu' })
@@ -910,9 +903,9 @@ describe('FeaturesPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<FromSession />)
 
-      await screen.findByRole('tablist', { name: 'Table orders arrive' })
-      await user.click(tabOf('Table orders arrive', 'WhatsApp'))
-      expect(tabOf('Table orders arrive', 'WhatsApp')).toHaveAttribute('aria-selected', 'true')
+      await screen.findByRole('tablist', { name: 'Where table orders go' })
+      await user.click(tabOf('Where table orders go', 'WhatsApp'))
+      expect(tabOf('Where table orders go', 'WhatsApp')).toHaveAttribute('aria-selected', 'true')
 
       answer.release([
         422,
@@ -922,7 +915,10 @@ describe('FeaturesPage', () => {
         },
       ])
       await waitFor(() =>
-        expect(tabOf('Table orders arrive', 'Dashboard')).toHaveAttribute('aria-selected', 'true'),
+        expect(tabOf('Where table orders go', 'Dashboard')).toHaveAttribute(
+          'aria-selected',
+          'true',
+        ),
       )
       expect((await screen.findAllByText('Could not update your features')).length).toBeGreaterThan(
         0,

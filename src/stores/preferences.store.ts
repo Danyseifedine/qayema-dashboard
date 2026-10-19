@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { setLanguage } from '@/lib/i18n'
 import { isLocale, localeDir, type Locale } from '@/shared/constants/locales'
 
-export type Theme = 'light' | 'dark'
+type Theme = 'light' | 'dark'
 
 const STORAGE_KEY = 'qayema.dashboard.theme.v1'
 const LOCALE_KEY = 'qayema.dashboard.locale.v1'

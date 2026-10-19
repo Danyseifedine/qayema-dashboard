@@ -9,7 +9,7 @@ import type { ApiError } from '@/shared/types/api'
 /** The uses a day and those left; null for no daily cap. */
 export type WritingHelpUses = { limit: number | null; left: number | null }
 
-export type WritingHelpState = {
+type WritingHelpState = {
   /** Null while the restaurant has no writing help: no buttons. */
   uses: WritingHelpUses | null
   /** What is left now, after a use or a refusal. */
@@ -39,7 +39,7 @@ const answerSchema = z.object({
   data: z.object({ text: z.string(), left: z.number().int().nullable() }),
 })
 
-export type TranslateInput = {
+type TranslateInput = {
   text: string
   from: string
   to: string
@@ -50,7 +50,7 @@ export type TranslateInput = {
 }
 
 /** `text` is the owner's own description to improve; empty writes a new one. */
-export type DescribeInput =
+type DescribeInput =
   | {
       kind: 'category'
       /** The category's name, in the language written in when it has one there. */

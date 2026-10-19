@@ -1,7 +1,7 @@
 import { IconLayoutList, IconPlus, IconToolsKitchen2 } from '@tabler/icons-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LimitNotice } from '@/shared/components/data-display'
+import { isAtLimit, LimitNotice } from '@/shared/components/data-display'
 import { useCategories } from '@/features/menu/categories/hooks/use-categories'
 import { CategoryFilter, UNCATEGORISED } from '@/features/menu/components/filters/category-filter'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
@@ -14,11 +14,10 @@ import {
   useReorderDishes,
 } from '@/features/menu/dishes/hooks/use-dishes'
 import type { Dish } from '@/features/menu/dishes/schemas/dish.schema'
-import { ConfirmDialog, EmptyState, ErrorState, Skeleton } from '@/shared/components/feedback'
-import { Alert, Button } from '@/shared/components/ui'
+import { ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
+import { Alert, Button, PageSwitch } from '@/shared/components/ui'
 import { useDishChoices } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
-import { MenuSwitch } from '@/features/menu/components/switch/menu-switch'
 
 export type DishesPageProps = {
   locale: Locale
@@ -65,11 +64,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
     return dishList.filter((dish) => dish.category_id === filter)
   }, [dishList, filter])
 
-  // An unlimited package reports a null limit, which is never reached.
-  const atLimit =
-    dishes.data !== undefined &&
-    dishes.data.meta.limit !== null &&
-    dishes.data.meta.used >= dishes.data.meta.limit
+  const atLimit = isAtLimit(dishes.data?.meta)
   const noCategories = !categories.isPending && categoryList.length === 0
 
   // Stable identities: every card takes these, so a new closure per card per
@@ -93,7 +88,15 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <MenuSwitch value="dishes" onChange={onOpenCategories} />
+      <PageSwitch
+        label={t('nav.menu', { ns: 'common' })}
+        value="dishes"
+        options={[
+          { value: 'dishes', label: t('nav.dishes', { ns: 'common' }) },
+          { value: 'categories', label: t('nav.categories', { ns: 'common' }) },
+        ]}
+        onOpen={onOpenCategories}
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LimitNotice used={dishes.data?.meta.used ?? 0} limit={dishes.data?.meta.limit ?? null} />
@@ -144,11 +147,11 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
           ) : null}
 
           {dishes.isPending ? (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
-              {Array.from({ length: 6 }, (_, index) => (
-                <Skeleton key={index} className="h-[132px]" />
-              ))}
-            </div>
+            <SkeletonList
+              count={6}
+              className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3"
+              itemClassName="h-[132px]"
+            />
           ) : dishes.isError ? (
             <ErrorState description={dishes.error.message} onRetry={() => void dishes.refetch()} />
           ) : visible.length === 0 ? (

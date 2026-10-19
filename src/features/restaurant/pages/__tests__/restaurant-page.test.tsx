@@ -329,10 +329,15 @@ describe('RestaurantPage', () => {
     expect(screen.getAllByText(/· Night/).length).toBeGreaterThan(0)
     expect(screen.getByRole('switch', { name: 'Monday is open' })).toBeChecked()
 
-    // A day with no range is switched off, but keeps usable times in its
-    // boxes so turning it on does not start from nothing.
-    expect(screen.getByRole('switch', { name: 'Wednesday is open' })).not.toBeChecked()
-    expect(screen.getByRole('combobox', { name: 'Wednesday opens: hour' })).toBeDisabled()
+    // A day with no range is switched off and shows no times, but keeps
+    // usable ones in the form, so turning it on does not start from nothing.
+    const wednesday = screen.getByRole('switch', { name: 'Wednesday is open' })
+    expect(wednesday).not.toBeChecked()
+    expect(
+      screen.queryByRole('combobox', { name: 'Wednesday opens: hour' }),
+    ).not.toBeInTheDocument()
+    await userEvent.setup().click(wednesday)
+    expect(screen.getByRole('combobox', { name: 'Wednesday opens: hour' })).toHaveValue('9')
   })
 
   it('stores what was picked as HH:MM', async () => {
@@ -670,7 +675,7 @@ describe('RestaurantPage', () => {
       )
       expect(screen.getAllByRole('tab', { name: 'AR' })).toHaveLength(2)
       // Choosing the languages lives on the Features page now.
-      expect(screen.queryByRole('combobox', { name: /Second language/ })).not.toBeInTheDocument()
+      expect(screen.queryByRole('combobox', { name: /Which language/ })).not.toBeInTheDocument()
     })
 
     it('edits English only on an English-only menu', async () => {

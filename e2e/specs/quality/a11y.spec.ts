@@ -54,7 +54,7 @@ const DASHBOARD_PAGES = [
   ['dishes', 'Dishes', 'الأطباق'],
   ['design', 'Design', 'التصميم'],
   ['appearance', 'Appearance', 'المظهر'],
-  ['orders', 'Orders', 'الطلبات'],
+  ['orders', 'Delivery and pickup', 'التوصيل والاستلام'],
   ['qr', 'QR code', 'رمز QR'],
   ['social-links', 'Social links', 'روابط التواصل'],
   ['restaurant', 'Restaurant', 'المطعم'],
@@ -85,7 +85,7 @@ test.describe('accessibility: the dashboard', () => {
   for (const [key, heading] of [
     ['analytics', 'Analytics'],
     ['appearance', 'Appearance'],
-    ['orders', 'Orders'],
+    ['orders', 'Delivery and pickup'],
   ] as const) {
     test(`${key}, locked on Free`, async ({ page, owner, expectAccessible }) => {
       await owner({ package: 'free', visits: 5 })

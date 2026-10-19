@@ -19,6 +19,7 @@ function tile(label: string): HTMLElement {
 function summary(overrides: Record<string, unknown> = {}) {
   return {
     totals: { views: 120, unique_visitors: 80, qr_scans: 90, views_today: 7, orders: 12 },
+    previous: { views: 100, unique_visitors: 80, qr_scans: 100, orders: 0 },
     series: [
       { date: '2026-09-25', views: 50, qr_scans: 40 },
       { date: '2026-09-26', views: 70, qr_scans: 50 },
@@ -44,7 +45,6 @@ function advanced(overrides: Record<string, unknown> = {}) {
   hours[20] = 30
   hours[13] = 10
   return {
-    previous: { views: 100, unique_visitors: 80, qr_scans: 100, orders: 0 },
     hours,
     weekdays: [1, 2, 3, 4, 20, 5, 6],
     languages: [
@@ -359,8 +359,8 @@ describe('AnalyticsPage', () => {
     })
 
     it('has nothing to compare with on all time', async () => {
-      stubSummary()
-      stubAdvanced('today', { previous: null })
+      stubSummary('today', { previous: null })
+      stubAdvanced()
       renderWithProviders(<AnalyticsPage locale="en" advanced onOpenPackage={vi.fn()} />)
 
       await screen.findByText('Tapped WhatsApp')

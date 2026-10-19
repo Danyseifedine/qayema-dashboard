@@ -1,7 +1,6 @@
-import { IconPencil, IconTrash } from '@tabler/icons-react'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/components/ui'
+import { RowActions } from '@/shared/components/ui'
 import { localeLabel, type Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
@@ -84,29 +83,18 @@ export const CategoryCard = memo(function CategoryCard({
 
       {/* The actions apart from what the category is, behind a hairline. */}
       <span aria-hidden className="ms-1 h-9 w-px shrink-0 bg-[var(--line)] sm:ms-2" />
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => onEdit(category)}
-        aria-label={
+      <RowActions
+        editLabel={
           name.text ? t('categoryCard.edit', { name: name.text }) : t('categoryCard.editUnnamed')
         }
-      >
-        <IconPencil aria-hidden className="size-[18px]" stroke={1.7} />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => onDelete(category)}
-        aria-label={
+        deleteLabel={
           name.text
             ? t('categoryCard.delete', { name: name.text })
             : t('categoryCard.deleteUnnamed')
         }
-        className="text-[var(--muted)] hover:bg-status-danger-wash hover:text-status-danger"
-      >
-        <IconTrash aria-hidden className="size-[18px]" stroke={1.7} />
-      </Button>
+        onEdit={() => onEdit(category)}
+        onDelete={() => onDelete(category)}
+      />
     </div>
   )
 })
