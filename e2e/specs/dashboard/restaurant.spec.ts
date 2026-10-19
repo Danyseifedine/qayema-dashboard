@@ -309,8 +309,10 @@ test.describe('restaurant', () => {
     const guest = await guestMenu(browser, restaurant)
     const facts = guest.locator('.facts-row')
     await expect(facts).toContainText('Open now')
-    // Today itself is a closed day.
-    await expect(facts).toContainText('Closed today')
+    // Today itself is a closed day, so the hours shown are the night still
+    // running, never "Closed today" beside "Open now".
+    await expect(facts).toContainText(`20:00 - ${hhmm(hour + 2, 0)}`)
+    await expect(facts).not.toContainText('Closed today')
 
     // Closing an hour ago means closed now.
     await page.reload()

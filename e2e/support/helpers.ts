@@ -36,8 +36,9 @@ export function isPhone(page: Page): boolean {
 /**
  * The dashboard's navigation. On a computer, the sidebar. On a phone, the
  * More tab is opened and both are searched: the four tabs (Home, Menu, the
- * orders, More) and the More page's sections. On a phone Overview is "Home"
- * and Dishes is "Menu".
+ * orders, More) and the More page, which lists every section but Home, so a
+ * section a tab opens is found twice. On a phone Overview is "Home" and
+ * Dishes is "Menu".
  */
 export async function openSidebar(page: Page): Promise<Locator> {
   const sections = page.getByRole('navigation', { name: either('Dashboard', 'لوحة التحكم') })

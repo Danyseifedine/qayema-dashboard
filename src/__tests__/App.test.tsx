@@ -202,6 +202,7 @@ describe('App', () => {
     { path: '/design', name: 'design', action: 'onOpenPackage', lands: 'package' },
     { path: '/appearance', name: 'appearance' },
     { path: '/orders', name: 'orders', action: 'onOpenFeatures', lands: 'features' },
+    { path: '/orders', name: 'orders', action: 'onOpenTableOrders', lands: 'table-orders' },
     { path: '/qr', name: 'qr', action: 'onOpenFeatures', lands: 'features' },
     { path: '/qr', name: 'qr', action: 'onOpenPackage', lands: 'package' },
     { path: '/social-links', name: 'social-links' },
@@ -211,6 +212,7 @@ describe('App', () => {
     { path: '/features', name: 'features', action: 'onOpenRestaurant', lands: 'restaurant' },
     { path: '/table-orders', name: 'table-orders', action: 'onOpenTables', lands: 'tables' },
     { path: '/table-orders', name: 'table-orders', action: 'onOpenFeatures', lands: 'features' },
+    { path: '/table-orders', name: 'table-orders', action: 'onOpenOrders', lands: 'orders' },
     { path: '/tables', name: 'tables', action: 'onOpenFeatures', lands: 'features' },
     { path: '/restaurant', name: 'restaurant' },
     { path: '/account', name: 'account' },
@@ -227,6 +229,16 @@ describe('App', () => {
       expect(await page(lands)).toBeInTheDocument()
       expect(window.location.pathname).toBe(`/${lands}`)
     }
+  })
+
+  it('offers the switch between the two kinds of order only while both are taken', async () => {
+    signIn({ switched_off: ['dine_in'] })
+    openAt('/orders')
+    renderWithProviders(<App />)
+
+    const region = await page('orders')
+    expect(within(region).getByRole('button', { name: 'onOpenFeatures' })).toBeInTheDocument()
+    expect(within(region).queryByRole('button', { name: 'onOpenTableOrders' })).toBeNull()
   })
 
   it('shows a way out in place of a page that broke, and the next page opens as usual', async () => {

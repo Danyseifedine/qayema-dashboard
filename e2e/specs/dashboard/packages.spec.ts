@@ -8,9 +8,12 @@ type PackageSlug = NonNullable<ScenarioInput['package']>
 /** The sidebar; on a phone, the tabs and the More page (`openSidebar`). */
 const sidebar = (page: Page): Promise<Locator> => openSidebar(page)
 
-/** A sidebar row, whatever chip follows its label (`\\b` knows no Arabic letters). */
+/**
+ * A sidebar row, whatever chip follows its label (`\\b` knows no Arabic
+ * letters). On a phone a section a tab opens is also on More: the first.
+ */
 function row(nav: Locator, english: string, arabic: string): Locator {
-  return nav.getByRole('button', { name: startsWith(english, arabic) })
+  return nav.getByRole('button', { name: startsWith(english, arabic) }).first()
 }
 
 /** A heading that begins with a label in either language, whatever chip follows it. */

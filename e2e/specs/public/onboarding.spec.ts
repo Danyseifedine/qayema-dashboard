@@ -140,17 +140,17 @@ test.describe('onboarding', () => {
 
     await w.slug.pressSequentially('Café Ñame/ #1!')
     await expect(w.slug).toHaveValue('caf-ame-1')
+    // The link's own hint gives way to the result of its check.
+    await expect(page.getByText('This link is available.')).toBeVisible()
 
-    // A name alone is not enough; the step asks for it.
+    // A link alone is not enough; the step asks for a name.
     await w.next.click()
     await expect(w.error('Restaurant name is required.')).toBeVisible()
     // The hint stays under the error, rather than being replaced by it.
     await expect(
       page.getByText('This is the name your guests will see on your menu page.'),
     ).toBeVisible()
-    await expect(
-      page.getByText('Share this link with guests so they can view your menu.'),
-    ).toBeVisible()
+    await expect(page.getByText('This link is available.')).toBeVisible()
     await w.name.fill('A')
     await w.next.click()
     await expect(w.error('Restaurant name must be at least 2 characters.')).toBeVisible()
