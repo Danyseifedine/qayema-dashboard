@@ -34,13 +34,22 @@ export function choiceParts(
 ): string[] {
   return [
     ...variants.map((variant) => `${variant.name}: ${variant.choice}`),
-    ...builds.map((build) => `${build.name}: ${builtText(build.parts)}`),
+    ...builds.map(
+      (build) => `${build.name}: ${builtText(build.parts)}${build.size ? ` (${build.size})` : ''}`,
+    ),
     ...addons.map((addon) => `+ ${addon.name}`),
   ]
 }
 
-/** A build as `choiceParts` reads it: its name and each part's choice. */
-export type BuiltParts = { name: string; parts: readonly { choice: string; share: number }[] }
+/**
+ * A build as `choiceParts` reads it: its name, each part's choice and, built
+ * in a size, the size, read after it as `OrderItem::built()` does: "(Large)".
+ */
+export type BuiltParts = {
+  name: string
+  parts: readonly { choice: string; share: number }[]
+  size?: string
+}
 
 /** One part of N as a fraction, the server's characters; else "1/N". */
 const FRACTIONS: Record<number, string> = { 2: '½', 3: '⅓', 4: '¼', 5: '⅕', 6: '⅙', 8: '⅛' }

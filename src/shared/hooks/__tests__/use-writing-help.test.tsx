@@ -21,7 +21,7 @@ describe('useWritingHelp', () => {
     const { result } = renderHook(() => useWritingHelp())
 
     expect(result.current.uses).toBeNull()
-    expect(() => result.current.setLeft({ uses: 3 })).not.toThrow()
+    expect(() => result.current.setLeft({ credits: 3 })).not.toThrow()
     expect(result.current.spentNoteBy).toBeNull()
     expect(() => result.current.queueForSpentNote('name')()).not.toThrow()
   })
@@ -50,7 +50,7 @@ describe('the writing help calls', () => {
       return null
     }
     renderWithProviders(
-      <WritingHelpProvider uses={makeWritingHelp({ limit: 30, left: 30 })} onLeft={setLeft}>
+      <WritingHelpProvider uses={makeWritingHelp()} onLeft={setLeft}>
         <Probe />
       </WritingHelpProvider>,
     )
@@ -58,9 +58,7 @@ describe('the writing help calls', () => {
   }
 
   it('passes what is left after each answer to the provider', async () => {
-    mock
-      .onPost('/api/writing/translate')
-      .reply(200, { data: { text: 'Soupe', left: 29, credits_left: 499 } })
+    mock.onPost('/api/writing/translate').reply(200, { data: { text: 'Soupe', credits_left: 499 } })
     const { setLeft, current } = run(() => useTranslateText())
 
     let text = ''
@@ -69,13 +67,13 @@ describe('the writing help calls', () => {
     })
 
     expect(text).toBe('Soupe')
-    expect(setLeft).toHaveBeenCalledWith({ uses: 29, credits: 499 })
+    expect(setLeft).toHaveBeenCalledWith({ credits: 499 })
   })
 
   it('sends a description to the address of its kind, without the kind', async () => {
     mock
       .onPost('/api/writing/restaurant-description')
-      .reply(200, { data: { text: 'Hello.', left: null, credits_left: null } })
+      .reply(200, { data: { text: 'Hello.', credits_left: null } })
     const { setLeft, current } = run(() => useWriteDescription())
 
     await act(async () => {
@@ -83,7 +81,7 @@ describe('the writing help calls', () => {
     })
 
     expect(JSON.parse(mock.history.post[0]?.data as string)).toEqual({ text: '', language: 'en' })
-    expect(setLeft).toHaveBeenCalledWith({ uses: null, credits: null })
+    expect(setLeft).toHaveBeenCalledWith({ credits: null })
   })
 
   it('says a busy writing help with the server’s words, and keeps the count', async () => {
@@ -103,7 +101,7 @@ describe('the writing help calls', () => {
   })
 
   it('treats an answer in the wrong shape as a failure, not as text', async () => {
-    mock.onPost('/api/writing/translate').reply(200, { data: { text: 'Soupe' } })
+    mock.onPost('/api/writing/translate').reply(200, { data: { words: 'Soupe' } })
     const { setLeft, current } = run(() => useTranslateText())
 
     act(() => current().mutate({ text: 'Soup', from: 'en', to: 'fr' }))
@@ -113,25 +111,6 @@ describe('the writing help calls', () => {
       screen.getByText('Something went wrong on our side. Please try again in a moment.'),
     ).toBeInTheDocument()
     await waitFor(() => expect(setLeft).not.toHaveBeenCalled())
-  })
-
-  it('locks the buttons and says when the uses come back once the day is spent', async () => {
-    mock.onPost('/api/writing/category-description').reply(429, {
-      message: 'You have used today’s writing help. It comes back tomorrow.',
-      code: 'writing_help_limit',
-      retry_after: 80000,
-      left: 0,
-    })
-    const { setLeft, current } = run(() => useWriteDescription())
-
-    act(() => current().mutate({ kind: 'category', name: 'Soups', text: '', language: 'en' }))
-
-    expect(
-      await screen.findByText('You have used today’s writing help. It comes back tomorrow.'),
-    ).toBeInTheDocument()
-    expect(setLeft).toHaveBeenCalledWith({ uses: 0 })
-    // Not the usual "try again in 80000 seconds".
-    expect(screen.queryByText(/80000/)).not.toBeInTheDocument()
   })
 
   it('locks what the month’s credits no longer cover and says when they come back', async () => {
@@ -168,30 +147,25 @@ describe('the writing help calls', () => {
 })
 
 describe('what is spent', () => {
-  it('is the day’s uses, or the month’s credits short of what an action costs', () => {
+  it('is the month’s credits short of what an action costs', () => {
     expect(spentFor(null, 'translation')).toBeNull()
-    expect(spentFor(makeWritingHelp({ left: 0 }), 'translation')).toBe('day')
-    expect(spentFor(makeWritingHelp({}, { limit: 500, left: 2 }), 'translation')).toBeNull()
-    expect(spentFor(makeWritingHelp({}, { limit: 500, left: 2 }), 'description')).toBe('month')
-    expect(spentFor(makeWritingHelp({}, { limit: 500, left: 0 }), 'translation')).toBe('month')
+    expect(spentFor(makeWritingHelp({ limit: 500, left: 2 }), 'translation')).toBeNull()
+    expect(spentFor(makeWritingHelp({ limit: 500, left: 2 }), 'description')).toBe('month')
+    expect(spentFor(makeWritingHelp({ limit: 500, left: 0 }), 'translation')).toBe('month')
     // No cap on the month.
-    expect(spentFor(makeWritingHelp({}, { limit: null, left: null }), 'description')).toBeNull()
+    expect(spentFor(makeWritingHelp({ limit: null, left: null }), 'description')).toBeNull()
   })
 
   it('takes in what an answer says is left, keeping what it does not say', () => {
-    const now = makeWritingHelp({ left: 10 }, { limit: 500, left: 400 })
+    const now = makeWritingHelp({ limit: 500, left: 400 })
 
-    expect(withLeft(now, { uses: 9, credits: 399 })).toEqual(
-      makeWritingHelp({ left: 9 }, { limit: 500, left: 399 }),
-    )
-    expect(withLeft(now, { credits: 0 })).toEqual(
-      makeWritingHelp({ left: 10 }, { limit: 500, left: 0 }),
-    )
+    expect(withLeft(now, { credits: 399 })).toEqual(makeWritingHelp({ limit: 500, left: 399 }))
+    expect(withLeft(now, { credits: 0 })).toEqual(makeWritingHelp({ limit: 500, left: 0 }))
     expect(withLeft(now, {})).toEqual(now)
 
     // A server from before the credits sends none to keep.
-    const before = { limit: 30, left: 10, credits: null }
-    expect(withLeft(before, { uses: 9, credits: 3 })).toEqual({ ...before, left: 9 })
+    const before = { credits: null }
+    expect(withLeft(before, { credits: 3 })).toEqual(before)
     expect(spentFor(before, 'description')).toBeNull()
   })
 })

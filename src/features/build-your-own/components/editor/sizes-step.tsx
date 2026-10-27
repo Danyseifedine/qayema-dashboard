@@ -56,12 +56,15 @@ export function SizesStep({ form, offered, currency, dishName, languages }: Size
   const main = mainLanguageOf(languages)
   const rows =
     source === 'category'
-      ? offered.map((dish) => ({
-          key: dishKey(dish.id),
-          path: `dish_prices.${dishKey(dish.id)}`,
-          choice: dishName(dish.name),
-          whole: Number(dish.price),
-        }))
+      ? // A dish priced by size takes its share at each size: no prices of its own.
+        offered
+          .filter((dish) => dish.price !== null)
+          .map((dish) => ({
+            key: dishKey(dish.id),
+            path: `dish_prices.${dishKey(dish.id)}`,
+            choice: dishName(dish.name),
+            whole: Number(dish.price),
+          }))
       : choices.map((row, index) => ({
           key: `row${index}`,
           path: `choices.${index}.part_prices`,

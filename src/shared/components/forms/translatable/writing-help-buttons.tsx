@@ -15,10 +15,9 @@ import { formatDay } from '@/shared/utils/format/date'
 import { formatNumber } from '@/shared/utils/format/number'
 
 /**
- * What the AI buttons say of the allowance: why `action` is spent (come
- * back tomorrow, or on the day the month's credits come back), or the uses
- * spent today and the credits left this month. Null when there is nothing
- * to say.
+ * What the AI buttons say of the month's credits: why `action` is spent
+ * (they come back on a day), or how many are left. Null when there is
+ * nothing to say.
  */
 function useAllowanceWords() {
   const { t, i18n } = useTranslation()
@@ -27,10 +26,8 @@ function useAllowanceWords() {
 
   return {
     spent: (action: WritingHelpAction): string | null => {
-      const reason = spentFor(uses, action)
-      if (reason === null) return null
       const credits = uses?.credits
-      if (reason === 'day' || !credits) return t('writing.spent')
+      if (spentFor(uses, action) === null || !credits) return null
       const date = formatDay(credits.resets_on, locale)
       // Some left, too few for this: not "used", which reads as none.
       return credits.left
@@ -38,20 +35,13 @@ function useAllowanceWords() {
         : t('writing.creditsSpent', { date })
     },
     usage: (): string | null => {
-      if (uses === null) return null
-      const { credits } = uses
-      const lines = [
-        uses.limit !== null && uses.left !== null
-          ? t('writing.usesUsed', { used: uses.limit - uses.left, limit: uses.limit })
-          : null,
-        credits?.limit != null && credits.left !== null
-          ? t('writing.creditsLeft', {
-              left: formatNumber(credits.left, locale),
-              limit: formatNumber(credits.limit, locale),
-            })
-          : null,
-      ].filter(Boolean)
-      return lines.length > 0 ? lines.join('. ') : null
+      const credits = uses?.credits
+      return credits?.limit != null && credits.left !== null
+        ? t('writing.creditsLeft', {
+            left: formatNumber(credits.left, locale),
+            limit: formatNumber(credits.limit, locale),
+          })
+        : null
     },
   }
 }
@@ -72,11 +62,11 @@ export type AiButtonProps = {
 }
 
 /**
- * One AI button, everywhere one is: gold (red and locked once the day's uses
- * are spent or the month's credits do not cover its `action`), an icon as
+ * One AI button, everywhere one is: gold (red and locked once the month's
+ * credits do not cover its `action`), an icon as
  * tall as the language tabs or, with `pill`, a round pill that says its
- * label. Its tooltip says what it does, then why it is off, or the uses
- * spent today and the credits left this month.
+ * label. Its tooltip says what it does, then why it is off, or the credits
+ * left this month.
  */
 export function AiButton({
   label,
@@ -139,10 +129,9 @@ export type WritingHelpButtonsProps = {
  * restaurant's description box, a small labelled pill, writes it with AI, or improves it once the
  * open tab has text. One at a time.
  *
- * Each button's tooltip says what it does, the uses spent today out of the
- * day's and the credits left this month; once either does not cover it, it
- * turns red and cannot be pressed (WritingHelpSpentNote says when to come
- * back).
+ * Each button's tooltip says what it does and the credits left this month;
+ * once they do not cover it, it turns red and cannot be pressed
+ * (WritingHelpSpentNote says when they come back).
  */
 export function WritingHelpButtons({
   children,
@@ -216,8 +205,8 @@ function useWritingHelpButtons({
 }
 
 /**
- * When the AI comes back, once a button the field shows is spent (the day's
- * uses, or the month's credits short of what it costs), said in words for
+ * When the AI comes back, once a button the field shows is spent (the
+ * month's credits short of what it costs), said in words for
  * a phone, which shows no tooltip: once on a screen, by the first field
  * that shows this, not under every field.
  */

@@ -29,8 +29,6 @@ const packageSchema = z.object({
     dish_limit: z.number().int().nullable(),
     category_limit: z.number().int().nullable(),
     social_link_limit: z.number().int().nullable(),
-    /** Uses of the dashboard's AI a day; 0 is none. */
-    writing_help_limit: z.number().int().nullable(),
     /** The dashboard's AI credits a month; 0 is none. Never money. */
     writing_help_credits: z.number().int().nullable(),
     multiple_languages: z.boolean(),

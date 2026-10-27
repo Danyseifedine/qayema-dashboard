@@ -130,15 +130,12 @@ const restaurantSchema = z.object({
   plan: planSchema,
   /**
    * The AI buttons (translate, write a description): null while off (no
-   * provider, or none on the package), else the uses a day (null for no
-   * cap) and those left today, and the month's credits: how many and those
-   * left (null for no cap), the day they come back and each action's price
-   * (null from a server from before them).
+   * provider, or no credits on the package), else the month's credits, the
+   * only limit: how many and those left (null for no cap), the day they
+   * come back and each action's price (null from a server from before them).
    */
   writing_help: z
     .object({
-      limit: z.number().int().nullable(),
-      left: z.number().int().nullable(),
       credits: z
         .object({
           limit: z.number().int().nullable(),

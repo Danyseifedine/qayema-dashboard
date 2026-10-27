@@ -19,7 +19,6 @@ function pkg(slug: string, features: Partial<Package['features']>): Package {
       dish_limit: 40,
       category_limit: 8,
       social_link_limit: 1,
-      writing_help_limit: 10,
       writing_help_credits: 500,
       ...EMPTY_PLAN,
       ...features,
@@ -36,7 +35,6 @@ describe('highlightsOf', () => {
       'dish_limit',
       'category_limit',
       'social_link_limit',
-      'writing_help_limit',
       'writing_help_credits',
     ])
   })

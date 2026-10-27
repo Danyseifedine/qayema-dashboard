@@ -6,6 +6,7 @@ import { Money } from '@/shared/components/data-display'
 import { ComboboxField } from '@/shared/components/forms'
 import { Alert, CheckRow, HelperText } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
+import { formatMoney } from '@/shared/utils/format/money'
 import { nameOr } from '@/shared/utils/string/translated'
 import { OptionCards } from '@/features/build-your-own/components/editor/option-cards'
 import { OwnChoices } from '@/features/build-your-own/components/editor/own-choices'
@@ -121,11 +122,23 @@ export function ChoicesStep({
                     on={isTicked(dish.id)}
                     onClick={() => toggle(dish.id)}
                     trailing={
-                      <Money
-                        amount={Number(dish.price)}
-                        currency={currency}
-                        className="shrink-0 text-[13px] text-[var(--muted)]"
-                      />
+                      dish.price === null ? (
+                        // Priced by size: each size at its price, as guests pick it.
+                        <span className="shrink-0 text-end text-[13px] text-[var(--muted)]">
+                          {(dish.variants[0]?.options ?? [])
+                            .map(
+                              (option) =>
+                                `${nameOr(option.name, locale, '')} ${formatMoney(Number(option.price), currency)}`,
+                            )
+                            .join(' · ')}
+                        </span>
+                      ) : (
+                        <Money
+                          amount={Number(dish.price)}
+                          currency={currency}
+                          className="shrink-0 text-[13px] text-[var(--muted)]"
+                        />
+                      )
                     }
                   >
                     {nameOr(dish.name, locale, t('card.untitled'))}

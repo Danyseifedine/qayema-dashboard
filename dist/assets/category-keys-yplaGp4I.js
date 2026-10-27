@@ -1,0 +1,1 @@
+import{t as e}from"./keys-mU7VYvHO.js";import{C as t}from"./index-DRKRtyQI.js";var n=[`en`];function r(){return t().data?.restaurant?.languages??n}var i={all:[e.categories],list:()=>[e.categories,`list`]};export{r as n,i as t};

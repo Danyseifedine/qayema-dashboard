@@ -138,6 +138,34 @@ describe('BuildYourOwnPage', () => {
     expect(duo).not.toHaveTextContent('From')
   })
 
+  it('counts a pizza priced only by size at its cheapest size, by its share', async () => {
+    stub([
+      ...DISHES.filter((dish) => dish.id !== 10 && dish.id !== 11),
+      makeDish({ id: 10, name: { en: 'Margherita' }, price: '12.00', category_id: 2 }),
+      makeDish({
+        id: 11,
+        name: { en: 'Pepperoni' },
+        price: null,
+        category_id: 2,
+        variants: [
+          {
+            id: 110,
+            name: { en: 'Size' },
+            options: [
+              { id: 111, name: { en: 'Small' }, price: '9.00' },
+              { id: 112, name: { en: 'Large' }, price: '16.00' },
+            ],
+          },
+        ],
+      }),
+    ])
+    renderWithProviders(<BuildYourOwnPage locale="en" />)
+
+    // A whole small Pepperoni is less than a whole Margherita.
+    const pizza = await screen.findByRole('heading', { name: 'Build your pizza' })
+    expect(pizza.closest('article')).toHaveTextContent('From $9.00')
+  })
+
   it('says when a build offers only some of its category’s dishes', async () => {
     stub([
       ...DISHES.filter((dish) => dish.id !== 13),
@@ -173,10 +201,10 @@ describe('BuildYourOwnPage', () => {
     ])
     renderWithProviders(<BuildYourOwnPage locale="en" />)
 
-    const card = (await screen.findByRole('heading', { name: 'Build your pizza' })).closest(
+    const tile = (await screen.findByRole('heading', { name: 'Build your pizza' })).closest(
       'article',
     )!
-    expect(within(card).getAllByText('Build your pizza')).toHaveLength(1)
+    expect(within(tile).getAllByText('Build your pizza')).toHaveLength(1)
   })
 
   it('shows a picture and a short example before the first build', async () => {

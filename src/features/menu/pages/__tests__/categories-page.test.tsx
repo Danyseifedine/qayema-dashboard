@@ -64,11 +64,11 @@ describe('CategoriesPage', () => {
   it('writes a new category’s description from the name typed, in the open language', async () => {
     mock.onGet('/api/categories').reply(200, { data: [], meta: { used: 0, limit: 10 } })
     mock.onPost('/api/writing/category-description').reply(200, {
-      data: { text: 'Warm bowls of soup to start your meal or share across the table.', left: 9 },
+      data: { text: 'Warm bowls of soup to start your meal or share across the table.' },
     })
     const user = userEvent.setup()
     renderWithProviders(
-      <WritingHelpProvider uses={makeWritingHelp({ limit: 10, left: 10 })} onLeft={() => {}}>
+      <WritingHelpProvider uses={makeWritingHelp()} onLeft={() => {}}>
         <CategoriesPage locale="en" onOpenDishes={vi.fn()} />
       </WritingHelpProvider>,
     )
@@ -92,9 +92,10 @@ describe('CategoriesPage', () => {
       text: '',
       language: 'en',
     })
+    // No cap on the credits here: the tooltip says what it does, and nothing more.
     expect(within(dialog).getByRole('button', { name: 'Improve with AI' })).toHaveAttribute(
       'title',
-      "Improve with AI. You've used 0 of 10 AI uses today",
+      'Improve with AI',
     )
   })
 

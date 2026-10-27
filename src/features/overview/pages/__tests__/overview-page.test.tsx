@@ -103,7 +103,7 @@ describe('OverviewPage', () => {
   })
 
   it('shows the AI credits left this month, a tap from the Package page', async () => {
-    stub({}, 1, makeWritingHelp({}, { limit: 7500, left: 6840 }))
+    stub({}, 1, makeWritingHelp({ limit: 7500, left: 6840 }))
     const onOpen = vi.fn()
     const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
@@ -115,7 +115,7 @@ describe('OverviewPage', () => {
   })
 
   it('says when the credits come back once none are left', async () => {
-    stub({}, 1, makeWritingHelp({}, { limit: 500, left: 0, resets_on: '2099-11-01' }))
+    stub({}, 1, makeWritingHelp({ limit: 500, left: 0, resets_on: '2099-11-01' }))
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     await waitFor(() => expect(tile('AI credits')).toHaveTextContent('Back on Nov 1'))
@@ -125,7 +125,7 @@ describe('OverviewPage', () => {
     stub(
       {},
       1,
-      makeWritingHelp({}, { limit: 500, left: 3, prices: { translation: 5, description: 9 } }),
+      makeWritingHelp({ limit: 500, left: 3, prices: { translation: 5, description: 9 } }),
     )
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
@@ -133,7 +133,7 @@ describe('OverviewPage', () => {
   })
 
   it('takes the credits as back once their day came, in a tab left open', async () => {
-    stub({}, 1, makeWritingHelp({}, { limit: 500, left: 0, resets_on: '2020-11-01' }))
+    stub({}, 1, makeWritingHelp({ limit: 500, left: 0, resets_on: '2020-11-01' }))
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     await waitFor(() => expect(tile('AI credits')).toHaveTextContent('500'))
@@ -141,7 +141,7 @@ describe('OverviewPage', () => {
   })
 
   it('has no credits tile without the AI, or with no cap on it', async () => {
-    stub({}, 1, makeWritingHelp({}, { limit: null, left: null }))
+    stub({}, 1, makeWritingHelp({ limit: null, left: null }))
     const { unmount } = renderWithProviders(
       <OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />,
     )

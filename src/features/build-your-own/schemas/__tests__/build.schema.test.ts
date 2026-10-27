@@ -452,6 +452,42 @@ describe('what a category’s build offers', () => {
     expect(offeredDishes(dishes, null, null, 'USD')).toEqual([])
   })
 
+  it('takes a pizza priced only by size while variants are on, at its cheapest size', () => {
+    const sized = makeDish({
+      id: 7,
+      name: { en: 'Pepperoni' },
+      category_id: 4,
+      price: null,
+      variants: [
+        {
+          id: 70,
+          name: { en: 'Size' },
+          options: [
+            { id: 71, name: { en: 'Large' }, price: '16.00' },
+            { id: 72, name: { en: 'Small' }, price: '10.00' },
+          ],
+        },
+      ],
+    })
+    const dishes = [
+      makeDish({ id: 1, category_id: 4 }),
+      sized,
+      makeDish({ id: 3, category_id: 4, price: null }),
+    ]
+
+    expect(offeredDishes(dishes, 4, null, 'USD').map((dish) => dish.id)).toEqual([1])
+    expect(offeredDishes(dishes, 4, null, 'USD', true).map((dish) => dish.id)).toEqual([1, 7])
+    // Shares only: the part prices are a priced dish's.
+    expect(
+      choicesOf(
+        { source: 'category', dish_prices: { d7: [null, null, 7] }, choices: [] },
+        [sized],
+        (text) => text.en ?? '',
+        () => '',
+      ),
+    ).toEqual([{ name: 'Pepperoni', price: 10, part_prices: undefined }])
+  })
+
   it('names and prices the choices a guest meets', () => {
     const dish = makeDish({ id: 1, name: { en: 'Margherita' }, price: '12.00' })
     const name = (text: Record<string, string | null>) => text.en ?? ''

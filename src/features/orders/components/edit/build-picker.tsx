@@ -4,26 +4,41 @@ import { formatMoney } from '@/shared/utils/format/money'
 import { translated } from '@/shared/utils/string/translated'
 import type { BuildShape } from '@/features/orders/schemas/order.schema'
 import { partPriceCents, shareCents } from '@/features/build-your-own'
-import type { BuildChoice, BuildToFill } from '@/features/orders/utils/order-edit'
+import { choicesAt, type BuildChoice, type BuildToFill } from '@/features/orders/utils/order-edit'
 
 export type BuildPickerProps = {
   build: BuildToFill
   /** The choice key picked in each part, null where none yet; undefined before a count. */
   value: readonly (string | null)[] | undefined
   onChange: (parts: (string | null)[]) => void
+  /** The size picked, for a build priced by size (`build.sizes`). */
+  size?: string
+  /** A new size, with the parts kept where that size still offers them. */
+  onSizeChange?: (size: string, parts: (string | null)[] | undefined) => void
   /** The dish's currency, its builds' too. */
   currency: string
   locale: string
 }
 
 /**
- * One build of a dish being added: how many parts (only when the dish
- * allows more than one count), then a choice for each part, as the guest's
- * sheet asks them. Each choice says what it adds for that many parts.
+ * One build of a dish being added: its size (only when its choices are
+ * priced by size, and it has more than one), how many parts (only when the
+ * dish allows more than one count), then a choice for each part, as the
+ * guest's sheet asks them. Each choice says what it adds for that many parts
+ * at that size.
  */
-export function BuildPicker({ build, value, onChange, currency, locale }: BuildPickerProps) {
+export function BuildPicker({
+  build,
+  value,
+  onChange,
+  size,
+  onSizeChange,
+  currency,
+  locale,
+}: BuildPickerProps) {
   const { t } = useTranslation('orders')
   const name = translated(build.name, locale).text
+  const offered = choicesAt(build, size)
 
   const countLabel = (shape: BuildShape, count: number): string => {
     if (shape === 'pieces') return t('edit.build.pieces', { count })
@@ -44,6 +59,26 @@ export function BuildPicker({ build, value, onChange, currency, locale }: BuildP
   return (
     <div role="group" aria-label={name} className="flex flex-col gap-2">
       <p className="text-[12.5px] text-[var(--muted)]">{name}</p>
+      {build.sizes.length > 1 ? (
+        <Combobox
+          aria-label={t('edit.build.size', { build: name })}
+          placeholder={t('edit.build.sizePlaceholder')}
+          searchable={false}
+          value={size ?? null}
+          onChange={(next) => {
+            if (next === null) return
+            const kept = choicesAt(build, next)
+            onSizeChange?.(
+              next,
+              value?.map((key) => (kept.some((choice) => choice.key === key) ? key : null)),
+            )
+          }}
+          options={build.sizes.map((each) => ({
+            value: each.key,
+            label: translated(each.name, locale).text,
+          }))}
+        />
+      ) : null}
       {build.parts.length > 1 ? (
         <Combobox
           aria-label={t('edit.build.count', { build: name })}
@@ -80,7 +115,7 @@ export function BuildPicker({ build, value, onChange, currency, locale }: BuildP
                   if (next === null) return
                   onChange(value.map((current, at) => (at === index ? next : current)))
                 }}
-                options={build.choices.map((choice) => {
+                options={offered.map((choice) => {
                   const cost = partCost(choice, value.length)
                   return {
                     value: choice.key,

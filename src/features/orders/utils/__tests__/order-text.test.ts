@@ -56,6 +56,25 @@ describe('choiceParts', () => {
       '+ Cheese',
     ])
   })
+
+  it('names the size a build was made in after its parts', () => {
+    expect(
+      choiceParts(
+        [],
+        [],
+        [
+          {
+            name: 'Your pizza',
+            parts: [
+              { choice: 'Margherita', share: 2 },
+              { choice: 'Pepperoni', share: 2 },
+            ],
+            size: 'Large',
+          },
+        ],
+      ),
+    ).toEqual(['Your pizza: ½ Margherita + ½ Pepperoni (Large)'])
+  })
 })
 
 describe('builtText', () => {

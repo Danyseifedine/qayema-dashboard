@@ -39,7 +39,7 @@ function deferred() {
 
 function show(
   props: Partial<WritingHelpButtonsProps> = {},
-  uses: WritingHelpUses = makeWritingHelp({ limit: null, left: null }),
+  uses: WritingHelpUses = makeWritingHelp(),
 ) {
   const onTranslated = vi.fn()
   const onWritten = vi.fn()
@@ -148,7 +148,7 @@ describe('WritingHelpButtons', () => {
     expect(sent()).toEqual({ name: 'Soups', text: '', language: 'fr' })
   })
 
-  it('is an icon to translate and a pill that says Improve with AI, with no count with no daily cap', () => {
+  it('is an icon to translate and a pill that says Improve with AI, with no count without a cap on credits', () => {
     show({ write: { kind: 'restaurant' } })
 
     expect(button(/^Translate to French$/)).toHaveTextContent(/^$/)
@@ -158,20 +158,8 @@ describe('WritingHelpButtons', () => {
     expect(button(/^Translate to French$/)).toHaveAttribute('title', 'Translate to French')
   })
 
-  it('says the uses spent of the day in the tooltip', () => {
-    show({}, makeWritingHelp({ limit: 30, left: 12 }))
-
-    expect(button(/^Translate to French$/)).toHaveAttribute(
-      'title',
-      "Translate to French. You've used 18 of 30 AI uses today",
-    )
-  })
-
   it('gives the reason a button is off before the count', () => {
-    show(
-      { text: '', peerText: '', write: { kind: 'category', subject: '' } },
-      makeWritingHelp({ limit: 30, left: 12 }),
-    )
+    show({ text: '', peerText: '', write: { kind: 'category', subject: '' } }, makeWritingHelp())
 
     expect(button(/^Write with AI$/)).toHaveAttribute(
       'title',
@@ -183,37 +171,37 @@ describe('WritingHelpButtons', () => {
     )
   })
 
-  it('once spent, coming back tomorrow is the only reason given', () => {
+  it('once the month’s credits are spent, when they come back is the only reason given', () => {
     show(
       { text: '', peerText: '', write: { kind: 'category', subject: '' } },
-      makeWritingHelp({ limit: 30, left: 0 }),
+      makeWritingHelp({ limit: 500, left: 0 }),
     )
 
     expect(button(/^Write with AI$/)).toHaveAttribute(
       'title',
-      'Write with AI. Come back tomorrow for more AI help.',
+      "Write with AI. You've used this month's AI credits. They come back on Nov 1.",
     )
     expect(button(/^Translate from French$/)).toHaveAttribute(
       'title',
-      'Translate from French. Come back tomorrow for more AI help.',
+      "Translate from French. You've used this month's AI credits. They come back on Nov 1.",
     )
     for (const name of [/^Write with AI$/, /^Translate from French$/]) {
       expect(button(name)).toBeDisabled()
     }
   })
 
-  it('says the month’s credits left beside the day’s uses', () => {
-    show({}, makeWritingHelp({ limit: 30, left: 12 }, { limit: 7500, left: 6840 }))
+  it('says the month’s credits left in the tooltip, and no uses a day', () => {
+    show({}, makeWritingHelp({ limit: 7500, left: 6840 }))
 
     expect(button(/^Translate to French$/)).toHaveAttribute(
       'title',
-      "Translate to French. You've used 18 of 30 AI uses today. 6,840 of 7,500 AI credits left this month",
+      'Translate to French. 6,840 of 7,500 AI credits left this month',
     )
   })
 
   it('locks only what the month’s credits no longer cover, and says when they are back', () => {
     // Two left: a translation (1) still goes, a description (3) does not.
-    show({ write: { kind: 'restaurant' } }, makeWritingHelp({}, { limit: 500, left: 2 }))
+    show({ write: { kind: 'restaurant' } }, makeWritingHelp({ limit: 500, left: 2 }))
 
     expect(button(/^Improve with AI$/)).toBeDisabled()
     expect(button(/^Improve with AI$/)).toHaveAttribute(

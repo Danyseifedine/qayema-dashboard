@@ -10,16 +10,17 @@ import { API_URL, DASHBOARD_URL } from '../../support/urls'
 const CATEGORY_LINE = 'Warm plates to share with friends at the start of every long meal.'
 const RESTAURANT_LINE =
   'Good food and good company come together here, for slow lunches and easy dinners with the people you love.'
-const SPENT = either(
-  'Come back tomorrow for more AI help.',
-  'عُد غدًا لمزيد من المساعدة بالذكاء الاصطناعي.',
-)
+/** Said once on a screen when the month's credits are spent. */
+const SPENT = /used this month's AI credits\. They come back on/
 
 const WRITE = either('Write with AI', 'اكتب بالذكاء الاصطناعي')
 const IMPROVE = either('Improve with AI', 'حسّن بالذكاء الاصطناعي')
 const TO_ARABIC = either('Translate to Arabic', 'ترجم إلى العربية')
-/** A button's tooltip: the uses of Pro's 100 spent today. */
-const USED = (used: number) => new RegExp(`(used|استخدمت) ${used} (of|من) 100`)
+/** A button's tooltip: the credits left of Pro's 7,500 this month (Western digits in Arabic too). */
+const LEFT = (left: number) =>
+  new RegExp(
+    `${Math.floor(left / 1000)}[,٬]?${String(left % 1000).padStart(3, '0')} (of|من) 7[,٬]?500`,
+  )
 
 /** Only the API's requests carry the switch; a font host would refuse the header. */
 async function withWritingHelp(page: Page) {
@@ -66,20 +67,21 @@ test.describe('writing help', () => {
     await expect(dialog.getByRole('button', { name: WRITE })).toBeDisabled()
 
     await dialog.getByLabel(/^(Name|الاسم)/).fill('Soups')
-    // Each button's tooltip carries the day's uses: none spent of Pro's 100.
+    // Each button's tooltip carries the month's credits: all of Pro's 7,500 left.
     await expect(dialog.getByRole('button', { name: TO_ARABIC }).first()).toHaveAttribute(
       'title',
-      USED(0),
+      LEFT(7500),
     )
     await dialog.getByRole('button', { name: TO_ARABIC }).first().click()
     // The Arabic tab opens with the translation in it.
     await expect(dialog.getByLabel(/^(Name|الاسم)/)).toHaveValue('Translated: Soups')
-    await expect(dialog.getByRole('button', { name: WRITE })).toHaveAttribute('title', USED(1))
+    // A translation took one credit.
+    await expect(dialog.getByRole('button', { name: WRITE })).toHaveAttribute('title', LEFT(7499))
 
     await dialog.getByRole('button', { name: WRITE }).click()
     await expect(dialog.getByLabel(/^(Description|الوصف)/)).toHaveValue(CATEGORY_LINE)
-    // The server counts each one: two spent now.
-    await expect(dialog.getByRole('button', { name: IMPROVE })).toHaveAttribute('title', USED(2))
+    // The server counts each one: a description took three more.
+    await expect(dialog.getByRole('button', { name: IMPROVE })).toHaveAttribute('title', LEFT(7496))
     await expect(dialog.getByRole('button', { name: IMPROVE })).toBeVisible()
 
     await dialog.getByRole('button', { name: either('Add category', 'إضافة القسم') }).click()
@@ -119,22 +121,6 @@ test.describe('writing help', () => {
     await page.goto('/restaurant')
     await expect(page.getByLabel(/^Description/)).toBeVisible()
     await expect(page.getByRole('button', { name: /with AI|Translate/ })).toHaveCount(0)
-  })
-
-  test('a day already spent opens with the buttons red and locked, said once', async ({
-    page,
-    owner,
-  }) => {
-    await withWritingHelp(page)
-    await owner({ package: 'pro', second_locale: 'ar', writing_help_used: 100 })
-    const dialog = await openNewCategory(page)
-    await dialog.getByLabel(/^Name/).fill('Soups')
-
-    for (const button of await dialog.getByRole('button', { name: /with AI|Translate/ }).all()) {
-      await expect(button).toBeDisabled()
-      await expect(button).toHaveAttribute('title', /Come back tomorrow for more AI help\./)
-    }
-    await expect(dialog.getByText(SPENT)).toHaveCount(1)
   })
 
   test('each use takes the month’s credits, and the buttons say how many are left', async ({
@@ -178,12 +164,17 @@ test.describe('writing help', () => {
     await expect(dialog.getByText(/used this month's AI credits/)).toHaveCount(1)
   })
 
-  test('the last use locks the buttons, and another tab finds them spent', async ({
+  test('the last credits lock the buttons, and another tab finds them spent', async ({
     page,
     owner,
   }) => {
     await withWritingHelp(page)
-    await owner({ package: 'pro', second_locale: 'ar', writing_help_used: 99 })
+    // Three left: one description's worth.
+    await owner({
+      package: 'pro',
+      second_locale: 'ar',
+      writing_help_days: [{ uses: 9, input_tokens: 0, output_tokens: 0, cost: '0', credits: 7497 }],
+    })
     // A second tab, opened while one use was still left.
     const other = await page.context().newPage()
     await withWritingHelp(other)
@@ -191,7 +182,7 @@ test.describe('writing help', () => {
     await otherDialog.getByLabel(/^Name/).fill('Grills')
     await expect(otherDialog.getByRole('button', { name: 'Write with AI' })).toHaveAttribute(
       'title',
-      USED(99),
+      /3 of 7,500 AI credits left this month/,
     )
 
     const dialog = await openNewCategory(page)
@@ -202,11 +193,9 @@ test.describe('writing help', () => {
     await expect(dialog.getByRole('button', { name: 'Improve with AI' })).toBeDisabled()
     await expect(dialog.getByText(SPENT)).toHaveCount(1)
 
-    // The other tab still shows one left; the server says otherwise.
+    // The other tab still shows three left; the server says otherwise.
     await otherDialog.getByRole('button', { name: 'Write with AI' }).click()
-    await expect(
-      other.getByText("You have used today's writing help. It comes back tomorrow."),
-    ).toBeVisible()
+    await expect(other.getByText(/You have used this month's AI credits/)).toBeVisible()
     await expect(otherDialog.getByRole('button', { name: 'Write with AI' })).toBeDisabled()
     await expect(otherDialog.getByLabel(/^Description/)).toHaveValue('')
     await other.close()
@@ -353,10 +342,8 @@ test.describe('writing help', () => {
     await owner({ package: 'free' })
     await page.goto('/package')
 
-    await expect(page.getByText('100 AI writing uses a day').first()).toBeVisible()
-    const row = page.getByRole('rowheader', { name: 'AI writing help a day' }).locator('xpath=..')
-    await expect(row.getByRole('cell').first()).toHaveText('10')
-    // The month's credits, never what they cost.
+    // The month's credits are the only AI limit, never what they cost.
+    await expect(page.getByText(/AI writing/)).toHaveCount(0)
     await expect(page.getByText('7,500 AI credits a month').first()).toBeVisible()
     const credits = page.getByRole('rowheader', { name: 'AI credits a month' }).locator('xpath=..')
     await expect(credits.getByRole('cell').first()).toHaveText('500')

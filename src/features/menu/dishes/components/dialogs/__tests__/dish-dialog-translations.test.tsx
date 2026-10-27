@@ -16,7 +16,7 @@ let mock: MockAdapter
 const CATEGORIES = [makeCategory({ id: 1, name: { en: 'Grills', ar: null } })]
 
 /** A new dish on a menu in English and Arabic; `uses` null is no writing help. */
-function open(uses: WritingHelpUses | null = makeWritingHelp({ limit: 30, left: 30 })) {
+function open(uses: WritingHelpUses | null = makeWritingHelp()) {
   const onClose = vi.fn()
   mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
   mock.onPost('/api/dishes').reply(201, { data: makeDish({ id: 99 }) })
@@ -86,15 +86,15 @@ describe('the dish form fills in its other language with AI', () => {
     expect(await screen.findByText(note)).toBeInTheDocument()
   })
 
-  it('says nothing of it once the day is spent', async () => {
-    open(makeWritingHelp({ limit: 30, left: 0 }))
+  it('says nothing of it once the month’s credits are spent', async () => {
+    open(makeWritingHelp({ limit: 500, left: 0 }))
     await section()
     expect(screen.queryByText(/one is enough/)).not.toBeInTheDocument()
   })
 
   it('translates everything left in one language in one go, then saves it', async () => {
     mock.onPost('/api/writing/translate-many').reply(200, {
-      data: { texts: ['كباب', 'لحم, بصل', 'خبز إضافي'], left: 29 },
+      data: { texts: ['كباب', 'لحم, بصل', 'خبز إضافي'] },
     })
     const { onClose } = open()
     const { user } = await fillDish()
@@ -131,8 +131,8 @@ describe('the dish form fills in its other language with AI', () => {
     expect(posted('/api/dishes')).toMatchObject({ name: { en: 'Kebab', ar: '' } })
   })
 
-  it('asks nothing when the day is spent', async () => {
-    const { onClose } = open(makeWritingHelp({ limit: 30, left: 0 }))
+  it('asks nothing when the month’s credits are spent', async () => {
+    const { onClose } = open(makeWritingHelp({ limit: 500, left: 0 }))
     const { user } = await fillDish()
     await user.click(screen.getByRole('button', { name: 'Add dish' }))
     await waitFor(() => expect(onClose).toHaveBeenCalled())
@@ -140,7 +140,7 @@ describe('the dish form fills in its other language with AI', () => {
   })
 
   it('asks nothing when the month’s credits are spent', async () => {
-    const { onClose } = open(makeWritingHelp({ limit: 30, left: 30 }, { limit: 500, left: 0 }))
+    const { onClose } = open(makeWritingHelp({ limit: 500, left: 0 }))
     const { user } = await fillDish()
     await user.click(screen.getByRole('button', { name: 'Add dish' }))
     await waitFor(() => expect(onClose).toHaveBeenCalled())
@@ -188,16 +188,11 @@ describe('one button translates every variant and add-on name', () => {
   })
 
   it('fills the names into the other language and opens it', async () => {
-    mock
-      .onPost('/api/writing/translate-many')
-      .reply(200, { data: { texts: ['خبز إضافي'], left: 29 } })
+    mock.onPost('/api/writing/translate-many').reply(200, { data: { texts: ['خبز إضافي'] } })
     open()
     const { user, region } = await fillDish()
     const button = within(region).getByRole('button', { name: 'Translate all names' })
-    expect(button).toHaveAttribute(
-      'title',
-      "Translate all names. You've used 0 of 30 AI uses today",
-    )
+    expect(button).toHaveAttribute('title', 'Translate all names')
 
     await user.click(button)
 
@@ -222,14 +217,14 @@ describe('one button translates every variant and add-on name', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Add dish' })).toBeDisabled())
   })
 
-  it('is red and locked once the day is spent', async () => {
-    open(makeWritingHelp({ limit: 30, left: 0 }))
+  it('is red and locked once the month’s credits are spent', async () => {
+    open(makeWritingHelp({ limit: 500, left: 0 }))
     const region = await section()
     const button = within(region).getByRole('button', { name: 'Translate all names' })
     expect(button).toBeDisabled()
     expect(button).toHaveAttribute(
       'title',
-      'Translate all names. Come back tomorrow for more AI help.',
+      "Translate all names. You've used this month's AI credits. They come back on Nov 1.",
     )
   })
 

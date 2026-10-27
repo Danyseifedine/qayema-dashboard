@@ -16,7 +16,7 @@ let mock: MockAdapter
 const NOTE = 'Write in English or Arabic, one is enough. When you save, AI fills in the other.'
 
 /** A new category on a menu in English and Arabic; `uses` null is no writing help. */
-function open(uses: WritingHelpUses | null = makeWritingHelp({ limit: 30, left: 30 })) {
+function open(uses: WritingHelpUses | null = makeWritingHelp()) {
   const onClose = vi.fn()
   mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
   mock.onPost('/api/categories').reply(201, { data: makeCategory({ id: 5 }) })
@@ -88,7 +88,7 @@ describe('the category form fills in its other language with AI', () => {
     mock.onPost('/api/writing/translate-many').reply(200, { data: { texts: ['شوربات'], left: 29 } })
     mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
     renderWithProviders(
-      <WritingHelpProvider uses={makeWritingHelp({ limit: 30, left: 30 })} onLeft={() => {}}>
+      <WritingHelpProvider uses={makeWritingHelp()} onLeft={() => {}}>
         <CategoryDialog open category={null} onClose={vi.fn()} />
       </WritingHelpProvider>,
     )
@@ -127,7 +127,7 @@ describe('the category form fills in its other language with AI', () => {
   })
 
   it('still asks for the main language when the AI will not fill it in', async () => {
-    const { onClose } = open(makeWritingHelp({ limit: 30, left: 0 }))
+    const { onClose } = open(makeWritingHelp({ limit: 500, left: 0 }))
     const user = userEvent.setup()
     const dialog = screen.getByRole('dialog')
     await user.click((await within(dialog).findAllByRole('tab', { name: 'AR' }))[0]!)
@@ -141,7 +141,7 @@ describe('the category form fills in its other language with AI', () => {
   })
 
   it('saves as written, with no note and no AI, once the day is spent', async () => {
-    const { onClose } = open(makeWritingHelp({ limit: 30, left: 0 }))
+    const { onClose } = open(makeWritingHelp({ limit: 500, left: 0 }))
     const user = userEvent.setup()
     // Once the session has said the menu is in two languages.
     await screen.findAllByRole('tab', { name: 'AR' })

@@ -22,25 +22,21 @@ export type WritingHelpCredits = {
 }
 
 /**
- * The uses a day and those left (null for no daily cap), and the month's
- * credits (null from a server from before them).
+ * What the writing help allows: the month's credits, its only limit (null
+ * from a server from before them).
  */
 export type WritingHelpUses = {
-  limit: number | null
-  left: number | null
   credits: WritingHelpCredits | null
 }
 
-/** What an answer or a refusal says is left: the day's uses, the month's credits, or both. */
-export type WritingHelpLeft = { uses?: number | null; credits?: number | null }
+/** What an answer or a refusal says is left of the month's credits. */
+export type WritingHelpLeft = { credits?: number | null }
 
 /** `uses` with what an answer or a refusal says is left; a count it does not give is kept. */
 export function withLeft<T extends WritingHelpUses>(uses: T, left: WritingHelpLeft): T {
-  const credits =
-    uses.credits && left.credits !== undefined
-      ? { ...uses.credits, left: left.credits }
-      : uses.credits
-  return { ...uses, left: left.uses === undefined ? uses.left : left.uses, credits }
+  return uses.credits && left.credits !== undefined
+    ? { ...uses, credits: { ...uses.credits, left: left.credits } }
+    : uses
 }
 
 /**
@@ -55,17 +51,11 @@ function monthShort(credits: WritingHelpCredits | null, action: WritingHelpActio
 }
 
 /**
- * Why `action` cannot run now: the month's credits do not cover it, or the
- * day's uses are spent; null when it can. The month first: its date is the
- * later, so it is the one worth saying. The server refuses the same.
+ * Why `action` cannot run now: the month's credits do not cover it; null
+ * when it can. The server refuses the same.
  */
-export function spentFor(
-  uses: WritingHelpUses | null,
-  action: WritingHelpAction,
-): 'day' | 'month' | null {
-  if (uses === null) return null
-  if (monthShort(uses.credits, action)) return 'month'
-  return uses.left === 0 ? 'day' : null
+export function spentFor(uses: WritingHelpUses | null, action: WritingHelpAction): 'month' | null {
+  return uses !== null && monthShort(uses.credits, action) ? 'month' : null
 }
 
 type WritingHelpState = {
@@ -74,7 +64,7 @@ type WritingHelpState = {
   /** What is left now, after a use or a refusal. */
   setLeft: (left: WritingHelpLeft) => void
   /**
-   * "Come back tomorrow" is said once on a screen, not under every field:
+   * "They come back on …" is said once on a screen, not under every field:
    * fields whose buttons are spent queue for it, and the first one says it.
    */
   spentNoteBy: string | null
@@ -95,7 +85,6 @@ export function useWritingHelp(): WritingHelpState {
 }
 
 const left = {
-  left: z.number().int().nullable(),
   // Missing from a server from before the credits: the count is kept.
   credits_left: z.number().int().nullable().optional(),
 }
@@ -126,9 +115,10 @@ type DescribeInput =
 
 /**
  * The writing help (`POST /api/writing/*`, see ../qayema WritingHelpController).
- * Each answers with text for the form, the uses left today and the credits
- * left this month, which every AI button shows; nothing is saved until the owner saves, so only a failure
- * toasts (the server's words: none left today, busy, or try again).
+ * Each answers with text for the form and the credits left this month,
+ * which every AI button shows; nothing is saved until the owner saves, so
+ * only a failure toasts (the server's words: no credits left, busy, or try
+ * again).
  */
 export function useTranslateText() {
   const { setLeft } = useWritingHelp()
@@ -140,7 +130,7 @@ export function useTranslateText() {
         url: '/api/writing/translate',
         data: input,
       })
-      setLeft({ uses: data.left, credits: data.credits_left })
+      setLeft({ credits: data.credits_left })
       return data.text
     },
     onError: (error) => failed(t('writing.translateFailed'), error, setLeft),
@@ -161,8 +151,8 @@ export function useTranslatingMany(): boolean {
 /**
  * Many pieces in one go (`POST /api/writing/translate-many`): every text a
  * dish's or a category's save leaves in one language (useTranslateOnSave),
- * or the variants' and add-ons' "Translate all names". One use of the day
- * for the lot; the answers come back in the order sent.
+ * or the variants' and add-ons' "Translate all names". One translation's
+ * credits for the lot; the answers come back in the order sent.
  */
 export function useTranslateMany() {
   const { setLeft } = useWritingHelp()
@@ -175,7 +165,7 @@ export function useTranslateMany() {
         url: '/api/writing/translate-many',
         data: { items },
       })
-      setLeft({ uses: data.left, credits: data.credits_left })
+      setLeft({ credits: data.credits_left })
       return data.texts
     },
     onError: (error) => failed(t('writing.translateFailed'), error, setLeft),
@@ -192,7 +182,7 @@ export function useWriteDescription() {
         url: `/api/writing/${kind}-description`,
         data: body,
       })
-      setLeft({ uses: data.left, credits: data.credits_left })
+      setLeft({ credits: data.credits_left })
       return data.text
     },
     onError: (error) => failed(t('writing.writeFailed'), error, setLeft),
@@ -200,14 +190,10 @@ export function useWriteDescription() {
 }
 
 function failed(fallback: string, error: ApiError, setLeft: (left: WritingHelpLeft) => void) {
-  // The day's uses are spent, or the month's credits do not cover this
-  // (another tab may have used the last): the buttons lock, and the
-  // server's words say when they are back, where the usual rate-limit line
-  // would count the seconds until then.
-  if (error.code === 'writing_help_limit') {
-    setLeft({ uses: 0 })
-    toast.error(error.message)
-  } else if (error.code === 'writing_help_credits') {
+  // The month's credits do not cover this (another tab may have used the
+  // last): the buttons lock, and the server's words say when they are back,
+  // where the usual rate-limit line would count the seconds until then.
+  if (error.code === 'writing_help_credits') {
     setLeft({ credits: error.creditsLeft ?? 0 })
     toast.error(error.message)
   } else {

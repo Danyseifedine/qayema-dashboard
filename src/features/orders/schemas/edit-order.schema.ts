@@ -23,7 +23,13 @@ export const editOrderFormSchema = z
         options: z.array(z.number().int()),
         addons: z.array(z.number().int()),
         builds: z
-          .array(z.object({ build: z.number().int(), parts: z.array(z.string()).min(1) }))
+          .array(
+            z.object({
+              build: z.number().int(),
+              parts: z.array(z.string()).min(1),
+              size: z.string().optional(),
+            }),
+          )
           .optional(),
       }),
     ),

@@ -7,6 +7,7 @@ import type { Locale } from '@/shared/constants/locales'
 import { nameOr } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import {
+  lowestPrice,
   offeredDishes,
   tickedDishes,
   type Build,
@@ -20,6 +21,8 @@ export type BuildCardProps = {
   dish: Dish
   /** Every dish of the restaurant, for a category's choices. */
   dishes: readonly Dish[]
+  /** Variants are on, so a dish priced by size is a choice too. */
+  sized?: boolean
   categories: readonly Category[]
   /** Menu text's language. */
   locale: Locale
@@ -39,6 +42,7 @@ export function BuildCard({
   build,
   dish,
   dishes,
+  sized = false,
   categories,
   locale,
   onEdit,
@@ -51,11 +55,16 @@ export function BuildCard({
   const name = nameOr(build.name, locale, t('card.untitled'))
 
   const fromCategory = build.category_id !== null
-  const pickable = offeredDishes(dishes, build.category_id, dish.id, dish.currency)
+  const pickable = offeredDishes(dishes, build.category_id, dish.id, dish.currency, sized)
   const offered = tickedDishes(pickable, build.dish_ids)
   const saved = new Map(build.choices.map((choice) => [choice.dish_id, choice.part_prices]))
   const choices: BuildPart[] = fromCategory
-    ? offered.map((each) => ({ price: each.price!, part_prices: saved.get(each.id) }))
+    ? offered.map((each) =>
+        // One priced by size counts at its cheapest, with shares only.
+        each.price === null
+          ? { price: lowestPrice(each) }
+          : { price: each.price, part_prices: saved.get(each.id) },
+      )
     : build.choices.flatMap((choice) =>
         choice.price === null ? [] : [{ price: choice.price, part_prices: choice.part_prices }],
       )

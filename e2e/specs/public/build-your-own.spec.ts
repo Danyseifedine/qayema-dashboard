@@ -52,6 +52,46 @@ const PIZZERIA: ScenarioInput['categories'] = [
   },
 ]
 
+/** Pizzas priced only by size: the guest picks the size, then each half. */
+const BY_SIZE: ScenarioInput['categories'] = [
+  {
+    name: { en: 'Pizzas' },
+    dishes: [
+      {
+        name: { en: 'Margherita' },
+        price: null,
+        variants: [
+          {
+            name: { en: 'Size' },
+            options: [
+              { name: { en: 'Small' }, price: 8 },
+              { name: { en: 'Large' }, price: 12 },
+            ],
+          },
+        ],
+      },
+      {
+        name: { en: 'Pepperoni' },
+        price: null,
+        variants: [
+          {
+            name: { en: 'Size' },
+            options: [
+              { name: { en: 'Small' }, price: 10 },
+              { name: { en: 'Large' }, price: 16 },
+            ],
+          },
+        ],
+      },
+      {
+        name: { en: 'Build your pizza' },
+        price: null,
+        builds: [{ name: { en: 'Your pizza' }, shape: 'split', parts: [2], category: 'Pizzas' }],
+      },
+    ],
+  },
+]
+
 function dish(page: Page, name: string): Locator {
   return page.locator('article.dish', { hasText: name })
 }
@@ -135,6 +175,50 @@ test.describe('build your own on the menu', () => {
     const card = page.getByRole('article').filter({ hasText: answer.data.reference })
     await expect(card).toContainText('Your pizza: ½ Margherita + ½ Pepperoni')
     await expect(card).toContainText('Your scoops: 2 × Vanilla, Pistachio')
+  })
+
+  test('a guest picks the size of pizzas priced by size, then each half at that size', async ({
+    page,
+    owner,
+  }) => {
+    const restaurant = await owner({
+      package: 'premium',
+      order_mode: 'menu',
+      order_types: ['pickup'],
+      overrides: [{ feature: 'build_your_own', value: 1 }],
+      categories: BY_SIZE,
+    })
+    await page.goto(restaurant.restaurant.public_url)
+
+    await page.locator('.builds article.dish', { hasText: 'Build your pizza' }).click()
+    const sheet = page.getByRole('dialog', { name: 'Build your pizza' })
+    const sizes = sheet.getByRole('radiogroup', { name: 'Size' })
+    await expect(sizes.getByRole('radio', { name: 'Small' })).toBeChecked()
+    const parts = sheet.locator('.build-pick-button')
+    await expect(parts.nth(0)).toHaveText('1Margherita$4')
+
+    await sizes.getByText('Large').click()
+    await expect(parts.nth(0)).toHaveText('1Margherita$6')
+    await pickPart(sheet, 1, 'Pepperoni')
+    await expect(parts.nth(1)).toHaveText('2Pepperoni$8')
+    const add = sheet.locator('.dish-sheet-add')
+    await expect(add).toHaveText('Add$14')
+    await add.click()
+    await expect(sheet).toBeHidden()
+
+    const cart = await openCart(page)
+    await expect(cart.locator('.cart-line')).toContainText('½ Margherita + ½ Pepperoni (Large)')
+    await cart.getByLabel('Your name').fill('Rami')
+    await cart.getByLabel('Phone number').fill('70 123 456')
+    const placed = page.waitForResponse((response) => response.url().endsWith('/order'))
+    await cart.getByRole('button', { name: /Place order/ }).click()
+    const answer = (await (await placed).json()) as { data: { reference: string; total: string } }
+    expect(answer.data.total).toBe('14.00')
+
+    await page.goto(`${DASHBOARD_URL}/orders`)
+    await expect(
+      page.getByRole('article').filter({ hasText: answer.data.reference }),
+    ).toContainText('Your pizza: ½ Margherita + ½ Pepperoni (Large)')
   })
 
   test('without the feature the dish priced by its build is not on offer to build', async ({

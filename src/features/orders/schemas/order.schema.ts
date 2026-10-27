@@ -22,6 +22,9 @@ const builtSchema = z.object({
   build_id: z.number().int(),
   /** The choices' keys ("d12", "c5"), so the guest's cart can be built again. */
   keys: z.array(z.string()),
+  /** The size it was built in ("Large") and its key, for a build priced by size. */
+  size: z.string().optional(),
+  size_key: z.string().optional(),
 })
 
 /**

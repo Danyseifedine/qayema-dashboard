@@ -6,8 +6,8 @@ import { withLeft, type WritingHelpLeft } from '@/shared/hooks/use-writing-help'
 
 /**
  * Keeps the session's `writing_help` in step: each AI answer says how many
- * uses are left today and credits this month, and every AI button reads
- * them from the session (WritingHelpProvider in App). Off writing help
+ * credits are left this month, and every AI button reads them from the
+ * session (WritingHelpProvider in App). Off writing help
  * stays off.
  */
 export function useWritingHelpLeft(): (left: WritingHelpLeft) => void {

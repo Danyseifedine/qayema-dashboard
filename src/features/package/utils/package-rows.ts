@@ -16,7 +16,6 @@ export const PACKAGE_ROWS: readonly PackageRow[] = [
   { kind: 'limit', key: 'dish_limit', group: 'menu' },
   { kind: 'limit', key: 'category_limit', group: 'menu' },
   { kind: 'limit', key: 'social_link_limit', group: 'menu' },
-  { kind: 'limit', key: 'writing_help_limit', group: 'menu' },
   { kind: 'limit', key: 'writing_help_credits', group: 'menu' },
   { kind: 'flag', key: 'multiple_languages', group: 'menu' },
   { kind: 'flag', key: 'variants', group: 'menu' },
@@ -38,13 +37,8 @@ export const PACKAGE_ROWS: readonly PackageRow[] = [
 
 export const PACKAGE_GROUPS: readonly PackageGroup[] = ['menu', 'look', 'guests', 'numbers']
 
-/**
- * A package's limit as the owner reads it: no AI uses a day means no AI
- * credits either, whatever its budget, so a card never says both "No AI
- * writing help" and "Unlimited AI credits".
- */
+/** A package's limit as the owner reads it; null is unlimited. */
 export function limitOf(pkg: Package, key: PackageLimit): number | null {
-  if (key === 'writing_help_credits' && pkg.features.writing_help_limit === 0) return 0
   return pkg.features[key]
 }
 

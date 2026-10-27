@@ -76,8 +76,6 @@ export type ScenarioInput = {
   settings?: Record<string, string | boolean>
   qr_settings?: Record<string, unknown>
   logo?: boolean
-  /** AI writing uses already spent today (tests/E2e/E2eController). */
-  writing_help_used?: number
   /** Logged AI use with its cost in dollars, for the admin's spending figures. */
   writing_help_days?: {
     days_ago?: number

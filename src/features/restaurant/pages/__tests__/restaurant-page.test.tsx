@@ -127,7 +127,7 @@ describe('RestaurantPage', () => {
     mock.onPost('/api/writing/translate').reply(200, { data: { text: 'بيت قايمة', left: 28 } })
     const user = userEvent.setup()
     renderWithProviders(
-      <WritingHelpProvider uses={makeWritingHelp({ limit: 30, left: 30 })} onLeft={() => {}}>
+      <WritingHelpProvider uses={makeWritingHelp()} onLeft={() => {}}>
         <RestaurantPage />
       </WritingHelpProvider>,
     )

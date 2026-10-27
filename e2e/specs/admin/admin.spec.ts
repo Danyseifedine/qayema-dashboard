@@ -544,10 +544,13 @@ test.describe('admin', () => {
     await expect(page.getByRole('button').filter({ hasText: /0 \/ 45/ })).toBeVisible()
   })
 
-  test('Packages: each package carries its AI writing help a day', async ({ page, signIn }) => {
+  test('Packages: the AI is held to its budget a month, with no uses a day', async ({
+    page,
+    signIn,
+  }) => {
     await asAdmin(page, signIn)
     await page.goto(`${ADMIN_URL}/packages`)
-    await expect(page.getByRole('columnheader', { name: 'AI writing help a day' })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: 'AI writing help a day' })).toHaveCount(0)
 
     await page
       .getByRole('row')
@@ -556,11 +559,11 @@ test.describe('admin', () => {
       .getByRole('link', { name: 'Edit' })
       .click()
     // Read only: the packages are shared by every test running beside this one.
-    await expect(page.getByRole('spinbutton', { name: 'AI writing help a day' })).toHaveValue('100')
-    await expect(page.getByText('0 turns it off. Leave empty for unlimited.')).toBeVisible()
+    await expect(page.getByRole('spinbutton', { name: 'AI budget a month' })).toHaveValue('0.75')
+    await expect(page.getByRole('spinbutton', { name: 'AI writing help a day' })).toHaveCount(0)
   })
 
-  test('Extra AI uses: a grant reaches the owner’s AI buttons', async ({
+  test('Extra AI credits: a grant reaches the owner’s AI buttons', async ({
     page,
     scenario,
     signIn,
@@ -571,11 +574,11 @@ test.describe('admin', () => {
     await openRelation(page, owner.restaurant.id, 'Extras & overrides')
     await page.getByRole('button', { name: 'Add extra or override' }).click()
     const modal = openModal(page)
-    await pick(page, modal, 'Feature', 'AI writing help a day')
-    await modal.getByLabel('Amount').fill('5')
+    await pick(page, modal, 'Feature', 'AI credits a month')
+    await modal.getByLabel('Amount').fill('100')
     await modal.getByLabel('Note').fill('AI trial')
     await submit(page, modal, 'Create')
-    await expect(page.getByRole('row').filter({ hasText: 'AI trial' })).toContainText('+5')
+    await expect(page.getByRole('row').filter({ hasText: 'AI trial' })).toContainText('+100')
 
     await asOwner(page, signIn, owner.user.email)
     // The writing help is on only for requests that ask (tests/E2e).
@@ -585,10 +588,10 @@ test.describe('admin', () => {
     await page.goto('/categories')
     await page.getByRole('button', { name: 'Add your first category' }).click()
     await page.getByRole('dialog').getByLabel(/^Name/).fill('Soups')
-    // Free's 10 a day and the 5 granted, in the AI button's tooltip.
+    // Free's 500 a month and the 100 granted, in the AI button's tooltip.
     await expect(
       page.getByRole('dialog').getByRole('button', { name: 'Write with AI' }),
-    ).toHaveAttribute('title', /used 0 of 15 AI uses today/)
+    ).toHaveAttribute('title', /600 of 600 AI credits left this month/)
   })
 
   test('An add-on: ordering for a Free owner unlocks Orders', async ({

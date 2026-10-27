@@ -14,6 +14,7 @@ import type { EditOrderFormValues } from '@/features/orders/schemas/edit-order.s
 import {
   addonsToPick,
   buildsToPick,
+  firstSize,
   isFilled,
   isSellable,
   type BuildToFill,
@@ -43,6 +44,8 @@ export function DishPicker({ dishes, onAdd }: DishPickerProps) {
   const [options, setOptions] = useState<Record<number, number>>({})
   // Each build's parts by its id: the choice key per part, null until picked.
   const [parts, setParts] = useState<Record<number, (string | null)[]>>({})
+  // Each build's size by its id, for one priced by size; its first until picked.
+  const [sizes, setSizes] = useState<Record<number, string>>({})
   const [addons, setAddons] = useState<number[]>([])
   const [quantity, setQuantity] = useState(1)
 
@@ -64,10 +67,12 @@ export function DishPicker({ dishes, onAdd }: DishPickerProps) {
   const partsOf = (build: BuildToFill) =>
     parts[build.id] ??
     (build.parts.length === 1 ? Array.from({ length: build.parts[0]! }, () => null) : undefined)
+  const sizeOf = (build: BuildToFill) => sizes[build.id] ?? firstSize(build)
   const built: PickedBuild[] = builds.flatMap((build) => {
     const keys = partsOf(build)
+    const size = sizeOf(build)
     return keys?.every((key): key is string => key !== null)
-      ? [{ build: build.id, parts: keys }]
+      ? [{ build: build.id, parts: keys, ...(size === undefined ? {} : { size }) }]
       : []
   })
   const ready =
@@ -84,6 +89,7 @@ export function DishPicker({ dishes, onAdd }: DishPickerProps) {
     setDishId(null)
     setOptions({})
     setParts({})
+    setSizes({})
     setAddons([])
     setQuantity(1)
   }
@@ -98,6 +104,7 @@ export function DishPicker({ dishes, onAdd }: DishPickerProps) {
           setDishId(next)
           setOptions({})
           setParts({})
+          setSizes({})
           setAddons([])
           setQuantity(1)
         }}
@@ -140,6 +147,11 @@ export function DishPicker({ dishes, onAdd }: DishPickerProps) {
           build={build}
           value={partsOf(build)}
           onChange={(next) => setParts((current) => ({ ...current, [build.id]: next }))}
+          size={sizeOf(build)}
+          onSizeChange={(size, kept) => {
+            setSizes((current) => ({ ...current, [build.id]: size }))
+            if (kept) setParts((current) => ({ ...current, [build.id]: kept }))
+          }}
           currency={currency}
           locale={locale}
         />

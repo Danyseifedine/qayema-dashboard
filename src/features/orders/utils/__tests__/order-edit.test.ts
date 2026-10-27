@@ -5,6 +5,8 @@ import {
   buildsCost,
   buildsToPick,
   builtParts,
+  choicesAt,
+  firstSize,
   isFilled,
   isSellable,
   orderTotal,
@@ -272,5 +274,111 @@ describe('builds', () => {
       },
     ])
     expect(builtParts(builds, [], 'en')).toEqual([])
+  })
+})
+
+/** A pizza priced by its sizes only: no price of its own, its first variant's options are full prices. */
+function sized(id: number, name: string, sizes: Record<string, string>): Dish {
+  return makeDish({
+    id,
+    name: { en: name },
+    price: null,
+    category_id: 7,
+    variants: [
+      {
+        id: id * 10,
+        name: { en: 'Size' },
+        options: Object.entries(sizes).map(([size, price], index) => ({
+          id: id * 10 + index + 1,
+          name: { en: size, ar: size === 'Large' ? 'كبير' : null },
+          price,
+        })),
+      },
+    ],
+  })
+}
+
+const HALVES = built({ id: 400, name: { en: 'Half and half' }, price: null, category_id: 8 }, [
+  {
+    id: 9,
+    name: { en: 'Your pizza' },
+    shape: 'split',
+    parts: [2],
+    category_id: 7,
+    dish_ids: null,
+    choices: [{ id: 90, dish_id: 404, name: null, price: null, part_prices: { '2': '3.00' } }],
+  },
+])
+
+const BY_SIZE: Dish[] = [
+  HALVES,
+  sized(401, 'Margherita', { Small: '8.00', Large: '12.00' }),
+  // Named with spaces and capitals: still the same size.
+  sized(402, 'Pepperoni', { ' small ': '10.00', LARGE: '16.00' }),
+  sized(403, 'Veggie', { Small: '9.00' }),
+  makeDish({ id: 404, name: { en: 'Garlic' }, price: '5.50', category_id: 7 }),
+]
+
+describe('builds priced by size', () => {
+  it('offers a pizza priced only by size, with the sizes its choices come in', () => {
+    const [build] = buildsToPick(HALVES, BUILDS, BY_SIZE)
+
+    expect(build!.sizes).toEqual([
+      { key: 'small', name: { en: 'Small', ar: null } },
+      { key: 'large', name: { en: 'Large', ar: 'كبير' } },
+    ])
+    expect(build!.choices.map((choice) => choice.key)).toEqual(['d401', 'd402', 'd403', 'd404'])
+    expect(firstSize(build!)).toBe('small')
+  })
+
+  it('prices each choice at the size picked, and leaves out a pizza not made in it', () => {
+    const [build] = buildsToPick(HALVES, BUILDS, BY_SIZE)
+    const large = choicesAt(build!, 'large')
+
+    expect(large.map((choice) => [choice.key, choice.price, choice.part_prices])).toEqual([
+      ['d401', '12.00', null],
+      ['d402', '16.00', null],
+      // A dish with its own price is the same at every size, its part prices kept.
+      ['d404', '5.50', { '2': '3.00' }],
+    ])
+    expect(choicesAt(build!, 'medium')).toEqual([])
+    expect(choicesAt(build!, undefined)).toEqual([])
+  })
+
+  it('takes a build as filled only with a size it has and a choice made in it', () => {
+    const [build] = buildsToPick(HALVES, BUILDS, BY_SIZE)
+
+    expect(isFilled(build!, { build: 9, parts: ['d401', 'd402'], size: 'large' })).toBe(true)
+    expect(isFilled(build!, { build: 9, parts: ['d401', 'd403'], size: 'large' })).toBe(false)
+    expect(isFilled(build!, { build: 9, parts: ['d401', 'd402'] })).toBe(false)
+  })
+
+  it('prices the halves at the size, and names the size on the line', () => {
+    const builds = buildsToPick(HALVES, BUILDS, BY_SIZE)
+    const large = [{ build: 9, parts: ['d401', 'd402'], size: 'large' }]
+
+    // Half of $12 and half of $16.
+    expect(unitPrice(HALVES, [], [], BUILDS, large, BY_SIZE)).toBe(14)
+    expect(builtParts(builds, large, 'en')).toEqual([
+      {
+        name: 'Your pizza',
+        parts: [
+          { choice: 'Margherita', share: 2 },
+          { choice: 'Pepperoni', share: 2 },
+        ],
+        size: 'Large',
+      },
+    ])
+  })
+
+  it("keys the sizes by the menu's main language", () => {
+    const [build] = buildsToPick(HALVES, { ...BUILDS, main: 'ar' }, BY_SIZE)
+
+    expect(build!.sizes.map((size) => size.key)).toContain('كبير')
+  })
+
+  it('offers no pizza priced by size while variants are off', () => {
+    // Garlic alone is left: one choice is no build.
+    expect(buildsToPick(HALVES, { ...OFF, builds: true }, BY_SIZE)).toEqual([])
   })
 })

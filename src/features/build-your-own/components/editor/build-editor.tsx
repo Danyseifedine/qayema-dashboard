@@ -50,6 +50,8 @@ export type BuildEditorProps = {
   dish: Dish | null
   /** Every dish of the restaurant, in the owner's order. */
   dishes: readonly Dish[]
+  /** Variants are on, so a dish priced by size is a choice too. */
+  sized?: boolean
   categories: readonly Category[]
   /** The main currency: a new dish is priced in it. */
   currency: string
@@ -71,6 +73,7 @@ export function BuildEditor({
   build,
   dish,
   dishes,
+  sized = false,
   categories,
   currency,
   locale,
@@ -98,7 +101,7 @@ export function BuildEditor({
   const categoryId = useWatch({ control: form.control, name: 'category_id' })
   const dishIds = useWatch({ control: form.control, name: 'dish_ids' })
   const dishCurrency = dish?.currency ?? currency
-  const pickable = offeredDishes(dishes, categoryId, dish?.id ?? null, dishCurrency)
+  const pickable = offeredDishes(dishes, categoryId, dish?.id ?? null, dishCurrency, sized)
   const offered = tickedDishes(pickable, dishIds)
   const dishName = (name: Dish['name']) => nameOr(name, locale, t('card.untitled'))
 

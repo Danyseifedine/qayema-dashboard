@@ -302,6 +302,48 @@ describe('the build editor', () => {
     expect(sent('post').builds).toEqual([expect.objectContaining({ dish_ids: [10, 16] })])
   })
 
+  it('offers a pizza priced only by size, with its sizes, and asks no part prices for it', async () => {
+    const user = userEvent.setup()
+    open({
+      dishes: [
+        ...DISHES,
+        makeDish({
+          id: 17,
+          name: { en: 'Veggie' },
+          price: null,
+          category_id: 2,
+          variants: [
+            {
+              id: 170,
+              name: { en: 'Size' },
+              options: [
+                { id: 171, name: { en: 'Small' }, price: '8.00' },
+                { id: 172, name: { en: 'Large' }, price: '12.00' },
+              ],
+            },
+          ],
+        }),
+      ],
+    })
+    await startNew(user)
+    await user.click(await screen.findByRole('radio', { name: /A pizza, half and half/ }))
+    await next(user)
+
+    await heading('What can guests choose from?')
+    const offered = screen.getByRole('group', { name: 'Guests will choose from' })
+    expect(within(offered).getByRole('checkbox', { name: /Veggie/ })).toHaveTextContent(
+      'Small $8.00 · Large $12.00',
+    )
+    expect(screen.getByText('3 of 3')).toBeInTheDocument()
+    await next(user)
+
+    // Its halves are shares of the size picked: no prices of its own.
+    await heading('How it is made and its sizes')
+    await user.click(screen.getByRole('button', { name: 'Set your own prices' }))
+    expect(await screen.findByLabelText('Margherita, price for one of 2 parts')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Veggie, price for one of 2 parts')).not.toBeInTheDocument()
+  })
+
   it('makes scoops with their dish, a list typed in', { timeout: 20_000 }, async () => {
     stubSortableRects()
     const user = userEvent.setup()
@@ -734,7 +776,7 @@ describe('the build editor', () => {
       data: { texts: ['ثلاث كرات', 'فانيلا', 'فستق'], left: 29 },
     })
     mock.onPatch('/api/dishes/20').reply(200, { data: makeDish({ id: 20 }) })
-    open({ languages: ['en', 'ar'], uses: makeWritingHelp({ limit: 30, left: 30 }) })
+    open({ languages: ['en', 'ar'], uses: makeWritingHelp() })
 
     await user.click(await screen.findByRole('button', { name: 'Edit Topping on Three scoops' }))
     await user.click(screen.getByRole('button', { name: 'Step 2: Choices, done' }))

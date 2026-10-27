@@ -29,31 +29,22 @@ describe('the session’s writing_help', () => {
     prices: { translation: 1, description: 3 },
   }
 
-  it('reads off, a daily cap or no cap, and the month’s credits', () => {
+  it('reads off, or the month’s credits capped or not', () => {
     expect(parse(null).data?.data.restaurant?.writing_help).toBeNull()
-    expect(parse({ limit: 30, left: 12, credits }).data?.data.restaurant?.writing_help).toEqual({
-      limit: 30,
-      left: 12,
-      credits,
-    })
+    expect(parse({ credits }).data?.data.restaurant?.writing_help).toEqual({ credits })
     const uncapped = { ...credits, limit: null, left: null }
-    expect(
-      parse({ limit: null, left: null, credits: uncapped }).data?.data.restaurant?.writing_help,
-    ).toEqual({ limit: null, left: null, credits: uncapped })
+    expect(parse({ credits: uncapped }).data?.data.restaurant?.writing_help).toEqual({
+      credits: uncapped,
+    })
   })
 
   it('reads no credits from a server from before them', () => {
-    expect(parse({ limit: 30, left: 12 }).data?.data.restaurant?.writing_help).toEqual({
-      limit: 30,
-      left: 12,
-      credits: null,
-    })
+    expect(parse({}).data?.data.restaurant?.writing_help).toEqual({ credits: null })
   })
 
   it('refuses a count that is not a whole number', () => {
-    expect(parse({ limit: 30, left: 1.5, credits }).success).toBe(false)
-    expect(parse({ limit: '30', left: 12, credits }).success).toBe(false)
-    expect(parse({ limit: 30, left: 12, credits: { ...credits, left: 0.5 } }).success).toBe(false)
+    expect(parse({ credits: { ...credits, left: 0.5 } }).success).toBe(false)
+    expect(parse({ credits: { ...credits, limit: '500' } }).success).toBe(false)
     expect(parse(true).success).toBe(false)
   })
 })

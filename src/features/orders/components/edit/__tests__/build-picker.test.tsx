@@ -5,8 +5,8 @@ import { BuildPicker } from '@/features/orders/components/edit/build-picker'
 import type { BuildToFill } from '@/features/orders/utils/order-edit'
 
 const CHOICES: BuildToFill['choices'] = [
-  { key: 'c1', name: { en: 'Cheese' }, price: '10.00', part_prices: null },
-  { key: 'c2', name: { en: 'Free' }, price: '0.00', part_prices: null },
+  { key: 'c1', name: { en: 'Cheese' }, price: '10.00', part_prices: null, sizes: {} },
+  { key: 'c2', name: { en: 'Free' }, price: '0.00', part_prices: null, sizes: {} },
 ]
 
 function show(build: Partial<BuildToFill>, value?: (string | null)[]) {
@@ -19,6 +19,7 @@ function show(build: Partial<BuildToFill>, value?: (string | null)[]) {
         shape: 'split',
         parts: [1],
         choices: CHOICES,
+        sizes: [],
         ...build,
       }}
       value={value}

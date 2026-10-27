@@ -90,6 +90,45 @@ function open(session: Partial<AuthRestaurant> = {}, dishes: Dish[] = [BURGER, S
 
 const BUILT_MENU = [PIZZA, MARGHERITA, PEPPERONI, SCOOPS]
 
+/** A pizza priced by its sizes only, from the Pizzas category of the halves below. */
+function sized(id: number, name: string, sizes: Record<string, string>): Dish {
+  return makeDish({
+    id,
+    name: { en: name, ar: null },
+    price: null,
+    category_id: 7,
+    variants: [
+      {
+        id: id * 10,
+        name: { en: 'Size' },
+        options: Object.entries(sizes).map(([size, price], index) => ({
+          id: id * 10 + index + 1,
+          name: { en: size },
+          price,
+        })),
+      },
+    ],
+  })
+}
+
+const HALVES = built({ id: 400, name: { en: 'Half and half', ar: null }, price: null }, [
+  {
+    id: 9,
+    name: { en: 'Your pizza' },
+    shape: 'split',
+    parts: [2],
+    category_id: 7,
+    dish_ids: null,
+    choices: [],
+  },
+])
+const SIZED_MENU = [
+  HALVES,
+  sized(401, 'Margherita', { Small: '8.00', Large: '12.00' }),
+  sized(402, 'Pepperoni', { Small: '10.00', Large: '16.00' }),
+  sized(403, 'Veggie', { Small: '9.00' }),
+]
+
 describe('DishPicker', () => {
   beforeEach(() => {
     mock = new MockAdapter(api)
@@ -322,6 +361,43 @@ describe('DishPicker', () => {
     await user.click(screen.getByRole('option', { name: 'Ice cream' }))
 
     expect(screen.getByRole('combobox', { name: 'Your scoops, part 1' })).toHaveValue('')
+  })
+
+  it('asks the size of a build priced by size first, and prices its halves at it', async () => {
+    const { onAdd, user } = open({}, SIZED_MENU)
+
+    await user.click(screen.getByRole('combobox', { name: 'Dish' }))
+    await user.click(await screen.findByRole('option', { name: 'Half and half' }))
+
+    const size = screen.getByRole('combobox', { name: 'Your pizza: size' })
+    expect(size).toHaveValue('Small')
+    await user.click(screen.getByRole('combobox', { name: 'Your pizza, part 1' }))
+    expect(screen.getByRole('option', { name: /^Veggie/ })).toHaveTextContent('+$4.50')
+    await user.click(screen.getByRole('option', { name: /^Veggie/ }))
+    await user.click(screen.getByRole('combobox', { name: 'Your pizza, part 2' }))
+    await user.click(screen.getByRole('option', { name: /^Margherita/ }))
+    expect(screen.getByText('$8.50')).toBeInTheDocument()
+
+    await user.click(size)
+    await user.click(screen.getByRole('option', { name: 'Large' }))
+    // Veggie is not made Large: its half is asked again, Margherita stays.
+    expect(screen.getByRole('combobox', { name: 'Your pizza, part 1' })).toHaveValue('')
+    expect(screen.getByRole('combobox', { name: 'Your pizza, part 2' })).toHaveValue('Margherita')
+    expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled()
+    await user.click(screen.getByRole('combobox', { name: 'Your pizza, part 1' }))
+    expect(screen.queryByRole('option', { name: /^Veggie/ })).toBeNull()
+    expect(screen.getByRole('option', { name: /^Pepperoni/ })).toHaveTextContent('+$8.00')
+    await user.click(screen.getByRole('option', { name: /^Pepperoni/ }))
+    expect(screen.getByText('$14.00')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith({
+      dish_id: 400,
+      quantity: 1,
+      options: [],
+      addons: [],
+      builds: [{ build: 9, parts: ['d402', 'd401'], size: 'large' }],
+    })
   })
 
   it('asks no builds without them on the package, and leaves out a dish only they price', async () => {

@@ -515,18 +515,36 @@ type Offerable = {
   is_available: boolean
   price: string | null
   currency: string
+  variants?: readonly { options: readonly { price: string }[] }[]
+}
+
+/**
+ * The prices of a dish priced by size (a pizza with no price of its own):
+ * its first variant's options, each a full price, as the server's
+ * BuildChoices reads them. Empty for a dish with a price.
+ */
+export function sizePrices(dish: Offerable): number[] {
+  if (dish.price !== null) return []
+  return (dish.variants?.[0]?.options ?? []).map((option) => Number(option.price))
+}
+
+/** The least a dish costs in a build: its price, else its cheapest size. */
+export function lowestPrice(dish: Offerable): number {
+  return dish.price === null ? Math.min(...sizePrices(dish)) : Number(dish.price)
 }
 
 /**
  * The dishes of a category guests can pick in a build, the server's
- * BuildChoices: available, priced, in the dish's currency, never the dish
- * itself; in the menu's order.
+ * BuildChoices: available, priced (or, while variants are on, `sized`,
+ * priced by size), in the dish's currency, never the dish itself; in the
+ * menu's order.
  */
 export function offeredDishes<T extends Offerable>(
   dishes: readonly T[],
   categoryId: number | null,
   dishId: number | null,
   currency: string,
+  sized = false,
 ): T[] {
   if (categoryId === null) return []
   return dishes.filter(
@@ -534,7 +552,7 @@ export function offeredDishes<T extends Offerable>(
       dish.category_id === categoryId &&
       dish.id !== dishId &&
       dish.is_available &&
-      dish.price !== null &&
+      (dish.price !== null || (sized && sizePrices(dish).length > 0)) &&
       dish.currency === currency,
   )
 }
@@ -555,8 +573,9 @@ export type ExampleChoice = { name: string; price: number; part_prices?: PartPri
 
 /**
  * The choices of a build as a guest meets them, named and priced: a
- * category's offered dishes with their part prices, or the own list's rows
- * that have a price.
+ * category's offered dishes with their part prices (a dish priced by size
+ * at its cheapest, with shares only, as the guest's sheet prices it), or
+ * the own list's rows that have a price.
  */
 export function choicesOf(
   build: Pick<BuildFields, 'source' | 'dish_prices' | 'choices'>,
@@ -567,8 +586,8 @@ export function choicesOf(
   if (build.source === 'category') {
     return offered.map((dish) => ({
       name: dishName(dish.name),
-      price: Number(dish.price),
-      part_prices: build.dish_prices[dishKey(dish.id)],
+      price: lowestPrice(dish),
+      part_prices: dish.price === null ? undefined : build.dish_prices[dishKey(dish.id)],
     }))
   }
   return build.choices.flatMap((row, index) =>

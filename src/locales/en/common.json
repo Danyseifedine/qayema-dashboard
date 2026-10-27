@@ -76,8 +76,6 @@
     "translateFrom": "Translate from {{language}}",
     "nameFirst": "Give the category a name first.",
     "writeFirst": "Write the text in either language first.",
-    "usesUsed": "You've used {{used}} of {{limit}} AI uses today",
-    "spent": "Come back tomorrow for more AI help.",
     "creditsLeft": "{{left}} of {{limit}} AI credits left this month",
     "creditsSpent": "You've used this month's AI credits. They come back on {{date}}.",
     "creditsShort": "Not enough AI credits left this month for this. They come back on {{date}}.",

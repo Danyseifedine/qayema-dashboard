@@ -267,7 +267,9 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   Margherita + ½ Pepperoni") show under the dish on its card; "Changed by
   you at …" shows after an edit. A dish added in the editor is built there
   too (`BuildPicker`, priced by `buildPriceCents` from the build-your-own
-  barrel, the one twin of `BuildPrice`). The editor loads the first time an order is edited
+  barrel, the one twin of `BuildPrice`; a pizza priced by size asks its
+  size first, `choicesAt()` in `order-edit.ts`, the twin of
+  `BuildChoices::forSize()`). The editor loads the first time an order is edited
   (`lazy` in `OrderBoard`), since the Orders page is in the first download.
 - **Orders come one way at a time** (`useOrderingMode()` from `features/auth`:
   `whatsapp`, `menu`, or null without ordering). On WhatsApp the Orders page
@@ -490,8 +492,8 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   backend's `App\Support\Ingredients`). Send every active language (blank clears it); never send
   a hidden one (the server keeps it for when the owner switches back).
 - **Writing help (AI)**: while `restaurant.writing_help` is on (the server
-  has an AI provider set up and the package gives uses a day,
-  `writing_help_limit`, a limit row on the Package page), `WritingHelpProvider` (around
+  has an AI provider set up and the package gives credits a month, its only
+  AI limit: there are no uses a day), `WritingHelpProvider` (around
   the pages in `App.tsx`) lets every `TranslatableTextField` show
   `WritingHelpButtons`: Translate, a gold icon beside its language tabs
   (the full name as `aria-label`), and on a description "Write with AI", a
@@ -507,44 +509,40 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   AI" once the open tab has text, writes in the open language. The text
   lands in the form only; saving is the form's. The calls are
   `useTranslateText` / `useWriteDescription`
-  (`shared/hooks/use-writing-help.ts`, error toasts only; a spent day's
-  allowance, 429 `writing_help_limit`, shows the server's words rather than
-  a seconds countdown). Every AI button's tooltip says what it does, the uses spent today
-  (`restaurant.writing_help.{limit, left}`, "You've used 2 of 30 AI uses
-  today", none for no daily cap) and the month's credits left
-  (`writing_help.credits.{limit, left, resets_on, prices}`, "6,840 of
-  7,500 AI credits left this month"; never money; null from a server from
-  before them); each answer's `left` and `credits_left` are written back into the session
-  (`useWritingHelpLeft`, from `features/auth`, through `withLeft`). A
-  button whose action the allowance does not cover (`spentFor()`: the
-  day's uses at 0, or fewer credits left than a translation
-  or a description costs; a 429 `writing_help_credits` says the credits
-  left) turns red (Button `variant="spent"`), cannot be pressed and says
-  to come back tomorrow, or on the day the credits come back, once per
-  screen (`WritingHelpSpentNote`: the first spent field holds the note);
-  the Package page lists each package's credits a month and, while capped,
-  the credits used this month beside the other limits (no AI uses a day
-  reads as no credits, `limitOf()`); a month whose `resets_on` has come is
+  (`shared/hooks/use-writing-help.ts`, error toasts only; spent credits,
+  429 `writing_help_credits`, show the server's words rather than a seconds
+  countdown). Every AI button's tooltip says what it does and the month's
+  credits left (`writing_help.credits.{limit, left, resets_on, prices}`,
+  "6,840 of 7,500 AI credits left this month", none without a cap; never
+  money; null from a server from before them); each answer's
+  `credits_left` is written back into the session (`useWritingHelpLeft`,
+  from `features/auth`, through `withLeft`). A button whose action the
+  credits do not cover (`spentFor()`: fewer left than a translation or a
+  description costs; a 429 `writing_help_credits` says the credits left)
+  turns red (Button `variant="spent"`), cannot be pressed and says the day
+  the credits come back, once per screen (`WritingHelpSpentNote`: the first
+  spent field holds the note); the Package page lists each package's
+  credits a month and, while capped, the credits used this month beside
+  the other limits; a month whose `resets_on` has come is
   taken as back in a tab left open; a dish's save and its "Translate all
   names" wait for each other (`useTranslatingMany`), since the server runs
   one AI request a restaurant at a time;
   saving a dish or a category first fills in (`useTranslateOnSave`, over
-  `useTranslateMany`: one use) every text written in one language only
+  `useTranslateMany`: one translation's credits) every text written in one language only
   (`missingTranslation`, `shared/utils/string/missing-translations.ts`; a
   dish's list in `features/menu/dishes/utils/dish-translations.ts`), and
-  saves as written should that fail or the day be spent; while it will,
+  saves as written should that fail or the credits be spent; while it will,
   `OneLanguageNote` atop the form says one language is enough, and it is: the
   form's rules (`makeDishFormSchema` / `makeCategoryFormSchema` with
   `anyLanguage`, `requireMainLanguage(..., anyLanguage)`) then take a name in
   either language, the AI filling the main one in; the variants and add-ons also have
   one "Translate all names" button (`TranslateChoicesButton`). A
   translatable field shows its count of characters only past 80% of its
-  limit; the
-  uses come back at the restaurant's midnight. E2E:
+  limit; the credits come back on the 1st in the restaurant's timezone. E2E:
   `e2e/specs/dashboard/writing-help.spec.ts` runs on the real backend's
   pretend Gemini, switched on per test by an `x-e2e-writing-help` header
   added to API requests only (a font host refuses it); the count is real
-  there, and `writing_help_used` starts an owner with uses spent. On the Package page a
+  there, and `writing_help_days` starts an owner with credits spent. On the Package page a
   limit of 0 reads like a feature left out, in the table too.
 - **Menu link** (`features/restaurant/components/identity/link-section.tsx`):
   the slug, changed on its own (not with the page's save), after a

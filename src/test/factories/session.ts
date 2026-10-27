@@ -106,18 +106,12 @@ export function makeSessionUser(
 }
 
 /**
- * The writing help's state as the session sends it: the uses a day (30, all
- * left, unless given) and the month's credits, uncapped unless given, so a
- * test that is not about credits sees no credits line.
+ * The writing help's state as the session sends it: the month's credits,
+ * uncapped unless given, so a test that is not about credits sees no
+ * credits line.
  */
-export function makeWritingHelp(
-  uses: Partial<Pick<WritingHelpUses, 'limit' | 'left'>> = {},
-  credits: Partial<WritingHelpCredits> = {},
-): WritingHelpUses {
+export function makeWritingHelp(credits: Partial<WritingHelpCredits> = {}): WritingHelpUses {
   return {
-    limit: 30,
-    left: 30,
-    ...uses,
     credits: {
       limit: null,
       left: null,

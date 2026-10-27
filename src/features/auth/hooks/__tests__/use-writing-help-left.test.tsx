@@ -19,30 +19,26 @@ function render(session: AuthUser | undefined) {
 }
 
 describe('useWritingHelpLeft', () => {
-  it('writes what is left into the session, keeping a count the answer does not give', () => {
+  it('writes the credits left into the session, keeping them when an answer does not say', () => {
     const { setLeft, now } = render(
-      makeSessionUser({ writing_help: makeWritingHelp({}, { limit: 500, left: 500 }) }),
+      makeSessionUser({ writing_help: makeWritingHelp({ limit: 500, left: 500 }) }),
     )
 
-    act(() => setLeft({ uses: 29, credits: 499 }))
-    expect(now()?.restaurant?.writing_help).toEqual(
-      makeWritingHelp({ left: 29 }, { limit: 500, left: 499 }),
-    )
+    act(() => setLeft({ credits: 499 }))
+    expect(now()?.restaurant?.writing_help).toEqual(makeWritingHelp({ limit: 500, left: 499 }))
 
-    // A refusal of the month's credits says only those.
-    act(() => setLeft({ credits: 2 }))
-    expect(now()?.restaurant?.writing_help).toEqual(
-      makeWritingHelp({ left: 29 }, { limit: 500, left: 2 }),
-    )
+    // An answer from a server from before the credits says nothing: kept.
+    act(() => setLeft({}))
+    expect(now()?.restaurant?.writing_help).toEqual(makeWritingHelp({ limit: 500, left: 499 }))
   })
 
   it('leaves writing help that is off, or no session, as it is', () => {
     const off = render(makeSessionUser({ writing_help: null }))
-    act(() => off.setLeft({ uses: 3 }))
+    act(() => off.setLeft({ credits: 3 }))
     expect(off.now()?.restaurant?.writing_help).toBeNull()
 
     const none = render(undefined)
-    act(() => none.setLeft({ uses: 3 }))
+    act(() => none.setLeft({ credits: 3 }))
     expect(none.now()).toBeUndefined()
   })
 })

@@ -116,6 +116,8 @@
     "cancel": "إلغاء",
     "empty": "يجب أن يحتوي الطلب على طبق واحد على الأقل. لإيقافه، ألغِه.",
     "build": {
+      "size": "{{build}}: الحجم",
+      "sizePlaceholder": "أي حجم؟",
       "count": "{{build}}: كم",
       "countPlaceholder": "كم؟",
       "choose": "اختر",

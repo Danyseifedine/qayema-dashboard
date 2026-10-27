@@ -108,6 +108,8 @@
     "cancel": "Cancel",
     "empty": "An order needs at least one dish. To call it off, cancel it.",
     "build": {
+      "size": "{{build}}: size",
+      "sizePlaceholder": "Which size?",
       "count": "{{build}}: how many",
       "countPlaceholder": "How many?",
       "choose": "Choose",

@@ -405,46 +405,6 @@ describe('PackagePage', () => {
     )
   })
 
-  it('lists the AI writing help a day on each card: none, a number or unlimited', async () => {
-    session()
-    mock.onGet('/api/packages').reply(200, {
-      data: [
-        makePackage({ features: { writing_help_limit: 0 } }),
-        makePackage({
-          id: 2,
-          slug: 'pro',
-          name: { en: 'Pro', ar: null },
-          is_default: false,
-          features: { writing_help_limit: 100 },
-        }),
-        makePackage({
-          id: 3,
-          slug: 'custom',
-          name: { en: 'Custom', ar: null },
-          is_default: false,
-          features: { writing_help_limit: null },
-        }),
-      ],
-      meta: { current: 'free' },
-    })
-    renderWithProviders(<PackagePage locale="en" />)
-
-    expect(await screen.findByText('No AI writing help')).toBeInTheDocument()
-    expect(screen.getByText('100 AI writing uses a day')).toBeInTheDocument()
-    expect(screen.getByText('Unlimited AI writing help')).toBeInTheDocument()
-
-    const table = screen.getByRole('table')
-    const ai = within(table)
-      .getByRole('rowheader', { name: 'AI writing help a day' })
-      .closest('tr')!
-    // None reads like a feature left out, not a bare 0.
-    expect(
-      within(ai)
-        .getAllByRole('cell')
-        .map((cell) => cell.textContent),
-    ).toEqual(['Not included', '100', 'Unlimited'])
-  })
-
   it('lists the AI credits a month on each card and in the table, never money', async () => {
     session()
     mock.onGet('/api/packages').reply(200, {
@@ -481,10 +441,12 @@ describe('PackagePage', () => {
         .map((cell) => cell.textContent),
     ).toEqual(['500', '7,500', 'Unlimited'])
     expect(screen.queryByText(/\$/)).not.toBeInTheDocument()
+    // Credits are the only AI limit: no uses a day anywhere.
+    expect(screen.queryByText(/AI writing/)).not.toBeInTheDocument()
   })
 
   it('shows the credits used this month beside the package’s other limits', async () => {
-    stub('free', { writing_help: makeWritingHelp({}, { limit: 500, left: 120 }) })
+    stub('free', { writing_help: makeWritingHelp({ limit: 500, left: 120 }) })
     renderWithProviders(<PackagePage locale="en" />)
 
     expect(await screen.findByText('AI credits this month')).toBeInTheDocument()
@@ -492,23 +454,11 @@ describe('PackagePage', () => {
   })
 
   it('leaves the credits out when there is no cap or no AI', async () => {
-    stub('free', { writing_help: makeWritingHelp({}, { limit: null, left: null }) })
+    stub('free', { writing_help: makeWritingHelp({ limit: null, left: null }) })
     const { unmount } = renderWithProviders(<PackagePage locale="en" />)
 
     expect(await screen.findByText('12 / 40')).toBeInTheDocument()
     expect(screen.queryByText('AI credits this month')).not.toBeInTheDocument()
-    unmount()
-  })
-
-  it('names one AI use a day in the singular', async () => {
-    session()
-    mock.onGet('/api/packages').reply(200, {
-      data: [makePackage({ features: { writing_help_limit: 1 } })],
-      meta: { current: 'free' },
-    })
-    const { unmount } = renderWithProviders(<PackagePage locale="en" />)
-
-    expect(await screen.findByText('1 AI writing use a day')).toBeInTheDocument()
     unmount()
   })
 

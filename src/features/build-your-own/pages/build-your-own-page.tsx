@@ -1,7 +1,7 @@
 import { IconPlus } from '@tabler/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useMenuLanguages, useSession } from '@/features/auth'
+import { useDishChoices, useMenuLanguages, useSession } from '@/features/auth'
 import { useCategories, useDeleteDish, useDishes, type Dish } from '@/features/menu'
 import { LimitHeader } from '@/shared/components/data-display'
 import {
@@ -46,6 +46,8 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
   const categories = useCategories()
   const languages = useMenuLanguages()
   const session = useSession()
+  // While variants are on, a pizza priced by size is a choice too.
+  const sized = useDishChoices().variants
   const removeBuild = useRemoveBuild()
   const removeDish = useDeleteDish()
 
@@ -78,6 +80,7 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
         build={editing?.build ?? null}
         dish={editing?.dish ?? null}
         dishes={dishList}
+        sized={sized}
         categories={categoryList}
         currency={currency}
         locale={locale}
@@ -173,6 +176,7 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
               build={each.build}
               dish={each.dish}
               dishes={dishList}
+              sized={sized}
               categories={categoryList}
               locale={locale}
               onEdit={() => setEditing(each)}
