@@ -1,10 +1,15 @@
-import { IconPizza, IconPlus } from '@tabler/icons-react'
+import { IconPlus } from '@tabler/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMenuLanguages, useSession } from '@/features/auth'
 import { useCategories, useDeleteDish, useDishes, type Dish } from '@/features/menu'
 import { LimitHeader } from '@/shared/components/data-display'
-import { ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
+import {
+  ConfirmDialog,
+  ErrorState,
+  PictureEmptyState,
+  SkeletonList,
+} from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
 import { isAtLimit } from '@/shared/utils/limits/is-at-limit'
 import type { Locale } from '@/shared/constants/locales'
@@ -19,6 +24,9 @@ export type BuildYourOwnPageProps = {
   /** Menu text's language, for the dishes' and builds' names. */
   locale: Locale
 }
+
+/** The picture over the page when there is no build yet. */
+const EMPTY_PICTURE = '/assets/images/dashboard/empty-build.webp'
 
 /** A build with the dish it is on. */
 type Placed = { build: Build; dish: Dish }
@@ -131,7 +139,7 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
       />
 
       {atBuildLimit ? (
-        <Alert variant="warning">{t('page.atBuildLimit', { count: buildLimit ?? 0 })}</Alert>
+        <Alert variant="warning">{t('page.atBuildLimit', { count: builtCount })}</Alert>
       ) : atDishLimit ? (
         <Alert variant="warning">{t('page.atLimit')}</Alert>
       ) : null}
@@ -146,18 +154,13 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
       ) : failed ? (
         <ErrorState description={failed.error.message} onRetry={() => void failed.refetch()} />
       ) : placed.length === 0 ? (
-        <EmptyState
-          icon={IconPizza}
+        <PictureEmptyState
+          fill
+          picture={EMPTY_PICTURE}
           title={t('page.emptyTitle')}
-          description={
-            <>
-              {t('page.emptyDescription')}
-              <span className="mt-2 block">{t('page.emptyPizza')}</span>
-              <span className="block">{t('page.emptyScoops')}</span>
-            </>
-          }
+          description={t('page.emptyDescription')}
           action={
-            <Button disabled={atLimit || noCategories} onClick={() => setEditing(null)}>
+            <Button block disabled={atLimit || noCategories} onClick={() => setEditing(null)}>
               {t('page.addFirst')}
             </Button>
           }

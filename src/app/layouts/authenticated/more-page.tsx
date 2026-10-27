@@ -27,6 +27,7 @@ const ART: Record<string, string> = {
   appearance: `${ART_DIR}/Appearance.webp`,
   // From the Features page's pictures: no picture of their own here.
   dishes: '/assets/images/dashboard/features/dish.webp',
+  offers: `${ART_DIR}/offers.webp`,
   'build-your-own': `${ART_DIR}/build-your-own.webp`,
   orders: '/assets/images/dashboard/features/orders.webp',
   qr: `${ART_DIR}/qr-studio.webp`,

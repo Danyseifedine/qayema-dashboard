@@ -1,0 +1,1 @@
+import{t as e}from"./keys-Bm1XZkcU.js";var t={all:[e.categories],list:()=>[e.categories,`list`]};export{t};

@@ -668,7 +668,7 @@ test.describe('admin', () => {
     await page.goto(`${ADMIN_URL}/packages`)
     await page.getByRole('link', { name: 'New package' }).click()
     // It opens on the default package's numbers.
-    await expect(page.getByRole('spinbutton', { name: 'Dishes' })).toHaveValue('40')
+    await expect(page.getByRole('spinbutton', { name: 'Dishes', exact: true })).toHaveValue('40')
     await page.getByLabel('Name (English)').fill(`Starter ${slug}`)
     await page.getByLabel('Slug').fill(slug)
     await page.getByLabel('Crown').click()

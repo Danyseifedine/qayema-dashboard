@@ -95,6 +95,9 @@ vi.mock('@/features/design/pages', () => ({
 vi.mock('@/features/offers/pages', () => ({
   OffersPage: stubPage('offers'),
 }))
+vi.mock('@/features/build-your-own/pages', () => ({
+  BuildYourOwnPage: stubPage('build-your-own'),
+}))
 
 type Restaurant = NonNullable<AuthUser['restaurant']>
 
@@ -212,6 +215,8 @@ describe('App', () => {
     { path: '/social-links', name: 'social-links' },
     { path: '/offers', name: 'offers', action: 'onOpenCategories', lands: 'categories' },
     { path: '/dishes', name: 'dishes', action: 'onOpenOffers', lands: 'offers' },
+    { path: '/dishes', name: 'dishes', action: 'onOpenBuilds', lands: 'build-your-own' },
+    { path: '/build-your-own', name: 'build-your-own' },
     { path: '/features', name: 'features', action: 'onOpenPackage', lands: 'package' },
     { path: '/features', name: 'features', action: 'onOpenTables', lands: 'tables' },
     { path: '/features', name: 'features', action: 'onOpenDishes', lands: 'dishes' },

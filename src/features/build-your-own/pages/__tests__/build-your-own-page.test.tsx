@@ -159,14 +159,38 @@ describe('BuildYourOwnPage', () => {
     expect(within(pizza).getByText("Guests can't see it yet")).toBeInTheDocument()
   })
 
-  it('explains itself with two examples before the first build', async () => {
+  it('names a build titled with its dish once', async () => {
+    stub([
+      makeDish({ id: 10, name: { en: 'Margherita' }, price: '12.00', category_id: 2 }),
+      makeDish({ id: 11, name: { en: 'Pepperoni' }, price: '16.00', category_id: 2 }),
+      makeDish({
+        id: 13,
+        name: { en: 'Build your pizza' },
+        price: null,
+        category_id: null,
+        builds: [{ ...PIZZA, name: { en: 'Build your pizza', ar: null } }],
+      }),
+    ])
+    renderWithProviders(<BuildYourOwnPage locale="en" />)
+
+    const card = (await screen.findByRole('heading', { name: 'Build your pizza' })).closest(
+      'article',
+    )!
+    expect(within(card).getAllByText('Build your pizza')).toHaveLength(1)
+  })
+
+  it('shows a picture and a short example before the first build', async () => {
     const user = userEvent.setup()
     stub([makeDish({ id: 1, name: { en: 'Margherita' } })])
     renderWithProviders(<BuildYourOwnPage locale="en" />)
 
     expect(await screen.findByText('Let guests build a dish')).toBeInTheDocument()
-    expect(screen.getByText(/A pizza half and half/)).toBeInTheDocument()
-    expect(screen.getByText(/Three scoops/)).toBeInTheDocument()
+    expect(
+      document.querySelector('img[src="/assets/images/dashboard/empty-build.webp"]'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Like a half and half pizza, or three scoops of ice cream.'),
+    ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Make your first build' }))
     expect(await screen.findByRole('heading', { name: 'New build' })).toBeInTheDocument()
