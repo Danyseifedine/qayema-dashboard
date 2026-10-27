@@ -246,7 +246,7 @@ describe('TablesPage', () => {
     const user = userEvent.setup()
     renderWithProviders(<TablesPage onOpenFeatures={onOpenFeatures} />)
 
-    expect(await screen.findByText('Ordering at the table is switched off')).toBeInTheDocument()
+    expect(await screen.findByText("Guests can't order to their table")).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Open Features' }))
     expect(onOpenFeatures).toHaveBeenCalledOnce()
   })

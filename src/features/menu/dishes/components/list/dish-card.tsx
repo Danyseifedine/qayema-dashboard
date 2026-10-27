@@ -1,16 +1,20 @@
 import { IconPhotoOff } from '@tabler/icons-react'
+import type { TFunction } from 'i18next'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Money } from '@/shared/components/data-display'
+import { localDate } from '@/features/offers'
+import { Money, StatusChip } from '@/shared/components/data-display'
 import { RowActions, Switch } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
-import { translated } from '@/shared/utils/string/translated'
-import type { Dish } from '@/features/menu/dishes/schemas/dish.schema'
+import { nameOr, translated } from '@/shared/utils/string/translated'
+import { usePreferencesStore } from '@/stores/preferences.store'
+import type { Dish, DishOffer } from '@/features/menu/dishes/schemas/dish.schema'
+import { lowestPrice } from '@/features/menu/dishes/schemas/dish-choices.schema'
 
 export type DishCardProps = {
+  /** Priced in its own currency (`dish.currency`). */
   dish: Dish
-  currency: string
   locale: Locale
   handle: ReactNode
   /** Count the dish's variants and add-ons on its face, when each is on. */
@@ -40,7 +44,6 @@ export type DishCardProps = {
  */
 export const DishCard = memo(function DishCard({
   dish,
-  currency,
   locale,
   handle,
   showVariants,
@@ -50,20 +53,15 @@ export const DishCard = memo(function DishCard({
   onToggleAvailability,
 }: DishCardProps) {
   const { t } = useTranslation('menu')
+  // The card's words and dates are the dashboard's language; the offer's title the menu's.
+  const ui = usePreferencesStore((state) => state.locale)
   const name = translated(dish.name, locale)
   const ingredients = translated(dish.ingredients, locale)
   // A dish with no price of its own is priced by its variants: the card
   // shows the least a guest pays, as the menu does.
   const pricedByVariants = dish.price === null && showVariants && dish.variants.length > 0
   const price = pricedByVariants
-    ? dish.variants.reduce(
-        (sum, variant) =>
-          sum +
-          (variant.options.length > 0
-            ? Math.min(...variant.options.map((o) => Number(o.price)))
-            : 0),
-        0,
-      )
+    ? lowestPrice(0, dish.variants)
     : dish.price === null
       ? null
       : Number(dish.price)
@@ -125,8 +123,7 @@ export const DishCard = memo(function DishCard({
               {price !== null ? (
                 <Money
                   amount={price}
-                  currency={currency}
-                  locale={locale}
+                  currency={dish.currency}
                   className="shrink-0 text-[14px] font-semibold text-accent"
                 />
               ) : null}
@@ -142,14 +139,19 @@ export const DishCard = memo(function DishCard({
               </p>
             ) : null}
 
-            {choices.length > 0 || !dish.is_available ? (
+            {choices.length > 0 || !dish.is_available || dish.offer ? (
               <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] font-medium text-[var(--faint)]">
+                {dish.offer ? <StatusChip tone="gold">{t('dishCard.deal.chip')}</StatusChip> : null}
                 {!dish.is_available ? (
-                  <span className="rounded-full bg-status-danger-wash px-2 py-0.5 text-[10px] tracking-[0.06em] text-status-danger uppercase">
-                    {t('dishCard.soldOut')}
-                  </span>
+                  <StatusChip tone="danger">{t('dishCard.soldOut')}</StatusChip>
                 ) : null}
                 {choices.length > 0 ? <span>{choices.join(' · ')}</span> : null}
+              </p>
+            ) : null}
+
+            {dish.offer ? (
+              <p dir="auto" className="mt-0.5 text-[12px] leading-snug text-[var(--muted)]">
+                {dealLine(dish.offer, locale, ui, t)}
               </p>
             ) : null}
           </div>
@@ -187,3 +189,19 @@ export const DishCard = memo(function DishCard({
     </article>
   )
 })
+
+/**
+ * Where a deal dish stands, from the offer that made it: on the menu while
+ * the offer runs, else hidden, and why (back when it starts again, paused,
+ * kept off by the package, ended). The title is in the menu's language, the date in the dashboard's.
+ */
+function dealLine(offer: DishOffer, locale: Locale, ui: Locale, t: TFunction<'menu'>): string {
+  const title = nameOr(offer.title, locale, t('dishCard.deal.untitledOffer'))
+  if (offer.status === 'live') return t('dishCard.deal.live', { title })
+  if (offer.status === 'scheduled' && offer.next_start !== null) {
+    return t('dishCard.deal.scheduled', { title, when: localDate(offer.next_start, ui) })
+  }
+  if (offer.status === 'paused') return t('dishCard.deal.paused', { title })
+  if (offer.status === 'off') return t('dishCard.deal.off', { title })
+  return t('dishCard.deal.ended', { title })
+}

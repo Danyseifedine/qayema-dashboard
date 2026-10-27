@@ -1,4 +1,4 @@
-import { IconArrowBackUp, IconEye } from '@tabler/icons-react'
+import { IconArrowBackUp } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import type { AuthUser } from '@/features/auth'
 import { Button } from '@/shared/components/ui'
@@ -23,8 +23,9 @@ export function ImpersonationBanner({ owner, impersonation }: ImpersonationBanne
       role="status"
       className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b-[0.5px] border-status-warn-border bg-status-warn-wash px-4 py-2 text-[13px] text-status-warn sm:px-6"
     >
-      <p className="flex min-w-0 items-center gap-2">
-        <IconEye aria-hidden className="size-4 shrink-0" />
+      <p className="flex min-w-0 items-center gap-2.5 font-semibold">
+        {/* The banner's dot (Alert), on a strip across the top. */}
+        <span aria-hidden className="size-2.5 shrink-0 rounded-full bg-current" />
         <span className="min-w-0">
           {impersonation.admin
             ? t('impersonation.viewingAs', { owner, admin: impersonation.admin })

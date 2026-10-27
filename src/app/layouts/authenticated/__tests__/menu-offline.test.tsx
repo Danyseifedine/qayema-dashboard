@@ -5,6 +5,7 @@ import { MenuGoingOffline, MenuOfflinePage } from '@/app/layouts/authenticated/m
 
 const lapsed = {
   slug: 'pro',
+  tier: null,
   name: { en: 'Pro', ar: null },
   ended_at: '2026-10-01T00:00:00Z',
   offline_at: '2026-10-08T00:00:00Z',

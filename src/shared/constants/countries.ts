@@ -4,7 +4,7 @@
  * the onboarding wizard offer exactly the same options. `code` is the ISO-3166
  * alpha-2 value the API stores in `restaurants.country_code`.
  */
-export type Country = {
+type Country = {
   code: string
   label: string
   flag: string

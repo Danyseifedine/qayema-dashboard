@@ -22,7 +22,6 @@
     "platformPlaceholder": "Choose a platform",
     "linkLabel": "Link",
     "linkHint": "Paste the full address, including https://",
-    "cancel": "Cancel",
     "addSubmit": "Add link",
     "saveSubmit": "Save link"
   },

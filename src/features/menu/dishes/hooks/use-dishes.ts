@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { sessionKeys } from '@/features/auth'
+import { offerKeys } from '@/features/offers'
 import { categoryKeys } from '@/features/menu/categories/hooks/category-keys'
 import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
@@ -12,35 +14,45 @@ import {
   updateDish,
   type DishPayload,
 } from '@/features/menu/dishes/api/dish.api'
-import type { Dish, DishList } from '@/features/menu/dishes/schemas/dish.schema'
+import {
+  withCurrency,
+  type ApiDish,
+  type Dish,
+  type DishList,
+} from '@/features/menu/dishes/schemas/dish.schema'
 import { dishKeys } from '@/features/menu/dishes/hooks/dish-keys'
 
 /**
  * Every dish for the restaurant, in one request.
  *
  * The API offers no category filter and no pagination, so the whole set is
- * cached once and the category tabs filter it in memory. The stale window
- * stops a refetch of that whole set every time the owner steps between
+ * cached once and the category tabs filter it in memory. The client's stale
+ * window (`lib/query/client.ts`) stops a refetch of that whole set every time the owner steps between
  * Categories and Dishes, which on a long menu is the heaviest call they make.
  */
 export function useDishes(): UseQueryResult<DishList, ApiError> {
   return useQuery<DishList, ApiError>({
     queryKey: dishKeys.list(),
     queryFn: ({ signal }) => fetchDishes(signal),
-    staleTime: 30_000,
   })
 }
 
 export function useSaveDish(id: number | null) {
   const queryClient = useQueryClient()
 
-  return useMutation<Dish, ApiError, DishPayload>({
+  return useMutation<ApiDish, ApiError, DishPayload>({
     mutationFn: (payload) => (id === null ? createDish(payload) : updateDish(id, payload)),
-    onSuccess: () => {
+    onSuccess: (dish, payload) => {
       toast.success(id === null ? t('menu:dishToast.added') : t('menu:dishToast.saved'))
+      // A deal dish is shown on its offer's card.
+      if (dish.offer !== null) void queryClient.invalidateQueries({ queryKey: offerKeys.all })
       void queryClient.invalidateQueries({ queryKey: dishKeys.all })
       // A new dish changes the category's dish count.
       void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
+      // The session counts the dishes and those without a photo (Home).
+      if (id === null || payload.image_key !== undefined || payload.delete_image === true) {
+        void queryClient.invalidateQueries({ queryKey: sessionKeys.current() })
+      }
     },
     onError: (error) =>
       toast.error(
@@ -55,10 +67,16 @@ export function useDeleteDish() {
 
   return useMutation<void, ApiError, number>({
     mutationFn: deleteDish,
-    onSuccess: () => {
+    onSuccess: (_nothing, id) => {
       toast.success(t('menu:dishToast.deleted'))
+      // Deleting a deal dish leaves its offer without a deal.
+      const gone = queryClient
+        .getQueryData<DishList>(dishKeys.list())
+        ?.data.find((dish) => dish.id === id)
+      if (gone?.offer) void queryClient.invalidateQueries({ queryKey: offerKeys.all })
       void queryClient.invalidateQueries({ queryKey: dishKeys.all })
       void queryClient.invalidateQueries({ queryKey: categoryKeys.all })
+      void queryClient.invalidateQueries({ queryKey: sessionKeys.current() })
     },
     onError: (error) => toast.error(t('menu:dishToast.deleteFailed'), error),
   })
@@ -71,54 +89,59 @@ export function useDeleteDish() {
 export function useDishAvailability() {
   const queryClient = useQueryClient()
 
-  return useMutation<Dish, ApiError, { id: number; isAvailable: boolean }, { previous?: DishList }>(
-    {
-      mutationFn: ({ id, isAvailable }) => setDishAvailability(id, isAvailable),
+  return useMutation<
+    ApiDish,
+    ApiError,
+    { id: number; isAvailable: boolean },
+    { previous?: DishList }
+  >({
+    mutationFn: ({ id, isAvailable }) => setDishAvailability(id, isAvailable),
 
-      onMutate: async ({ id, isAvailable }) => {
-        await queryClient.cancelQueries({ queryKey: dishKeys.list() })
-        const previous = queryClient.getQueryData<DishList>(dishKeys.list())
+    onMutate: async ({ id, isAvailable }) => {
+      await queryClient.cancelQueries({ queryKey: dishKeys.list() })
+      const previous = queryClient.getQueryData<DishList>(dishKeys.list())
 
-        if (previous) {
-          queryClient.setQueryData<DishList>(dishKeys.list(), {
-            ...previous,
-            data: previous.data.map((dish) =>
-              dish.id === id ? { ...dish, is_available: isAvailable } : dish,
-            ),
-          })
-        }
+      if (previous) {
+        queryClient.setQueryData<DishList>(dishKeys.list(), {
+          ...previous,
+          data: previous.data.map((dish) =>
+            dish.id === id ? { ...dish, is_available: isAvailable } : dish,
+          ),
+        })
+      }
 
-        return { previous }
-      },
-
-      // The server hands back the saved dish, so the optimistic row is
-      // replaced in place. Refetching the whole menu to learn one boolean was
-      // the most wasteful call in the app: it ran on every toggle.
-      onSuccess: (saved) => {
-        queryClient.setQueryData<DishList>(dishKeys.list(), (current) =>
-          current === undefined
-            ? current
-            : {
-                ...current,
-                data: current.data.map((dish) => (dish.id === saved.id ? saved : dish)),
-              },
-        )
-      },
-
-      onError: (_error, _variables, context) => {
-        if (context?.previous) queryClient.setQueryData(dishKeys.list(), context.previous)
-        // Only a failure needs the truth from the server.
-        void queryClient.invalidateQueries({ queryKey: dishKeys.list() })
-      },
+      return { previous }
     },
-  )
+
+    // The server hands back the saved dish, so the optimistic row is
+    // replaced in place. Refetching the whole menu to learn one boolean was
+    // the most wasteful call in the app: it ran on every toggle.
+    onSuccess: (saved) => {
+      queryClient.setQueryData<DishList>(dishKeys.list(), (current) =>
+        current === undefined
+          ? current
+          : {
+              ...current,
+              data: current.data.map((dish) =>
+                dish.id === saved.id ? withCurrency(saved, current.meta.currency) : dish,
+              ),
+            },
+      )
+    },
+
+    onError: (_error, _variables, context) => {
+      if (context?.previous) queryClient.setQueryData(dishKeys.list(), context.previous)
+      // Only a failure needs the truth from the server.
+      void queryClient.invalidateQueries({ queryKey: dishKeys.list() })
+    },
+  })
 }
 
 /** Reorder within the current view, applied optimistically. */
 export function useReorderDishes() {
   const queryClient = useQueryClient()
 
-  return useMutation<Dish[], ApiError, Dish[], { previous?: DishList }>({
+  return useMutation<ApiDish[], ApiError, Dish[], { previous?: DishList }>({
     mutationFn: (ordered) => reorderDishes(ordered.map((dish) => dish.id)),
 
     onMutate: async (ordered) => {
@@ -146,7 +169,12 @@ export function useReorderDishes() {
     // one directly instead of costing a second round trip.
     onSuccess: (ordered) => {
       queryClient.setQueryData<DishList>(dishKeys.list(), (current) =>
-        current === undefined ? current : { ...current, data: ordered },
+        current === undefined
+          ? current
+          : {
+              ...current,
+              data: ordered.map((dish) => withCurrency(dish, current.meta.currency)),
+            },
       )
     },
 

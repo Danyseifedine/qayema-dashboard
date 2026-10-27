@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { makeCategory, resetFactories } from '@/test/factories/menu'
-import { makeSessionUser } from '@/test/factories/session'
+import { makeSessionUser, makeWritingHelp } from '@/test/factories/session'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { moveDown, stubSortableRects } from '@/test/sortable'
 import { CategoriesPage } from '@/features/menu/pages/categories-page'
@@ -68,7 +68,7 @@ describe('CategoriesPage', () => {
     })
     const user = userEvent.setup()
     renderWithProviders(
-      <WritingHelpProvider uses={{ limit: 10, left: 10 }} onLeft={() => {}}>
+      <WritingHelpProvider uses={makeWritingHelp({ limit: 10, left: 10 })} onLeft={() => {}}>
         <CategoriesPage locale="en" onOpenDishes={vi.fn()} />
       </WritingHelpProvider>,
     )
@@ -92,7 +92,10 @@ describe('CategoriesPage', () => {
       text: '',
       language: 'en',
     })
-    expect(within(dialog).getAllByText('0/10').length).toBeGreaterThan(0)
+    expect(within(dialog).getByRole('button', { name: 'Improve with AI' })).toHaveAttribute(
+      'title',
+      "Improve with AI. You've used 0 of 10 AI uses today",
+    )
   })
 
   it('shows plan usage and blocks adding at the limit', async () => {
@@ -124,6 +127,7 @@ describe('CategoriesPage', () => {
       expect(JSON.parse(post!.data as string)).toEqual({
         name: { en: 'Drinks', ar: '' },
         description: { en: '', ar: '' },
+        icon: null,
       })
     })
 
@@ -274,6 +278,7 @@ describe('CategoriesPage', () => {
       expect(JSON.parse(patch!.data as string)).toEqual({
         name: { en: 'Openers', ar: 'المقبلات' },
         description: { en: '', ar: '' },
+        icon: null,
       })
     })
     expect(await screen.findByText('Category renamed')).toBeInTheDocument()

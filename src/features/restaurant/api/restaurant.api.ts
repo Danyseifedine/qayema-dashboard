@@ -17,6 +17,10 @@ export type RestaurantPayload = {
   country_code: string | null
   phone: string
   currency: string
+  /** One more currency some dishes may be priced in; null for none. */
+  second_currency: string | null
+  /** Main per one second (89000 for main LBP, second USD); null without one. */
+  exchange_rate: string | number | null
   timezone: string
   /** The shifts of each weekday, null for a day the restaurant does not open. */
   opening_hours: Record<string, { open: string; close: string }[] | null>

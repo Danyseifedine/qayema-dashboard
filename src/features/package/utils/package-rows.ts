@@ -17,6 +17,7 @@ export const PACKAGE_ROWS: readonly PackageRow[] = [
   { kind: 'limit', key: 'category_limit', group: 'menu' },
   { kind: 'limit', key: 'social_link_limit', group: 'menu' },
   { kind: 'limit', key: 'writing_help_limit', group: 'menu' },
+  { kind: 'limit', key: 'writing_help_credits', group: 'menu' },
   { kind: 'flag', key: 'multiple_languages', group: 'menu' },
   { kind: 'flag', key: 'variants', group: 'menu' },
   { kind: 'flag', key: 'addons', group: 'menu' },
@@ -25,12 +26,27 @@ export const PACKAGE_ROWS: readonly PackageRow[] = [
   { kind: 'flag', key: 'qr_studio', group: 'guests' },
   { kind: 'flag', key: 'ordering', group: 'guests' },
   { kind: 'flag', key: 'menu_ordering', group: 'guests' },
+  { kind: 'flag', key: 'order_tracking', group: 'guests' },
   { kind: 'flag', key: 'dine_in', group: 'guests' },
+  { kind: 'flag', key: 'dine_in_whatsapp', group: 'guests' },
+  { kind: 'flag', key: 'offers', group: 'guests' },
+  { kind: 'flag', key: 'offer_schedules', group: 'guests' },
+  { kind: 'flag', key: 'offer_discounts', group: 'guests' },
   { kind: 'flag', key: 'analytics', group: 'numbers' },
   { kind: 'flag', key: 'advanced_analytics', group: 'numbers' },
 ]
 
 export const PACKAGE_GROUPS: readonly PackageGroup[] = ['menu', 'look', 'guests', 'numbers']
+
+/**
+ * A package's limit as the owner reads it: no AI uses a day means no AI
+ * credits either, whatever its budget, so a card never says both "No AI
+ * writing help" and "Unlimited AI credits".
+ */
+export function limitOf(pkg: Package, key: PackageLimit): number | null {
+  if (key === 'writing_help_credits' && pkg.features.writing_help_limit === 0) return 0
+  return pkg.features[key]
+}
 
 /** Null is unlimited, so it beats any number. */
 function atLeast(value: number | null, than: number | null): boolean {
@@ -54,7 +70,7 @@ export function highlightsOf(
     previous !== undefined &&
     PACKAGE_ROWS.every((row) =>
       row.kind === 'limit'
-        ? atLeast(pkg.features[row.key], previous.features[row.key])
+        ? atLeast(limitOf(pkg, row.key), limitOf(previous, row.key))
         : pkg.features[row.key] || !previous.features[row.key],
     )
 
@@ -64,7 +80,7 @@ export function highlightsOf(
     base: previous,
     rows: included.filter((row) =>
       row.kind === 'limit'
-        ? pkg.features[row.key] !== previous.features[row.key]
+        ? limitOf(pkg, row.key) !== limitOf(previous, row.key)
         : !previous.features[row.key],
     ),
   }

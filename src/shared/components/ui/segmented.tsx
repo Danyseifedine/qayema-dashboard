@@ -41,8 +41,10 @@ export function Segmented<T extends string>({
     <div
       role="tablist"
       className={cn(
-        'rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-1',
-        block ? 'flex w-full' : 'inline-flex',
+        'rounded-control border-[0.5px] border-[var(--line)] bg-[var(--bg)] p-1',
+        // Never wider than its place: on a narrow phone the options shrink
+        // and their labels wrap rather than spill over each other.
+        block ? 'flex w-full' : 'inline-flex max-w-full',
       )}
       {...aria}
     >
@@ -58,20 +60,22 @@ export function Segmented<T extends string>({
             title={option.title}
             onClick={() => onChange(option.value)}
             className={cn(
-              'inline-flex items-center gap-1.5 whitespace-nowrap rounded-[8px] font-medium',
+              'inline-flex items-center justify-center gap-1.5 rounded-tile text-center leading-tight font-medium',
               'transition-[background-color,color,border-color] duration-200',
-              'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--gold-on)]',
+              'focus-ring',
               size === 'sm' ? 'px-3 py-1 text-[12px]' : 'px-4 py-2 text-[13px]',
-              // Sharing the width evenly, with room for every option on a
-              // narrow phone.
-              block && 'min-w-0 flex-1 justify-center gap-1 px-1.5',
+              // Sharing the width evenly; on a narrow phone a long label
+              // wraps between its words, never inside one.
+              block && 'flex-1 basis-0 gap-1 px-1.5',
               active
                 ? 'bg-accent-wash text-accent'
                 : 'text-[var(--muted)] hover:text-[var(--text)]',
               'disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:text-[var(--muted)]',
             )}
           >
-            {option.label}
+            <span className="[text-wrap:balance]">
+              {option.label}
+            </span>
             {option.icon}
             {option.badge ? (
               <span aria-hidden className="text-[10px] text-accent">

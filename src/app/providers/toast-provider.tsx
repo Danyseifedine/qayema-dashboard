@@ -6,16 +6,14 @@ import { usePreferencesStore } from '@/stores/preferences.store'
  * Mounts the toaster.
  *
  * It sits in the top outer corner, which mirrors with the language: top right
- * in a left-to-right language, top left in a right-to-left one. Colours come from the token layer, so it
- * follows the theme.
+ * in a left-to-right language, top left in a right-to-left one. Colours come from the token layer.
  */
 export function ToastProvider() {
-  const theme = usePreferencesStore((state) => state.theme)
   const locale = usePreferencesStore((state) => state.locale)
 
   return (
     <Toaster
-      theme={theme}
+      theme="dark"
       dir={localeDir(locale)}
       position={localeDir(locale) === 'rtl' ? 'top-left' : 'top-right'}
       closeButton

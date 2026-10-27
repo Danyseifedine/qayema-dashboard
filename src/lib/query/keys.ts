@@ -9,6 +9,7 @@ export const QUERY_ROOTS = {
   analytics: 'analytics',
   categories: 'categories',
   dishes: 'dishes',
+  offers: 'offers',
   restaurant: 'restaurant',
   design: 'design',
   appearance: 'appearance',

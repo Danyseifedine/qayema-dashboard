@@ -3,6 +3,7 @@
   "range": {
     "label": "Range",
     "locked": "Comes with advanced analytics",
+    "turnedOff": "Turned off for your restaurant",
     "options": {
       "today": "Today",
       "7d": "7 days",

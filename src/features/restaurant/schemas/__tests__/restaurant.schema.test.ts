@@ -15,6 +15,9 @@ function valid(): RestaurantFormValues {
     country_code: 'LB',
     phone: '70 123 456',
     currency: 'USD',
+    second_currency: '',
+    rate_one: 'second',
+    rate: null,
     timezone: 'Asia/Beirut',
     opening_hours: {
       mon: OPEN,
@@ -103,12 +106,12 @@ describe('restaurantFormSchema', () => {
     expect(
       problems({
         ...valid(),
-        name: { en: 'x'.repeat(256) },
-        description: { en: 'x'.repeat(2001) },
+        name: { en: 'x'.repeat(61) },
+        description: { en: 'x'.repeat(201) },
       }),
     ).toEqual({
-      'name.en': 'Keep the restaurant name under 255 characters.',
-      'description.en': 'Keep the description under 2000 characters.',
+      'name.en': 'Keep the restaurant name under 60 characters.',
+      'description.en': 'Keep the description under 200 characters.',
     })
   })
 
@@ -129,6 +132,25 @@ describe('restaurantFormSchema', () => {
       country_code: 'Please choose a country from the list.',
       currency: 'Please choose a currency from the list.',
       timezone: 'Choose a timezone.',
+    })
+  })
+
+  it('takes no second currency, or one other than the main one with a rate above 0', () => {
+    expect(problems({ ...valid(), second_currency: null })).toEqual({})
+    expect(problems({ ...valid(), second_currency: 'LBP', rate_one: 'main', rate: 89000 })).toEqual(
+      {},
+    )
+    expect(problems({ ...valid(), second_currency: 'USD', rate: 1 })).toEqual({
+      second_currency: 'Pick a currency other than the main one.',
+    })
+    expect(problems({ ...valid(), second_currency: 'XXX', rate: 1 })).toEqual({
+      second_currency: 'Pick a currency other than the main one.',
+    })
+    expect(problems({ ...valid(), second_currency: 'LBP', rate: null })).toEqual({
+      rate: 'Enter the exchange rate.',
+    })
+    expect(problems({ ...valid(), second_currency: 'LBP', rate: 0 })).toEqual({
+      rate: 'The exchange rate must be more than 0.',
     })
   })
 

@@ -1,5 +1,6 @@
 import { IconLock } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
+import { useTurnedOff } from '@/features/auth'
 import { Segmented } from '@/shared/components/ui'
 import {
   BASIC_RANGES,
@@ -17,11 +18,14 @@ export type RangePickerProps = {
 /** Today, 7 and 30 days for every package; 90 days and all time with advanced analytics. */
 export function RangePicker({ value, onChange, advanced }: RangePickerProps) {
   const { t } = useTranslation('analytics')
+  // Turned off by an admin, no package brings them back.
+  const turnedOff = useTurnedOff('advanced_analytics')
 
   return (
     // The whole width on a phone, five options sharing it; its own width
-    // from a tablet up.
-    <div className="w-full sm:w-auto">
+    // from a tablet up, each option as wide as its label (sharing an
+    // auto width evenly, "30 days" broke onto two lines).
+    <div className="w-full sm:w-auto sm:[&_[role=tab]]:basis-auto sm:[&_[role=tab]]:px-3 sm:[&_[role=tab]]:whitespace-nowrap">
       <Segmented
         block
         aria-label={t('range.label')}
@@ -38,7 +42,7 @@ export function RangePicker({ value, onChange, advanced }: RangePickerProps) {
             icon: locked ? (
               <IconLock aria-hidden className="size-3 max-[359px]:hidden" />
             ) : undefined,
-            title: locked ? t('range.locked') : undefined,
+            title: locked ? t(turnedOff ? 'range.turnedOff' : 'range.locked') : undefined,
           }
         })}
       />

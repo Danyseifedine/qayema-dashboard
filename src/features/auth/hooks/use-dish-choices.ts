@@ -21,3 +21,14 @@ export function useDishChoices(): DishChoices {
 
   return useMemo(() => ({ variants, addons }), [variants, addons])
 }
+
+/**
+ * Whether "build your own" (half and half pizzas) is on: the server's
+ * Restaurant::showsBuilds(). No package has it and the owner cannot switch
+ * it off; an admin turns it on per restaurant. The dish form then lets saved
+ * builds price a dish and points to the Build your own page; while off,
+ * saved builds stay as they are.
+ */
+export function useDishBuilds(): boolean {
+  return Boolean(useSession().data?.restaurant?.plan.build_your_own)
+}

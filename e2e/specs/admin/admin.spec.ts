@@ -131,7 +131,7 @@ async function choose(modal: Locator, option: string): Promise<void> {
 }
 
 /** The restaurant's relation managers, in the order the edit page shows them. */
-const RELATIONS = { 'Extra slots & add-ons': 0, 'Package history': 1 } as const
+const RELATIONS = { 'Extras & overrides': 0, 'Package history': 1 } as const
 
 /**
  * Open a restaurant's edit page on one relation manager (its tab is in the
@@ -529,8 +529,8 @@ test.describe('admin', () => {
     const owner = await scenario({ package: 'free' })
 
     await asAdmin(page, signIn)
-    await openRelation(page, owner.restaurant.id, 'Extra slots & add-ons')
-    await page.getByRole('button', { name: 'Grant slots' }).click()
+    await openRelation(page, owner.restaurant.id, 'Extras & overrides')
+    await page.getByRole('button', { name: 'Add extra or override' }).click()
     const modal = openModal(page)
     await pick(page, modal, 'Feature', 'Dishes')
     await modal.getByLabel('Amount').fill('5')
@@ -568,8 +568,8 @@ test.describe('admin', () => {
     const owner = await scenario({ package: 'free' })
 
     await asAdmin(page, signIn)
-    await openRelation(page, owner.restaurant.id, 'Extra slots & add-ons')
-    await page.getByRole('button', { name: 'Grant slots' }).click()
+    await openRelation(page, owner.restaurant.id, 'Extras & overrides')
+    await page.getByRole('button', { name: 'Add extra or override' }).click()
     const modal = openModal(page)
     await pick(page, modal, 'Feature', 'AI writing help a day')
     await modal.getByLabel('Amount').fill('5')
@@ -584,8 +584,11 @@ test.describe('admin', () => {
     )
     await page.goto('/categories')
     await page.getByRole('button', { name: 'Add your first category' }).click()
-    // Free's 10 a day and the 5 granted.
-    await expect(page.getByRole('dialog').getByText('0/15')).toBeVisible()
+    await page.getByRole('dialog').getByLabel(/^Name/).fill('Soups')
+    // Free's 10 a day and the 5 granted, in the AI button's tooltip.
+    await expect(
+      page.getByRole('dialog').getByRole('button', { name: 'Write with AI' }),
+    ).toHaveAttribute('title', /used 0 of 15 AI uses today/)
   })
 
   test('An add-on: ordering for a Free owner unlocks Orders', async ({
@@ -596,13 +599,16 @@ test.describe('admin', () => {
     const owner = await scenario({ package: 'free' })
 
     await asAdmin(page, signIn)
-    await openRelation(page, owner.restaurant.id, 'Extra slots & add-ons')
-    await page.getByRole('button', { name: 'Grant slots' }).click()
+    await openRelation(page, owner.restaurant.id, 'Extras & overrides')
+    await page.getByRole('button', { name: 'Add extra or override' }).click()
     const modal = openModal(page)
-    await pick(page, modal, 'Feature', 'Ordering')
-    await expect(modal.getByLabel('Amount')).toBeDisabled()
+    await pick(page, modal, 'Feature', 'Orders on WhatsApp')
+    // An on/off feature added is simply on: there is no amount to give.
+    await expect(modal.getByLabel('Amount')).toHaveCount(0)
     await submit(page, modal, 'Create')
-    await expect(page.getByRole('row').filter({ hasText: 'Ordering' })).toContainText('Unlocked')
+    await expect(page.getByRole('row').filter({ hasText: 'Orders on WhatsApp' })).toContainText(
+      'Unlocked',
+    )
 
     await asOwner(page, signIn, owner.user.email)
     await page.goto('/orders')
@@ -613,6 +619,92 @@ test.describe('admin', () => {
         .getByRole('navigation', { name: 'Dashboard' })
         .getByRole('button', { name: 'Delivery and pickup' }),
     ).toHaveAccessibleName('Delivery and pickup')
+  })
+
+  test('An override: Ordering turned off for one Premium restaurant says why on its dashboard', async ({
+    page,
+    scenario,
+    signIn,
+  }) => {
+    // Orders open with either way in: the one in the menu is already off,
+    // and the admin turns off the WhatsApp one here.
+    const owner = await scenario({
+      package: 'premium',
+      order_mode: 'whatsapp',
+      overrides: [{ feature: 'menu_ordering', value: 0 }],
+    })
+
+    await asAdmin(page, signIn)
+    await openRelation(page, owner.restaurant.id, 'Extras & overrides')
+    await page.getByRole('button', { name: 'Add extra or override' }).click()
+    const modal = openModal(page)
+    await pick(page, modal, 'Feature', 'Orders on WhatsApp')
+    await modal.getByText('Set exactly (overrides the package)').click()
+    await choose(modal, 'Off')
+    await modal.getByLabel('Note').fill('Kitchen closed for renovation')
+    await submit(page, modal, 'Create')
+    await expect(page.getByRole('row').filter({ hasText: 'Kitchen closed' })).toContainText(
+      'Turned off',
+    )
+
+    await asOwner(page, signIn, owner.user.email)
+    await page.goto('/orders')
+    await expect(page.getByText('Turned off for your restaurant')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Contact us' })).toBeVisible()
+    // Never offered a package it already has.
+    await expect(page.getByRole('button', { name: 'See packages' })).toHaveCount(0)
+  })
+
+  test('A new package: made in the admin, given to an owner, worn in its own metal', async ({
+    page,
+    scenario,
+    signIn,
+    setPackage,
+  }) => {
+    const slug = `starter-${tag()}`
+    const owner = await scenario({ package: 'free' })
+
+    await asAdmin(page, signIn)
+    await page.goto(`${ADMIN_URL}/packages`)
+    await page.getByRole('link', { name: 'New package' }).click()
+    // It opens on the default package's numbers.
+    await expect(page.getByRole('spinbutton', { name: 'Dishes' })).toHaveValue('40')
+    await page.getByLabel('Name (English)').fill(`Starter ${slug}`)
+    await page.getByLabel('Slug').fill(slug)
+    await page.getByLabel('Crown').click()
+    await page.getByRole('option', { name: 'Silver' }).click()
+    // Off, since every test beside this one shares the packages on offer.
+    await page.getByRole('switch', { name: 'Active' }).click()
+    await page.getByRole('button', { name: 'Create', exact: true }).click()
+    await expect(notification(page, 'Package created')).toBeVisible()
+
+    await setPackage(owner.restaurant.id, { package: slug })
+    await asOwner(page, signIn, owner.user.email)
+    await page.goto('/package')
+    await expect(page.getByRole('heading', { name: `Starter ${slug}` }).first()).toBeVisible()
+    await expect(page.locator('[data-tier]').first()).toHaveAttribute('data-tier', 'silver')
+  })
+
+  test('Its own price: set on the restaurant page, shown on the owner’s Package page', async ({
+    page,
+    scenario,
+    signIn,
+  }) => {
+    const owner = await scenario({ package: 'premium' })
+
+    await asAdmin(page, signIn)
+    await page.goto(`${ADMIN_URL}/restaurants/${owner.restaurant.id}/edit`)
+    await page.getByRole('spinbutton', { name: 'Price a month' }).fill('6.50')
+    await page.getByRole('switch', { name: 'Pays with Whish' }).click()
+    await page.getByRole('button', { name: 'Save changes' }).click()
+    await expect(notification(page, 'Saved')).toBeVisible()
+
+    await asOwner(page, signIn, owner.user.email)
+    await page.goto('/package')
+    const current = page
+      .getByRole('article')
+      .filter({ has: page.getByRole('heading', { name: 'Premium', exact: true }) })
+    await expect(current).toContainText('6.50')
   })
 
   test('A package request from the dashboard is applied from Contact Messages', async ({
@@ -707,9 +799,9 @@ test.describe('admin', () => {
 
     await asAdmin(page, signIn)
     await restaurants(page, word)
-    await restaurantRow(page, owner.restaurant.id)
-      .getByRole('link', { name: 'Log in as owner' })
-      .click()
+    // The rarer row actions sit behind the row's "Actions" menu.
+    await restaurantRow(page, owner.restaurant.id).getByRole('button', { name: 'Actions' }).click()
+    await page.getByRole('menuitem', { name: 'Log in as owner' }).click()
 
     // Impersonation opens the owner's dashboard, which says who is looking.
     await expect(
@@ -719,5 +811,61 @@ test.describe('admin', () => {
       either('Overview', 'نظرة عامة'),
     )
     await expect(page.getByRole('link', { name: new RegExp(owner.restaurant.slug) })).toBeVisible()
+  })
+})
+
+test.describe('AI spending', () => {
+  test('the admin sees what the AI cost, in all and per restaurant', async ({
+    page,
+    scenario,
+    signIn,
+  }, info) => {
+    const word = tag()
+    const busy = await scenario({
+      name: { en: `Busy ${word}` },
+      writing_help_days: [
+        { uses: 12, input_tokens: 36000, output_tokens: 9000, cost: '0.008100' },
+        { days_ago: 3, uses: 40, input_tokens: 120000, output_tokens: 30000, cost: '0.027000' },
+      ],
+    })
+    await scenario({
+      name: { en: `Quiet ${word}` },
+      writing_help_days: [{ uses: 2, input_tokens: 5000, output_tokens: 1200, cost: '0.001100' }],
+    })
+
+    await asAdmin(page, signIn)
+    await page.goto(ADMIN_URL)
+    const card = page
+      .locator('.fi-wi-stats-overview')
+      .filter({ hasText: 'AI writing help, last 30 days' })
+    await expect(card.getByText('AI cost', { exact: true })).toBeVisible()
+    await expect(card).toContainText('today')
+    // The test server has the AI off; the figures still show what it cost.
+    await expect(card).toContainText('Writing help is off')
+    await card.scrollIntoViewIfNeeded()
+    await card.screenshot({ path: info.outputPath('ai-cost-dashboard.png') })
+
+    // Each restaurant's cost in the Restaurants table, the heaviest first.
+    const table = await restaurants(page, word)
+    await page.getByRole('button', { name: 'Column manager' }).click()
+    await page.getByRole('checkbox', { name: 'AI cost (30 days)' }).check()
+    // Filament keeps the choice until it is applied.
+    await page.getByRole('button', { name: 'Apply' }).filter({ visible: true }).click()
+    await expect(table.getByRole('columnheader', { name: 'AI cost (30 days)' })).toBeVisible()
+    await page.getByRole('heading', { level: 1, name: 'Restaurants' }).click()
+    await expect(page.getByRole('checkbox', { name: 'AI cost (30 days)' })).toBeHidden()
+    await expect(table.getByRole('row').filter({ hasText: `Busy ${word}` })).toContainText('$0.04')
+    await expect(table.getByRole('row').filter({ hasText: `Quiet ${word}` })).toContainText(
+      '$0.0011',
+    )
+    await table.screenshot({ path: info.outputPath('ai-cost-restaurants.png') })
+
+    // And on the restaurant's own page, with its tokens.
+    await page.goto(`${ADMIN_URL}/restaurants/${busy.restaurant.id}/edit`)
+    const line = page.getByText('52 in the last 30 days (195,000 tokens, $0.04)')
+    await expect(line).toBeVisible()
+    await line.locator('xpath=ancestor::*[contains(@class,"fi-section")][1]').screenshot({
+      path: info.outputPath('ai-cost-restaurant.png'),
+    })
   })
 })

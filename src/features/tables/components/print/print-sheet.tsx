@@ -1,12 +1,11 @@
-import type { Options } from 'qr-code-styling'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { TableQr } from '@/features/tables/components/list/table-qr'
+import { QrCode, type QrCodeOptions } from '@/features/qr'
 import type { DiningTable } from '@/features/tables/schemas/table.schema'
 
 export type PrintSheetProps = {
   tables: readonly DiningTable[]
-  options: Options
+  options: QrCodeOptions
   /** The card's heading from the QR design, if the owner wrote one. */
   title: string | null
   /** Whether guests can order from the code, which changes what it invites. */
@@ -35,7 +34,12 @@ export function PrintSheet({ tables, options, title, ordering }: PrintSheetProps
               className="rounded-[4mm] p-[3mm]"
               style={{ background: options.backgroundOptions?.color ?? '#FFFFFF' }}
             >
-              <TableQr options={{ ...options, data: table.url }} size={200} label={table.name} />
+              <QrCode
+                options={{ ...options, data: table.url }}
+                size={200}
+                label={table.name}
+                className="w-[200px] max-w-full"
+              />
             </div>
             <p className="text-[12pt] font-semibold">
               {ordering ? t('print.ctaOrder') : t('print.ctaMenu')}

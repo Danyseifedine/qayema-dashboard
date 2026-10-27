@@ -9,7 +9,7 @@ import { reportError } from '@/lib/api/report-error'
  * CORS headers, which the browser shows as no answer at all); `offline` when
  * the phone could not reach it.
  */
-export type Unanswered = 'blocked' | 'offline'
+type Unanswered = 'blocked' | 'offline'
 
 /** A small file Cloudflare keeps: asking for it costs the server nothing. */
 const PROBE = `${env.VITE_API_URL}/favicon.ico`

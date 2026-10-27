@@ -9,19 +9,13 @@ export type TextFieldProps<T extends FieldValues> = {
   control: Control<T>
   name: FieldPath<T>
   label?: ReactNode
-  /**
-   * The accessible name when there is no visible label: a field inside a row
-   * that is already headed, such as one day of the opening hours.
-   */
-  'aria-label'?: string
   placeholder?: string
   hint?: ReactNode
   required?: boolean
   optionalText?: ReactNode
-  disabled?: boolean
   autoComplete?: string
   leadingIcon?: ReactNode
-  /** Shows a live `n / max` counter in the trailing slot. */
+  /** Caps the text; its count shows under the field once it nears the cap. */
   maxLength?: number
   /** Renders a reveal toggle and starts masked. */
   password?: boolean
@@ -37,12 +31,10 @@ export function TextField<T extends FieldValues>({
   control,
   name,
   label,
-  'aria-label': ariaLabel,
   placeholder,
   hint,
   required,
   optionalText,
-  disabled,
   autoComplete,
   leadingIcon,
   maxLength,
@@ -56,12 +48,6 @@ export function TextField<T extends FieldValues>({
   const [revealed, setRevealed] = useState(false)
   const { field, fieldState } = useController({ control, name })
   const value = (field.value as string | null | undefined) ?? ''
-
-  const counter = maxLength ? (
-    <span dir="ltr" className="tabular-nums">
-      {value.length} / {maxLength}
-    </span>
-  ) : null
 
   const reveal = password ? (
     <FieldTrailingButton
@@ -79,6 +65,7 @@ export function TextField<T extends FieldValues>({
       required={required}
       optionalText={optionalText}
       error={fieldState.error?.message}
+      count={maxLength ? { length: value.length, max: maxLength } : undefined}
       className={className}
     >
       {({ id, describedBy, invalid }) => (
@@ -94,15 +81,13 @@ export function TextField<T extends FieldValues>({
           dir={forceLtr ? 'ltr' : undefined}
           className={forceLtr ? 'text-start' : undefined}
           placeholder={placeholder}
-          disabled={disabled}
           autoComplete={autoComplete}
           maxLength={maxLength}
-          aria-label={ariaLabel}
           aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           tone={invalid ? 'error' : 'default'}
           leadingIcon={leadingIcon}
-          trailing={reveal ?? counter}
+          trailing={reveal}
         />
       )}
     </Field>

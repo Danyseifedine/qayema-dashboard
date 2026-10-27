@@ -1,6 +1,7 @@
 import { IconQrcode, IconRefresh, IconToolsKitchen2, IconX } from '@tabler/icons-react'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/components/ui'
+import { Button, Collapse, SectionCard } from '@/shared/components/ui'
 import { useUiStore } from '@/stores/ui.store'
 
 const STEPS = [
@@ -11,66 +12,77 @@ const STEPS = [
 
 /**
  * How Qayema works, in three lines: fill in the menu, put its QR code on the
- * tables, change it any time. Put away by the owner once read (remembered in
- * this browser); the Overview then offers it back.
+ * tables, change it any time. On the same glass card, with the same title,
+ * as the steps beside it. Put away by the owner once read (remembered in
+ * this browser); the Overview then offers it back. Either one slides in as
+ * the other slides away, and the keyboard follows to the one shown.
  */
 export function HowItWorks() {
   const { t } = useTranslation('overview')
   const hidden = useUiStore((state) => state.guideHidden)
   const setHidden = useUiStore((state) => state.setGuideHidden)
+  const showRef = useRef<HTMLButtonElement>(null)
+  const hideRef = useRef<HTMLButtonElement>(null)
 
-  if (hidden) {
-    return (
-      <Button variant="link" size="sm" className="self-start px-0" onClick={() => setHidden(false)}>
-        {t('guide.show')}
-      </Button>
-    )
+  const toggle = (next: boolean) => {
+    setHidden(next)
+    // The button pressed is about to slide away: focus goes to its partner.
+    requestAnimationFrame(() => (next ? showRef : hideRef).current?.focus())
   }
 
   return (
-    <section
-      aria-labelledby="how-it-works"
-      className="rounded-card border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5"
-    >
-      <div className="flex items-start justify-between gap-3 border-b-[0.5px] border-[var(--line-2)] pb-3.5">
-        <div>
-          <h3 id="how-it-works" className="label-caps text-[var(--muted)]">
-            {t('guide.title')}
-          </h3>
-          <p className="mt-1 text-[13px] text-[var(--muted)]">{t('guide.description')}</p>
-        </div>
+    <div className="flex flex-col">
+      <Collapse open={hidden}>
         <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 shrink-0"
-          aria-label={t('guide.hide')}
-          onClick={() => setHidden(true)}
+          ref={showRef}
+          variant="link"
+          size="sm"
+          className="px-0"
+          onClick={() => toggle(false)}
         >
-          <IconX aria-hidden className="size-4" />
+          {t('guide.show')}
         </Button>
-      </div>
-
-      <ol className="mt-4 flex flex-col gap-4">
-        {STEPS.map(({ key, icon: Icon }, index) => (
-          <li key={key} className="flex gap-3">
-            <span
-              aria-hidden
-              className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-accent-wash text-accent"
+      </Collapse>
+      <Collapse open={!hidden}>
+        <SectionCard
+          title={t('guide.title')}
+          description={t('guide.description')}
+          action={
+            <Button
+              ref={hideRef}
+              variant="ghost"
+              size="icon-sm"
+              className="-me-1.5 shrink-0 text-[var(--muted)]"
+              aria-label={t('guide.hide')}
+              onClick={() => toggle(true)}
             >
-              <Icon className="size-[18px]" />
-            </span>
-            <div>
-              <p className="text-[13.5px] font-medium text-[var(--text)]">
-                <span className="text-[var(--muted)]">{index + 1}. </span>
-                {t(`guide.steps.${key}.title`)}
-              </p>
-              <p className="text-[12.5px] leading-snug text-[var(--muted)]">
-                {t(`guide.steps.${key}.body`)}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </section>
+              <IconX aria-hidden className="size-4" />
+            </Button>
+          }
+        >
+          <ol className="flex flex-col gap-3">
+            {STEPS.map(({ key, icon: Icon }, index) => (
+              <li key={key} className="inset-tile flex items-start gap-3 rounded-tile p-3">
+                <span
+                  aria-hidden
+                  className="grid size-9 shrink-0 place-items-center rounded-tile bg-accent-wash text-accent"
+                >
+                  <Icon className="size-[18px]" stroke={1.7} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[13.5px] font-medium text-[var(--text)]">
+                    <span className="text-[var(--muted)] tabular-nums">{index + 1}. </span>
+                    {t(`guide.steps.${key}.title`)}
+                  </p>
+                  <p className="mt-0.5 text-[12.5px] leading-snug text-[var(--muted)]">
+                    {t(`guide.steps.${key}.body`)}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </SectionCard>
+      </Collapse>
+    </div>
   )
 }

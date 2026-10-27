@@ -1,19 +1,78 @@
-import { useMutation } from '@tanstack/react-query'
+import { useIsMutating, useMutation } from '@tanstack/react-query'
 import { createContext, useContext } from 'react'
 import { z } from 'zod'
 import { request } from '@/lib/api'
 import { t } from '@/lib/i18n'
 import { toast } from '@/shared/components/feedback'
 import type { ApiError } from '@/shared/types/api'
+import { todayDay } from '@/shared/utils/format/date'
 
-/** The uses a day and those left; null for no daily cap. */
-export type WritingHelpUses = { limit: number | null; left: number | null }
+/** What the owner asks the AI for, each at its own price in credits. */
+export type WritingHelpAction = 'translation' | 'description'
+
+/**
+ * The month's AI credits: how many and those left (null for no cap), the
+ * day they come back ("YYYY-MM-DD") and each action's price. Never money.
+ */
+export type WritingHelpCredits = {
+  limit: number | null
+  left: number | null
+  resets_on: string
+  prices: Record<WritingHelpAction, number>
+}
+
+/**
+ * The uses a day and those left (null for no daily cap), and the month's
+ * credits (null from a server from before them).
+ */
+export type WritingHelpUses = {
+  limit: number | null
+  left: number | null
+  credits: WritingHelpCredits | null
+}
+
+/** What an answer or a refusal says is left: the day's uses, the month's credits, or both. */
+export type WritingHelpLeft = { uses?: number | null; credits?: number | null }
+
+/** `uses` with what an answer or a refusal says is left; a count it does not give is kept. */
+export function withLeft<T extends WritingHelpUses>(uses: T, left: WritingHelpLeft): T {
+  const credits =
+    uses.credits && left.credits !== undefined
+      ? { ...uses.credits, left: left.credits }
+      : uses.credits
+  return { ...uses, left: left.uses === undefined ? uses.left : left.uses, credits }
+}
+
+/**
+ * Whether the month's credits are short of what `action` costs. Once their
+ * day comes (a tab left open from the month before), they are taken as back:
+ * the server, which has them again, has the last word.
+ */
+function monthShort(credits: WritingHelpCredits | null, action: WritingHelpAction): boolean {
+  return (
+    credits?.left != null && credits.left < credits.prices[action] && todayDay() < credits.resets_on
+  )
+}
+
+/**
+ * Why `action` cannot run now: the month's credits do not cover it, or the
+ * day's uses are spent; null when it can. The month first: its date is the
+ * later, so it is the one worth saying. The server refuses the same.
+ */
+export function spentFor(
+  uses: WritingHelpUses | null,
+  action: WritingHelpAction,
+): 'day' | 'month' | null {
+  if (uses === null) return null
+  if (monthShort(uses.credits, action)) return 'month'
+  return uses.left === 0 ? 'day' : null
+}
 
 type WritingHelpState = {
   /** Null while the restaurant has no writing help: no buttons. */
   uses: WritingHelpUses | null
   /** What is left now, after a use or a refusal. */
-  setLeft: (left: number | null) => void
+  setLeft: (left: WritingHelpLeft) => void
   /**
    * "Come back tomorrow" is said once on a screen, not under every field:
    * fields whose buttons are spent queue for it, and the first one says it.
@@ -35,16 +94,20 @@ export function useWritingHelp(): WritingHelpState {
   return useContext(WritingHelpContext)
 }
 
-const answerSchema = z.object({
-  data: z.object({ text: z.string(), left: z.number().int().nullable() }),
-})
+const left = {
+  left: z.number().int().nullable(),
+  // Missing from a server from before the credits: the count is kept.
+  credits_left: z.number().int().nullable().optional(),
+}
 
-type TranslateInput = {
-  text: string
-  from: string
-  to: string
-  /** The field's own limit, which the translation keeps to. */
-  max?: number
+const answerSchema = z.object({ data: z.object({ text: z.string(), ...left }) })
+
+const listAnswerSchema = z.object({ data: z.object({ texts: z.array(z.string()), ...left }) })
+
+/** A piece of text, the way it goes, and the limit of the field it goes into (kept to). */
+export type TranslationPiece = { text: string; from: string; to: string; max?: number }
+
+type TranslateInput = TranslationPiece & {
   /** The description it is: one the AI wrote keeps that length in the other language. */
   fit?: 'category' | 'restaurant'
 }
@@ -63,8 +126,8 @@ type DescribeInput =
 
 /**
  * The writing help (`POST /api/writing/*`, see ../qayema WritingHelpController).
- * Each answers with text for the form and the uses left today, which every
- * AI button shows; nothing is saved until the owner saves, so only a failure
+ * Each answers with text for the form, the uses left today and the credits
+ * left this month, which every AI button shows; nothing is saved until the owner saves, so only a failure
  * toasts (the server's words: none left today, busy, or try again).
  */
 export function useTranslateText() {
@@ -77,8 +140,43 @@ export function useTranslateText() {
         url: '/api/writing/translate',
         data: input,
       })
-      setLeft(data.left)
+      setLeft({ uses: data.left, credits: data.credits_left })
       return data.text
+    },
+    onError: (error) => failed(t('writing.translateFailed'), error, setLeft),
+  })
+}
+
+const TRANSLATE_MANY = ['writing-help', 'translate-many'] as const
+
+/**
+ * Whether a list is being translated anywhere on the screen: a dish's save
+ * and its "Translate all names" wait for each other, since the server runs
+ * one AI request a restaurant at a time and would answer the second "busy".
+ */
+export function useTranslatingMany(): boolean {
+  return useIsMutating({ mutationKey: TRANSLATE_MANY }) > 0
+}
+
+/**
+ * Many pieces in one go (`POST /api/writing/translate-many`): every text a
+ * dish's or a category's save leaves in one language (useTranslateOnSave),
+ * or the variants' and add-ons' "Translate all names". One use of the day
+ * for the lot; the answers come back in the order sent.
+ */
+export function useTranslateMany() {
+  const { setLeft } = useWritingHelp()
+
+  return useMutation<string[], ApiError, TranslationPiece[]>({
+    mutationKey: TRANSLATE_MANY,
+    mutationFn: async (items) => {
+      const { data } = await request(listAnswerSchema, {
+        method: 'POST',
+        url: '/api/writing/translate-many',
+        data: { items },
+      })
+      setLeft({ uses: data.left, credits: data.credits_left })
+      return data.texts
     },
     onError: (error) => failed(t('writing.translateFailed'), error, setLeft),
   })
@@ -94,19 +192,23 @@ export function useWriteDescription() {
         url: `/api/writing/${kind}-description`,
         data: body,
       })
-      setLeft(data.left)
+      setLeft({ uses: data.left, credits: data.credits_left })
       return data.text
     },
     onError: (error) => failed(t('writing.writeFailed'), error, setLeft),
   })
 }
 
-function failed(fallback: string, error: ApiError, setLeft: (left: number) => void) {
-  // The day's uses are spent (another tab may have used the last): the
-  // buttons lock, and the server's words say when they are back, where the
-  // usual rate-limit line would count the seconds until tomorrow.
+function failed(fallback: string, error: ApiError, setLeft: (left: WritingHelpLeft) => void) {
+  // The day's uses are spent, or the month's credits do not cover this
+  // (another tab may have used the last): the buttons lock, and the
+  // server's words say when they are back, where the usual rate-limit line
+  // would count the seconds until then.
   if (error.code === 'writing_help_limit') {
-    setLeft(0)
+    setLeft({ uses: 0 })
+    toast.error(error.message)
+  } else if (error.code === 'writing_help_credits') {
+    setLeft({ credits: error.creditsLeft ?? 0 })
     toast.error(error.message)
   } else {
     toast.error(fallback, error)

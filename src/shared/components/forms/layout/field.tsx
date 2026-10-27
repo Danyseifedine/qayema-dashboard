@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react'
 import { HelperText, Label } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
+import { isNearLimit } from '@/shared/utils/limits/is-near-limit'
 
 export type FieldProps = {
   label?: ReactNode
@@ -16,12 +17,26 @@ export type FieldProps = {
   hint?: ReactNode
   /** When set, the control renders in its error tone and this replaces the hint. */
   error?: string
+  /** The text's length and limit: a count shows under the control once it nears the limit. */
+  count?: { length: number; max: number }
   className?: string
   /**
    * Receives the ids the control must carry so the label, hint and error are
    * announced by screen readers.
    */
   children: (ids: { id: string; describedBy: string | undefined; invalid: boolean }) => ReactNode
+}
+
+/** "245 / 255" at the end of the line under a field, only once the text nears its limit. */
+export function CharacterCount({ length, max }: { length: number; max: number }) {
+  if (!isNearLimit(length, max)) return null
+  return (
+    <HelperText className="shrink-0 tabular-nums">
+      <span dir="ltr">
+        {length} / {max}
+      </span>
+    </HelperText>
+  )
 }
 
 /**
@@ -36,6 +51,7 @@ export function Field({
   required,
   hint,
   error,
+  count,
   className,
   children,
 }: FieldProps) {
@@ -58,13 +74,18 @@ export function Field({
 
       {children({ id, describedBy, invalid })}
 
-      {invalid ? (
-        <HelperText id={errorId} tone="error">
-          {error}
-        </HelperText>
-      ) : hint ? (
-        <HelperText id={hintId}>{hint}</HelperText>
-      ) : null}
+      <div className="flex items-start justify-between gap-3 empty:hidden">
+        {invalid ? (
+          <HelperText id={errorId} tone="error" className="min-w-0">
+            {error}
+          </HelperText>
+        ) : hint ? (
+          <HelperText id={hintId} className="min-w-0">
+            {hint}
+          </HelperText>
+        ) : null}
+        {count ? <CharacterCount length={count.length} max={count.max} /> : null}
+      </div>
     </div>
   )
 }

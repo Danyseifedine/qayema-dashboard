@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import type { Restaurant } from '@/features/restaurant'
-import { makeDish } from '@/test/factories/menu'
 import { menuChecklist, setupSteps } from '@/features/overview/utils/menu-checklist-items'
 
 const CLOSED = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null }
@@ -15,6 +14,8 @@ function settings(overrides: Partial<Restaurant> = {}): Restaurant {
     phone: null,
     country_code: null,
     currency: 'USD',
+    second_currency: null,
+    exchange_rate: null,
     opening_hours: CLOSED,
     timezone: 'Asia/Beirut',
     logo_url: null,
@@ -27,6 +28,7 @@ const EMPTY = {
   dishes: { used: 0, limit: 40 },
   categories: { used: 0, limit: 10 },
   social_links: { used: 0, limit: 2 },
+  builds: { used: 0, limit: 3 },
 }
 
 const done = (items: ReturnType<typeof menuChecklist>) =>
@@ -34,7 +36,9 @@ const done = (items: ReturnType<typeof menuChecklist>) =>
 
 describe('menuChecklist', () => {
   it('has everything to do on a new menu', () => {
-    expect(done(menuChecklist({ settings: settings(), dishes: [], limits: EMPTY }))).toEqual([])
+    expect(done(menuChecklist({ settings: settings(), limits: EMPTY, withoutPhoto: 0 }))).toEqual(
+      [],
+    )
   })
 
   it('ticks off what the restaurant has filled in', () => {
@@ -45,8 +49,8 @@ describe('menuChecklist', () => {
         opening_hours: { ...CLOSED, fri: [{ open: '12:00', close: '23:00' }] },
         phone: '+96170000000',
       }),
-      dishes: [makeDish({ image_url: 'https://cdn.test/a.webp' })],
       limits: { ...EMPTY, dishes: { used: 1, limit: 40 }, categories: { used: 1, limit: 10 } },
+      withoutPhoto: 0,
     })
 
     expect(done(items)).toEqual([
@@ -63,8 +67,8 @@ describe('menuChecklist', () => {
   it('treats blank text as missing', () => {
     const items = menuChecklist({
       settings: settings({ description: { en: '   ', ar: '' }, google_maps_url: ' ' }),
-      dishes: [],
       limits: EMPTY,
+      withoutPhoto: 0,
     })
 
     expect(done(items)).not.toContain('description')
@@ -74,12 +78,8 @@ describe('menuChecklist', () => {
   it('counts the dishes that still need a photo', () => {
     const items = menuChecklist({
       settings: settings(),
-      dishes: [
-        makeDish({ image_url: null }),
-        makeDish({ image_url: null }),
-        makeDish({ image_url: 'https://cdn.test/b.webp' }),
-      ],
-      limits: EMPTY,
+      limits: { ...EMPTY, dishes: { used: 3, limit: 40 } },
+      withoutPhoto: 2,
     })
 
     const photos = items.find((item) => item.id === 'photos')!
@@ -89,7 +89,7 @@ describe('menuChecklist', () => {
   })
 
   it('does not call photos done when there are no dishes', () => {
-    const photos = menuChecklist({ settings: settings(), dishes: [], limits: EMPTY }).find(
+    const photos = menuChecklist({ settings: settings(), limits: EMPTY, withoutPhoto: 0 }).find(
       (item) => item.id === 'photos',
     )!
 
@@ -98,7 +98,9 @@ describe('menuChecklist', () => {
   })
 
   it('groups the checklist into three steps, in the order an owner goes', () => {
-    const steps = setupSteps(menuChecklist({ settings: settings(), dishes: [], limits: EMPTY }))
+    const steps = setupSteps(
+      menuChecklist({ settings: settings(), limits: EMPTY, withoutPhoto: 0 }),
+    )
 
     expect(steps.map((step) => step.id)).toEqual(['restaurant', 'menu', 'share'])
     expect(steps[0]!.items.map((item) => item.id)).toEqual([
@@ -117,8 +119,8 @@ describe('menuChecklist', () => {
   it('marks a step done once all its items are, and leaves out an empty one', () => {
     const items = menuChecklist({
       settings: settings(),
-      dishes: [],
       limits: { ...EMPTY, social_links: { used: 1, limit: 2 } },
+      withoutPhoto: 0,
     })
 
     const share = setupSteps(items).find((step) => step.id === 'share')!

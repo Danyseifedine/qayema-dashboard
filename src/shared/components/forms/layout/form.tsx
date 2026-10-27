@@ -1,4 +1,5 @@
 import type { ComponentProps, ReactNode } from 'react'
+import { SectionCard } from '@/shared/components/ui/section-card'
 import { cn } from '@/shared/utils/dom/cn'
 
 /** The form element itself. Submission is wired by the caller's RHF handler. */
@@ -11,33 +12,30 @@ export function Form({ className, children, ...props }: ComponentProps<'form'>) 
 }
 
 /**
- * A titled group of fields inside a longer form, on the dashboard's glass
- * card with its title as the other cards write theirs (`SectionCard`).
- *
- * It draws its own panel. A page of plain stacked fields gives an eye nothing
- * to hold on to: the heading of one group sits as close to the last field of
- * the previous group as its own fields do, so everything reads as one wall.
+ * A titled group of fields inside a longer form: a `SectionCard`, its
+ * fields stacked. A page of plain stacked fields gives an eye
+ * nothing to hold on to; a card per group keeps them apart.
  */
 export function FormSection({
+  icon,
   title,
   description,
+  action,
   children,
 }: {
+  /** Its gold mark beside the title, as on the other settings cards. */
+  icon?: ReactNode
   title: ReactNode
   description?: ReactNode
+  /** A small control at the end of the title row, e.g. a close button. */
+  action?: ReactNode
   children: ReactNode
 }) {
   return (
-    <section className="flex flex-col glass-card rounded-card p-3.5 sm:p-4">
-      <div className="flex flex-col gap-1 pb-1.5">
-        <h3 className="font-display text-[20px] leading-tight">{title}</h3>
-        {description ? (
-          <p className="text-[12.5px] leading-snug text-[var(--muted)]">{description}</p>
-        ) : null}
-      </div>
+    <SectionCard icon={icon} title={title} description={description} action={action}>
       {/* Fields bring their own top padding, so the gap here is the extra. */}
-      <div className="flex flex-col gap-3 pt-2">{children}</div>
-    </section>
+      <div className="-mt-2 flex flex-col gap-3">{children}</div>
+    </SectionCard>
   )
 }
 

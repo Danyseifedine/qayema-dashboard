@@ -54,8 +54,8 @@ MySQL) and Vite on **5174**. It rebuilds the e2e database first
   test.
 - Every test builds its own owner, so tests share nothing and run in parallel.
   No retries: a flaky test is a bug.
-- Projects: `desktop` runs everything; `phone`, `arabic-rtl` and `dark` re-run
-  the flows tagged `@matrix`; `visual` and `visual-phone` compare the
+- Projects: `desktop` runs everything; `phone` and `arabic-rtl` re-run the
+  flows tagged `@matrix`; `visual` and `visual-phone` compare the
   screenshots in `e2e/snapshots`.
 - Specs: `e2e/specs/{dashboard,public,admin,quality}`; shared helpers in
   `e2e/support/helpers.ts`; the config is `e2e/playwright.config.ts`.

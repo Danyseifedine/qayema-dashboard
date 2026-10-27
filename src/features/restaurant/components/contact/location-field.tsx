@@ -1,9 +1,8 @@
-import { IconExternalLink, IconCurrentLocation, IconMapPin } from '@tabler/icons-react'
+import { IconCurrentLocation, IconMapPin } from '@tabler/icons-react'
 import type { Control, FieldValues, FieldPath } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { UrlField } from '@/shared/components/forms'
-import { Button, HelperText } from '@/shared/components/ui'
-import { cn } from '@/shared/utils/dom/cn'
+import { Button, ExternalLink, HelperText } from '@/shared/components/ui'
 import {
   googleMapsUrlFor,
   mapEmbedUrlFor,
@@ -59,21 +58,7 @@ export function LocationField<T extends FieldValues>({
           {locating ? t('location.finding') : t('location.useCurrent')}
         </Button>
 
-        {value ? (
-          <a
-            href={value}
-            target="_blank"
-            rel="noreferrer noopener"
-            className={cn(
-              'inline-flex items-center gap-1.5 text-[12.5px] text-[var(--muted)]',
-              'hover:text-accent hover:underline',
-              'focus-ring',
-            )}
-          >
-            {t('location.openInMaps')}
-            <IconExternalLink aria-hidden className="size-3" />
-          </a>
-        ) : null}
+        {value ? <ExternalLink href={value}>{t('location.openInMaps')}</ExternalLink> : null}
       </div>
 
       {error ? <HelperText tone="error">{error}</HelperText> : null}
@@ -97,7 +82,7 @@ export function LocationField<T extends FieldValues>({
                navigation stay blocked. */
             // eslint-disable-next-line react/iframe-missing-sandbox -- third-party frame; see above
             sandbox="allow-scripts allow-same-origin"
-            className="h-[180px] w-full rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--field)]"
+            className="h-[180px] w-full rounded-card border-[0.5px] border-[var(--line)] bg-[var(--field)]"
           />
           <figcaption className="force-ltr flex items-center gap-1.5 text-[12px] text-[var(--muted)]">
             <IconMapPin aria-hidden className="size-3" />

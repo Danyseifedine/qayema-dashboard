@@ -4,7 +4,7 @@ import { Money } from '@/shared/components/data-display'
 import { Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
-import { translated } from '@/shared/utils/string/translated'
+import { nameOr, translated } from '@/shared/utils/string/translated'
 import { useRowText } from '@/features/package/hooks/use-row-text'
 import type { Package } from '@/features/package/schemas/package.schema'
 import { highlightsOf } from '@/features/package/utils/package-rows'
@@ -15,6 +15,12 @@ export type PackageCardProps = {
   previous: Package | undefined
   /** True when this is the package the restaurant is on. */
   current: boolean
+  /**
+   * What this restaurant pays for the package, in cents, when an admin set
+   * it a price of its own; shown in place of the published one. Null or
+   * left out: the published price.
+   */
+  yourPriceCents?: number | null
   locale: Locale
   onRequest: () => void
 }
@@ -26,27 +32,33 @@ export type PackageCardProps = {
  * packages by hand. The default package needs no action at all, since every
  * restaurant already has it.
  */
-export function PackageCard({ pkg, previous, current, locale, onRequest }: PackageCardProps) {
+export function PackageCard({
+  pkg,
+  previous,
+  current,
+  yourPriceCents = null,
+  locale,
+  onRequest,
+}: PackageCardProps) {
   const { t } = useTranslation('package')
   const rowText = useRowText()
-  const name = translated(pkg.name, locale)
+  const name = nameOr(pkg.name, locale, pkg.slug)
   const description = translated(pkg.description, locale)
   const { base, rows } = highlightsOf(pkg, previous)
   // The admin's own lines (Custom: a design of their own...), in the
   // reader's language or English; otherwise what the package adds.
   const written =
     locale === 'ar' && pkg.highlights.ar.length > 0 ? pkg.highlights.ar : pkg.highlights.en
-  const baseName = base ? translated(base.name, locale) : null
+  const priceCents = yourPriceCents ?? pkg.price_cents
 
   return (
     <article
       className={cn(
-        'relative flex flex-col rounded-card border-[0.5px] bg-[var(--surface)] p-4',
+        'relative flex flex-col glass-card rounded-card p-4',
+        // The package in use wears a gold ring, as the design in use does.
         current
-          ? 'border-gold shadow-[0_0_0_1px_var(--color-gold)]'
-          : pkg.is_featured
-            ? 'border-accent-border'
-            : 'border-[var(--line)]',
+          ? 'shadow-[0_0_0_1.5px_var(--color-gold),var(--card-lift)]'
+          : pkg.is_featured && 'border-[0.5px] border-accent-border',
       )}
     >
       {pkg.is_featured ? (
@@ -56,25 +68,22 @@ export function PackageCard({ pkg, previous, current, locale, onRequest }: Packa
         </span>
       ) : null}
 
-      <h3 className="font-display text-[17px] leading-tight">
-        {name.missing ? pkg.slug : name.text}
-      </h3>
+      <h3 className="font-display text-[17px] leading-tight">{name}</h3>
 
       <p className="mt-2 flex items-baseline gap-1.5">
-        {pkg.price_cents === null ? (
+        {priceCents === null ? (
           <span className="font-display text-[24px] leading-none text-accent">
             {t('card.letsTalk')}
           </span>
-        ) : pkg.price_cents === 0 ? (
+        ) : priceCents === 0 ? (
           <span className="font-display text-[24px] leading-none text-accent">
             {t('card.free')}
           </span>
         ) : (
           <>
             <Money
-              amount={pkg.price_cents / 100}
+              amount={priceCents / 100}
               currency={pkg.currency}
-              locale={locale}
               className="font-display text-[24px] leading-none text-accent"
             />
             <span className="text-[12px] text-[var(--muted)]">{t('card.perMonth')}</span>
@@ -87,8 +96,8 @@ export function PackageCard({ pkg, previous, current, locale, onRequest }: Packa
       ) : null}
 
       <p className="mt-3 text-[12px] font-medium text-[var(--muted)]">
-        {base && baseName
-          ? t('card.everythingIn', { name: baseName.missing ? base.slug : baseName.text })
+        {base
+          ? t('card.everythingIn', { name: nameOr(base.name, locale, base.slug) })
           : t('card.includes')}
       </p>
       <ul className="mt-1.5 flex flex-col gap-1.5">

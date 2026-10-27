@@ -37,6 +37,34 @@ describe('RequestPackageDialog', () => {
     expect(mock.history.post).toHaveLength(0)
   })
 
+  it('opens with the words and the note it is given, and sends that note', async () => {
+    mock.onPost('/api/packages/request').reply(201)
+    const user = userEvent.setup()
+    renderWithProviders(
+      <RequestPackageDialog
+        open
+        pkg={PRO}
+        locale="en"
+        onClose={vi.fn()}
+        title="Ask us to turn it back on"
+        description="We will read this."
+        message="Please turn Analytics back on."
+      />,
+    )
+
+    expect(screen.getByText('Ask us to turn it back on')).toBeInTheDocument()
+    expect(screen.getByText('We will read this.')).toBeInTheDocument()
+    expect(screen.queryByText('Ask about Pro')).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox')).toHaveValue('Please turn Analytics back on.')
+
+    await user.click(screen.getByRole('button', { name: 'Send request' }))
+    await waitFor(() => expect(mock.history.post).toHaveLength(1))
+    expect(JSON.parse(mock.history.post[0]!.data as string)).toEqual({
+      package: 'pro',
+      message: 'Please turn Analytics back on.',
+    })
+  })
+
   it('closes on Escape, on the backdrop and on Cancel, but not on a click inside', async () => {
     const onClose = vi.fn()
     const user = userEvent.setup()

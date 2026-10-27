@@ -14,8 +14,8 @@ export type SwitchProps = {
 /**
  * 38x22 track with an 18px knob, as `.ui-switch` in the portal. The portal
  * positions the knob with a physical `left`, which does not mirror in Arabic;
- * this one uses a logical inset so RTL works. The knob is white in both
- * themes: a dark-surface knob on the gold track reads as a hole, not a knob.
+ * this one uses a logical inset so RTL works. The knob is white: a
+ * dark-surface knob on the gold track reads as a hole, not a knob.
  */
 export function Switch({
   checked,

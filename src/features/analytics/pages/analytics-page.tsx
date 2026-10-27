@@ -94,6 +94,7 @@ function Summary({
         channel={summary.order_channel}
         previous={previous}
         showToday={!today}
+        locale={locale}
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -108,6 +109,7 @@ function Summary({
         <FormSection title={t('arrive.title')}>
           <RankedList
             aria-label={t('arrive.title')}
+            locale={locale}
             empty={t('arrive.empty')}
             items={
               totals.views === 0
@@ -144,7 +146,11 @@ function Advanced({ insights, locale }: { insights: AdvancedStats; locale: Local
       </FormSection>
 
       <FormSection title={t('actions.title')} description={t('actions.description')}>
-        <GuestActions actions={insights.actions} takesOrders={insights.funnel !== null} />
+        <GuestActions
+          actions={insights.actions}
+          takesOrders={insights.funnel !== null}
+          locale={locale}
+        />
       </FormSection>
 
       {/* Only for orders placed in the menu; WhatsApp ordering has no totals. */}
@@ -153,13 +159,14 @@ function Advanced({ insights, locale }: { insights: AdvancedStats; locale: Local
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {insights.funnel ? (
           <FormSection title={t('funnel.title')}>
-            <OrderFunnel funnel={insights.funnel} />
+            <OrderFunnel funnel={insights.funnel} locale={locale} />
           </FormSection>
         ) : null}
         {insights.funnel !== null ? (
           <FormSection title={t('topAdded.title')}>
             <RankedList
               aria-label={t('topAdded.title')}
+              locale={locale}
               empty={t('topAdded.empty')}
               items={insights.top_added.map((dish) => ({
                 id: dish.name,
@@ -172,6 +179,7 @@ function Advanced({ insights, locale }: { insights: AdvancedStats; locale: Local
         <FormSection title={t('topCategories.title')}>
           <RankedList
             aria-label={t('topCategories.title')}
+            locale={locale}
             empty={t('topCategories.empty')}
             items={insights.top_categories.map((category) => ({
               id: category.name,
@@ -183,6 +191,7 @@ function Advanced({ insights, locale }: { insights: AdvancedStats; locale: Local
         <FormSection title={t('searches.title')}>
           <RankedList
             aria-label={t('searches.title')}
+            locale={locale}
             empty={t('searches.empty')}
             items={insights.searches.map((search) => ({
               id: search.term,
@@ -194,6 +203,7 @@ function Advanced({ insights, locale }: { insights: AdvancedStats; locale: Local
         <FormSection title={t('missed.title')} description={t('missed.description')}>
           <RankedList
             aria-label={t('missed.title')}
+            locale={locale}
             empty={t('missed.empty')}
             items={insights.missed_searches.map((search) => ({
               id: search.term,
@@ -205,6 +215,7 @@ function Advanced({ insights, locale }: { insights: AdvancedStats; locale: Local
         <FormSection title={t('languages.title')} description={t('languages.description')}>
           <RankedList
             aria-label={t('languages.title')}
+            locale={locale}
             empty={t('languages.empty')}
             items={languageItems(insights.languages)}
           />

@@ -1,5 +1,29 @@
 import { describe, expect, it } from 'vitest'
-import { requestPackageFormSchema } from '@/features/package/schemas/package.schema'
+import {
+  packageListSchema,
+  requestPackageFormSchema,
+} from '@/features/package/schemas/package.schema'
+import { PACKAGE_CATALOGUE } from '@/test/factories/packages'
+
+describe('packageListSchema', () => {
+  it("reads the restaurant's own price for its package", () => {
+    const list = packageListSchema.parse({
+      data: PACKAGE_CATALOGUE,
+      meta: { current: 'pro', your_price_cents: 450 },
+    })
+    expect(list.meta.your_price_cents).toBe(450)
+  })
+
+  it('takes the published price when there is no price of its own, or no field at all', () => {
+    expect(
+      packageListSchema.parse({ data: [], meta: { current: 'free', your_price_cents: null } }).meta
+        .your_price_cents,
+    ).toBeNull()
+    expect(
+      packageListSchema.parse({ data: [], meta: { current: 'free' } }).meta.your_price_cents,
+    ).toBeNull()
+  })
+})
 
 describe('requestPackageFormSchema', () => {
   it('trims the note', () => {

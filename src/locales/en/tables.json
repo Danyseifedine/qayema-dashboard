@@ -9,8 +9,8 @@
     "manage": "Manage your table QR codes",
     "emptyTitle": "No tables yet",
     "emptyDescription": "Add your tables to get a QR code for each one. Print the cards and put one on every table.",
-    "notOrderingTitle": "Ordering at the table is switched off",
-    "notOrderingBody": "Guests can open your menu from these codes, but can't order to their table. Switch it on in Features.",
+    "notOrderingTitle": "Guests can't order to their table",
+    "notOrderingBody": "Guests can open your menu from these codes, but can't order to their table: it is switched off in Features, or table orders go to WhatsApp and your restaurant has no WhatsApp number yet.",
     "openFeatures": "Open Features",
     "atLimit": "You have {{limit}} tables, the most a restaurant can have.",
     "newCodeTitle": "New code for {{name}}?",
@@ -54,8 +54,7 @@
     "addMany_other": "Add {{count}} tables",
     "renameTitle": "Rename table",
     "renameDescription": "The table keeps its QR code, so the card already on it still works.",
-    "save": "Save",
-    "cancel": "Cancel"
+    "save": "Save"
   },
   "print": {
     "ctaOrder": "Scan to see the menu and order",

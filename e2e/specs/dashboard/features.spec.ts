@@ -104,6 +104,32 @@ test.describe('features', () => {
     await expect(analyticsRow).toBeVisible()
   })
 
+  test('a package with only some ways of ordering shows just those', async ({ page, owner }) => {
+    // Orders in the menu without WhatsApp; table orders on WhatsApp without the menu.
+    await owner({
+      package: 'premium',
+      order_mode: 'whatsapp',
+      overrides: [
+        { feature: 'ordering', value: 0 },
+        { feature: 'dine_in', value: 0 },
+      ],
+    })
+    await page.goto('/features')
+
+    // With one way there is nothing to pick: the way is named, the other left out.
+    const field = (label: RegExp) =>
+      page.locator('label', { hasText: label }).locator('xpath=../..')
+    const orders = field(/How guests send orders|كيف يرسل الزبائن الطلبات/)
+    // The only way left is the way, whatever was chosen before.
+    await expect(orders).toContainText(/Dashboard|لوحة التحكم/)
+    await expect(orders).not.toContainText(/WhatsApp|واتساب/)
+
+    const tables = field(/Where table orders go|إلى أين تذهب طلبات الطاولات/)
+    await expect(tables).toContainText(/WhatsApp|واتساب/)
+    await expect(tables).not.toContainText(/Dashboard|لوحة التحكم/)
+    await expect(page.getByRole('tablist', { name: /orders|طلبات/ })).toHaveCount(0)
+  })
+
   test('each of the six switches goes off and on, and survives a reload', async ({
     page,
     owner,
@@ -281,20 +307,15 @@ test.describe('features', () => {
     await owner({ package: 'free' })
     await page.goto('/features')
 
-    await expect(page.getByRole('switch')).toHaveCount(SWITCHES.length)
-    // Each names the first package that has it.
+    // Nothing on this page is in Free: no switch at all, but for each
+    // feature the first package that has it, and the way there.
+    await expect(page.getByRole('switch')).toHaveCount(0)
     await expect(
       page.getByRole('button', { name: 'Available on Premium. See packages' }),
     ).toHaveCount(3)
     await expect(page.getByRole('button', { name: 'Available on Pro. See packages' })).toHaveCount(
       4,
     )
-    // Nothing on this page is in Free: every switch is off and locked, and
-    // each one offers the packages that have it.
-    for (const name of SWITCHES) {
-      await expect(page.getByRole('switch', { name })).toHaveAttribute('aria-checked', 'false')
-      await expect(page.getByRole('switch', { name })).toBeDisabled()
-    }
     await expect(page.getByRole('combobox', { name: 'Which language' })).toHaveCount(0)
     await expect(page.getByRole('tablist', { name: 'Menu opens in' })).toHaveCount(0)
     await expectAccessible()

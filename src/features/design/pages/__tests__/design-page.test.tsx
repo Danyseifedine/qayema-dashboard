@@ -6,6 +6,7 @@ import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { makePackage, PACKAGE_CATALOGUE } from '@/test/factories/packages'
+import { EMPTY_PLAN, makeSessionUser } from '@/test/factories/session'
 import { DesignPage } from '@/features/design/pages/design-page'
 
 let mock: MockAdapter
@@ -137,6 +138,22 @@ describe('DesignPage', () => {
     expect(within(alert).getByText('That design is no longer active.')).toBeInTheDocument()
   })
 
+  it('marks a design made for this restaurant, open whatever the package', async () => {
+    const ownDesign = {
+      ...classic,
+      id: 4,
+      slug: 'olive-gold',
+      name: { en: 'Olive Gold', ar: null },
+      made_for_you: true,
+    }
+    stub(1, [classic, ownDesign])
+    renderWithProviders(<DesignPage locale="en" onOpenPackage={onOpenPackage} />)
+
+    const card = (await screen.findByRole('heading', { name: 'Olive Gold' })).closest('article')!
+    expect(within(card as HTMLElement).getByText('Made for you')).toBeInTheDocument()
+    expect(within(card as HTMLElement).queryByText('Premium')).toBeNull()
+  })
+
   it('marks a premium design and points to the package that has it', async () => {
     stub(1, [classic, golden])
     const user = userEvent.setup()
@@ -158,6 +175,49 @@ describe('DesignPage', () => {
     expect(
       screen.getByText(/Golden needs a package with premium designs, so your menu uses Classic/),
     ).toBeInTheDocument()
+  })
+
+  it('says premium designs are turned off when the admin turned them off', async () => {
+    stub(1, [classic, golden])
+    mock.onGet('/api/user').reply(200, {
+      data: makeSessionUser({ plan: EMPTY_PLAN, turned_off: ['premium_designs'] }),
+    })
+    renderWithProviders(<DesignPage locale="en" onOpenPackage={onOpenPackage} />)
+
+    expect(
+      await screen.findByRole('button', { name: 'Turned off for your restaurant' }),
+    ).toBeDisabled()
+    expect(screen.getByRole('status')).toHaveTextContent('Turned off for your restaurant')
+    expect(screen.queryByRole('button', { name: 'Comes with Premium' })).not.toBeInTheDocument()
+  })
+
+  it('says the chosen premium design waits because premium designs were turned off', async () => {
+    stub(3, [classic, golden], 1)
+    mock.onGet('/api/user').reply(200, {
+      data: makeSessionUser({ plan: EMPTY_PLAN, turned_off: ['premium_designs'] }),
+    })
+    renderWithProviders(<DesignPage locale="en" onOpenPackage={onOpenPackage} />)
+
+    expect(await screen.findByText('Your menu shows another design for now')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Qayema turned premium designs off for your restaurant, so your menu uses Classic for now. Your choice of Golden is kept.',
+      ),
+    ).toBeInTheDocument()
+    // With the way to ask for it back.
+    expect(screen.getByText('Turned off for your restaurant')).toBeInTheDocument()
+  })
+
+  it('says nothing about premium designs turned off while none is locked', async () => {
+    stub(1, [classic, midnight])
+    mock.onGet('/api/user').reply(200, {
+      data: makeSessionUser({ plan: EMPTY_PLAN, turned_off: ['premium_designs'] }),
+    })
+    renderWithProviders(<DesignPage locale="en" onOpenPackage={onOpenPackage} />)
+
+    expect(await screen.findByRole('button', { name: 'Currently in use' })).toBeInTheDocument()
+    await waitFor(() => expect(mock.history.get.some((r) => r.url === '/api/user')).toBe(true))
+    expect(screen.queryByText('Turned off for your restaurant')).not.toBeInTheDocument()
   })
 
   it('shows an error with a retry when the designs cannot load', async () => {

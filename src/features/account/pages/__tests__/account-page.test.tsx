@@ -51,18 +51,18 @@ describe('AccountPage', () => {
     renderWithProviders(<AccountPage />)
 
     expect(await screen.findByLabelText(/^Owner name/)).toHaveValue('Dany')
-    // The email is the identity, so it is text rather than an input.
-    expect(screen.getByText('owner@example.com')).toBeInTheDocument()
-    expect(screen.queryByLabelText(/^Email/)).not.toBeInTheDocument()
+    // The email is the identity, so its field cannot be typed in.
+    const email = screen.getByLabelText(/^Email/)
+    expect(email).toHaveValue('owner@example.com')
+    expect(email).toHaveAttribute('readonly')
   })
 
   it('shows an account made with a username its username, and no email', async () => {
     stub(true, { email: null, username: 'beit.rami' })
     renderWithProviders(<AccountPage />)
 
-    expect(await screen.findByText('beit.rami')).toBeInTheDocument()
-    expect(screen.getByText('Username')).toBeInTheDocument()
-    expect(screen.queryByText('Email')).not.toBeInTheDocument()
+    expect(await screen.findByLabelText(/^Username/)).toHaveValue('beit.rami')
+    expect(screen.queryByLabelText(/^Email/)).not.toBeInTheDocument()
   })
 
   it('saves a new name', async () => {

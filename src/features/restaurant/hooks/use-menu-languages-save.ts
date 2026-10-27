@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { sessionKeys } from '@/features/auth'
 import type { AuthUser } from '@/features/auth'
+import { patchRestaurant } from '@/features/restaurant/hooks/use-session-save'
 import { t } from '@/lib/i18n'
 import { appearanceKeys } from '@/features/appearance'
 import { categoryKeys, dishKeys } from '@/features/menu'
@@ -34,7 +35,7 @@ export function useSaveMenuLanguages() {
     onSuccess: (saved) => {
       const { missing: _missing, ...languages } = saved
       queryClient.setQueryData<AuthUser>(sessionKeys.current(), (user) =>
-        user?.restaurant ? { ...user, restaurant: { ...user.restaurant, ...languages } } : user,
+        patchRestaurant(user, () => languages),
       )
       // Menu text follows the languages: every page that shows it drops its
       // copy and loads again, so none opens on the old languages first.

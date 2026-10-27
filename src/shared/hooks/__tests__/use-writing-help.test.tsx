@@ -1,13 +1,16 @@
 import { act, renderHook, screen, waitFor } from '@testing-library/react'
+import { makeWritingHelp } from '@/test/factories/session'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { WritingHelpProvider } from '@/shared/components/forms/translatable/writing-help-provider'
 import {
+  spentFor,
   useTranslateText,
   useWriteDescription,
   useWritingHelp,
+  withLeft,
 } from '@/shared/hooks/use-writing-help'
 import { renderWithProviders } from '@/test/render-with-providers'
 
@@ -18,7 +21,7 @@ describe('useWritingHelp', () => {
     const { result } = renderHook(() => useWritingHelp())
 
     expect(result.current.uses).toBeNull()
-    expect(() => result.current.setLeft(3)).not.toThrow()
+    expect(() => result.current.setLeft({ uses: 3 })).not.toThrow()
     expect(result.current.spentNoteBy).toBeNull()
     expect(() => result.current.queueForSpentNote('name')()).not.toThrow()
   })
@@ -47,7 +50,7 @@ describe('the writing help calls', () => {
       return null
     }
     renderWithProviders(
-      <WritingHelpProvider uses={{ limit: 30, left: 30 }} onLeft={setLeft}>
+      <WritingHelpProvider uses={makeWritingHelp({ limit: 30, left: 30 })} onLeft={setLeft}>
         <Probe />
       </WritingHelpProvider>,
     )
@@ -55,7 +58,9 @@ describe('the writing help calls', () => {
   }
 
   it('passes what is left after each answer to the provider', async () => {
-    mock.onPost('/api/writing/translate').reply(200, { data: { text: 'Soupe', left: 29 } })
+    mock
+      .onPost('/api/writing/translate')
+      .reply(200, { data: { text: 'Soupe', left: 29, credits_left: 499 } })
     const { setLeft, current } = run(() => useTranslateText())
 
     let text = ''
@@ -64,13 +69,13 @@ describe('the writing help calls', () => {
     })
 
     expect(text).toBe('Soupe')
-    expect(setLeft).toHaveBeenCalledWith(29)
+    expect(setLeft).toHaveBeenCalledWith({ uses: 29, credits: 499 })
   })
 
   it('sends a description to the address of its kind, without the kind', async () => {
     mock
       .onPost('/api/writing/restaurant-description')
-      .reply(200, { data: { text: 'Hello.', left: null } })
+      .reply(200, { data: { text: 'Hello.', left: null, credits_left: null } })
     const { setLeft, current } = run(() => useWriteDescription())
 
     await act(async () => {
@@ -78,7 +83,7 @@ describe('the writing help calls', () => {
     })
 
     expect(JSON.parse(mock.history.post[0]?.data as string)).toEqual({ text: '', language: 'en' })
-    expect(setLeft).toHaveBeenCalledWith(null)
+    expect(setLeft).toHaveBeenCalledWith({ uses: null, credits: null })
   })
 
   it('says a busy writing help with the server’s words, and keeps the count', async () => {
@@ -124,8 +129,69 @@ describe('the writing help calls', () => {
     expect(
       await screen.findByText('You have used today’s writing help. It comes back tomorrow.'),
     ).toBeInTheDocument()
-    expect(setLeft).toHaveBeenCalledWith(0)
+    expect(setLeft).toHaveBeenCalledWith({ uses: 0 })
     // Not the usual "try again in 80000 seconds".
     expect(screen.queryByText(/80000/)).not.toBeInTheDocument()
+  })
+
+  it('locks what the month’s credits no longer cover and says when they come back', async () => {
+    mock.onPost('/api/writing/category-description').reply(429, {
+      message: 'You have used this month’s AI credits. They come back on 1 November.',
+      code: 'writing_help_credits',
+      retry_after: 900000,
+      resets_on: '2099-11-01',
+      credits_left: 2,
+    })
+    const { setLeft, current } = run(() => useWriteDescription())
+
+    act(() => current().mutate({ kind: 'category', name: 'Soups', text: '', language: 'en' }))
+
+    expect(
+      await screen.findByText(
+        'You have used this month’s AI credits. They come back on 1 November.',
+      ),
+    ).toBeInTheDocument()
+    // Two left still translate: only what they do not cover locks.
+    expect(setLeft).toHaveBeenCalledWith({ credits: 2 })
+  })
+
+  it('takes a credits refusal without a count as none left', async () => {
+    mock
+      .onPost('/api/writing/translate')
+      .reply(429, { message: 'No credits.', code: 'writing_help_credits' })
+    const { setLeft, current } = run(() => useTranslateText())
+
+    act(() => current().mutate({ text: 'Soup', from: 'en', to: 'fr' }))
+
+    await waitFor(() => expect(setLeft).toHaveBeenCalledWith({ credits: 0 }))
+  })
+})
+
+describe('what is spent', () => {
+  it('is the day’s uses, or the month’s credits short of what an action costs', () => {
+    expect(spentFor(null, 'translation')).toBeNull()
+    expect(spentFor(makeWritingHelp({ left: 0 }), 'translation')).toBe('day')
+    expect(spentFor(makeWritingHelp({}, { limit: 500, left: 2 }), 'translation')).toBeNull()
+    expect(spentFor(makeWritingHelp({}, { limit: 500, left: 2 }), 'description')).toBe('month')
+    expect(spentFor(makeWritingHelp({}, { limit: 500, left: 0 }), 'translation')).toBe('month')
+    // No cap on the month.
+    expect(spentFor(makeWritingHelp({}, { limit: null, left: null }), 'description')).toBeNull()
+  })
+
+  it('takes in what an answer says is left, keeping what it does not say', () => {
+    const now = makeWritingHelp({ left: 10 }, { limit: 500, left: 400 })
+
+    expect(withLeft(now, { uses: 9, credits: 399 })).toEqual(
+      makeWritingHelp({ left: 9 }, { limit: 500, left: 399 }),
+    )
+    expect(withLeft(now, { credits: 0 })).toEqual(
+      makeWritingHelp({ left: 10 }, { limit: 500, left: 0 }),
+    )
+    expect(withLeft(now, {})).toEqual(now)
+
+    // A server from before the credits sends none to keep.
+    const before = { limit: 30, left: 10, credits: null }
+    expect(withLeft(before, { uses: 9, credits: 3 })).toEqual({ ...before, left: 9 })
+    expect(spentFor(before, 'description')).toBeNull()
   })
 })

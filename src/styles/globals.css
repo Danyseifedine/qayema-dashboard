@@ -187,6 +187,14 @@
   background-color: var(--inset-fill);
 }
 
+/* A tile on a card with a photo behind it (a design's setting, a font, a
+   table's buttons): the photo shows through, darkened and blurred. */
+@utility frost-tile {
+  border: 0.5px solid var(--line);
+  background-color: color-mix(in srgb, var(--bg) 45%, transparent);
+  backdrop-filter: blur(12px);
+}
+
 /* Keyboard focus on anything that can be pressed: a gold ring just outside it. */
 @utility focus-ring {
   &:focus-visible {
@@ -203,7 +211,7 @@
 /* Home's backdrop (authenticated-layout, on the overview): a soft light from
    the top, a fine grain over the whole page so it reads as a surface rather
    than flat colour, and a faint dot grid behind the greeting that fades out
-   lower down. The grain is grey, so it works in both themes. */
+   lower down. */
 @layer components {
   .home-backdrop {
     position: relative;
@@ -237,8 +245,7 @@
 }
 
 /* A section's icon on a More card (more-page.tsx): a small block of dark,
-   gold-tinted glass with a quiet rim, a touch lighter on top. The same in
-   both themes, like the package's metals, since it often sits on a photo. */
+   gold-tinted glass with a quiet rim, a touch lighter on top. */
 @layer components {
   .gold-chip {
     border: 1px solid transparent;
@@ -250,13 +257,6 @@
       inset 0 1px 0 rgba(255, 236, 196, 0.12),
       0 2px 6px -2px rgba(0, 0, 0, 0.5);
     color: var(--color-gold);
-  }
-
-  /* Its shadow on a light page: the warm shade the cards use, not black. */
-  :root:not([data-theme='dark']) .gold-chip {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 236, 196, 0.12),
-      0 2px 6px -3px rgba(20, 17, 9, 0.3);
   }
 }
 
@@ -442,21 +442,13 @@
 }
 
 /* A section card's photo (SectionCard), in its top corner: it fades out
-   toward the words and down into the card. A light page gets a softer,
-   shorter fade, so the dark photo never sits behind the words. */
+   toward the words and down into the card. */
 @layer components {
   .card-picture {
     mask-image:
       linear-gradient(to left, #000 55%, transparent),
       linear-gradient(to bottom, #000 58%, transparent);
     mask-composite: intersect;
-  }
-
-  :root:not([data-theme='dark']) .card-picture {
-    opacity: 0.9;
-    mask-image:
-      linear-gradient(to left, #000 20%, transparent 75%),
-      linear-gradient(to bottom, #000 35%, transparent);
   }
 
   /* A photo kept inside the card meets its edge: that side fades too, so a
@@ -466,20 +458,10 @@
       linear-gradient(to left, transparent, #000 14%, #000 55%, transparent),
       linear-gradient(to bottom, #000 58%, transparent);
   }
-
-  /* On a light page too it keeps its subject: the words never reach it
-     (the card keeps its share of the row free), so only the edges fade. */
-  :root:not([data-theme='dark']) .card-picture-inside {
-    mask-image:
-      linear-gradient(to left, transparent, #000 14%, #000 48%, transparent),
-      linear-gradient(to bottom, #000 50%, transparent);
-  }
 }
 
-/* A photo on black (PictureEmptyState). On a dark page its edges fade into
-   the page and the title rises into the fade; on a light one that would
-   leave a dark smudge, so it sits in a rounded frame cropped close to its
-   subject instead. */
+/* A photo on black (PictureEmptyState): its edges fade into the page and the
+   title rises into the fade. */
 @layer components {
   .night-picture {
     width: 88%;
@@ -493,20 +475,6 @@
     aspect-ratio: 16 / 9;
     object-fit: cover;
     mask-image: radial-gradient(ellipse closest-side, #000 55%, transparent);
-  }
-
-  :root:not([data-theme='dark']) .night-picture {
-    width: 72%;
-    max-width: 340px;
-    margin-bottom: 1.25rem;
-    overflow: hidden;
-    border-radius: var(--radius-card);
-    box-shadow: var(--card-lift);
-  }
-
-  :root:not([data-theme='dark']) .night-picture > img {
-    mask-image: none;
-    scale: 1.45;
   }
 }
 
@@ -603,5 +571,20 @@
 
   @page {
     margin: 12mm;
+  }
+}
+
+/* The collapsed sidebar's tooltip (rail-tooltip.tsx) fades in beside its row. */
+@keyframes rail-tip {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* The page skeleton (page-skeleton.tsx) appears only once a page's code is late. */
+@keyframes page-wait {
+  to {
+    opacity: 1;
   }
 }

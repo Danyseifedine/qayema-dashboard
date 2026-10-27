@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react'
+import { cn } from '@/shared/utils/dom/cn'
 
 export type PictureEmptyStateProps = {
   /** A photo of what the page will hold, on black: its edges fade into the page. */
@@ -6,6 +7,8 @@ export type PictureEmptyStateProps = {
   title: ReactNode
   description: ReactNode
   action?: ReactNode
+  /** Grows into the height left in its flex column and centres itself there. */
+  fill?: boolean
 }
 
 /**
@@ -13,11 +16,23 @@ export type PictureEmptyStateProps = {
  * of what will be here, its title in large type and the button that fills
  * it, straight on the page rather than in a card.
  */
-export function PictureEmptyState({ picture, title, description, action }: PictureEmptyStateProps) {
+export function PictureEmptyState({
+  picture,
+  title,
+  description,
+  action,
+  fill = false,
+}: PictureEmptyStateProps) {
   const id = useId()
 
   return (
-    <section aria-labelledby={id} className="flex flex-col items-center px-2 py-4 text-center">
+    <section
+      aria-labelledby={id}
+      className={cn(
+        'flex flex-col items-center px-2 py-4 text-center',
+        fill && 'flex-1 justify-center',
+      )}
+    >
       <div className="night-picture">
         <img src={picture} alt="" aria-hidden decoding="async" />
       </div>

@@ -23,7 +23,6 @@ export function useSocialLinks(): UseQueryResult<SocialLinkList, ApiError> {
   return useQuery<SocialLinkList, ApiError>({
     queryKey: socialLinkKeys.list(),
     queryFn: ({ signal }) => fetchSocialLinks(signal),
-    staleTime: 30_000,
   })
 }
 

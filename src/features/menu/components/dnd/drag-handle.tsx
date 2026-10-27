@@ -19,7 +19,7 @@ export function DragHandle({ className, ...props }: DragHandleProps) {
       type="button"
       aria-label={t('dragHandle.label')}
       className={cn(
-        'grid size-11 shrink-0 cursor-grab touch-none place-items-center rounded-[var(--radius-control)]',
+        'grid size-11 shrink-0 cursor-grab touch-none place-items-center rounded-control',
         'transition-colors active:cursor-grabbing',
         'focus-ring',
         'text-[var(--faint)] hover:bg-[var(--hover-wash)] hover:text-[var(--muted)]',

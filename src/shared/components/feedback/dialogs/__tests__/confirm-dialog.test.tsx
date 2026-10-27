@@ -32,6 +32,12 @@ function pressEscape(dialog: HTMLDialogElement) {
 }
 
 describe('ConfirmDialog', () => {
+  it('is named by its title, so a screen reader says which dialog opened', () => {
+    const { dialog } = renderDialog()
+
+    expect(dialog).toHaveAccessibleName('Delete this dish?')
+  })
+
   it('opens as a modal with the title, description and a destructive confirm', () => {
     const { dialog } = renderDialog()
 

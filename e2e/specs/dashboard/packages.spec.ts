@@ -55,7 +55,7 @@ const SECTIONS = [
     key: 'analytics',
     en: 'Analytics',
     ar: 'الإحصاءات',
-    locked: startsWith('See how guests use your menu', 'اعرف كيف يستخدم الضيوف قائمتك'),
+    locked: startsWith('See how guests use your menu', 'اعرف كيف يستخدم الزبائن قائمتك'),
   },
   {
     key: 'appearance',

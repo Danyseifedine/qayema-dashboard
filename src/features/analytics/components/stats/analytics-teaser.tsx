@@ -21,7 +21,7 @@ export function AnalyticsTeaser({ locale }: AnalyticsTeaserProps) {
   const views = teaser.data.views
 
   return (
-    <p className="flex items-center gap-2.5 rounded-[10px] bg-[var(--surface)] px-3.5 py-3 text-[13.5px]">
+    <p className="flex items-center gap-2.5 inset-tile rounded-tile px-3.5 py-3 text-[13.5px]">
       <IconEye aria-hidden className="size-4 shrink-0 text-accent" />
       <span>{t('teaser.views', { count: views, number: formatNumber(views, locale) })}</span>
     </p>

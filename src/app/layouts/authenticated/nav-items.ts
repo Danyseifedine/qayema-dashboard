@@ -1,5 +1,5 @@
 import {
-  IconChartHistogram,
+  IconTrendingUp,
   IconCrown,
   IconLayoutDashboard,
   IconLayoutList,
@@ -18,6 +18,8 @@ import {
   IconBowlSpoon,
   IconLayoutGrid,
   IconHome,
+  IconDiscount2,
+  IconPizza,
 } from '@tabler/icons-react'
 import type { Plan } from '@/features/auth'
 import type common from '@/locales/en/common.json'
@@ -32,15 +34,41 @@ type PlanFlag = keyof Plan
  */
 type NavLabelKey = `nav.${keyof typeof common.nav}`
 
+/** Every page's key. `App.tsx` maps each to its page, so TypeScript proves none is missing. */
+export type NavKey =
+  | 'overview'
+  | 'analytics'
+  | 'orders'
+  | 'table-orders'
+  | 'categories'
+  | 'dishes'
+  | 'offers'
+  | 'build-your-own'
+  | 'design'
+  | 'appearance'
+  | 'qr'
+  | 'tables'
+  | 'social-links'
+  | 'restaurant'
+  | 'features'
+  | 'package'
+  | 'account'
+  | 'more'
+
 export type NavItem = {
   /** Stable id: the page `App.tsx` shows, and the feature folder's name. */
-  key: string
+  key: NavKey
   labelKey: NavLabelKey
   icon: TablerIcon
   /** Locked until the owner has picked a design. */
   requiresTemplate?: boolean
-  /** Locked unless the restaurant's plan includes the flag. */
+  /** Locked unless the restaurant's plan includes the flag (or `alsoOpensWith`). */
   requiresPlan?: PlanFlag
+  /**
+   * Another flag that opens it too: a page that serves two ways a package
+   * may sell apart (orders on WhatsApp or in the menu).
+   */
+  alsoOpensWith?: PlanFlag
   /**
    * Leaves the sidebar when the owner switches its feature off on the
    * Features page (same key in `Restaurant::OPTIONAL_FEATURES`, ../qayema).
@@ -77,7 +105,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         key: 'analytics',
         labelKey: 'nav.analytics',
-        icon: IconChartHistogram,
+        icon: IconTrendingUp,
         requiresPlan: 'analytics',
         hideable: true,
       },
@@ -93,6 +121,7 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: IconShoppingBag,
         requiresTemplate: true,
         requiresPlan: 'ordering',
+        alsoOpensWith: 'menu_ordering',
         hideable: true,
       },
       // Ordering at the table: a feature of its own, apart from Orders.
@@ -102,6 +131,7 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: IconToolsKitchen2,
         requiresTemplate: true,
         requiresPlan: 'dine_in',
+        alsoOpensWith: 'dine_in_whatsapp',
         hideable: true,
         switchKey: 'dine_in',
       },
@@ -118,6 +148,22 @@ export const NAV_GROUPS: NavGroup[] = [
         requiresTemplate: true,
       },
       { key: 'dishes', labelKey: 'nav.dishes', icon: IconBowlSpoon, requiresTemplate: true },
+      // Promotions on the menu, a Premium feature.
+      {
+        key: 'offers',
+        labelKey: 'nav.offers',
+        icon: IconDiscount2,
+        requiresTemplate: true,
+        requiresPlan: 'offers',
+      },
+      // Dishes guests build from parts: on no package, an admin turns it on.
+      {
+        key: 'build-your-own',
+        labelKey: 'nav.buildYourOwn',
+        icon: IconPizza,
+        requiresTemplate: true,
+        requiresPlan: 'build_your_own',
+      },
     ],
   },
   {
@@ -150,6 +196,7 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: IconArmchair,
         requiresTemplate: true,
         requiresPlan: 'dine_in',
+        alsoOpensWith: 'dine_in_whatsapp',
         hideable: true,
         switchKey: 'dine_in',
       },
@@ -191,6 +238,11 @@ export const NAV_ITEMS: NavItem[] = [
   MORE_ITEM,
 ]
 
+/** Whether a string (a path, a page's link) names a page. */
+export function isNavKey(key: string): key is NavKey {
+  return NAV_ITEMS.some((item) => item.key === key)
+}
+
 /** A page by its key, or undefined for a key that is none. */
 export function navItem(key: string): NavItem | undefined {
   return NAV_ITEMS.find((item) => item.key === key)
@@ -207,7 +259,11 @@ export function isNavItemHidden(key: string, off: readonly string[]): boolean {
 
 /** Whether the package includes this section. A section without a flag always is. */
 export function isOnPlan(item: NavItem, plan: Plan): boolean {
-  return item.requiresPlan === undefined || plan[item.requiresPlan]
+  return (
+    item.requiresPlan === undefined ||
+    plan[item.requiresPlan] ||
+    (item.alsoOpensWith !== undefined && plan[item.alsoOpensWith])
+  )
 }
 
 export type NavAccess = {
@@ -236,7 +292,7 @@ export function navLock(key: string, access: NavAccess): NavLock {
   if (item.requiresTemplate === true && !access.hasTemplate) return 'template'
   // Data-driven, so gating a new section on a new flag is one line in the
   // table above rather than another branch here.
-  if (item.requiresPlan !== undefined && !access.plan[item.requiresPlan]) return 'plan'
+  if (!isOnPlan(item, access.plan)) return 'plan'
 
   return null
 }

@@ -4,6 +4,8 @@ import { cn } from '@/shared/utils/dom/cn'
 export type FilterChip<T> = {
   value: T
   label: ReactNode
+  /** A small icon before the label (a category's). */
+  icon?: ReactNode
   /** A quiet count after the label: how many it holds. */
   count?: number
   /** A count in a gold dot, for what is waiting on the owner. Hidden at 0. */
@@ -55,6 +57,7 @@ export function FilterChips<T extends string | number | null>({
                 : 'border-[var(--line-strong)] text-[var(--text)] hover:bg-[var(--hover-wash)]',
             )}
           >
+            {chip.icon}
             {chip.label}
             {chip.count !== undefined ? (
               <span className="tabular-nums opacity-60">{chip.count}</span>

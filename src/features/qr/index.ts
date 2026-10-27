@@ -1,4 +1,5 @@
 export { qrKeys } from '@/features/qr/hooks/qr-keys'
 export { useQr } from '@/features/qr/hooks/use-qr'
-export { qrOptions } from '@/features/qr/utils/qr-options'
+export { qrOptions, type QrCodeOptions } from '@/features/qr/utils/qr-options'
+export { QrCode } from '@/features/qr/components/preview/qr-code'
 export { downloadQr } from '@/features/qr/utils/qr-download'

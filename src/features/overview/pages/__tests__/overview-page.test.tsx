@@ -4,8 +4,8 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeDish } from '@/test/factories/menu'
-import { makeSessionUser } from '@/test/factories/session'
+import { makeSessionUser, makeWritingHelp } from '@/test/factories/session'
+import type { WritingHelpUses } from '@/shared/hooks/use-writing-help'
 import { useUiStore } from '@/stores/ui.store'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { OverviewPage } from '@/features/overview/pages/overview-page'
@@ -16,11 +16,17 @@ const LIMITS = {
   dishes: { used: 12, limit: 40 },
   categories: { used: 4, limit: 10 },
   social_links: { used: 2, limit: 2 },
+  builds: { used: 0, limit: 3 },
 }
 
 const CLOSED = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null }
 
-function stub(settings: Record<string, unknown> = {}, dishes = [makeDish()]) {
+/** The restaurant's settings, and the session with the dishes still without a photo and its AI. */
+function stub(
+  settings: Record<string, unknown> = {},
+  withoutPhoto = 1,
+  writingHelp: WritingHelpUses | null = null,
+) {
   mock.onGet('/api/restaurant').reply(200, {
     data: {
       languages: ['en', 'ar'],
@@ -38,9 +44,9 @@ function stub(settings: Record<string, unknown> = {}, dishes = [makeDish()]) {
       ...settings,
     },
   })
-  mock
-    .onGet('/api/dishes')
-    .reply(200, { data: dishes, meta: { used: dishes.length, limit: 40, currency: 'USD' } })
+  mock.onGet('/api/user').reply(200, {
+    data: makeSessionUser({ dishes_without_photo: withoutPhoto, writing_help: writingHelp }),
+  })
 }
 
 /** Every step of the set-up, behind "See every step". */
@@ -96,6 +102,61 @@ describe('OverviewPage', () => {
     expect(onOpen).toHaveBeenLastCalledWith('social-links')
   })
 
+  it('shows the AI credits left this month, a tap from the Package page', async () => {
+    stub({}, 1, makeWritingHelp({}, { limit: 7500, left: 6840 }))
+    const onOpen = vi.fn()
+    const user = userEvent.setup()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
+
+    await waitFor(() => expect(tile('AI credits')).toHaveTextContent('6,840'))
+    expect(tile('AI credits')).toHaveTextContent('left of 7,500 this month')
+    await user.click(tile('AI credits'))
+    expect(onOpen).toHaveBeenLastCalledWith('package')
+  })
+
+  it('says when the credits come back once none are left', async () => {
+    stub({}, 1, makeWritingHelp({}, { limit: 500, left: 0, resets_on: '2099-11-01' }))
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+
+    await waitFor(() => expect(tile('AI credits')).toHaveTextContent('Back on Nov 1'))
+  })
+
+  it('takes too few for a translation as none left', async () => {
+    stub(
+      {},
+      1,
+      makeWritingHelp({}, { limit: 500, left: 3, prices: { translation: 5, description: 9 } }),
+    )
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+
+    await waitFor(() => expect(tile('AI credits')).toHaveTextContent('Back on Nov 1'))
+  })
+
+  it('takes the credits as back once their day came, in a tab left open', async () => {
+    stub({}, 1, makeWritingHelp({}, { limit: 500, left: 0, resets_on: '2020-11-01' }))
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+
+    await waitFor(() => expect(tile('AI credits')).toHaveTextContent('500'))
+    expect(tile('AI credits')).not.toHaveTextContent('Back on')
+  })
+
+  it('has no credits tile without the AI, or with no cap on it', async () => {
+    stub({}, 1, makeWritingHelp({}, { limit: null, left: null }))
+    const { unmount } = renderWithProviders(
+      <OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />,
+    )
+    await screen.findByRole('button', { name: 'See every step' })
+    expect(
+      within(screen.getByRole('region', { name: 'Quick' })).getAllByRole('button'),
+    ).toHaveLength(3)
+    unmount()
+
+    stub()
+    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
+    await screen.findByRole('button', { name: 'See every step' })
+    expect(screen.queryByText('AI credits')).not.toBeInTheDocument()
+  })
+
   it('never shows an unlimited allowance as a number', () => {
     stub()
     renderWithProviders(
@@ -115,7 +176,7 @@ describe('OverviewPage', () => {
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     // Done: logo, description, hours, phone, categories, dishes, social.
-    // To do: cover, location, the one dish's photo.
+    // To do: cover, location, the dish without a photo.
     expect(await screen.findByText('7 of 10 done')).toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Menu set-up' })).toHaveAttribute(
       'aria-valuenow',
@@ -124,7 +185,7 @@ describe('OverviewPage', () => {
   })
 
   it('sends each missing item to the page that fixes it', async () => {
-    stub({}, [makeDish({ image_url: null }), makeDish({ image_url: null })])
+    stub({}, 2)
     const onOpen = vi.fn()
     const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
@@ -137,6 +198,8 @@ describe('OverviewPage', () => {
     await user.click(screen.getByRole('button', { name: /Your dishes/ }))
     await user.click(screen.getByRole('button', { name: 'Fix: 2 dishes have no photo' }))
     expect(onOpen).toHaveBeenLastCalledWith('dishes')
+    // The session counts them: the menu itself is never downloaded for it.
+    expect(mock.history.get.some((request) => request.url === '/api/dishes')).toBe(false)
   })
 
   it('opens on the first step not done, what is left before what is done', async () => {
@@ -198,7 +261,6 @@ describe('OverviewPage', () => {
 
   it('puts the menu link first, to share, preview or turn into a QR code', async () => {
     stub()
-    mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
     const onOpen = vi.fn()
     const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={onOpen} />)
@@ -228,7 +290,10 @@ describe('OverviewPage', () => {
     expect(screen.getByText('Put the QR code on your tables')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Hide the guide' }))
 
-    expect(screen.queryByText('Put the QR code on your tables')).not.toBeInTheDocument()
+    // It slides away, then leaves the page.
+    await waitFor(() =>
+      expect(screen.queryByText('Put the QR code on your tables')).not.toBeInTheDocument(),
+    )
     expect(useUiStore.getState().guideHidden).toBe(true)
     await user.click(screen.getByRole('button', { name: 'How it works' }))
     expect(screen.getByText('Put the QR code on your tables')).toBeInTheDocument()
@@ -251,7 +316,7 @@ describe('OverviewPage', () => {
         cover_url: 'https://cdn.test/cover.webp',
         google_maps_url: 'https://maps.google.com/?q=1,2',
       },
-      [makeDish({ image_url: 'https://cdn.test/a.webp' })],
+      0,
     )
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
@@ -346,9 +411,6 @@ describe('OverviewPage', () => {
 
   it('shows an error with a retry when the checklist cannot load', async () => {
     mock.onGet('/api/restaurant').reply(500, { message: 'Server error', code: 'server_error' })
-    mock
-      .onGet('/api/dishes')
-      .reply(200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } })
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
     expect(await screen.findByRole('button', { name: /try again/i })).toBeInTheDocument()
@@ -356,32 +418,18 @@ describe('OverviewPage', () => {
     expect(tile('Dishes')).toHaveTextContent('12')
   })
 
-  it('retries only the restaurant when that is what failed', async () => {
-    mock.onGet('/api/restaurant').replyOnce(500, { message: 'Server error', code: 'server_error' })
+  it('asks for the restaurant again on a retry, with its message', async () => {
+    mock
+      .onGet('/api/restaurant')
+      .replyOnce(500, { message: 'Restaurant is down', code: 'server_error' })
     stub()
     const user = userEvent.setup()
     renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
 
-    await user.click(await screen.findByRole('button', { name: /try again/i }))
-
-    expect(await screen.findByText(/of 10 done/)).toBeInTheDocument()
-    const calls = (url: string) => mock.history.get.filter((call) => call.url === url).length
-    expect(calls('/api/restaurant')).toBe(2)
-    expect(calls('/api/dishes')).toBe(1)
-  })
-
-  it('retries only the dishes when those failed, with their message', async () => {
-    mock.onGet('/api/dishes').replyOnce(500, { message: 'Dishes are down', code: 'server_error' })
-    stub()
-    const user = userEvent.setup()
-    renderWithProviders(<OverviewPage limits={LIMITS} switchedOff={[]} onOpen={vi.fn()} />)
-
-    expect(await screen.findByText('Dishes are down')).toBeInTheDocument()
+    expect(await screen.findByText('Restaurant is down')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /try again/i }))
 
     expect(await screen.findByText(/of 10 done/)).toBeInTheDocument()
-    const calls = (url: string) => mock.history.get.filter((call) => call.url === url).length
-    expect(calls('/api/restaurant')).toBe(1)
-    expect(calls('/api/dishes')).toBe(2)
+    expect(mock.history.get.filter((call) => call.url === '/api/restaurant')).toHaveLength(2)
   })
 })

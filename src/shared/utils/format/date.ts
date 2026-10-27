@@ -6,6 +6,12 @@ export function parseDay(date: string): Date {
   return new Date(year!, month! - 1, day!)
 }
 
+/** Today on this device as "YYYY-MM-DD", the way the API writes a day. */
+export function todayDay(now: Date = new Date()): string {
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
 /** An ISO timestamp as a full date in the reader's language: "12 Oct 2026". */
 export function formatDate(iso: string, locale: Locale): string {
   return new Intl.DateTimeFormat(locale, {

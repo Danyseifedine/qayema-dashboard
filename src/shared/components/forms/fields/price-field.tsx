@@ -10,6 +10,12 @@ export type PriceFieldProps<T extends FieldValues> = {
   currency: string
   label?: ReactNode
   hint?: ReactNode
+  /**
+   * A small currency switch inside the field, at its end, in place of the
+   * code before the number: the label line stays as tall as its
+   * neighbours', so the fields beside it line up.
+   */
+  currencyPicker?: ReactNode
 }
 
 /**
@@ -23,6 +29,7 @@ export function PriceField<T extends FieldValues>({
   currency,
   label,
   hint,
+  currencyPicker,
 }: PriceFieldProps<T>) {
   const { field, fieldState } = useController({ control, name })
   const value = field.value as number | string | null | undefined
@@ -46,7 +53,10 @@ export function PriceField<T extends FieldValues>({
           step="0.01"
           dir="ltr"
           placeholder="0.00"
-          prefix={currency}
+          prefix={currencyPicker ? undefined : currency}
+          trailing={
+            currencyPicker ? <span className="-me-2.5 flex">{currencyPicker}</span> : undefined
+          }
           className="text-start tabular-nums"
           aria-describedby={describedBy}
           aria-invalid={invalid || undefined}

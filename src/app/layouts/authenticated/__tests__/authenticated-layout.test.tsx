@@ -69,7 +69,6 @@ describe('AuthenticatedLayout', () => {
   beforeEach(() => {
     mock = new MockAdapter(api)
     useUiStore.setState({ sidebarCollapsed: false })
-    usePreferencesStore.getState().setTheme('light')
     usePreferencesStore.getState().setLocale('en')
   })
 
@@ -177,20 +176,13 @@ describe('AuthenticatedLayout', () => {
     await waitFor(() => expect(document.documentElement).toHaveAttribute('dir', 'ltr'))
   })
 
-  it('toggles dark mode on the document', async () => {
+  it('is dark only, with no theme switch', async () => {
     const user = userEvent.setup()
     renderWithProviders(<Harness />)
 
-    expect(document.documentElement.dataset.theme).toBe('light')
-
     await user.click(screen.getByRole('button', { name: 'Account menu' }))
-    await user.click(screen.getByRole('switch', { name: 'Dark mode' }))
-
-    expect(document.documentElement.dataset.theme).toBe('dark')
-    expect(usePreferencesStore.getState().theme).toBe('dark')
-
-    await user.click(screen.getByRole('switch', { name: 'Dark mode' }))
-    expect(document.documentElement.dataset.theme).toBe('light')
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    expect(document.documentElement).not.toHaveAttribute('data-theme')
   })
 
   it('opens the user menu and logs out', async () => {
@@ -216,9 +208,8 @@ describe('AuthenticatedLayout', () => {
 
     expect(screen.getByRole('button', { name: /Free package/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Account menu' })).toBeInTheDocument()
-    // Closed menu: no language tabs or theme switch on the bar itself.
+    // Closed menu: no language tabs on the bar itself.
     expect(screen.queryByRole('tab', { name: 'ع' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('switch', { name: 'Dark mode' })).not.toBeInTheDocument()
   })
 
   it('keeps the account out of the sidebar and in the avatar menu', async () => {

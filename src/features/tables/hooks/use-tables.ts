@@ -16,7 +16,6 @@ export function useTables(): UseQueryResult<TableList, ApiError> {
   return useQuery<TableList, ApiError>({
     queryKey: tableKeys.list(),
     queryFn: ({ signal }) => fetchTables(signal),
-    staleTime: 30_000,
   })
 }
 

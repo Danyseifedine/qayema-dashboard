@@ -55,8 +55,10 @@ test.describe('errors', () => {
     await page.goto('/categories')
 
     const alert = page.getByRole('alert').filter({ hasText: 'That did not load' })
+    // The page retries for about 15 s first (NETWORK_RETRIES), and the page
+    // itself may load slowly on a busy machine: room for both.
     await expect(alert).toContainText('We could not connect. Check your internet and try again.', {
-      timeout: 20_000,
+      timeout: 30_000,
     })
 
     await page.unroute(CATEGORIES_API)

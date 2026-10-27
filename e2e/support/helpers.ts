@@ -72,3 +72,17 @@ export function lockedCard(page: Page, title: string | RegExp): Locator {
     .filter({ has: page.getByRole('heading', { name: title }) })
     .last()
 }
+
+/**
+ * Picks the choice for one part of a build in the menu's dish sheet: its
+ * own picker (a button opening a listbox), the part by its place from 0,
+ * the choice by the start of its name.
+ */
+export async function pickPart(sheet: Locator, part: number, choice: string) {
+  await sheet.locator('.build-pick-button').nth(part).click()
+  await sheet
+    .getByRole('listbox')
+    .getByRole('option', { name: new RegExp(`^${choice}`) })
+    .click()
+  await expect(sheet.getByRole('listbox')).toBeHidden()
+}

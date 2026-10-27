@@ -1,0 +1,1 @@
+function e(e){return e!==void 0&&e.limit!==null&&e.used>=e.limit}export{e as t};

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { sessionKeys } from '@/features/auth/hooks/session-keys'
 import { useWritingHelpLeft } from '@/features/auth/hooks/use-writing-help-left'
 import type { AuthUser } from '@/features/auth/schemas/user.schema'
-import { makeSessionUser } from '@/test/factories/session'
+import { makeSessionUser, makeWritingHelp } from '@/test/factories/session'
 
 function render(session: AuthUser | undefined) {
   const queryClient = new QueryClient()
@@ -19,21 +19,30 @@ function render(session: AuthUser | undefined) {
 }
 
 describe('useWritingHelpLeft', () => {
-  it('writes what is left into the session', () => {
-    const { setLeft, now } = render(makeSessionUser({ writing_help: { limit: 30, left: 30 } }))
+  it('writes what is left into the session, keeping a count the answer does not give', () => {
+    const { setLeft, now } = render(
+      makeSessionUser({ writing_help: makeWritingHelp({}, { limit: 500, left: 500 }) }),
+    )
 
-    act(() => setLeft(29))
+    act(() => setLeft({ uses: 29, credits: 499 }))
+    expect(now()?.restaurant?.writing_help).toEqual(
+      makeWritingHelp({ left: 29 }, { limit: 500, left: 499 }),
+    )
 
-    expect(now()?.restaurant?.writing_help).toEqual({ limit: 30, left: 29 })
+    // A refusal of the month's credits says only those.
+    act(() => setLeft({ credits: 2 }))
+    expect(now()?.restaurant?.writing_help).toEqual(
+      makeWritingHelp({ left: 29 }, { limit: 500, left: 2 }),
+    )
   })
 
   it('leaves writing help that is off, or no session, as it is', () => {
     const off = render(makeSessionUser({ writing_help: null }))
-    act(() => off.setLeft(3))
+    act(() => off.setLeft({ uses: 3 }))
     expect(off.now()?.restaurant?.writing_help).toBeNull()
 
     const none = render(undefined)
-    act(() => none.setLeft(3))
+    act(() => none.setLeft({ uses: 3 }))
     expect(none.now()).toBeUndefined()
   })
 })

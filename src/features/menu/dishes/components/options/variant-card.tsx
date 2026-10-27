@@ -20,6 +20,8 @@ export type VariantCardProps = {
   language: string
   currency: string
   handle: ReactNode
+  /** Its dish's saved builds price it: the variants are extras then. */
+  pricedByBuilds: boolean
   onRemove: () => void
 }
 
@@ -34,18 +36,20 @@ export function VariantCard({
   language,
   currency,
   handle,
+  pricedByBuilds,
   onRemove,
 }: VariantCardProps) {
   const { t } = useTranslation('menu')
   const options = useFieldArray({ control, name: `variants.${index}.options` })
   const name = useWatch({ control, name: `variants.${index}.name.${mainLanguageOf(languages)}` })
-  // The first variant of a dish with no price of its own holds the prices.
+  // The first variant of a dish with no price of its own holds the prices,
+  // unless a build prices the dish: its variants are extras then.
   const dishPrice = useWatch({ control, name: 'price' })
-  const full = index === 0 && (dishPrice === null || dishPrice === undefined)
+  const full = index === 0 && (dishPrice === null || dishPrice === undefined) && !pricedByBuilds
   const label = name?.trim() || t('choices.variantNumber', { number: index + 1 })
 
   return (
-    <div className="rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-2.5">
+    <div className="rounded-card border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-2.5">
       {/* One line on a wide screen. On a phone the handle and the bin go up
           beside a small "Variant 1", so the name gets the whole width. */}
       <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-1.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">

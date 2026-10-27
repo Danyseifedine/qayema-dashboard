@@ -13,8 +13,8 @@ afterEach(() => {
   resetUnanswered()
 })
 
-// jsdom implements neither of these, and the theme store and image field both
-// call them during render.
+// jsdom implements neither of these, and the image field calls
+// them during render.
 if (!window.matchMedia) {
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
     matches: false,

@@ -4,7 +4,7 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeCategory, makeDish, resetFactories } from '@/test/factories/menu'
+import { makeBuild, makeCategory, makeDish, resetFactories } from '@/test/factories/menu'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { makeSessionUser } from '@/test/factories/session'
 import { moveDown, stubSortableRects } from '@/test/sortable'
@@ -68,12 +68,48 @@ describe('DishesPage', () => {
 
   it('shows dishes as cards with prices, never a table', async () => {
     stub()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     expect(await screen.findAllByRole('article')).toHaveLength(3)
     expect(screen.getByText('$8.50')).toBeInTheDocument()
     expect(screen.getByText('$24.50')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('leaves a build’s dish to the Build your own page', async () => {
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
+    mock.onGet('/api/categories').reply(200, { data: categories, meta: { used: 2, limit: 10 } })
+    const built = makeDish({
+      id: 30,
+      name: { en: 'Build your pizza', ar: null },
+      category_id: null,
+      price: null,
+      builds: [makeBuild()],
+    })
+    mock
+      .onGet('/api/dishes')
+      .reply(200, { data: [...dishes, built], meta: { used: 4, limit: 40, currency: 'USD' } })
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Hummus' })).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.queryByRole('heading', { name: 'Build your pizza' })).not.toBeInTheDocument(),
+    )
+    expect(screen.getAllByRole('article')).toHaveLength(3)
   })
 
   it('counts a dish’s variants and add-ons on its card', async () => {
@@ -92,14 +128,28 @@ describe('DishesPage', () => {
     mock
       .onGet('/api/dishes')
       .reply(200, { data: [burger], meta: { used: 1, limit: 40, currency: 'USD' } })
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     expect(await screen.findByText('2 variants · 1 add-on')).toBeInTheDocument()
   })
 
   it('marks an unavailable dish as sold out', async () => {
     stub()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     expect(await screen.findByText('Sold out')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: /Lamb shank is available/ })).not.toBeChecked()
@@ -107,7 +157,14 @@ describe('DishesPage', () => {
 
   it('dims only the photo of a sold-out dish, never its text', async () => {
     stub()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     const card = (await screen.findByText('Lamb shank')).closest('article')!
     // Dimming the card dimmed the name, price and switch below 4.5:1.
@@ -122,7 +179,14 @@ describe('DishesPage', () => {
   it('filters by category chip', async () => {
     stub()
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     expect(await screen.findAllByRole('article')).toHaveLength(3)
 
@@ -139,7 +203,14 @@ describe('DishesPage', () => {
       .reply(200, { data: { ...dishes[0]!, is_available: false } })
 
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('switch', { name: /Hummus is available/ }))
 
@@ -163,7 +234,14 @@ describe('DishesPage', () => {
     mock.onPatch('/api/dishes/10/availability').reply(500, { message: 'Something went wrong.' })
 
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('switch', { name: /Hummus is available/ }))
 
@@ -184,7 +262,14 @@ describe('DishesPage', () => {
       meta: { used: 1, limit: 40, currency: 'USD' },
     })
 
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     expect(await screen.findByText('Orphan')).toBeInTheDocument()
     expect(screen.getByText('These dishes have no category')).toBeInTheDocument()
@@ -197,7 +282,12 @@ describe('DishesPage', () => {
     stub()
     const user = userEvent.setup()
     const { queryClient } = renderWithProviders(
-      <DishesPage locale="en" onOpenCategories={vi.fn()} />,
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
     )
 
     await user.click(await screen.findByRole('tab', { name: /Mains/ }))
@@ -222,7 +312,12 @@ describe('DishesPage', () => {
     stub()
     const user = userEvent.setup()
     const { queryClient } = renderWithProviders(
-      <DishesPage locale="en" onOpenCategories={vi.fn()} />,
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
     )
 
     await user.click(await screen.findByRole('tab', { name: /Mains/ }))
@@ -256,7 +351,14 @@ describe('DishesPage', () => {
       .reply(200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } })
     const onOpenCategories = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={onOpenCategories} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={onOpenCategories}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     expect(await screen.findByText('Add a category first')).toBeInTheDocument()
     // The header button disables on the same signal; wait for the commit
@@ -267,23 +369,63 @@ describe('DishesPage', () => {
     expect(onOpenCategories).toHaveBeenCalledOnce()
   })
 
+  it('shows nothing half-way: the count and "add a category first" come together', async () => {
+    // The categories answer first (none yet); the dishes are still on their way.
+    mock.onGet('/api/categories').reply(200, { data: [], meta: { used: 0, limit: 10 } })
+    const dishesAnswer = deferred<[number, unknown]>()
+    mock.onGet('/api/dishes').reply(() => dishesAnswer.promise)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
+
+    await waitFor(() =>
+      expect(mock.history.get.some((r) => r.url === '/api/categories')).toBe(true),
+    )
+    expect(screen.queryByRole('button', { name: 'Go to categories' })).not.toBeInTheDocument()
+    expect(screen.queryByText('0 / 40')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Add dish/ })).toBeDisabled()
+
+    dishesAnswer.resolve([200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } }])
+    expect(await screen.findByRole('button', { name: 'Go to categories' })).toBeInTheDocument()
+    expect(screen.getByText('0 / 40')).toBeInTheDocument()
+  })
+
   it('blocks adding at the dish limit', async () => {
     mock.onGet('/api/categories').reply(200, { data: categories, meta: { used: 2, limit: 10 } })
     mock
       .onGet('/api/dishes')
       .reply(200, { data: dishes, meta: { used: 40, limit: 40, currency: 'USD' } })
 
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /Add dish/ })).toBeDisabled())
-    expect(screen.getByText('40 / 40')).toBeInTheDocument()
+    expect(await screen.findByText('40 / 40')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Add dish/ })).toBeDisabled()
   })
 
   it('surfaces a failed load with a retry', async () => {
     mock.onGet('/api/categories').reply(200, { data: categories, meta: { used: 2, limit: 10 } })
     mock.onGet('/api/dishes').reply(500, { message: 'Server error', code: 'server_error' })
 
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     expect(await screen.findByText('Server error')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
@@ -295,7 +437,14 @@ describe('DishesPage', () => {
     })
 
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('button', { name: 'Edit Hummus' }))
 
@@ -329,7 +478,14 @@ describe('DishesPage', () => {
     mock.onPatch('/api/dishes/12').reply(500, { message: 'Server error', code: 'server_error' })
 
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('button', { name: 'Edit Lamb shank' }))
     const dialog = screen.getByRole('dialog')
@@ -345,7 +501,14 @@ describe('DishesPage', () => {
     mock.onDelete('/api/dishes/11').reply(204)
 
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('button', { name: 'Delete Fattoush' }))
     const confirm = screen.getByRole('dialog')
@@ -361,12 +524,52 @@ describe('DishesPage', () => {
     )
   })
 
+  it('says a deal dish leaves its offer without a deal', async () => {
+    mock.onGet('/api/categories').reply(200, { data: categories, meta: { used: 2, limit: 10 } })
+    mock.onGet('/api/dishes').reply(200, {
+      data: [
+        makeDish({
+          id: 40,
+          name: { en: 'Family meal', ar: null },
+          category_id: 1,
+          offer: { id: 3, title: { en: 'Pizza night' }, status: 'paused', next_start: null },
+        }),
+      ],
+      meta: { used: 1, limit: 40, currency: 'USD' },
+    })
+
+    const user = userEvent.setup()
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByText('Hidden: “Pizza night” is paused')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Delete Family meal' }))
+    expect(
+      within(screen.getByRole('dialog')).getByText(
+        /cannot be undone\. It is the deal of “Pizza night”; the offer stays, without a deal\.$/,
+      ),
+    ).toBeInTheDocument()
+  })
+
   it('keeps the confirm open when a delete fails', async () => {
     stub()
     mock.onDelete('/api/dishes/11').reply(500, { message: 'Server error', code: 'server_error' })
 
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('button', { name: 'Delete Fattoush' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
@@ -378,7 +581,14 @@ describe('DishesPage', () => {
   it('cancelling a delete sends nothing', async () => {
     stub()
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('button', { name: 'Delete Fattoush' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }))
@@ -390,7 +600,14 @@ describe('DishesPage', () => {
   it('opens a new dish in the filtered category', async () => {
     stub()
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('tab', { name: /Mains/ }))
     await user.click(screen.getByRole('button', { name: /^Add dish$/ }))
@@ -412,7 +629,14 @@ describe('DishesPage', () => {
       .reply(200, { data: dishes, meta: { used: 3, limit: null, currency: 'USD' } })
 
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('tab', { name: /Desserts/ }))
 
@@ -434,10 +658,21 @@ describe('DishesPage', () => {
       .onGet('/api/dishes')
       .reply(200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } })
 
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    const user = userEvent.setup()
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     expect(await screen.findByText('No dishes yet')).toBeInTheDocument()
     expect(screen.getByText(/a name, a price and a photo/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Add a dish' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
   it('filters to the dishes that lost their category', async () => {
@@ -448,7 +683,14 @@ describe('DishesPage', () => {
     })
 
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     const chip = await screen.findByRole('tab', { name: /No category/ })
     expect(chip).toHaveAttribute('title', 'Dishes whose category was deleted')
@@ -471,7 +713,14 @@ describe('DishesPage', () => {
       .onGet('/api/dishes')
       .reply(200, { data: dishes, meta: { used: 40, limit: 40, currency: 'USD' } })
 
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     expect(await screen.findByText(/every dish your plan allows/)).toBeInTheDocument()
   })
@@ -485,7 +734,14 @@ describe('DishesPage', () => {
       .reply(200, { data: dishes, meta: { used: 3, limit: 40, currency: 'USD' } })
 
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await user.click(await screen.findByRole('button', { name: 'Try again' }))
     expect(await screen.findAllByRole('article')).toHaveLength(3)
@@ -499,7 +755,14 @@ describe('DishesPage', () => {
     })
     const onOpenCategories = vi.fn()
     const user = userEvent.setup()
-    renderWithProviders(<DishesPage locale="en" onOpenCategories={onOpenCategories} />)
+    renderWithProviders(
+      <DishesPage
+        locale="en"
+        onOpenCategories={onOpenCategories}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
+      />,
+    )
 
     await screen.findByText('These dishes have no category')
     await user.click(screen.getByRole('button', { name: 'Go to categories' }))
@@ -523,7 +786,14 @@ describe('DishesPage', () => {
         meta: { used: 2, limit: 40, currency: 'USD' },
       })
 
-      renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+      renderWithProviders(
+        <DishesPage
+          locale="en"
+          onOpenCategories={vi.fn()}
+          onOpenBuilds={vi.fn()}
+          onOpenOffers={vi.fn()}
+        />,
+      )
 
       const [kibbeh, untitled] = await screen.findAllByRole('article')
       expect(kibbeh!.querySelector('img')).toHaveAttribute(
@@ -552,7 +822,14 @@ describe('DishesPage', () => {
         .onGet('/api/dishes')
         .reply(200, { data: [], meta: { used: 0, limit: 40, currency: 'USD' } })
 
-      renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+      renderWithProviders(
+        <DishesPage
+          locale="en"
+          onOpenCategories={vi.fn()}
+          onOpenBuilds={vi.fn()}
+          onOpenOffers={vi.fn()}
+        />,
+      )
 
       expect(await screen.findByRole('tab', { name: 'Untitled0' })).toBeInTheDocument()
     })
@@ -571,7 +848,14 @@ describe('DishesPage', () => {
       mock.onPost('/api/dishes/reorder').reply(() => response.promise)
 
       const user = userEvent.setup()
-      renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+      renderWithProviders(
+        <DishesPage
+          locale="en"
+          onOpenCategories={vi.fn()}
+          onOpenBuilds={vi.fn()}
+          onOpenOffers={vi.fn()}
+        />,
+      )
 
       const handles = await screen.findAllByRole('button', { name: 'Reorder' })
       expect(order()).toEqual(['Hummus', 'Fattoush', 'Lamb shank'])
@@ -593,7 +877,14 @@ describe('DishesPage', () => {
       mock.onPost('/api/dishes/reorder').reply(() => response.promise)
 
       const user = userEvent.setup()
-      renderWithProviders(<DishesPage locale="en" onOpenCategories={vi.fn()} />)
+      renderWithProviders(
+        <DishesPage
+          locale="en"
+          onOpenCategories={vi.fn()}
+          onOpenBuilds={vi.fn()}
+          onOpenOffers={vi.fn()}
+        />,
+      )
 
       const handles = await screen.findAllByRole('button', { name: 'Reorder' })
       await moveDown(user, handles[1]!)
@@ -614,7 +905,12 @@ describe('DishesPage', () => {
 
       const user = userEvent.setup()
       const { queryClient } = renderWithProviders(
-        <DishesPage locale="en" onOpenCategories={vi.fn()} />,
+        <DishesPage
+          locale="en"
+          onOpenCategories={vi.fn()}
+          onOpenBuilds={vi.fn()}
+          onOpenOffers={vi.fn()}
+        />,
       )
 
       await user.click(await screen.findByRole('tab', { name: /Starters/ }))

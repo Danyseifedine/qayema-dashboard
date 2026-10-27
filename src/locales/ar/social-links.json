@@ -18,11 +18,10 @@
     "addTitle": "إضافة رابط تواصل",
     "editTitle": "تعديل الرابط",
     "description": "يرى الزبائن هذه الروابط كأيقونات أسفل قائمتك.",
-    "platformLabel": "المنصة",
-    "platformPlaceholder": "اختر منصة",
+    "platformLabel": "الموقع أو التطبيق",
+    "platformPlaceholder": "اختر الموقع أو التطبيق",
     "linkLabel": "الرابط",
     "linkHint": "الصق العنوان كاملًا، بما في ذلك https://",
-    "cancel": "إلغاء",
     "addSubmit": "إضافة الرابط",
     "saveSubmit": "حفظ الرابط"
   },

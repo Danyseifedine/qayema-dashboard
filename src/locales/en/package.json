@@ -11,6 +11,7 @@
     "dishes": "Dishes",
     "categories": "Categories",
     "socialLinks": "Social links",
+    "aiCredits": "AI credits this month",
     "forever": "No end date.",
     "foreverDefault": "Yours for as long as you like.",
     "until": "Until <date>{{date}}</date>",
@@ -24,7 +25,8 @@
     "lapsedOffline": "Your menu is offline: guests cannot open it until you renew. Everything you made is kept and comes back with {{name}}.",
     "renew": "Ask to renew",
     "upcoming": "{{name}} starts on <date>{{date}}</date>.",
-    "includedTitle": "On your package"
+    "includedTitle": "On your package",
+    "turnedOff": "turned off"
   },
   "card": {
     "letsTalk": "Let's talk",
@@ -43,7 +45,11 @@
       "writingHelp_zero": "No AI writing help",
       "writingHelp_one": "{{number}} AI writing use a day",
       "writingHelp_other": "{{number}} AI writing uses a day",
-      "writingHelpUnlimited": "Unlimited AI writing help"
+      "writingHelpUnlimited": "Unlimited AI writing help",
+      "writingHelpCredits_zero": "No AI credits",
+      "writingHelpCredits_one": "{{number}} AI credit a month",
+      "writingHelpCredits_other": "{{number}} AI credits a month",
+      "writingHelpCreditsUnlimited": "Unlimited AI credits"
     },
     "yours": "Your package",
     "includedForEveryone": "Included for everyone",
@@ -60,7 +66,6 @@
     "optional": "optional",
     "placeholder": "How many restaurants, how big your menu is, when you need it.",
     "messageTooLong": "Keep this under 2000 characters.",
-    "cancel": "Cancel",
     "submit": "Send request"
   },
   "toast": {
@@ -68,11 +73,46 @@
     "sentDescription": "We will be in touch shortly to set this up.",
     "failed": "Could not send that request"
   },
+  "turnedOff": {
+    "title": "Turned off for your restaurant",
+    "description": "Qayema turned this off for your restaurant. Contact us if you need it back.",
+    "contact": "Contact us",
+    "dialogTitle": "Ask us to turn it back on",
+    "dialogDescription": "We will read this and reply by email. Nothing changes and nothing is charged until then.",
+    "message": "Please turn {{feature}} back on for my restaurant.",
+    "names": {
+      "multiple_languages": "the second menu language",
+      "variants": "dish variants",
+      "addons": "dish add-ons",
+      "appearance": "my colours and fonts",
+      "premium_designs": "premium designs",
+      "qr_studio": "the QR studio",
+      "ordering": "ordering (delivery and pickup)",
+      "menu_ordering": "orders in the menu",
+      "dine_in": "table orders in the menu",
+      "analytics": "analytics",
+      "advanced_analytics": "advanced analytics",
+      "offers": "offers",
+      "dine_in_whatsapp": "table orders on WhatsApp",
+      "order_tracking": "order tracking",
+      "offer_schedules": "offer schedules",
+      "offer_discounts": "offer discounts",
+      "build_your_own": "build your own (half and half pizzas, scoops)"
+    }
+  },
+  "askOn": {
+    "title": "Ask us to turn it on",
+    "description": "No package includes this: we turn it on for a restaurant when asked. Ask us to turn it on for your restaurant.",
+    "contact": "Ask us",
+    "dialogTitle": "Ask us to turn it on",
+    "message": "Please turn {{feature}} on for my restaurant."
+  },
   "rows": {
     "dish_limit": "Dishes",
     "category_limit": "Categories",
     "social_link_limit": "Social links",
     "writing_help_limit": "AI writing help a day",
+    "writing_help_credits": "AI credits a month",
     "multiple_languages": "Second menu language",
     "variants": "Dish variants",
     "addons": "Dish add-ons (extra cheese)",
@@ -81,9 +121,14 @@
     "qr_studio": "QR studio",
     "ordering": "Orders on WhatsApp",
     "menu_ordering": "Orders in your menu",
-    "dine_in": "Orders at the table",
+    "dine_in": "Table orders in your menu",
     "analytics": "Analytics",
-    "advanced_analytics": "Advanced analytics"
+    "advanced_analytics": "Advanced analytics",
+    "offers": "Offers on your menu",
+    "dine_in_whatsapp": "Table orders on WhatsApp",
+    "order_tracking": "Order tracking for guests",
+    "offer_schedules": "Offers on a schedule",
+    "offer_discounts": "Discounts in offers"
   },
   "groups": {
     "menu": "Your menu",

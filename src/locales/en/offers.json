@@ -1,0 +1,310 @@
+{
+  "page": {
+    "description": "Promotions on your menu: a banner, a pop-up or a short ad, at the times you choose.",
+    "add": "New offer",
+    "addFirst": "Create your first offer",
+    "emptyTitle": "No offers yet",
+    "emptyDescription": "Happy hour, Sunday brunch, a lunch deal: show it on your menu when you choose, with a discount on the dishes you pick if you like.",
+    "atLimit": "A menu holds up to {{limit}} offers. Delete one you no longer use to add another.",
+    "removeTitle": "Delete this offer?",
+    "removeDescription": "It leaves your menu at once. Orders already placed with it keep their price.",
+    "removeConfirm": "Delete offer",
+    "timezone": "Times follow your restaurant's time zone, {{timezone}}."
+  },
+  "status": {
+    "live": "Live now",
+    "scheduled": "Starts {{when}}",
+    "ended": "Ended",
+    "paused": "Paused",
+    "off": "Off the menu"
+  },
+  "placements": {
+    "banner": {
+      "name": "Banner",
+      "hint": "A card at the top of your menu, under the cover"
+    },
+    "popup": {
+      "name": "Pop-up",
+      "hint": "Opens over the menu when a guest arrives"
+    },
+    "ad": {
+      "name": "Short ad",
+      "hint": "Slides in at the bottom; guests can close it after a short countdown"
+    }
+  },
+  "card": {
+    "edit": "Edit {{title}}",
+    "remove": "Delete {{title}}",
+    "active": "Show {{title}} on the menu",
+    "untitled": "Untitled offer",
+    "shown_one": "Seen {{count}} time in 30 days",
+    "shown_other": "Seen {{count}} times in 30 days",
+    "taps_one": "{{count}} tap",
+    "taps_other": "{{count}} taps",
+    "dishes_one": "on {{count}} dish",
+    "dishes_other": "on {{count}} dishes",
+    "percentOff": "{{value}}% off",
+    "amountOff": "{{value}} off",
+    "pictureOnly": "Picture only",
+    "deal": "Deal: {{name}}, {{price}}"
+  },
+  "editor": {
+    "titleNew": "New offer",
+    "titleEdit": "Edit offer",
+    "title": "Title",
+    "description": "Text",
+    "photo": "Picture",
+    "photoHint": "Optional. It is cut to the shape you pick next, so keep what matters near the middle.",
+    "optional": "Optional",
+    "where": "Where it shows",
+    "whereHint": "A pop-up and a short ad can go together: the short ad then comes after the pop-up is closed.",
+    "showAgain": "Show it again",
+    "showAgainOptions": {
+      "every_visit": "Every time",
+      "daily": "Once a day",
+      "once": "Only once"
+    },
+    "delay": "Wait before it shows",
+    "seconds": "Can be closed after",
+    "inSeconds": "{{count}} s",
+    "tap": "When a guest taps it",
+    "actionOptions": {
+      "none": "Nothing",
+      "dishes": "Show its dishes",
+      "link": "Open a link"
+    },
+    "link": "Link",
+    "linkHint": "Opens in a new tab. Starts with https://",
+    "discount": "Discount",
+    "discountOptions": {
+      "none": "None",
+      "percent": "Percent off",
+      "amount": "Amount off"
+    },
+    "percentValue": "Percent off",
+    "amountValue": "Amount off",
+    "discountHint": "Taken off each chosen dish's own price while the offer is live; choices and add-ons keep theirs. If two offers cover a dish, guests get the better one.",
+    "dishes": "Dishes",
+    "dishesHint": "The dishes the discount is for, and the ones a tap shows.",
+    "searchDishes": "Search your dishes",
+    "noDishes": "Add dishes to your menu first.",
+    "noMatch": "No dish matches that.",
+    "chosen_one": "{{count}} chosen",
+    "chosen_other": "{{count}} chosen",
+    "newPrice": "<was/> becomes <now/>",
+    "when": "When",
+    "whenOptions": {
+      "always": "Always",
+      "custom": "On a schedule"
+    },
+    "from": "From",
+    "until": "Until",
+    "fromHint": "Empty: from now.",
+    "untilHint": "Empty: no end. With no time, it runs to the end of that day.",
+    "time": "Time",
+    "repeat": "Repeats",
+    "repeatOptions": {
+      "always": "Every day",
+      "weekly": "Some weekdays",
+      "monthly": "Some days of the month"
+    },
+    "weekdays": "Days of the week",
+    "monthDays": "Days of the month",
+    "monthDaysHint": "The 31st also runs on the last day of shorter months.",
+    "allDay": "All day",
+    "allDayDescription": "Switch off to show it only at certain times, like a happy hour.",
+    "window": "Time {{number}}",
+    "starts": "Starts",
+    "ends": "Ends",
+    "windowStarts": "Time {{number}} starts",
+    "windowEnds": "Time {{number}} ends",
+    "addWindow": "Add a time",
+    "removeWindow": "Remove time {{number}}",
+    "pastMidnight": "Ends the next day, after midnight.",
+    "summary": "Runs: {{summary}}",
+    "active": "Show on the menu",
+    "activeDescription": "Switch off to pause it without losing it.",
+    "add": "Add offer",
+    "save": "Save offer",
+    "showText": "Write a title and text on it",
+    "showTextDescription": "Switch off when your picture already says everything: guests then see the picture alone.",
+    "photoOnlyHint": "Guests see this picture alone and tap it. It is cut to the shape you pick next, so keep your words near the middle.",
+    "back": "Offers",
+    "backLabel": "Back to your offers",
+    "previous": "Back",
+    "next": "Next",
+    "shape": "Shape",
+    "bannerShape": "Banner shape",
+    "popupShape": "Pop-up shape",
+    "adShape": "Always a wide rectangle, at the bottom of the screen.",
+    "leaveTitle": "Leave without saving?",
+    "leaveDescription": "What you changed in this offer will be lost.",
+    "leaveConfirm": "Leave",
+    "inMenu": "In the menu",
+    "overMenu": "Over the menu",
+    "overMenuHint": "Pick one or both",
+    "popupAndAd": "Pop-up and short ad",
+    "popupDelay": "Pop-up waits before it shows",
+    "adAfterPopup": "Short ad shows after the pop-up is closed, in",
+    "adStays": "Short ad can be closed after",
+    "notApplied": "does not apply: costs less than the discount",
+    "tooSmall": "Your picture is small ({{width}} x {{height}} pixels): it may look soft on phones. One at least 1200 pixels across looks sharp.",
+    "schedulesOff": "Schedules are not on your package: an offer is always on.",
+    "discountsOff": "Discounts are not on your package: an offer is a promotion only.",
+    "gives": "What does the offer give guests?",
+    "givesOptions": {
+      "nothing": "Nothing to order",
+      "discount": "A discount on your dishes",
+      "deal": "A deal"
+    }
+  },
+  "summary": {
+    "always": "always",
+    "everyDay": "every day",
+    "weekdays": "every {{days}}",
+    "monthDays": "on day {{days}} of each month",
+    "allDay": "all day",
+    "between": "{{from}} to {{to}}",
+    "from": "from {{date}}",
+    "until": "until {{date}}"
+  },
+  "validation": {
+    "titleRequired": "An offer needs a title in {{language}}.",
+    "placements": "Choose where the offer shows.",
+    "link": "Add a link that starts with https://.",
+    "discountValue": "Enter how much the discount takes off.",
+    "percentMax": "A discount can take off at most 90%.",
+    "dishes": "Choose the dishes this offer is for.",
+    "endBeforeStart": "The end must come after the start.",
+    "weekdays": "Pick at least one day of the week.",
+    "monthDays": "Pick at least one day of the month.",
+    "timeMissing": "Pick a time.",
+    "sameTime": "Ends when it starts. For the whole day, switch on All day.",
+    "overlap": "Times cannot overlap.",
+    "pastMidnightNotLast": "Only the last time of a day can run past midnight.",
+    "pictureNeeded": "Add a picture, or switch on the title and text.",
+    "amountTooBig": "{{dish}} costs {{price}}: a discount must take off less than that.",
+    "dealName": "The deal dish needs a name in {{language}}.",
+    "dealPrice": "Set the deal dish's price.",
+    "dealCategory": "Choose a category for the deal dish.",
+    "discountOrDishes": "Pick a discount, or let a tap show the dishes."
+  },
+  "toast": {
+    "added": "Offer added",
+    "saved": "Offer saved",
+    "addFailed": "Could not add that offer",
+    "saveFailed": "Could not save that offer",
+    "removed": "Offer deleted",
+    "removeFailed": "Could not delete that offer",
+    "pauseFailed": "Could not change that offer",
+    "reorderFailed": "Could not save the new order"
+  },
+  "steps": {
+    "content": "Picture and text",
+    "where": "Where and shape",
+    "tap": "Tap and discount",
+    "when": "When",
+    "review": "Review"
+  },
+  "stepper": {
+    "label": "Offer steps"
+  },
+  "shapes": {
+    "rectangle": {
+      "name": "Rectangle",
+      "hint": "Wide, twice as long as it is tall"
+    },
+    "square": {
+      "name": "Square",
+      "hint": "As tall as it is wide"
+    },
+    "tall": {
+      "name": "Tall",
+      "hint": "Taller than wide, like a phone screen"
+    }
+  },
+  "review": {
+    "pictureAlone": "The picture alone",
+    "pictureAndText": "A picture with a title and text",
+    "textOnly": "A title and text, no picture",
+    "withShape": "{{placement}} ({{shape}})",
+    "waits": "waits {{count}} s",
+    "stays": "can be closed after {{count}} s",
+    "separator": ", ",
+    "noDiscount": "No discount",
+    "opens": "Opens {{link}}",
+    "previews": "How guests see it",
+    "edit": "Edit",
+    "editStep": "Edit {{step}}",
+    "adAfterPopup": "the short ad {{count}} s after the pop-up closes",
+    "dealTap": "A tap opens the deal dish",
+    "nothingToOrder": "Nothing to order"
+  },
+  "slots": {
+    "label": "Switched on now",
+    "banner": "Banners",
+    "popup": "Pop-ups",
+    "ad": "Short ads",
+    "usage": "{{place}} {{used}} of {{limit}}",
+    "unlimited": "{{place}} {{used}}, no limit",
+    "tile": "{{used}} of {{limit}} in use",
+    "tileFull": "All in use: pause or end one first",
+    "noRoom": {
+      "banner": "No free banner: pause or end another banner first.",
+      "popup": "No free pop-up: pause or end the other pop-up first.",
+      "ad": "No free short ad: pause or end the other short ad first."
+    },
+    "offPackage": {
+      "banner": "Not on your package",
+      "popup": "Not on your package",
+      "ad": "Not on your package"
+    }
+  },
+  "warnings": {
+    "noDishes": "No dishes left on it: choose its dishes again.",
+    "allHidden": "All its dishes are hidden from the menu.",
+    "tooBig": "Does not apply to {{dishes}}: the discount is not less than the price.",
+    "waits": "Waits behind {{title}}: a guest gets one pop-up or ad per visit, the first in your order.",
+    "schedulesOff": "Schedules are not on your package: this offer stays off the menu.",
+    "placesOff": "Its places are not on your package: this offer stays off the menu.",
+    "placeOff": {
+      "banner": "Banners are not on your package: this offer doesn't show as one.",
+      "popup": "Pop-ups are not on your package: this offer doesn't show as one.",
+      "ad": "Short ads are not on your package: this offer doesn't show as one."
+    },
+    "discountOff": "Discounts are not on your package: this offer shows without its discount."
+  },
+  "crop": {
+    "whole": {
+      "tall": "Your picture is much taller than this shape: guests see it whole, on a soft blurred copy of itself at the sides.",
+      "wide": "Your picture is much wider than this shape: guests see it whole, on a soft blurred copy of itself above and below."
+    },
+    "trimmed": {
+      "tall": "Your picture is a little taller than this shape: a strip at its top and bottom is trimmed.",
+      "wide": "Your picture is a little wider than this shape: a strip at its sides is trimmed."
+    },
+    "better": "{{shape}} fits it best."
+  },
+  "deal": {
+    "name": "Deal name",
+    "ingredients": "What it includes",
+    "ingredientsHint": "Separate them with commas.",
+    "price": "Price",
+    "currency": "Currency",
+    "category": "Category",
+    "categoryPlaceholder": "Choose a category",
+    "untitledCategory": "Untitled category",
+    "addCategoryFirst": "Add a category first",
+    "needsCategory": "The deal dish shows on your menu in one of your categories.",
+    "goToCategories": "Go to Categories",
+    "useOfferImage": "Use the offer's picture",
+    "useOfferImageDescription": "Switch off to keep the photo the dish has, or to give it a new one.",
+    "photo": "Photo",
+    "photoHint": "Pick a new photo to replace it. To remove the dish's photo, edit the dish on the Dishes page.",
+    "onlyWhileLive": "This dish shows on your menu only while the offer is running, and guests can order it only then.",
+    "dishesFull": "Your package's dishes are all used, so a deal dish cannot be added. Delete a dish to make room.",
+    "removeTitle": "Remove the deal dish?",
+    "removeDescription": "It leaves your menu when you save the offer.",
+    "removeConfirm": "Remove it"
+  }
+}

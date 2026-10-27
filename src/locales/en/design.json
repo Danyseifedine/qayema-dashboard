@@ -17,7 +17,9 @@
     "use": "Use this design",
     "premium": "Premium",
     "comesWith": "Comes with {{name}}",
-    "seePackages": "See packages"
+    "seePackages": "See packages",
+    "turnedOff": "Turned off for your restaurant",
+    "madeForYou": "Made for you"
   },
   "toast": {
     "applied": "Design applied",
@@ -26,6 +28,7 @@
   },
   "fallback": {
     "title": "Your menu shows another design for now",
-    "description": "{{design}} needs a package with premium designs, so your menu uses {{fallback}} until you have one. Your choice is kept."
+    "description": "{{design}} needs a package with premium designs, so your menu uses {{fallback}} until you have one. Your choice is kept.",
+    "turnedOff": "Qayema turned premium designs off for your restaurant, so your menu uses {{fallback}} for now. Your choice of {{design}} is kept."
   }
 }

@@ -16,6 +16,7 @@ import {
 } from '@/features/uploads/schemas/temp-upload.schema'
 import type { UploadContext } from '@/features/uploads/schemas/temp-upload.schema'
 import { ACCEPTED_IMAGE_ACCEPT } from '@/lib/security/input-guards'
+import { StatusChip } from '@/shared/components/data-display'
 import { Button, HelperText, Label } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -32,7 +33,7 @@ export type ImageFieldProps<T extends FieldValues> = {
   aspect?: 'square' | 'wide'
   /**
    * Which optimizer preset the server applies. `logo` fits inside 400x400,
-   * `cover_image` crops to 1920x600, `dish` crops to 1200x900.
+   * `cover_image` inside 1920x1280 and `dish` inside 1200x1200, never cropped.
    */
   context: UploadContext
   /**
@@ -145,7 +146,7 @@ export function ImageField<T extends FieldValues>({
       {preview ? (
         <div
           className={cn(
-            'flex flex-col justify-between gap-3 rounded-[14px] p-3',
+            'flex flex-col justify-between gap-3 rounded-card p-3',
             'border-[0.5px] border-[var(--line)] bg-[var(--surface)]',
             BOX_HEIGHT,
           )}
@@ -155,7 +156,7 @@ export function ImageField<T extends FieldValues>({
               src={preview}
               alt=""
               className={cn(
-                'shrink-0 rounded-[10px] bg-[var(--color-sand)] object-cover',
+                'shrink-0 rounded-tile bg-[var(--color-sand)] object-cover',
                 aspect === 'square' ? 'size-16' : 'h-16 w-[86px]',
               )}
             />
@@ -167,9 +168,9 @@ export function ImageField<T extends FieldValues>({
                 <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--muted)]">
                   <span>{picked.optimizedSize}</span>
                   {picked.savedPercent > 0 ? (
-                    <span className="rounded-full bg-status-success-wash px-2 py-0.5 text-[11.5px] font-medium text-status-success">
+                    <StatusChip tone="success">
                       {t('imageField.smaller', { percent: picked.savedPercent })}
-                    </span>
+                    </StatusChip>
                   ) : null}
                 </p>
               ) : null}
@@ -225,7 +226,7 @@ export function ImageField<T extends FieldValues>({
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
           className={cn(
-            'flex cursor-pointer flex-col items-center justify-center gap-3 rounded-[14px] p-5 text-center',
+            'flex cursor-pointer flex-col items-center justify-center gap-3 rounded-card p-5 text-center',
             BOX_HEIGHT,
             'border-[1.5px] border-dashed transition-all duration-200',
             '[background-image:repeating-linear-gradient(135deg,transparent_0_12px,var(--line-2)_12px_13px)]',
@@ -257,7 +258,7 @@ export function ImageField<T extends FieldValues>({
               </div>
             </div>
           ) : (
-            <span className="grid size-11 place-items-center rounded-xl bg-ink text-[var(--color-paper)]">
+            <span className="grid size-11 place-items-center rounded-card bg-ink text-[var(--color-paper)]">
               {dragging ? (
                 <IconCloudUpload aria-hidden className="size-[18px]" />
               ) : (

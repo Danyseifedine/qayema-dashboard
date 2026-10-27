@@ -1,10 +1,12 @@
-import { IconLayoutList, IconPlus, IconToolsKitchen2 } from '@tabler/icons-react'
+import { IconPlus, IconToolsKitchen2 } from '@tabler/icons-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { isAtLimit, LimitNotice } from '@/shared/components/data-display'
+import { LimitHeader } from '@/shared/components/data-display'
+import { isAtLimit } from '@/shared/utils/limits/is-at-limit'
 import { useCategories } from '@/features/menu/categories/hooks/use-categories'
 import { CategoryFilter, UNCATEGORISED } from '@/features/menu/components/filters/category-filter'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
+import { MenuSwitch } from '@/features/menu/components/nav/menu-switch'
 import { DishDialog } from '@/features/menu/dishes/components/dialogs/dish-dialog'
 import { DishCard } from '@/features/menu/dishes/components/list/dish-card'
 import {
@@ -14,15 +16,26 @@ import {
   useReorderDishes,
 } from '@/features/menu/dishes/hooks/use-dishes'
 import type { Dish } from '@/features/menu/dishes/schemas/dish.schema'
-import { ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
-import { Alert, Button, PageSwitch } from '@/shared/components/ui'
-import { useDishChoices } from '@/features/auth'
+import {
+  ConfirmDialog,
+  EmptyState,
+  ErrorState,
+  PictureEmptyState,
+  SkeletonList,
+} from '@/shared/components/feedback'
+import { Alert, Button } from '@/shared/components/ui'
+import { useDishBuilds, useDishChoices } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
+import { nameOr } from '@/shared/utils/string/translated'
 
 export type DishesPageProps = {
   locale: Locale
   /** A dish needs a category, so the empty state can send the owner there. */
   onOpenCategories: () => void
+  /** A dish guests build is changed on the Build your own page. */
+  onOpenBuilds: () => void
+  /** A deal dish's offer is changed on the Offers page. */
+  onOpenOffers: () => void
 }
 
 /**
@@ -31,7 +44,12 @@ export type DishesPageProps = {
  * A card grid filtered by the category chips. Cards rather than a table,
  * because this is edited from a phone more often than a desk.
  */
-export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
+export function DishesPage({
+  locale,
+  onOpenCategories,
+  onOpenBuilds,
+  onOpenOffers,
+}: DishesPageProps) {
   const { t } = useTranslation('menu')
   const categories = useCategories()
   const dishes = useDishes()
@@ -51,7 +69,13 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
   // Derived from the query data so the effect below has a stable dependency.
   const categoryList = useMemo(() => categories.data?.data ?? [], [categories.data])
   const currency = dishes.data?.meta.currency ?? 'USD'
-  const dishList = useMemo(() => dishes.data?.data ?? [], [dishes.data])
+  const secondCurrency = dishes.data?.meta.second_currency ?? null
+  // A build's dish is the Build your own page's, above the menu's search.
+  const builds = useDishBuilds()
+  const dishList = useMemo(
+    () => (dishes.data?.data ?? []).filter((dish) => !builds || dish.builds.length === 0),
+    [dishes.data, builds],
+  )
 
   const orphanCount = useMemo(
     () => dishList.filter((dish) => dish.category_id === null).length,
@@ -65,6 +89,11 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
   }, [dishList, filter])
 
   const atLimit = isAtLimit(dishes.data?.meta)
+  // The page needs both answers to say anything true (how many dishes, and
+  // whether a category exists yet): until both are in, it shows its shape
+  // only, so nothing pops in after the rest. Dishes already in hand stay on
+  // screen while the categories load again.
+  const loading = dishes.isPending || (categories.isPending && dishList.length === 0)
   const noCategories = !categories.isPending && categoryList.length === 0
 
   // Stable identities: every card takes these, so a new closure per card per
@@ -86,39 +115,46 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
     if (!categoryList.some((category) => category.id === filter)) setFilter(null)
   }, [filter, categoryList, categories.isPending])
 
+  const addButton = (
+    <Button
+      leadingIcon={<IconPlus className="size-[18px]" />}
+      disabled={loading || atLimit || noCategories}
+      onClick={() => setDialog({ open: true, dish: null })}
+    >
+      {t('dishesPage.add')}
+    </Button>
+  )
+
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <PageSwitch
-        label={t('nav.menu', { ns: 'common' })}
-        value="dishes"
-        options={[
-          { value: 'dishes', label: t('nav.dishes', { ns: 'common' }) },
-          { value: 'categories', label: t('nav.categories', { ns: 'common' }) },
-        ]}
-        onOpen={onOpenCategories}
-      />
+      <MenuSwitch value="dishes" onOpen={onOpenCategories} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <LimitNotice used={dishes.data?.meta.used ?? 0} limit={dishes.data?.meta.limit ?? null} />
-        <Button
-          className="ms-auto"
-          leadingIcon={<IconPlus className="size-[18px]" />}
-          disabled={atLimit || noCategories}
-          onClick={() => setDialog({ open: true, dish: null })}
-        >
-          {t('dishesPage.add')}
-        </Button>
-      </div>
+      <LimitHeader
+        used={dishes.data?.meta.used ?? 0}
+        limit={dishes.data?.meta.limit ?? null}
+        loading={dishes.isPending}
+        action={addButton}
+      />
 
       {atLimit ? <Alert variant="warning">{t('dishesPage.atLimit')}</Alert> : null}
 
-      {noCategories && dishList.length === 0 ? (
-        <EmptyState
+      {loading ? (
+        <SkeletonList
+          count={6}
+          className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3 min-[118rem]:grid-cols-4"
+          itemClassName="h-[132px]"
+        />
+      ) : noCategories && dishList.length === 0 ? (
+        <PictureEmptyState
           fill
-          icon={IconLayoutList}
+          picture="/assets/images/dashboard/no_dishes.webp"
           title={t('shared.addCategoryFirst')}
           description={t('dishesPage.noCategoriesDescription')}
-          action={<Button onClick={onOpenCategories}>{t('shared.goToCategories')}</Button>}
+          action={
+            <Button block onClick={onOpenCategories}>
+              {t('shared.goToCategories')}
+            </Button>
+          }
         />
       ) : (
         <>
@@ -126,13 +162,12 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
             // Deleting a category keeps its dishes. They are still on the
             // menu and still count against the limit, so they must stay
             // visible and reassignable.
-            <Alert variant="warning" title={t('dishesPage.orphansTitle')}>
+            <Alert
+              variant="warning"
+              title={t('dishesPage.orphansTitle')}
+              action={{ label: t('shared.goToCategories'), onClick: onOpenCategories }}
+            >
               {t('dishesPage.orphansDescription')}
-              <div className="mt-2">
-                <Button size="sm" onClick={onOpenCategories}>
-                  {t('shared.goToCategories')}
-                </Button>
-              </div>
             </Alert>
           ) : null}
 
@@ -146,28 +181,25 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
             />
           ) : null}
 
-          {dishes.isPending ? (
-            <SkeletonList
-              count={6}
-              className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3"
-              itemClassName="h-[132px]"
-            />
-          ) : dishes.isError ? (
+          {dishes.isError ? (
             <ErrorState description={dishes.error.message} onRetry={() => void dishes.refetch()} />
+          ) : dishList.length === 0 ? (
+            <PictureEmptyState
+              fill
+              picture="/assets/images/dashboard/no_dishes.webp"
+              title={t('dishesPage.emptyTitle')}
+              description={t('dishesPage.emptyDescription')}
+              action={
+                <Button block onClick={() => setDialog({ open: true, dish: null })}>
+                  {t('dishesPage.emptyAction')}
+                </Button>
+              }
+            />
           ) : visible.length === 0 ? (
             <EmptyState
-              fill
               icon={IconToolsKitchen2}
-              title={
-                dishList.length === 0
-                  ? t('dishesPage.emptyTitle')
-                  : t('dishesPage.emptyFilteredTitle')
-              }
-              description={
-                dishList.length === 0
-                  ? t('dishesPage.emptyDescription')
-                  : t('dishesPage.emptyFilteredDescription')
-              }
+              title={t('dishesPage.emptyFilteredTitle')}
+              description={t('dishesPage.emptyFilteredDescription')}
               action={
                 <Button onClick={() => setDialog({ open: true, dish: null })}>
                   {t('dishesPage.emptyAction')}
@@ -181,7 +213,7 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
               onReorder={(ordered) => reorder.mutate(ordered)}
             >
               {/* One column of rows on a phone; two from a tablet, three on a wide screen. */}
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3 min-[118rem]:grid-cols-4">
                 {visible.map((dish) => (
                   <SortableCard
                     key={dish.id}
@@ -191,7 +223,6 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
                     {({ handle }) => (
                       <DishCard
                         dish={dish}
-                        currency={currency}
                         locale={locale}
                         handle={handle}
                         showVariants={show.variants}
@@ -216,16 +247,25 @@ export function DishesPage({ locale, onOpenCategories }: DishesPageProps) {
         categories={categoryList}
         defaultCategoryId={filter === null || filter === UNCATEGORISED ? null : filter}
         currency={currency}
+        secondCurrency={secondCurrency}
         locale={locale}
         onClose={() => setDialog({ open: false, dish: null })}
         onOpenCategories={onOpenCategories}
+        onOpenBuilds={onOpenBuilds}
+        onOpenOffers={onOpenOffers}
       />
 
       <ConfirmDialog
         open={pendingDelete !== null}
         loading={remove.isPending}
         title={t('dishesPage.deleteTitle')}
-        description={t('dishesPage.deleteDescription')}
+        description={
+          pendingDelete?.offer
+            ? `${t('dishesPage.deleteDescription')} ${t('dishesPage.deleteDeal', {
+                title: nameOr(pendingDelete.offer.title, locale, t('dishCard.deal.untitledOffer')),
+              })}`
+            : t('dishesPage.deleteDescription')
+        }
         confirmLabel={t('shared.delete')}
         onConfirm={() => {
           if (pendingDelete) {

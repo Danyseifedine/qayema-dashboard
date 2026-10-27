@@ -1,9 +1,7 @@
-import { IconExternalLink } from '@tabler/icons-react'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { RowActions } from '@/shared/components/ui'
+import { ExternalLink, RowActions } from '@/shared/components/ui'
 import { withoutScheme } from '@/shared/utils/string/url'
-import { cn } from '@/shared/utils/dom/cn'
 import {
   PLATFORM_LABELS,
   type SocialLink,
@@ -44,19 +42,9 @@ export const SocialLinkCard = memo(function SocialLinkCard({
 
       <div className="min-w-0 flex-1">
         <p className="text-[14.5px] font-medium tracking-[-0.012em]">{label}</p>
-        <a
-          href={link.url}
-          target="_blank"
-          rel="noreferrer noopener"
-          className={cn(
-            'force-ltr mt-0.5 inline-flex max-w-full items-center gap-1.5 truncate align-top',
-            'text-[12px] text-[var(--muted)] hover:text-accent hover:underline',
-            'focus-ring',
-          )}
-        >
-          <span className="truncate">{withoutScheme(link.url)}</span>
-          <IconExternalLink aria-hidden className="size-3 shrink-0" />
-        </a>
+        <ExternalLink href={link.url} className="force-ltr mt-0.5 max-w-full align-top">
+          {withoutScheme(link.url)}
+        </ExternalLink>
       </div>
 
       {/* The actions apart from what the link is, behind a hairline. */}

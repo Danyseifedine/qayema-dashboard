@@ -297,7 +297,9 @@ test.describe('QR code', () => {
       origin: DASHBOARD_URL,
     })
     await page.goto('/qr')
-    await expect(page.getByText(`127.0.0.1/${restaurant.slug}`)).toBeVisible()
+    await expect(page.getByRole('textbox', { name: 'Menu link' })).toHaveValue(
+      `127.0.0.1/${restaurant.slug}`,
+    )
 
     for (const [extension, name] of [
       ['png', 'Save image'],
@@ -426,8 +428,7 @@ test.describe('QR code', () => {
     await page.goto('/qr')
 
     await expect(page.getByRole('img', { name: "Your menu's QR code" })).toBeVisible()
-    await expect(lockedCard(page, /Make the code your own/)).toContainText('Premium')
-    await expect(page.getByText('Your logo in the middle')).toBeVisible()
+    await expect(lockedCard(page, /QR Studio comes with/)).toContainText('Premium')
     await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0)
     await expect(page.getByText('Scans', { exact: true })).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'Open the printable table card' })).toHaveCount(0)
@@ -449,7 +450,7 @@ test.describe('QR code', () => {
 
     await expect(page.getByText('Scans', { exact: true })).toBeVisible()
     await expect(page.locator('dl > div').filter({ hasText: 'All time' })).toContainText('4')
-    await expect(lockedCard(page, /Make the code your own/)).toContainText('Premium')
+    await expect(lockedCard(page, /QR Studio comes with/)).toContainText('Premium')
     await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0)
   })
 
@@ -461,7 +462,7 @@ test.describe('QR code', () => {
     // landed. Holding the refetch catches that copy on screen.
     await owner({ package: 'premium' })
     await page.goto('/qr')
-    // The studio's own sections; "Make the code your own" is the locked one.
+    // The studio's own sections; "QR Studio comes with" is the locked one.
     const studio = page.getByRole('heading', { name: 'Customisation', exact: true })
     const off = page.getByRole('heading', { name: 'QR Studio is off' })
     await expect(studio).toBeVisible()
@@ -525,7 +526,7 @@ test.describe('QR code', () => {
     await page.goto('/qr')
 
     await expect(page.getByRole('heading', { name: 'QR Studio is off' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /Make the code your own/ })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: /QR Studio comes with/ })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0)
     // The design is kept, but the menu draws the plain code meanwhile.
     expect(await publicOptions(page, restaurant.slug)).toMatchObject(PLAIN)

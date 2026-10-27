@@ -23,8 +23,9 @@ test.describe('account', () => {
     await expect(page).toHaveURL(/\/account$/)
 
     // The email is who they are, so it is shown, not edited.
-    await expect(page.getByText(user.email)).toBeVisible()
-    await expect(page.getByRole('textbox', { name: /Email|البريد/ })).toHaveCount(0)
+    const email = page.getByRole('textbox', { name: /Email|البريد/ })
+    await expect(email).toHaveValue(user.email)
+    await expect(email).toHaveAttribute('readonly', '')
 
     const name = page.getByRole('textbox', { name: either('Owner name', 'اسم المالك') })
     await expect(name).toHaveValue('E2E Owner')

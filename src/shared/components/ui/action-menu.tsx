@@ -1,6 +1,8 @@
 import { IconDotsVertical, type TablerIcon } from '@tabler/icons-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useDismiss } from '@/shared/hooks/use-dismiss'
+import { Button } from '@/shared/components/ui/button'
+import { menuItemClass, menuPanelClass } from '@/shared/components/ui/control-class'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type ActionMenuItem = {
@@ -59,23 +61,22 @@ export function ActionMenu({ label, items, disabled = false }: ActionMenuProps) 
 
   return (
     <div ref={container} className="relative shrink-0">
-      <button
+      <Button
         ref={trigger}
-        type="button"
+        variant="ghost"
+        size="icon-sm"
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
         disabled={disabled}
         onClick={() => setOpen((value) => !value)}
         className={cn(
-          'grid size-8 place-items-center rounded-[var(--radius-control)] text-[var(--muted)] transition-colors',
-          'hover:bg-[var(--hover-wash)] hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-40',
-          'focus-ring',
+          'text-[var(--muted)] hover:text-[var(--text)]',
           open && 'bg-[var(--hover-wash)] text-[var(--text)]',
         )}
       >
         <IconDotsVertical aria-hidden className="size-[18px]" />
-      </button>
+      </Button>
 
       {open ? (
         <div
@@ -83,7 +84,7 @@ export function ActionMenu({ label, items, disabled = false }: ActionMenuProps) 
           role="menu"
           aria-label={label}
           onKeyDown={onKeyDown}
-          className="absolute end-0 top-[calc(100%+4px)] z-30 min-w-[180px] rounded-tile border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-1 shadow-lift"
+          className={cn('absolute end-0 top-[calc(100%+4px)] z-30 min-w-[180px]', menuPanelClass)}
         >
           {items.map((item) => (
             <button
@@ -96,7 +97,7 @@ export function ActionMenu({ label, items, disabled = false }: ActionMenuProps) 
                 item.onSelect()
               }}
               className={cn(
-                'flex w-full items-center gap-2.5 rounded-[6px] px-2.5 py-2 text-start text-[13.5px] transition-colors',
+                menuItemClass,
                 'focus-visible:outline-none',
                 item.danger
                   ? 'text-status-danger hover:bg-status-danger-wash focus-visible:bg-status-danger-wash'

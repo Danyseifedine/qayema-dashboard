@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { StatTile } from '@/shared/components/data-display'
+import type { Locale } from '@/shared/constants/locales'
 import type { AdvancedStats, GuestAction } from '@/features/analytics/schemas/analytics.schema'
 import { formatNumber } from '@/shared/utils/format/number'
-import { usePreferencesStore } from '@/stores/preferences.store'
 
 type ActionLabel =
   'dishAdd' | 'categoryOpen' | 'search' | 'whatsapp' | 'map' | 'call' | 'social' | 'language'
@@ -22,15 +22,15 @@ export type GuestActionsProps = {
   actions: AdvancedStats['actions']
   /** Without ordering there is no cart, so its tile would only ever say 0. */
   takesOrders: boolean
+  locale: Locale
 }
 
 /**
  * What guests did once the menu was open. A tap is all the menu can see: the
  * call, the chat or the follow that comes after happens in another app.
  */
-export function GuestActions({ actions, takesOrders }: GuestActionsProps) {
+export function GuestActions({ actions, takesOrders, locale }: GuestActionsProps) {
   const { t } = useTranslation('analytics')
-  const locale = usePreferencesStore((state) => state.locale)
 
   return (
     <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">

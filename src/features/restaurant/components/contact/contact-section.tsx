@@ -1,3 +1,4 @@
+import { IconPhone } from '@tabler/icons-react'
 import type { Control } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { FormSection, PhoneField } from '@/shared/components/forms'
@@ -16,7 +17,11 @@ export function ContactSection({ control, locationUrl, onPickLocation }: Contact
   const { t } = useTranslation('restaurant')
 
   return (
-    <FormSection title={t('contact.title')} description={t('contact.description')}>
+    <FormSection
+      icon={<IconPhone aria-hidden className="size-[18px]" />}
+      title={t('contact.title')}
+      description={t('contact.description')}
+    >
       <PhoneField
         control={control}
         name="phone"

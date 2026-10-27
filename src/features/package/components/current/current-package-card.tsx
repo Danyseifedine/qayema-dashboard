@@ -1,12 +1,12 @@
 import { IconCheck, IconCrown, IconLock } from '@tabler/icons-react'
 import { Trans, useTranslation } from 'react-i18next'
 import type { AuthRestaurant } from '@/features/auth'
-import { LimitBadge } from '@/shared/components/data-display'
-import { Alert, Button } from '@/shared/components/ui'
+import { LimitBadge, StatusChip } from '@/shared/components/data-display'
+import { Alert } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { formatDate } from '@/shared/utils/format/date'
-import { translated, type TranslatableValue } from '@/shared/utils/string/translated'
+import { nameOr, type TranslatableValue } from '@/shared/utils/string/translated'
 import { PACKAGE_ROWS } from '@/features/package/utils/package-rows'
 
 /** How close to its end the card turns to a warning, in days. */
@@ -35,11 +35,10 @@ export function CurrentPackageCard({
   onAskFor,
 }: CurrentPackageCardProps) {
   const { t } = useTranslation('package')
-  const { package: pkg, lapsed, upcoming, limits, plan } = restaurant
-  const nameOf = (value: TranslatableValue, slug: string | null) => {
-    const name = translated(value, locale)
-    return name.missing ? (slug ?? t('page.fallbackName')) : name.text
-  }
+  const { package: pkg, lapsed, upcoming, limits, plan, turned_off: turnedOff } = restaurant
+  const credits = restaurant.writing_help?.credits
+  const nameOf = (value: TranslatableValue, slug: string | null) =>
+    nameOr(value, locale, slug ?? t('page.fallbackName'))
   const name = nameOf(pkg.name, pkg.slug)
   const endingSoon = pkg.days_left !== null && pkg.days_left <= ENDING_SOON_DAYS
   // What a request would ask for: this package again, or the one that ended.
@@ -50,6 +49,17 @@ export function CurrentPackageCard({
     { id: 'dishes', label: t('current.dishes'), value: limits.dishes },
     { id: 'categories', label: t('current.categories'), value: limits.categories },
     { id: 'social_links', label: t('current.socialLinks'), value: limits.social_links },
+    // The AI's credits this month, while it is on and capped: credits,
+    // never money.
+    ...(credits?.limit != null
+      ? [
+          {
+            id: 'ai_credits',
+            label: t('current.aiCredits'),
+            value: { used: credits.limit - (credits.left ?? credits.limit), limit: credits.limit },
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -77,18 +87,11 @@ export function CurrentPackageCard({
                 />
               </p>
               {pkg.days_left !== null ? (
-                <p
-                  className={cn(
-                    'rounded-full px-2 py-0.5 text-[12px] font-medium',
-                    endingSoon
-                      ? 'bg-[var(--status-warn-wash)] text-[var(--status-warn)]'
-                      : 'bg-[var(--surface)] text-[var(--text)]',
-                  )}
-                >
+                <StatusChip tone={endingSoon ? 'warning' : 'neutral'}>
                   {pkg.days_left === 0
                     ? t('current.endsToday')
                     : t('current.daysLeft', { count: pkg.days_left })}
-                </p>
+                </StatusChip>
               ) : null}
             </>
           ) : pkg.is_contact_only ? (
@@ -100,15 +103,11 @@ export function CurrentPackageCard({
       </div>
 
       {extendSlug ? (
-        <Alert variant="warning" title={t('current.endingSoon')}>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="mt-2"
-            onClick={() => onAskFor(extendSlug)}
-          >
-            {t('current.extend')}
-          </Button>
+        <Alert
+          variant="warning"
+          action={{ label: t('current.extend'), onClick: () => onAskFor(extendSlug) }}
+        >
+          {t('current.endingSoon')}
         </Alert>
       ) : null}
 
@@ -119,6 +118,7 @@ export function CurrentPackageCard({
             name: nameOf(lapsed.name, renewSlug),
             date: lapsed.ended_at ? formatDate(lapsed.ended_at, locale) : '',
           })}
+          action={{ label: t('current.renew'), onClick: () => onAskFor(renewSlug) }}
         >
           <p>
             {lapsed.offline || !lapsed.offline_at ? (
@@ -132,19 +132,11 @@ export function CurrentPackageCard({
               />
             )}
           </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="mt-2"
-            onClick={() => onAskFor(renewSlug)}
-          >
-            {t('current.renew')}
-          </Button>
         </Alert>
       ) : null}
 
       {upcoming?.slug && upcoming.starts_at ? (
-        <Alert variant="info">
+        <Alert variant="warning">
           <Trans
             ns="package"
             i18nKey="current.upcoming"
@@ -157,11 +149,16 @@ export function CurrentPackageCard({
         </Alert>
       ) : null}
 
-      <dl className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <dl
+        className={cn(
+          'grid grid-cols-1 gap-2',
+          limitRows.length > 3 ? 'sm:grid-cols-2' : 'sm:grid-cols-3',
+        )}
+      >
         {limitRows.map((row) => (
           <div
             key={row.id}
-            className="flex items-center justify-between gap-2 rounded-[10px] bg-[var(--surface)] px-3 py-2.5"
+            className="flex items-center justify-between gap-2 rounded-tile bg-[var(--surface)] px-3 py-2.5"
           >
             <dt className="text-[13px] text-[var(--muted)]">{row.label}</dt>
             <dd>
@@ -192,9 +189,14 @@ export function CurrentPackageCard({
                       <IconLock aria-hidden className="size-3" />
                     )}
                     {t(`rows.${row.key}`)}
-                    <span className="sr-only">
-                      {plan[row.key] ? t('compare.included') : t('compare.notIncluded')}
-                    </span>
+                    {/* The package may have it: an admin turned it off here. */}
+                    {turnedOff.includes(row.key) ? (
+                      <span>· {t('current.turnedOff')}</span>
+                    ) : (
+                      <span className="sr-only">
+                        {plan[row.key] ? t('compare.included') : t('compare.notIncluded')}
+                      </span>
+                    )}
                   </li>,
                 ]
               : [],

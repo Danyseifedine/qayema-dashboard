@@ -1,8 +1,9 @@
 import { IconCheck, IconChevronDown, IconQrcode } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ProgressBar } from '@/shared/components/data-display'
 import { FormSection } from '@/shared/components/forms'
-import { Button } from '@/shared/components/ui'
+import { Button, Collapse, StepCircle } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
 import {
   setupSteps,
@@ -34,19 +35,12 @@ export function SetupStepper({ items, onOpen }: SetupStepperProps) {
       description={current === null ? t('setup.complete') : t('setup.incomplete')}
     >
       <div className="flex items-center gap-3 pt-1 pb-2">
-        <div
-          role="progressbar"
-          aria-label={t('setup.progressLabel')}
-          aria-valuemin={0}
-          aria-valuemax={items.length}
-          aria-valuenow={done}
-          className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--hover-wash)]"
-        >
-          <div
-            className="h-full rounded-full bg-[var(--status-success)] transition-[width] duration-500"
-            style={{ width: `${(done / items.length) * 100}%` }}
-          />
-        </div>
+        <ProgressBar
+          value={done}
+          max={items.length}
+          label={t('setup.progressLabel')}
+          className="flex-1"
+        />
         <span className="shrink-0 text-[12.5px] text-[var(--muted)] tabular-nums">
           {t('setup.progress', { done, total: items.length })}
         </span>
@@ -64,22 +58,14 @@ export function SetupStepper({ items, onOpen }: SetupStepperProps) {
               {last ? null : (
                 <span
                   aria-hidden
-                  className="absolute start-[13px] top-8 bottom-0 w-px bg-[var(--line-strong)]"
+                  className="absolute start-[13.5px] top-8 bottom-0 w-px bg-[var(--line-strong)]"
                 />
               )}
-              <span
-                aria-hidden
-                className={cn(
-                  'relative z-[1] grid size-[27px] shrink-0 place-items-center rounded-full text-[12.5px] font-semibold',
-                  step.done
-                    ? 'bg-[var(--status-success)] text-white'
-                    : step.id === current
-                      ? 'bg-accent-wash text-accent ring-1 ring-[var(--gold-on)]'
-                      : 'border-[1.5px] border-[var(--line-strong)] bg-[var(--surface)] text-[var(--muted)]',
-                )}
-              >
-                {step.done ? <IconCheck className="size-3.5" stroke={3} /> : index + 1}
-              </span>
+              <StepCircle
+                number={index + 1}
+                state={step.done ? 'done' : step.id === current ? 'current' : 'ahead'}
+                className="relative z-[1]"
+              />
 
               <div className={cn('min-w-0 flex-1', last ? 'pb-1' : 'pb-5')}>
                 <button
@@ -87,7 +73,7 @@ export function SetupStepper({ items, onOpen }: SetupStepperProps) {
                   aria-expanded={expanded}
                   onClick={() => setOpen(expanded ? null : step.id)}
                   className={cn(
-                    'flex w-full items-start justify-between gap-3 rounded-md text-start',
+                    'flex w-full items-start justify-between gap-3 rounded-control text-start',
                     'focus-ring',
                   )}
                 >
@@ -104,38 +90,36 @@ export function SetupStepper({ items, onOpen }: SetupStepperProps) {
                   <IconChevronDown
                     aria-hidden
                     className={cn(
-                      'mt-0.5 size-4 shrink-0 text-[var(--muted)] transition-transform',
+                      'mt-0.5 size-4 shrink-0 text-[var(--muted)] transition-transform duration-300 motion-reduce:transition-none',
                       expanded && 'rotate-180',
                     )}
                   />
                 </button>
 
-                {expanded ? (
-                  <div className="mt-2 flex flex-col gap-2">
-                    <p className="text-[12.5px] leading-snug text-[var(--muted)]">
-                      {t(`setup.steps.${step.id}.description`)}
-                    </p>
-                    <ul
-                      className="flex flex-col divide-y-[0.5px] divide-[var(--line-2)] rounded-[10px] border-[0.5px] border-[var(--line)] px-3"
-                      aria-label={t(`setup.steps.${step.id}.title`)}
+                <Collapse open={expanded} className="flex flex-col gap-2 pt-2">
+                  <p className="text-[12.5px] leading-snug text-[var(--muted)]">
+                    {t(`setup.steps.${step.id}.description`)}
+                  </p>
+                  <ul
+                    className="flex flex-col divide-y-[0.5px] divide-[var(--line-2)] rounded-tile border-[0.5px] border-[var(--line)] px-3"
+                    aria-label={t(`setup.steps.${step.id}.title`)}
+                  >
+                    {[...left, ...step.items.filter((item) => item.done)].map((item) => (
+                      <ChecklistRow key={item.id} item={item} onOpen={onOpen} />
+                    ))}
+                  </ul>
+                  {step.id === 'share' ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="self-start"
+                      leadingIcon={<IconQrcode aria-hidden className="size-4" />}
+                      onClick={() => onOpen('qr')}
                     >
-                      {[...left, ...step.items.filter((item) => item.done)].map((item) => (
-                        <ChecklistRow key={item.id} item={item} onOpen={onOpen} />
-                      ))}
-                    </ul>
-                    {step.id === 'share' ? (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="self-start"
-                        leadingIcon={<IconQrcode aria-hidden className="size-4" />}
-                        onClick={() => onOpen('qr')}
-                      >
-                        {t('setup.getQr')}
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : null}
+                      {t('setup.getQr')}
+                    </Button>
+                  ) : null}
+                </Collapse>
               </div>
             </li>
           )
@@ -160,9 +144,7 @@ function ChecklistRow({
         aria-hidden
         className={cn(
           'grid size-5 shrink-0 place-items-center rounded-full',
-          item.done
-            ? 'bg-[var(--status-success)] text-white'
-            : 'border-[1.5px] border-[var(--line-strong)]',
+          item.done ? 'bg-status-success text-white' : 'border-[1.5px] border-[var(--line-strong)]',
         )}
       >
         {item.done ? <IconCheck className="size-3" stroke={3} /> : null}

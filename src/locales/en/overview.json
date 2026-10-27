@@ -4,7 +4,10 @@
     "categories": "Categories",
     "socialLinks": "Links",
     "noLimit": "No limit on your package",
-    "onYourPackage": "on your package"
+    "onYourPackage": "on your package",
+    "aiCredits": "AI credits",
+    "creditsLeft": "left of {{limit}} this month",
+    "creditsBack": "Back on {{date}}"
   },
   "checklist": {
     "stateDone": "(done)",

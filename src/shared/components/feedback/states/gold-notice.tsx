@@ -41,7 +41,7 @@ export function GoldNotice({
       <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3.5 gap-y-3 @min-[28rem]:items-start @min-[28rem]:gap-x-5">
         <span
           aria-hidden
-          className="gold-chip relative grid size-14 shrink-0 place-items-center rounded-[14px] shadow-[inset_0_1px_0_rgba(255,236,196,0.12),0_0_36px_-8px_rgba(248,211,141,0.4)] @min-[28rem]:row-span-3 @min-[28rem]:size-[88px] @min-[28rem]:rounded-[16px]"
+          className="gold-chip relative grid size-14 shrink-0 place-items-center rounded-card shadow-[inset_0_1px_0_rgba(255,236,196,0.12),0_0_36px_-8px_rgba(248,211,141,0.4)] @min-[28rem]:row-span-3 @min-[28rem]:size-[88px]"
         >
           <span className="gold-sheen" />
           <Icon className="size-8 @min-[28rem]:size-11" stroke={1.4} />
@@ -72,7 +72,7 @@ export function GoldNotice({
           aria-hidden
           className="h-px flex-1 bg-gradient-to-r from-transparent to-[var(--accent-border)] rtl:bg-gradient-to-l"
         />
-        <span className="inline-flex items-center gap-1.5 rounded-full border-[0.5px] border-[var(--accent-border)] px-3 py-1 text-[11.5px] text-[var(--muted)]">
+        <span className="inline-flex items-center gap-1.5 rounded-full border-[0.5px] border-accent-border px-3 py-1 text-[11.5px] text-[var(--muted)]">
           <IconSparkles aria-hidden className="size-3.5 text-accent" />
           {note}
         </span>

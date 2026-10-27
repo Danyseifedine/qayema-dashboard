@@ -3,7 +3,7 @@ import { Segmented } from '@/shared/components/ui'
 import { languageName } from '@/shared/constants/menu-languages'
 
 export type LocaleTabsProps = {
-  /** The menu's languages, English first. */
+  /** The menu's languages, its main one first. */
   languages: readonly string[]
   value: string
   onChange: (language: string) => void

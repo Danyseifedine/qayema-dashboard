@@ -15,6 +15,19 @@ describe('SectionCard', () => {
     expect(card).toHaveTextContent('Inter')
   })
 
+  it('can head itself with a small label in capitals', () => {
+    render(
+      <SectionCard icon={<span>Aa</span>} title="Scans" description="Last 30 days" heading="caps">
+        <p>120</p>
+      </SectionCard>,
+    )
+
+    const card = screen.getByRole('region', { name: 'Scans' })
+    expect(screen.getByRole('heading', { level: 3, name: 'Scans' })).toHaveClass('uppercase')
+    expect(card).toHaveTextContent('Last 30 days')
+    expect(card).toHaveClass('gap-3', 'sm:gap-4')
+  })
+
   it('can be a title alone', () => {
     render(<SectionCard icon={<span>Aa</span>} title="Classic" />)
 

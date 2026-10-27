@@ -17,7 +17,7 @@
   },
   "password": {
     "changeTitle": "كلمة المرور",
-    "setTitle": "تعيين كلمة مرور",
+    "setTitle": "إضافة كلمة مرور",
     "changeDescription": "تغييرها يسجّل خروجك من كل متصفح آخر بقيت مسجّلًا فيه.",
     "setDescription": "لقد سجّلت عبر Google. إضافة كلمة مرور تمنحك طريقة ثانية للدخول.",
     "currentLabel": "كلمة المرور الحالية",
@@ -30,16 +30,16 @@
     "confirmLabel": "تأكيد كلمة المرور",
     "confirmPlaceholder": "اكتب كلمة المرور نفسها مرة أخرى",
     "changeSubmit": "تغيير كلمة المرور",
-    "setSubmit": "تعيين كلمة المرور"
+    "setSubmit": "إضافة كلمة المرور"
   },
   "toast": {
     "profileSaved": "تم حفظ الملف الشخصي",
     "profileFailed": "تعذّر حفظ ملفك الشخصي",
     "passwordChanged": "تم تغيير كلمة المرور",
-    "passwordSet": "تم تعيين كلمة المرور",
+    "passwordSet": "تمت إضافة كلمة المرور",
     "passwordSignedOut": "تم تسجيل خروجك من أي متصفح آخر كنت مسجّلًا فيه.",
     "passwordChangeFailed": "تعذّر تغيير كلمة المرور",
-    "passwordSetFailed": "تعذّر تعيين كلمة مرور"
+    "passwordSetFailed": "تعذّرت إضافة كلمة المرور"
   },
   "validation": {
     "nameTooShort": "يجب أن يتكون اسم المالك من حرفين على الأقل.",

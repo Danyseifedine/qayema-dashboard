@@ -32,28 +32,11 @@ describe('StatTile', () => {
     expect(screen.getByText('Nothing to compare yet')).toBeInTheDocument()
   })
 
-  it('shows a rise in green with an up arrow', () => {
+  it('says how the number moved against the period before', () => {
     renderTile({ change: 0.124 })
 
-    const change = screen.getByText(/↑ 12%/)
-    expect(change).toHaveAttribute('dir', 'ltr')
-    expect(change).toHaveClass('text-[var(--status-success)]')
-    expect(change).toHaveTextContent('↑ 12% vs before')
-  })
-
-  it('shows a fall in red with a down arrow and no minus sign', () => {
-    renderTile({ change: -0.5 })
-
-    const change = screen.getByText(/↓ 50%/)
-    expect(change).toHaveClass('text-[var(--status-danger)]')
-    expect(change).not.toHaveTextContent('-')
-  })
-
-  it('calls a change that rounds to 0% the same', () => {
-    renderTile({ change: 0.004 })
-
-    expect(screen.getByText('Same as before')).toBeInTheDocument()
-    expect(screen.queryByText(/%/)).not.toBeInTheDocument()
+    expect(screen.getByText('+12%')).toHaveClass('text-status-success')
+    expect(screen.getAllByRole('definition')[1]).toHaveTextContent('+12%vs before')
   })
 
   it('is a panel inside a card, or a glass card of its own', () => {

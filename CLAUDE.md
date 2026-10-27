@@ -55,22 +55,25 @@ cookies, five a page load at most), and from there to Grafana.
 
 - **One name per thing.** Sidebar label = page heading = feature folder =
   nav key = i18n namespace = query root: `overview`, `analytics`, `menu`
-  (categories, dishes), `design`, `orders` (+ its `table-orders` page),
+  (categories, dishes), `offers`, `build-your-own`, `design`, `orders` (+ its `table-orders` page),
   `tables`, `qr`, `social-links`,
   `restaurant` (+ its `features` page), `package`, `account`. The sidebar
   goes by how often a page is opened: Overview and Analytics, then ORDERS
-  (Orders, Table orders), MENU (Categories, Dishes), LOOK (Design,
+  (Orders, Table orders), MENU (Categories, Dishes, Offers, Build your own), LOOK (Design,
   Appearance), SHARING (QR code, Tables, Social links), SETTINGS
   (Restaurant, Features, Package); Account opens from the avatar menu.
   The vocabulary table is §2 of docs/ARCHITECTURE.md; the backend's CLAUDE.md
   carries the same names.
-- Three words never swapped: **plan** = what the restaurant may use
+- Four words never swapped: **plan** = what the restaurant may use
   (`restaurant.plan`, one boolean per backend `Feature` flag:
   `multiple_languages`, `variants`, `addons`, `appearance`, `premium_designs`,
-  `qr_studio`, `ordering`, `menu_ordering`, `dine_in`, `analytics`, `advanced_analytics`; `requiresPlan`
+  `qr_studio`, `ordering`, `menu_ordering`, `dine_in`, `analytics`, `advanced_analytics`, `offers`,
+  `build_your_own` (on no package); `requiresPlan`
   in nav-items); **switched off** = what the owner turned off on the Features
   page (`restaurant.switched_off`, `hideable` in nav-items); **grant** is a
-  backend word (an admin giving one restaurant more than its package).
+  backend word (an admin giving one restaurant more than its package);
+  **turned off** = a flag an admin forced off for one restaurant
+  (`restaurant.turned_off`, also false in `plan`; `useTurnedOff(flag)`).
 - Feature-first: `src/features/<name>/{api,schemas,hooks,components/<area>,pages}`
   plus an `index.ts` barrel that exports only what outsiders import, never a
   page: pages are exported by `pages/index.ts`, which only `App.tsx` imports
@@ -89,7 +92,7 @@ cookies, five a page load at most), and from there to Grafana.
   overrides.
 - **Translations:** `src/locales/<code>/` holds `meta.json` (name, short
   label, `ltr`/`rtl`) and one JSON per namespace, named after the feature
-  (`common`, `overview`, `analytics`, `menu`, `design`, `appearance`, `orders`, `tables`,
+  (`common`, `overview`, `analytics`, `menu`, `offers`, `build-your-own`, `design`, `appearance`, `orders`, `tables`,
   `qr`, `social-links`, `restaurant`, `features`, `package`, `account`).
   **To add a language, copy `src/locales/en/` to `src/locales/<code>/` and
   translate it**: it is found at build time and appears in the switcher;
@@ -162,16 +165,24 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   (plus its copy under `planLocked.<key>` in `common.json`). A section the
   **package** lacks is left out of the sidebar (`isOnPlan`); opened by a
   link it shows `PlanLockedPage` (what it gives, the package that has it,
-  "See packages"). One waiting for a **design** is disabled. Anything locked inside a page uses `LockedState`
+  "See packages", or "Ask us to turn it on" for a flag no package has,
+  `useOnNoPackage`). One waiting for a **design** is disabled. Anything locked inside a page uses `LockedState`
   (`shared/components/feedback`) and names its package with
   `usePackageFor(flag, locale)` from the package barrel, never a hard-coded
-  "Pro".
+  "Pro". A flag the admin **turned off** is never an upsell: where
+  `useTurnedOff(flag)` is true, `PlanLockedPage`, the QR studio, advanced
+  analytics and the Design page show `TurnedOffNotice` (package barrel:
+  "Turned off for your restaurant", "Contact us" opens the package request
+  with a note naming the feature, no "See packages"), and `LockedFeature`
+  (Features page), the analytics range tooltip and the Package page's list
+  say "turned off" instead of naming a package.
 - **Package page** (`features/package`): the current package with its dates
   from the session (`package.{ends_at, days_left}`, `lapsed`,
   `upcoming`), shown as "Until …, N days left", a warning with "Ask to
   extend" in the last 7 days; the topbar pill is a crown with no text in the
-  package's metal (bronze Free, silver Pro, gold Premium and Custom,
-  `tierOf()`) with the days left in a round badge on its corner, edged in
+  package's metal (`package.tier`, the admin's choice; from a server
+  before it bronze Free, silver Pro, gold Premium and Custom, `tierOf()`)
+  with the days left in a round badge on its corner, edged in
   the same metal (`package.days_left`, 99+ past 99, amber in the last 7). "Your Pro
   ended on …" with when the menu goes offline and "Ask to renew", or
   "Premium starts on …"; the limits used; and what the package includes.
@@ -182,11 +193,13 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   screen (`MenuOfflinePage`, `app/layouts/authenticated/menu-offline.tsx`).
   Then one card per package ("Everything in Free, plus:",
   built by `highlightsOf()`, only when it really has everything the one before
-  has) and the comparison table. Cards and table both read
+  has; the current one at the restaurant's own price when an admin set one,
+  `meta.your_price_cents`, else the published one) and the comparison table. Cards and table both read
   `utils/package-rows.ts`, the one list of features, groups and order. Tests
   use `PACKAGE_CATALOGUE` / `makePackage()` (`test/factories/packages`)
   and `FULL_PLAN` / `EMPTY_PLAN` (`…/session`).
-- **Features page** (`features/restaurant/pages/features-page.tsx`): related
+- **Features page** (`features/restaurant/pages/features-page.tsx`, its parts
+  in `components/features/`): related
   features grouped in sections (`GROUPS`, in the sidebar's order): Orders
   (Orders, Ordering at the table), Dishes (Variants, Add-ons), Menu languages
   (the main language, then Multiple languages) and QR code and analytics (QR
@@ -250,8 +263,12 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   order accepts it; not for a cancelled one) or **delete** it for good
   (`DeleteOrderDialog`, `DELETE /api/orders/{id}`: its lines, its place in
   the analytics, and the guest's tracking go). A line's `options` (the
-  guest's variants and add-ons, as named then) show under the dish on its
-  card; "Changed by you at …" shows after an edit.
+  guest's variants, add-ons and builds, as named then: "Your pizza: ½
+  Margherita + ½ Pepperoni") show under the dish on its card; "Changed by
+  you at …" shows after an edit. A dish added in the editor is built there
+  too (`BuildPicker`, priced by `buildPriceCents` from the build-your-own
+  barrel, the one twin of `BuildPrice`). The editor loads the first time an order is edited
+  (`lazy` in `OrderBoard`), since the Orders page is in the first download.
 - **Orders come one way at a time** (`useOrderingMode()` from `features/auth`:
   `whatsapp`, `menu`, or null without ordering). On WhatsApp the Orders page
   says the orders are handled there (we never learn if one was sent) and
@@ -277,11 +294,85 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `lib/realtime/echo.ts`; `VITE_PUSHER_KEY` / `VITE_PUSHER_CLUSTER`, the
   private channel signed at `POST /api/broadcasting/auth`) and asks
   `/api/orders/pulse` only once a minute while Pusher cannot be heard, in a
-  background tab too:
+  background tab too (each such check also refreshes the order lists, which
+  never poll on their own; a pushed change refreshes them too):
   a new order plays `public/new_order_alert.mp3`, toasts and refreshes the
   list; the number waiting is the sidebar badge (`counts`) and the tab title
   "(2) …". Analytics label the orders tile and the funnel's last step from
   `order_channel` ("Sent to WhatsApp" vs "Orders").
+- **Two currencies**: the Restaurant page's Money and time section adds an
+  optional second currency and its rate (`second_currency`,
+  `exchange_rate`: main per one second, written either way round by the
+  owner, `utils/exchange-rate.ts`; 1 USD = 89,000 LBP by default for that
+  pair; an untouched rate goes back as the server's own string). A dish is
+  priced in the main one or the second (`dish.currency`, a toggle beside
+  its price), its choices with it. Orders show each line in its own
+  currency and the total in the order's, with the rate when lines differ;
+  a total worked out here is the server's rule: each second-currency line
+  `round(cents x rate)`, then added up (`orderTotal()` in
+  `features/orders/utils/order-edit.ts`; `rateFor()`, `formatRate()` in
+  `shared/utils/format/money.ts`). An amount-off offer
+  is in the main currency (`discountedCents(…, rate)`). Saving the
+  restaurant refreshes dishes and offers (`offerKeys` from
+  `features/offers`'s barrel).
+- **Offers** (`features/offers`, `/api/offers`, needs `plan.offers`, in
+  MENU after Dishes): cards in the owner's order (drag, the menu feature's
+  `SortableList` from its barrel), each with its status ("Live now",
+  "Starts Fri 6:00 PM", from the server), where it shows, its discount,
+  its schedule as a sentence (`utils/offer-schedule.ts`) and its last 30
+  days' numbers, a switch to pause it (optimistic) and edit and delete.
+  The editor (`components/editor/offer-editor.tsx`) is a page of its own
+  that takes the list's place (back arrow, a confirm before dropping
+  changes), in five steps (`offer-steps.ts`, the shared `Stepper`; Next checks
+  only the open step's fields, a saved offer can jump to and save from any
+  step, a refused save opens the first step with an error): 1 the picture,
+  then "Write a title and text on it" (`show_text`; off makes a picture
+  alone, which needs its picture: `saved_image` counts the one it has);
+  2 where it shows (`PlacementPicker`: banner, section, pop-up or ad, never
+  pop-up and ad together) and its shape (`banner_shape` rectangle 2:1 or
+  square, `popup_shape` square or tall 3:4, picked on cards drawn with the
+  owner's picture by `OfferPreview`; an ad is always a rectangle, the
+  section a dish-like row; the live preview is `LivePreview` over
+  `PreviewFigure`), how often and how long for a
+  pop-up or an ad; 3 what the offer gives guests (`gives`, a `Segmented`
+  first): nothing to order (a tap does nothing or opens a link), a
+  discount on the owner's dishes (what a tap does, the discount and its
+  dishes: `DishPicker`, old and new price by `discountedCents`, the twin of
+  the server's; never a deal dish, which the server refuses), or **a deal**
+  (the tab "A deal": a dish of its own, `DealFields`: "Deal name", the
+  offer's title until the owner writes one, "What it includes", its price
+  with a currency
+  toggle, its category, the only one picked for it, an `Alert` to
+  Categories without one, and "Use the offer's picture" or a new photo of
+  its own; off with no new photo keeps the one it has, the offer never
+  removes it). A deal sends `deal` with `discount_type: 'none'`,
+  `dish_ids: []` and `action: 'dishes'` (a tap opens it); leaving a saved
+  deal asks first (`ConfirmDialog`) and saving sends `deal: null`. It is a
+  dish against the package: at the limit (the session's counts,
+  `isAtLimit`) the choice is closed unless the offer has one. The dish is
+  on the menu, and orderable, only while the offer is live; 4 when (`ScheduleSection`: always, or dates with `DateField`,
+  a repeat, and times with `TimeField`, said back as one sentence in the
+  restaurant's timezone); 5 a review of every choice with previews in each
+  place it shows and the switch that puts it on the menu. Dates travel as the restaurant's local "YYYY-MM-DDTHH:MM";
+  an end date without a time is the next midnight (`toLocal`). An order
+  line bought on an offer says "Grill week, was $25.00" on its card. A
+  deal shows on the card and the review as "Deal: Family meal, $25.00"
+  with its photo (`DealSummary`). On the Dishes page a deal dish
+  (`dish.offer`) wears an "Offer deal" chip and a line from its offer's
+  status ("On your menu while “Pizza night” runs", "Hidden now. Back Fri
+  6:00 PM with …", paused, ended; `localDate` from the offers barrel); its
+  dish window says which offer made it, with "Open the offer"
+  (`useUiStore().editOffer`, which the Offers page opens in its editor
+  once), and deleting it says the offer stays, without a deal. Saving or
+  deleting a deal dish refreshes the offers; an offer save with a deal, a
+  pause or a delete of an offer with one refreshes the dishes and the
+  session's counts.
+  Backend rules: `../qayema/docs/architecture/offers.md`.
+- **Times and dates in forms:** `TimeField` (shared forms, hour, quarter
+  minutes and AM | PM, stored "HH:MM", the opening hours' and the offers'
+  times) and `DateField` (the phone's own date picker, "YYYY-MM-DD");
+  the clock helpers (`splitTime`, `joinTime`, `runsPastMidnight`,
+  `shiftProblem`) are `shared/utils/format/clock.ts`.
 - **Variants and add-ons** (`features/menu/dishes/components/options/`,
   `schemas/dish-choices.schema.ts`): a section of the dish form, shown per
   list while `useDishChoices()` (from `features/auth`: package flag and not
@@ -293,6 +384,54 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   id as `savedId` (RHF field arrays own `id`) and send it back as `id`. A
   list that is off is left out of the form and of the save, so the server
   keeps it. Limits mirror `../qayema/config/menu.php`.
+- **Build your own** (`features/build-your-own`, nav key and namespace
+  `build-your-own`, in MENU after Offers, `requiresPlan: 'build_your_own'`:
+  on no package, an admin turns it on per restaurant; opened by a link
+  without it, `PlanLockedPage` offers "Ask us to turn it on" since no
+  package has it): a dish guests build from parts, a pizza half and half
+  (`split`: each part its own price for that size, else its share) or three
+  scoops (`pieces`, each whole). **A build is its dish**: nothing is picked
+  from the menu. The page is a card per build in the owner's dish order (the
+  dish's photo and name as its heading, the heading above the parts under
+  it, "Halves and thirds, from Pizzas", "From $12": the dish's price plus
+  `cheapestCents`, the twin of `BuildPrice::cheapest()` beside
+  `buildPriceCents` in `utils/build-price.ts`; a warning chip below 2
+  choices guests can pick) with edit, delete and "New build" in a
+  `LimitHeader` (the dishes guests build against the restaurant's
+  `limits.builds`, 3 unless an admin sets another; disabled at it, at the
+  package's dish limit, or without a category). The editor
+  (`components/editor/build-editor.tsx`, `build-steps.ts`, the shared
+  `Stepper`) takes the list's place like the offers': 1 what guests build
+  (three cards: a pizza half and half, scoops or pieces, something else;
+  `kindDefaults()` sets the rest up, the dish's name and icon included),
+  2 the choices (a category's offered dishes, `offeredDishes()`,
+  each a `CheckRow` ticked to start; unticked ones are left out, `dish_ids`,
+  null while every one is ticked so a dish added later joins,
+  `tickedDishes()`; or an own list of 2 to 30 on the menu's `ChoiceRow`), 3 the sizes (Whole
+  to Quarters or 1 to 4 pieces, More for the rest; how it is made asked for
+  "Something else" only, a pizza and scoops keep what their card set; own
+  part prices behind "Set your own prices", empty boxes showing "6.00
+  auto"), 4 On your menu (`MenuStep`: "Name on the menu", also the title
+  above the parts (`titleOf()`), and an icon from the categories' set
+  (`IconPickerField` from the menu barrel); no category, price,
+  description or photo: the dish sits above the menu's search; the labels
+  never say "dish", since the owner makes a build, not a dish), 5 a review
+  drawn like the menu's dish sheet (`BuildPreview`, with the icon). A new
+  build is `POST /api/dishes` with its name, icon, `category_id: null`,
+  `price: null` and `builds`; a saved one is `PATCH /api/dishes/{id}` with
+  the same (an older dish's description emptied and photo deleted), the
+  dish's other builds sent back
+  as saved (`savedBuildsPayload()`, part prices of sold-out dishes kept).
+  Deleting a dish's only build deletes the dish (`useDeleteDish` from the
+  menu barrel, "It leaves your menu."); one of several is a PATCH of
+  `builds` without it. `placeBuildErrors()` puts a 422 on the editor's
+  fields (the dish's own on step 4) and the rest above the form; saving
+  translates the dish's name and the own-list names. The Dishes page
+  leaves a build's dish out while the feature is on. The dish form never holds or sends `builds` (the response keeps
+  them): a dish with saved builds, while they are on, needs no price of its
+  own, its variants are extras, and an `Alert` says "Guests build this
+  dish" with the way to the page (`useUiStore().showBuildsOf`, which the page
+  scrolls to). Orders price their builds through the feature's barrel.
 - **Table orders** (`table-orders` page inside `features/orders`,
   `GET /api/orders?kind=table`): orders to a table, a table at a time, the
   one waiting longest first, with the same cards and actions as Orders
@@ -300,8 +439,8 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `kind=away`. A card shows its one next step as a button; edit, cancel
   and delete wait behind its ⋮ (`ActionMenu` in shared/ui). A table order
   leads with the table and a drawn tent card with its number
-  (`TableTent`). The filter is round pills, and "still waiting" a bar
-  that shows only the new ones (`WaitingBar`). Before the first table order
+  (`TableTent`). The filter is round pills, and "still waiting" an
+  `Alert` banner whose tap shows only the new ones. Before the first table order
   the page shows `PictureEmptyState` (`no-orders.webp`, straight on the
   page, its black edges faded out) with the way to the Tables page. While orders go to WhatsApp
   either page says so with `WhatsAppNotice`, the same `GoldNotice` as QR
@@ -312,12 +451,14 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   each table has a name and a random `code`; its QR code opens the menu at
   `?table=<code>&qr=1`, and an order "at my table" (`dine_in`) goes to it.
   Codes are drawn with the QR page's design (`useQr`, `qrOptions` from the
-  qr barrel). Add a numbered run or one by name, rename (the code stays),
+  qr barrel) by `QrCode`, the one component that draws a code (the QR
+  page's preview too); tables never import `qr-code-styling` themselves. Add a numbered run or one by name, rename (the code stays),
   give a new code (the printed card stops working), remove (orders keep the
   table's name). Print uses a portal sheet (`components/print/print-sheet.tsx`)
   that `globals.css` shows only on paper. `meta.takes_orders` is false while
   ordering at the table is switched off, with a way to Features.
-- **The QR page** is a column of glass cards (`StudioCard`): the live code
+- **The QR page** (`QrStudio` in `components/studio/qr-studio.tsx`) is a
+  column of glass cards (`SectionCard` with `heading="caps"`): the live code
   standing on a marble table (`qr-ground.webp`) with PNG and SVG, the menu link, the scans, then
   Customisation (four tiles: Colours, Shapes with three quick looks, Logo
   with its switch, the card's colour; `customise-tiles.tsx`) and Text &
@@ -344,13 +485,17 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   with `toMenuTextForm()` and require the main language with
   `requireMainLanguage()` (the form text's first entry; the message names
   it). `TranslatableTextField` takes `languages` and shows no tabs for a
-  one-language menu. Send every active language (blank clears it); never send
+  one-language menu, and `tidy` rewrites the text as the owner leaves the
+  control (a dish's ingredients: `tidyIngredients`, the twin of the
+  backend's `App\Support\Ingredients`). Send every active language (blank clears it); never send
   a hidden one (the server keeps it for when the owner switches back).
 - **Writing help (AI)**: while `restaurant.writing_help` is on (the server
   has an AI provider set up and the package gives uses a day,
   `writing_help_limit`, a limit row on the Package page), `WritingHelpProvider` (around
   the pages in `App.tsx`) lets every `TranslatableTextField` show
-  `WritingHelpButtons` under its control: "Translate", either way: "to
+  `WritingHelpButtons`: Translate, a gold icon beside its language tabs
+  (the full name as `aria-label`), and on a description "Write with AI", a
+  small gold pill in the box's bottom end corner: "Translate", either way: "to
   <other>" puts the open tab's text into the other language and opens it;
   on an empty tab "from <other>" fills it from the other language. It sends
   the field's `maxLength` as `max` (the translation never runs past it) and,
@@ -364,12 +509,37 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `useTranslateText` / `useWriteDescription`
   (`shared/hooks/use-writing-help.ts`, error toasts only; a spent day's
   allowance, 429 `writing_help_limit`, shows the server's words rather than
-  a seconds countdown). Every AI button shows the uses left today
-  (`restaurant.writing_help.{limit, left}`, e.g. "28/30", none for no daily
-  cap); each answer's `left` is written back into the session
-  (`useWritingHelpLeft`, from `features/auth`), and at 0 the buttons turn
-  red (Button `variant="spent"`), cannot be pressed and say to come back
-  tomorrow, once per screen (the first spent field holds the note); the
+  a seconds countdown). Every AI button's tooltip says what it does, the uses spent today
+  (`restaurant.writing_help.{limit, left}`, "You've used 2 of 30 AI uses
+  today", none for no daily cap) and the month's credits left
+  (`writing_help.credits.{limit, left, resets_on, prices}`, "6,840 of
+  7,500 AI credits left this month"; never money; null from a server from
+  before them); each answer's `left` and `credits_left` are written back into the session
+  (`useWritingHelpLeft`, from `features/auth`, through `withLeft`). A
+  button whose action the allowance does not cover (`spentFor()`: the
+  day's uses at 0, or fewer credits left than a translation
+  or a description costs; a 429 `writing_help_credits` says the credits
+  left) turns red (Button `variant="spent"`), cannot be pressed and says
+  to come back tomorrow, or on the day the credits come back, once per
+  screen (`WritingHelpSpentNote`: the first spent field holds the note);
+  the Package page lists each package's credits a month and, while capped,
+  the credits used this month beside the other limits (no AI uses a day
+  reads as no credits, `limitOf()`); a month whose `resets_on` has come is
+  taken as back in a tab left open; a dish's save and its "Translate all
+  names" wait for each other (`useTranslatingMany`), since the server runs
+  one AI request a restaurant at a time;
+  saving a dish or a category first fills in (`useTranslateOnSave`, over
+  `useTranslateMany`: one use) every text written in one language only
+  (`missingTranslation`, `shared/utils/string/missing-translations.ts`; a
+  dish's list in `features/menu/dishes/utils/dish-translations.ts`), and
+  saves as written should that fail or the day be spent; while it will,
+  `OneLanguageNote` atop the form says one language is enough, and it is: the
+  form's rules (`makeDishFormSchema` / `makeCategoryFormSchema` with
+  `anyLanguage`, `requireMainLanguage(..., anyLanguage)`) then take a name in
+  either language, the AI filling the main one in; the variants and add-ons also have
+  one "Translate all names" button (`TranslateChoicesButton`). A
+  translatable field shows its count of characters only past 80% of its
+  limit; the
   uses come back at the restaurant's midnight. E2E:
   `e2e/specs/dashboard/writing-help.spec.ts` runs on the real backend's
   pretend Gemini, switched on per test by an `x-e2e-writing-help` header
@@ -388,11 +558,11 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   the first. Shifts must not overlap and only the last may run past midnight
   (`shiftProblem()`, the server's `OpeningHours::problemWith()`), said under
   the shift at fault. The API sends a list per day, null when closed. A time is picked the
-  way a clock reads (`TimePicker`): the hour (1 to 12), the minutes (00, 15,
+  way a clock reads (`TimeField`, shared/components/forms/fields): the hour (1 to 12), the minutes (00, 15,
   30, 45; a saved 07:20 keeps its 20) and AM | PM, with its part of the day
   beside it (Morning 05:00, Afternoon 12:00, Evening 17:00, Night 21:00),
   and stored as "HH:MM" as before (`splitTime` / `joinTime` in
-  `time-options.ts`). A day whose last shift closes before it opens says it
+  `shared/utils/format/clock.ts`). A day whose last shift closes before it opens says it
   runs past midnight. The shared `Combobox` has a `size="sm"` for small pickers on
   one line, opens on the current choice, and grows to fit its options (up to
   320px) toward the side with room.
@@ -413,14 +583,56 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   adds its back button on a row of its own above. Pages draw no title of
   their own (a page's usage is `LimitNotice`, "6 / 40 on your package",
   beside its add button); a new page adds its line to `usePageHero`.
-- **Shared pieces worth knowing:** every dialog is `Modal` (with
-  `ModalHeader` / `ModalFooter`; the native `<dialog>`, its open state, Escape
-  and the backdrop handled once); a loading block is `Skeleton`; a row of
-  filter chips is `FilterChips`; a popover closes through `useDismiss`;
-  a list still loading is `SkeletonList`; a row card's edit and delete are `RowActions`; whether a package's allowance is used up is `isAtLimit` (beside `LimitNotice`); keyboard focus is the `focus-ring` utility (globals.css); a panel inside a card (a number, a group of settings) is the `inset-tile` utility, never a bordered box, and a titled group of fields is `FormSection`, on the same glass card as `SectionCard`; copying a link is
-  `copyWithToast`; a part of a whole reads through `formatShare`. Orders and
-  Table orders are one `OrderBoard` with their own wording, empty state and
-  sorting.
+- **Shared pieces worth knowing (use them, never hand-roll their look):**
+  - Banners: `Alert` is the one banner: `warning` (amber, wants the owner to
+    act: orders waiting, turned off, a limit), `error` (red), `info` (small
+    and quiet, a helpful word); `size="sm"` inside a card; `action` for its
+    one button; `onClick` makes it a link with an arrow. No blue banners.
+  - Dialogs: a form dialog is `FormDialog` (header, save error, `notice`,
+    fields, Cancel from common `dialog.cancel` and the save button); other
+    dialogs are `Modal` + `ModalBody` / `ModalHeader` / `ModalFooter`; asking
+    before a loss is `ConfirmDialog`.
+  - Status: `StatusChip` (tones gold, success, warning, danger, info,
+    neutral, faded) for every state label; `ProgressBar` (gold) for any
+    progress; `StepCircle` for numbered steps.
+  - Buttons: `Button` variants include `accent` (the AI's gold buttons) and
+    sizes `icon-sm` (32px, menus and AI icons) and `icon-xs` (inside a field
+    or banner). Dropdown panels share `menuPanelClass` / `menuItemClass`; a
+    choice drawn as a card uses `optionCardClass(checked)`.
+  - Cards and rows: `SectionCard` (icon optional, `action` slot) and
+    `FormSection` (a SectionCard of fields) are every settings card; an
+    on/off row is `SwitchRow` (`SwitchField` in a form); a capped list's
+    header is `LimitHeader` (count + Add button, `loading`); a link out is
+    `ExternalLink`; prices are always `Money` (`prefix` for "+"); a
+    translatable name with a fallback is `nameOr`.
+  - Text fields show their count of characters only near the limit
+    (`CharacterCount` in `Field`). Every menu text's limit (dish name 60,
+    ingredients 300, category 40 and 120, restaurant 60 and 200, a
+    choice's name 40, an offer's 60 and 200) is `MENU_TEXT_LIMITS`
+    (`shared/constants/menu-text-limits.ts`), the twin of ../qayema's
+    `MenuTextLimits`: change one, change both. Radii are the tokens only: `rounded-card`
+    (cards, dialogs), `rounded-tile` (a box in a card), `rounded-field`,
+    `rounded-control`; status colours are the utilities (`text-status-warn`,
+    `bg-accent-wash`), never `[var(--…)]`. A tile over a photo is the
+    `frost-tile` utility.
+  - A category's icon: `CATEGORY_ICONS` / `categoryIcon()` in
+    `features/menu/categories/constants/category-icons.ts` (the same 30 Tabler
+    icons as ../qayema's `CategoryIcons`, add one in both), picked in the
+    category dialog (`CategoryIconField`), shown on the category card and its
+    filter chip (`FilterChip.icon`).
+  - Every dialog is `Modal` underneath (the native `<dialog>`, its open
+    state, Escape and the backdrop handled once); a loading block is `Skeleton`; a row of
+    filter chips is `FilterChips`; a popover closes through `useDismiss`;
+    a list still loading is `SkeletonList`; a row card's edit and delete are `RowActions`; whether a package's allowance is used up is `isAtLimit` (`shared/utils/limits`, for the Add button in `LimitHeader`); a number's change against before is `ChangeLine` (analytics tiles, Home's today); keyboard focus is the `focus-ring` utility (globals.css); a panel inside a card (a number, a group of settings) is the `inset-tile` utility, never a bordered box, and a titled group of fields is `FormSection`, on the same glass card as `SectionCard`; copying a link is
+    `copyWithToast`; a part of a whole reads through `formatShare`. Orders and
+    Table orders are one `OrderBoard` with their own wording, empty state and
+    sorting; it lists 30 at a time, unfinished orders first and newest first within
+    each (the API's order, so one still waiting is never behind "Show more"; `useOrders` is an infinite
+    query, pages joined and deduplicated), with "Show more" for the next.
+- **Dark only:** the dashboard has one set of colours (`:root` in
+  `tokens.css`, `color-scheme: dark`), like the website; there is no theme
+  switch and nothing keyed on a theme. In the collapsed sidebar a row's
+  name shows beside it on hover or focus (`sidebar/rail-tooltip.tsx`).
 - **Corners and fields:** every card, dialog and sheet is `rounded-card`
   (12px), a box inside one `rounded-tile` (8px), and fields and buttons
   `--radius-field` / `--radius-control` (8px), all tokens in `tokens.css`;
@@ -431,7 +643,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `ART`; a half-width card shows it whole as a band on top, with no icon
   but a lock when locked; Package and Account keep theirs on dark gold
   glass, `.gold-chip` in globals.css), under More's own headings (`GROUPS`
-  in more-page.tsx: Menu (Categories, Dishes), Look, Sharing (QR code,
+  in more-page.tsx: Menu (Categories, Dishes, Offers, Build your own), Look, Sharing (QR code,
   Social links), Orders (Delivery and pickup, Table orders, Tables),
   Insights (Analytics), Settings): every section but Home, the tabs' own
   included, locked and left out exactly as the sidebar does, a heading with
@@ -440,7 +652,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   and pickup" (a bag), `table-orders` is "Table orders" (fork and knife); the
   phone's tab for them is "Orders" (a receipt), and while both are taken
   their pages switch between each other at the top (`OrdersSwitch`, on the
-  shared `PageSwitch`, like Dishes and Categories under Menu). A section opened
+  shared `PageSwitch`, like `MenuSwitch` for Dishes and Categories). A section opened
   from More shows a back button in the topbar. E2E reaches sections through
   `openSidebar()` (support/helpers), which opens More on a phone.
 - **Overview** (`features/overview`, Home): the topbar greets the owner by
@@ -453,12 +665,15 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   summary's `previous`, asked again every minute); only the next set-up step (`NextStep`, an icon
   per item; every step and How it works behind "See every step", nothing
   once all are done); then Quick (`ContentCounts`: dishes and categories
-  against the package, then the links, counted alone; each a tap from its
-  page). Home's tints are `--live`
+  against the package, then the links, counted alone, and while the AI is
+  on and capped its credits left this month with a bar, "Back on Nov 1"
+  once none are, opening the Package page; each a tap from its page). Home's tints are `--live`
   (green) and `--tint-violet` in tokens.css. The steps
   (`components/checklist/setup-stepper.tsx`: your restaurant, your dishes,
   sharing it) are built from `menuChecklist()` and `setupSteps()`, pure and
-  unit tested; "How it works" is hidden on the owner's request and
+  unit tested; the dishes without a photo come from the session
+  (`restaurant.dishes_without_photo`, refreshed by a dish save that adds or
+  removes one), never from downloading the menu; "How it works" is hidden on the owner's request and
   remembered in `ui.store`. Each item's action is a nav key.
 - **Analytics** (`features/analytics`): opens on Today (ranges Today, 7
   and 30 days for every package, 90 days and All time with advanced; Today's
@@ -467,7 +682,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `GET /api/analytics/teaser`); `GET /api/analytics/advanced` only when
   `restaurant.plan.advanced_analytics` is on (the hook is disabled otherwise,
   never fired and caught). Charts are recharts with `responsive`; colours are
-  theme tokens (`utils/chart-style.ts`), date helpers are
+  the colour tokens (`utils/chart-style.ts`), date helpers are
   `shared/utils/format/date.ts`, and every count goes through `formatNumber`
   (`format/number.ts`: the reader's language, Western digits). jsdom has no ResizeObserver, so the test
   setup stubs it and chart tests read the words around a chart, not its bars.
@@ -531,7 +746,7 @@ A change is done when `typecheck`, `lint`, `format:check`, `test:coverage`,
 for them (rule 6). E2E rules: each test builds its own owner
 through the `owner()` fixture and never changes shared data; no retries, no
 fixed sleeps; tag the main flow of an area `@matrix` so it also runs on a
-phone, in Arabic RTL and in dark mode. Specs go in `e2e/specs/<surface>/`
+phone and in Arabic RTL. Specs go in `e2e/specs/<surface>/`
 (`dashboard`, `public`, `admin`, `quality`); a helper two specs use goes in
 `e2e/support/helpers.ts`. Generated output only ever lands in
 `.test-output/`.

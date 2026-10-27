@@ -20,7 +20,7 @@ const CORNER_STYLES = ['square', 'extra-rounded', 'dot'] as const
 const EYE_STYLES = ['square', 'dot'] as const
 const GRADIENT_TYPES = ['linear', 'radial'] as const
 const LOGO_SIZES = ['small', 'medium', 'large'] as const
-const CARD_THEMES = ['light', 'dark', 'brand'] as const
+export const CARD_THEMES = ['light', 'dark', 'brand'] as const
 
 export type DotStyle = (typeof DOT_STYLES)[number]
 export type CornerStyle = (typeof CORNER_STYLES)[number]

@@ -8,6 +8,7 @@ import {
   type MenuText,
   type MenuTextForm,
 } from '@/shared/utils/string/menu-text'
+import { MENU_TEXT_LIMITS } from '@/shared/constants/menu-text-limits'
 
 /**
  * A dish's variants (Size, Spice level: the guest picks one option of each)
@@ -31,14 +32,13 @@ export const variantSchema = z.object({
 export const addonsSchema = z.array(choiceSchema)
 
 type Choice = z.infer<typeof choiceSchema>
-export type Variant = z.infer<typeof variantSchema>
+type Variant = z.infer<typeof variantSchema>
 
 /** What one dish can carry, as ../qayema/config/menu.php has it. */
 export const CHOICE_LIMITS = {
   variants: 5,
   options: 10,
   addons: 20,
-  name: 60,
   // As a dish's own price: a menu in Lebanese pounds runs to millions.
   price: 99_999_999.99,
 } as const
@@ -47,7 +47,7 @@ const choiceRow = z.object({
   /** The saved row's id, so an edit keeps it; null for a new one. Not `id`,
    *  which react-hook-form's field arrays use for their own keys. */
   savedId: z.number().int().nullable(),
-  name: menuTextField(CHOICE_LIMITS.name, () => t('menu:fields.name')),
+  name: menuTextField(MENU_TEXT_LIMITS.choiceName, () => t('menu:fields.name')),
   // Empty means "costs nothing more".
   price: z
     .number({ error: () => t('menu:dishSchema.priceInvalid') })
@@ -60,7 +60,7 @@ export const variantsField = z
   .array(
     z.object({
       savedId: z.number().int().nullable(),
-      name: menuTextField(CHOICE_LIMITS.name, () => t('menu:fields.name')),
+      name: menuTextField(MENU_TEXT_LIMITS.choiceName, () => t('menu:fields.name')),
       options: z
         .array(choiceRow)
         .min(2, { error: () => t('menu:choices.needTwo') })
@@ -78,15 +78,21 @@ type ChoicesForm = { variants: VariantForm[]; addons: ChoiceRowForm[] }
 
 /**
  * The menu's main language is the one every variant, option and add-on
- * needs, as with the dish's own name. Added to the dish form's refinement.
+ * needs, as with the dish's own name (`anyLanguage` as there). Added to the
+ * dish form's refinement.
  */
-export function requireChoiceNames(values: ChoicesForm, ctx: z.RefinementCtx): void {
+export function requireChoiceNames(
+  values: ChoicesForm,
+  ctx: z.RefinementCtx,
+  anyLanguage = false,
+): void {
   values.variants.forEach((variant, v) => {
     requireMainLanguage(
       variant.name,
       `variants.${v}.name`,
       (language) => t('menu:choices.variantNameRequired', { language }),
       ctx,
+      anyLanguage,
     )
     variant.options.forEach((option, o) =>
       requireMainLanguage(
@@ -94,6 +100,7 @@ export function requireChoiceNames(values: ChoicesForm, ctx: z.RefinementCtx): v
         `variants.${v}.options.${o}.name`,
         (language) => t('menu:choices.optionNameRequired', { language }),
         ctx,
+        anyLanguage,
       ),
     )
   })
@@ -103,6 +110,7 @@ export function requireChoiceNames(values: ChoicesForm, ctx: z.RefinementCtx): v
       `addons.${a}.name`,
       (language) => t('menu:choices.addonNameRequired', { language }),
       ctx,
+      anyLanguage,
     ),
   )
 }
@@ -158,6 +166,24 @@ export function toAddonsPayload(addons: ChoiceRowForm[]): ChoicePayload[] {
   return addons.map(toChoicePayload)
 }
 
+/** A variant's option prices, saved ("1.50") or in the form (a number, or none). */
+type PricedVariant = { options: readonly { price?: number | string | null }[] }
+
+function optionPrices(variant: PricedVariant): number[] {
+  return variant.options.map((option) => Number(option.price ?? 0))
+}
+
+/**
+ * The least a guest can pay for one of the dish: the base with the cheapest
+ * option of each variant (the price the menu and the dish card show).
+ */
+export function lowestPrice(base: number, variants: readonly PricedVariant[]): number {
+  return variants.reduce((sum, variant) => {
+    const prices = optionPrices(variant)
+    return prices.length === 0 ? sum : sum + Math.min(...prices)
+  }, base)
+}
+
 /**
  * The least and most a guest can pay for one of the dish: the cheapest
  * option of each variant, then the dearest of each with every add-on.
@@ -167,16 +193,13 @@ export function priceRange(
   variants: VariantForm[],
   addons: ChoiceRowForm[],
 ): { min: number; max: number } {
-  let min = base
   let max = base
   for (const variant of variants) {
-    const prices = variant.options.map((option) => option.price ?? 0)
-    if (prices.length === 0) continue
-    min += Math.min(...prices)
-    max += Math.max(...prices)
+    const prices = optionPrices(variant)
+    if (prices.length > 0) max += Math.max(...prices)
   }
   for (const addon of addons) max += addon.price ?? 0
-  return { min, max }
+  return { min: lowestPrice(base, variants), max }
 }
 
 /** Whether a saved dish has anything to copy. */

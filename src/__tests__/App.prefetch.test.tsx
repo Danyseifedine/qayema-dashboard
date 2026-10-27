@@ -1,7 +1,7 @@
 import { cleanup, screen, waitFor } from '@testing-library/react'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import App from '@/App'
+import { App } from '@/App'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { makeSessionUser } from '@/test/factories/session'

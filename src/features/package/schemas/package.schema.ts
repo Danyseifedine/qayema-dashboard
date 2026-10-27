@@ -31,6 +31,8 @@ const packageSchema = z.object({
     social_link_limit: z.number().int().nullable(),
     /** Uses of the dashboard's AI a day; 0 is none. */
     writing_help_limit: z.number().int().nullable(),
+    /** The dashboard's AI credits a month; 0 is none. Never money. */
+    writing_help_credits: z.number().int().nullable(),
     multiple_languages: z.boolean(),
     variants: z.boolean(),
     addons: z.boolean(),
@@ -42,6 +44,11 @@ const packageSchema = z.object({
     dine_in: z.boolean(),
     analytics: z.boolean(),
     advanced_analytics: z.boolean(),
+    offers: z.boolean(),
+    dine_in_whatsapp: z.boolean(),
+    order_tracking: z.boolean(),
+    offer_schedules: z.boolean(),
+    offer_discounts: z.boolean(),
   }),
 })
 
@@ -50,6 +57,12 @@ export const packageListSchema = z.object({
   meta: z.object({
     /** The slug in force, null for an owner with no restaurant yet. */
     current: z.string().nullable(),
+    /**
+     * What this restaurant pays for its current package, in cents of that
+     * package's currency, when an admin set it a price of its own. Null:
+     * the published price applies (and from an API from before it).
+     */
+    your_price_cents: z.number().int().nullable().default(null),
   }),
 })
 

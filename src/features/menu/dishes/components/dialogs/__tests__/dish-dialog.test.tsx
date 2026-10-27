@@ -35,11 +35,13 @@ const CATEGORIES = [
 function Harness({
   categories = CATEGORIES,
   dish = null,
+  secondCurrency = null,
   onOpenCategories = vi.fn(),
   onClose = vi.fn(),
 }: {
   categories?: Category[]
   dish?: ReturnType<typeof makeDish> | null
+  secondCurrency?: string | null
   onOpenCategories?: () => void
   onClose?: () => void
 }) {
@@ -59,9 +61,12 @@ function Harness({
         categories={[...categories]}
         defaultCategoryId={null}
         currency="USD"
+        secondCurrency={secondCurrency}
         locale="en"
         onClose={onClose}
         onOpenCategories={onOpenCategories}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
       />
     </>
   )
@@ -146,9 +151,12 @@ describe('DishDialog', () => {
         categories={[]}
         defaultCategoryId={null}
         currency="USD"
+        secondCurrency={null}
         locale="en"
         onClose={vi.fn()}
         onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
       />,
     )
     await user.type(screen.getByLabelText(/^Name/), 'Hummus')
@@ -161,9 +169,12 @@ describe('DishDialog', () => {
         categories={CATEGORIES}
         defaultCategoryId={null}
         currency="USD"
+        secondCurrency={null}
         locale="en"
         onClose={vi.fn()}
         onOpenCategories={vi.fn()}
+        onOpenBuilds={vi.fn()}
+        onOpenOffers={vi.fn()}
       />,
     )
 
@@ -171,6 +182,18 @@ describe('DishDialog', () => {
       expect(screen.getByRole('combobox', { name: /Category/ })).toHaveValue('Starters'),
     )
     expect(screen.getByLabelText(/^Name/)).toHaveValue('Hummus')
+  })
+
+  it('tidies the ingredients into a clean list as the owner leaves the box', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<Harness />)
+
+    const box = within(screen.getByRole('dialog')).getByLabelText(/^Ingredients/)
+    await user.type(box, 'onion,..tomato...ect')
+    expect(box).toHaveValue('onion,..tomato...ect')
+    await user.tab()
+
+    expect(box).toHaveValue('onion, tomato')
   })
 
   it('posts the category as a number, not a string', async () => {
@@ -345,6 +368,93 @@ describe('DishDialog', () => {
       expect(body.is_available).toBe(false)
       expect(body.category_id).toBe(2)
     })
+  })
+
+  it('leaves a dish’s saved builds alone while builds are off for the restaurant', async () => {
+    const dish = makeDish({
+      id: 8,
+      builds: [
+        {
+          id: 3,
+          name: { en: 'Half & half' },
+          shape: 'split',
+          parts: [2],
+          category_id: 1,
+          dish_ids: null,
+          choices: [],
+        },
+      ],
+    })
+    mock.onPatch('/api/dishes/8').reply(200, { data: dish })
+    const user = userEvent.setup()
+    renderWithProviders(<Harness dish={dish} />)
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).queryByRole('region', { name: 'Build your own' })).not.toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Save dish' }))
+
+    await waitFor(() => expect(mock.history.patch).toHaveLength(1))
+    expect(JSON.parse(mock.history.patch[0]!.data as string)).not.toHaveProperty('builds')
+  })
+
+  it('has no currency to choose, and sends none, without a second currency', async () => {
+    mock.onPost('/api/dishes').reply(201, { data: makeDish({ id: 7 }) })
+    const user = userEvent.setup()
+    renderWithProviders(<Harness />)
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).queryByRole('tablist', { name: 'Dish currency' })).not.toBeInTheDocument()
+    await user.type(within(dialog).getByLabelText(/^Name/), 'Lamb')
+    await user.click(within(dialog).getByRole('button', { name: 'Add dish' }))
+
+    await waitFor(() => expect(mock.history.post).toHaveLength(1))
+    expect(JSON.parse(mock.history.post[0]!.data as string)).not.toHaveProperty('currency')
+  })
+
+  it('prices a new dish in the main currency, or the second one when picked', async () => {
+    mock.onPost('/api/dishes').reply(201, { data: makeDish({ id: 7 }) })
+    const user = userEvent.setup()
+    renderWithProviders(<Harness secondCurrency="LBP" />)
+
+    const dialog = screen.getByRole('dialog')
+    const currencies = within(dialog).getByRole('tablist', { name: 'Dish currency' })
+    expect(within(currencies).getByRole('tab', { name: 'USD' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    // The switch sits inside the price field, in place of the code before the number.
+    expect(within(dialog).getByLabelText(/^Price/).parentElement).toContainElement(currencies)
+
+    await user.click(within(currencies).getByRole('tab', { name: 'LBP' }))
+    expect(within(currencies).getByRole('tab', { name: 'LBP' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    await user.type(within(dialog).getByLabelText(/^Name/), 'Lamb')
+    await user.click(within(dialog).getByRole('button', { name: 'Add dish' }))
+
+    await waitFor(() => expect(mock.history.post).toHaveLength(1))
+    expect(JSON.parse(mock.history.post[0]!.data as string).currency).toBe('LBP')
+  })
+
+  it('opens a dish on its own currency and keeps it on save', async () => {
+    const dish = makeDish({ id: 8, currency: 'LBP' })
+    mock.onPatch('/api/dishes/8').reply(200, { data: dish })
+    const user = userEvent.setup()
+    renderWithProviders(<Harness dish={dish} secondCurrency="LBP" />)
+
+    const dialog = screen.getByRole('dialog')
+    const currencies = within(dialog).getByRole('tablist', { name: 'Dish currency' })
+    await waitFor(() =>
+      expect(within(currencies).getByRole('tab', { name: 'LBP' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      ),
+    )
+    await user.click(within(dialog).getByRole('button', { name: 'Save dish' }))
+
+    await waitFor(() => expect(mock.history.patch).toHaveLength(1))
+    expect(JSON.parse(mock.history.patch[0]!.data as string).currency).toBe('LBP')
   })
 
   it('names a category that has no text in this language', () => {

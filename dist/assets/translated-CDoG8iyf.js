@@ -1,0 +1,1 @@
+function e(e,t){let n=e[t]?.trim();if(n)return{text:n,isFallback:!1,missing:!1,language:t};let r=Object.keys(e).find(t=>e[t]?.trim());return r?{text:e[r].trim(),isFallback:!0,missing:!1,language:r}:{text:``,isFallback:!1,missing:!0,language:null}}function t(t,n,r){let i=e(t,n);return i.missing?r:i.text}export{e as n,t};

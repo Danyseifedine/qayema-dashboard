@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { formatNumber } from '@/shared/utils/format/number'
-import { translated } from '@/shared/utils/string/translated'
+import { nameOr } from '@/shared/utils/string/translated'
 import type { Package } from '@/features/package/schemas/package.schema'
 import {
+  limitOf,
   PACKAGE_GROUPS,
   PACKAGE_ROWS,
   type PackageRow,
@@ -28,8 +29,9 @@ export function CompareTable({ packages, current, locale }: CompareTableProps) {
 
   const cell = (row: PackageRow, pkg: Package) => {
     // A limit of none (no AI writing help) reads like a feature left out.
-    if (row.kind === 'limit' && pkg.features[row.key] !== 0) {
-      const value = pkg.features[row.key]
+    const limit = row.kind === 'limit' ? limitOf(pkg, row.key) : 0
+    if (row.kind === 'limit' && limit !== 0) {
+      const value = limit
       return value === null ? (
         <span className="font-medium text-accent">{t('compare.unlimited')}</span>
       ) : (
@@ -62,7 +64,7 @@ export function CompareTable({ packages, current, locale }: CompareTableProps) {
         // Paint containment keeps the table's min-width inside this box: without
         // it a phone's layout viewport grew to fit the table, so the whole page
         // scrolled sideways (and in Arabic opened shifted).
-        'overflow-x-auto contain-paint rounded-card border-[0.5px] border-[var(--line)] bg-[var(--surface)]',
+        'overflow-x-auto contain-paint glass-card rounded-card',
         'focus-ring',
       )}
     >
@@ -75,26 +77,23 @@ export function CompareTable({ packages, current, locale }: CompareTableProps) {
             >
               {t('compare.feature')}
             </th>
-            {packages.map((pkg) => {
-              const name = translated(pkg.name, locale)
-              return (
-                <th
-                  key={pkg.id}
-                  scope="col"
-                  className={cn(
-                    'px-3 py-3 text-center font-display text-[15px] font-normal',
-                    pkg.slug === current && 'bg-accent-wash text-accent',
-                  )}
-                >
-                  {name.missing ? pkg.slug : name.text}
-                  {pkg.slug === current ? (
-                    <span className="block font-sans text-[11px] font-medium">
-                      {t('compare.yours')}
-                    </span>
-                  ) : null}
-                </th>
-              )
-            })}
+            {packages.map((pkg) => (
+              <th
+                key={pkg.id}
+                scope="col"
+                className={cn(
+                  'px-3 py-3 text-center font-display text-[15px] font-normal',
+                  pkg.slug === current && 'bg-accent-wash text-accent',
+                )}
+              >
+                {nameOr(pkg.name, locale, pkg.slug)}
+                {pkg.slug === current ? (
+                  <span className="block font-sans text-[11px] font-medium">
+                    {t('compare.yours')}
+                  </span>
+                ) : null}
+              </th>
+            ))}
           </tr>
         </thead>
         {PACKAGE_GROUPS.map((group) => (

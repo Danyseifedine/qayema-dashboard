@@ -38,46 +38,10 @@ describe('QrPreview', () => {
     })
   })
 
-  it('draws afresh on a change, so a gradient or logo taken away is gone', () => {
-    // The library's own update() merges, which kept both on the code.
-    const gradient = {
-      type: 'linear' as const,
-      colorStops: [
-        { offset: 0, color: '#000000' },
-        { offset: 1, color: '#7C3AED' },
-      ],
-    }
-    const { rerender } = render(
-      <QrPreview options={{ data: 'a', image: 'data:logo', dotsOptions: { gradient } }} />,
-    )
-
-    rerender(<QrPreview options={{ data: 'a', dotsOptions: { color: '#000000' } }} />)
-
-    expect(drawn.created).toHaveLength(2)
-    expect(drawn.created[1]).toEqual({
-      data: 'a',
-      dotsOptions: { color: '#000000' },
-      width: 232,
-      height: 232,
-      type: 'svg',
-    })
-    // One drawing on screen, not the old one under the new.
-    expect(screen.getByRole('img').childElementCount).toBe(1)
-  })
-
   it('frames the code in white when no background is given', () => {
     render(<QrPreview options={{ data: 'a' }} />)
 
     expect(screen.getByRole('img').parentElement).toHaveStyle({ background: '#FFFFFF' })
     expect(drawn.created[0]).toMatchObject({ width: 232, height: 232 })
-  })
-
-  it('clears its drawing when it goes away', () => {
-    const { unmount } = render(<QrPreview options={{ data: 'a' }} />)
-    const host = screen.getByRole('img')
-    expect(host.childElementCount).toBe(1)
-
-    unmount()
-    expect(host.childElementCount).toBe(0)
   })
 })

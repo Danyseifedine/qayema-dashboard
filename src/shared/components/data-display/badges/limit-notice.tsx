@@ -17,7 +17,7 @@ export function LimitNotice({ used, limit }: LimitNoticeProps) {
   if (limit === null) return null
 
   return (
-    <p className="flex items-center gap-2.5 text-[13px] text-[var(--muted)]">
+    <p className="flex items-center gap-2 text-[12px] text-[var(--muted)]">
       <LimitBadge used={used} limit={limit} outlined />
       {t('limitNotice.onYourPackage')}
     </p>

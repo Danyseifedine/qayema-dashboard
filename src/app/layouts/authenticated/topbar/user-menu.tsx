@@ -1,18 +1,15 @@
-import {
-  IconExternalLink,
-  IconLanguage,
-  IconLogout,
-  IconMoon,
-  IconUserCircle,
-} from '@tabler/icons-react'
-import { useCallback, useRef, useState } from 'react'
+import { IconExternalLink, IconLanguage, IconLogout, IconUserCircle } from '@tabler/icons-react'
+import { useCallback, useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Switch } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
+import { menuItemClass, menuPanelClass } from '@/shared/components/ui'
 import { useDismiss } from '@/shared/hooks/use-dismiss'
 import { cn } from '@/shared/utils/dom/cn'
-import { usePreferencesStore } from '@/stores/preferences.store'
 import { LanguageSwitcher } from '@/app/layouts/authenticated/topbar/language-switcher'
+
+/** An everyday entry's colours, as in ActionMenu. */
+const ITEM =
+  'text-[var(--text)] hover:bg-[var(--hover-wash)] focus-visible:bg-[var(--hover-wash)] focus-visible:outline-none'
 
 export type UserMenuProps = {
   name: string
@@ -27,10 +24,11 @@ export type UserMenuProps = {
 }
 
 /**
- * Avatar button with a dropdown: the account, the public menu, and the two
- * preferences (language, dark mode), which are changed rarely enough not to
- * need a place in the top bar. Closes on outside click, on Escape, and returns
- * focus to the trigger so keyboard users are not stranded.
+ * Avatar button with a dropdown: the account, the public menu, and the
+ * language, which is changed rarely enough not to need a place in the top
+ * bar. Closes on outside click, on Escape, and returns
+ * focus to the trigger so keyboard users are not stranded. The arrow keys
+ * move between its entries, as in the other menus.
  */
 export function UserMenu({
   name,
@@ -43,8 +41,6 @@ export function UserMenu({
 }: UserMenuProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const dark = usePreferencesStore((state) => state.theme === 'dark')
-  const setTheme = usePreferencesStore((state) => state.setTheme)
   const containerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
@@ -53,8 +49,21 @@ export function UserMenu({
 
   const initial = name.trim().charAt(0).toUpperCase() || '?'
 
+  // From the avatar or an entry only: the language switch keeps its own arrows.
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!open || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return
+    const entries = [...event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+    const active = document.activeElement as HTMLElement
+    const at = entries.indexOf(active)
+    if (at === -1 && active !== triggerRef.current) return
+    event.preventDefault()
+    const step = event.key === 'ArrowDown' ? 1 : -1
+    const from = at === -1 ? (step === 1 ? -1 : 0) : at
+    entries[(from + step + entries.length) % entries.length]?.focus()
+  }
+
   return (
-    <div ref={containerRef} className="relative shrink-0">
+    <div ref={containerRef} onKeyDown={onKeyDown} className="relative shrink-0">
       <button
         ref={triggerRef}
         type="button"
@@ -77,11 +86,10 @@ export function UserMenu({
           role="menu"
           className={cn(
             'absolute end-0 top-[calc(100%+8px)] z-50 min-w-[232px] overflow-hidden',
-            'rounded-[14px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-1.5',
-            'shadow-lift',
+            menuPanelClass,
           )}
         >
-          <div className="border-b-[0.5px] border-[var(--line)] px-2.5 pt-1.5 pb-2.5">
+          <div className="border-b-[0.5px] border-[var(--line)] px-3 pt-1.5 pb-2.5">
             <p className="truncate text-[14px] font-medium">{name}</p>
             <p className="truncate text-[12px] text-[var(--muted)]">{login}</p>
           </div>
@@ -94,7 +102,7 @@ export function UserMenu({
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-[var(--text)] transition-colors hover:bg-[var(--hover-wash)]"
+                className={cn(menuItemClass, ITEM)}
               >
                 <IconExternalLink aria-hidden className="size-4 text-[var(--muted)]" />
                 {t('userMenu.viewPublicMenu')}
@@ -108,7 +116,7 @@ export function UserMenu({
                 setOpen(false)
                 onOpenAccount()
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-[var(--text)] transition-colors hover:bg-[var(--hover-wash)]"
+              className={cn(menuItemClass, ITEM)}
             >
               <IconUserCircle aria-hidden className="size-4 text-[var(--muted)]" />
               {t('userMenu.account')}
@@ -120,20 +128,11 @@ export function UserMenu({
             aria-label={t('userMenu.preferences')}
             className="mt-1.5 border-t-[0.5px] border-[var(--line)] pt-1.5"
           >
-            <div className="flex items-center gap-2.5 px-2.5 py-1.5 text-[13.5px]">
+            <div className="flex items-center gap-2.5 px-3 py-1.5 text-[13.5px]">
               <IconLanguage aria-hidden className="size-4 text-[var(--muted)]" />
               <span className="me-auto">{t('userMenu.language')}</span>
               <LanguageSwitcher value={locale} onChange={onLocaleChange} />
             </div>
-            <label className="flex cursor-pointer items-center gap-2.5 px-2.5 py-2 text-[13.5px]">
-              <IconMoon aria-hidden className="size-4 text-[var(--muted)]" />
-              <span className="me-auto">{t('userMenu.darkMode')}</span>
-              <Switch
-                checked={dark}
-                onChange={(on) => setTheme(on ? 'dark' : 'light')}
-                aria-label={t('userMenu.darkMode')}
-              />
-            </label>
           </div>
 
           <div className="mt-1.5 border-t-[0.5px] border-[var(--line)] pt-1.5">
@@ -144,7 +143,10 @@ export function UserMenu({
                 setOpen(false)
                 onLogout()
               }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-status-danger transition-colors hover:bg-status-danger-wash"
+              className={cn(
+                menuItemClass,
+                'text-status-danger hover:bg-status-danger-wash focus-visible:bg-status-danger-wash focus-visible:outline-none',
+              )}
             >
               <IconLogout aria-hidden className="size-4 rtl:rotate-180" />
               {t('userMenu.logOut')}

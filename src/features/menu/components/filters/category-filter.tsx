@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { FilterChips } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
-import { translated } from '@/shared/utils/string/translated'
+import { nameOr } from '@/shared/utils/string/translated'
+import { categoryIcon } from '@/features/menu/categories/constants/category-icons'
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
 
 export type CategoryFilterProps = {
@@ -34,10 +35,11 @@ export function CategoryFilter({
       chips={[
         { value: null, label: t('categoryFilter.all') },
         ...categories.map((category) => {
-          const name = translated(category.name, locale)
+          const Icon = categoryIcon(category.icon)
           return {
             value: category.id,
-            label: name.missing ? t('categoryFilter.untitled') : name.text,
+            icon: Icon ? <Icon aria-hidden className="-ms-1 size-4" stroke={1.8} /> : undefined,
+            label: nameOr(category.name, locale, t('categoryFilter.untitled')),
             count: category.dishes_count ?? 0,
           }
         }),

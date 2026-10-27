@@ -33,12 +33,6 @@ describe('toast', () => {
     expect(sonner).toHaveBeenCalledWith('Heads up', { description: undefined })
   })
 
-  it('dismisses every toast', () => {
-    toast.dismiss()
-
-    expect(sonner.dismiss).toHaveBeenCalledTimes(1)
-  })
-
   describe('error', () => {
     it('shows only the fallback for an error that is not from the API', () => {
       toast.error('Could not save', new Error('boom'))

@@ -1,3 +1,4 @@
+import { IconPhoto } from '@tabler/icons-react'
 import type { Control } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ImageField } from '@/features/uploads'
@@ -22,7 +23,11 @@ export function BrandingSection({
   const { t } = useTranslation('restaurant')
 
   return (
-    <FormSection title={t('branding.title')} description={t('branding.description')}>
+    <FormSection
+      icon={<IconPhoto aria-hidden className="size-[18px]" />}
+      title={t('branding.title')}
+      description={t('branding.description')}
+    >
       <FieldGroup>
         <ImageField
           control={control}

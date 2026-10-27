@@ -1,6 +1,5 @@
 {
   "shared": {
-    "cancel": "Cancel",
     "delete": "Delete",
     "optional": "optional",
     "name": "Name",
@@ -38,7 +37,9 @@
     "description": "Description",
     "descriptionHint": "One line under the heading on your menu.",
     "save": "Save",
-    "add": "Add category"
+    "add": "Add category",
+    "icon": "Icon",
+    "iconHint": "Shown before the category in your menu's tabs."
   },
   "categoryFilter": {
     "label": "Filter dishes by category",
@@ -73,7 +74,8 @@
     "emptyFilteredDescription": "Add a dish here, or pick another category above.",
     "emptyAction": "Add a dish",
     "deleteTitle": "Delete this dish?",
-    "deleteDescription": "This removes the dish and its photo from your menu. It cannot be undone."
+    "deleteDescription": "This removes the dish and its photo from your menu. It cannot be undone.",
+    "deleteDeal": "It is the deal of “{{title}}”; the offer stays, without a deal."
   },
   "dishCard": {
     "untitled": "Untitled dish",
@@ -89,7 +91,16 @@
     "variants_one": "{{count}} variant",
     "variants_other": "{{count}} variants",
     "addons_one": "{{count}} add-on",
-    "addons_other": "{{count}} add-ons"
+    "addons_other": "{{count}} add-ons",
+    "deal": {
+      "chip": "Offer deal",
+      "live": "On your menu while “{{title}}” runs",
+      "scheduled": "Hidden now. Back {{when}} with “{{title}}”",
+      "paused": "Hidden: “{{title}}” is paused",
+      "ended": "Hidden: “{{title}}” has ended",
+      "untitledOffer": "Untitled offer",
+      "off": "Hidden: your package keeps “{{title}}” off the menu"
+    }
   },
   "dishDialog": {
     "titleNew": "New dish",
@@ -97,7 +108,7 @@
     "needsCategory": "Every dish belongs to a category.",
     "untitledCategory": "Untitled category",
     "ingredients": "Ingredients",
-    "ingredientsHint": "Free text, shown under the dish on your menu.",
+    "ingredientsHint": "Separate them with commas.",
     "price": "Price",
     "priceHint": "Leave empty to hide the price.",
     "priceHintFromVariant": "No dish price: each {{variant}} sets the full price.",
@@ -107,18 +118,24 @@
     "photo": "Photo",
     "photoHint": "We trim it to fit the dish card and make it quick to load.",
     "available": "Available",
-    "availableDescription": "Turn this off to keep the dish on your menu but marked sold out.",
+    "availableDescription": "Turn this off when it runs out: guests stop seeing it until you turn it back on. Nothing is deleted.",
     "save": "Save dish",
-    "add": "Add dish"
+    "add": "Add dish",
+    "currency": "Dish currency",
+    "priceHintFromBuild": "No dish price: the guest's build sets the price.",
+    "priceHintWithBuild": "The build's price is added to this. Leave it empty to price by the build alone.",
+    "builtByGuests": "Guests build this dish. Edit how in Build your own.",
+    "buildsAction": "Open Build your own",
+    "deal": "Made by the offer “{{title}}”. It shows on your menu only while the offer is running.",
+    "dealAction": "Open the offer"
   },
   "choices": {
     "title": "Variants and add-ons",
-    "description": "Choices guests make on this dish.",
     "copyFrom": "Copy from another dish",
     "variants": "Variants",
-    "variantsHint": "Guests pick one option of each, like a size or a spice level. An option with no price is free.",
+    "variantsHint": "Guests pick one option, like a size. No price means free.",
     "addons": "Add-ons",
-    "addonsHint": "Extras guests may add, as many as they like. An add-on with no price is free.",
+    "addonsHint": "Extras guests can add. No price means free.",
     "variantNumber": "Variant {{number}}",
     "variantName": "Variant name",
     "variantPlaceholder": "e.g. Size",
@@ -147,7 +164,9 @@
     "needTwo": "A variant needs at least 2 options.",
     "variantNameRequired": "Give every variant a name in {{language}}.",
     "optionNameRequired": "Give every option a name in {{language}}.",
-    "addonNameRequired": "Give every add-on a name in {{language}}."
+    "addonNameRequired": "Give every add-on a name in {{language}}.",
+    "translate": "Translate all names",
+    "nothingToTranslate": "Every name is in both languages."
   },
   "dishToast": {
     "added": "Dish added",
@@ -171,5 +190,38 @@
     "name": "name",
     "description": "description",
     "ingredients": "ingredients"
+  },
+  "categoryIcons": {
+    "none": "No icon",
+    "tools-kitchen-2": "Mains",
+    "chef-hat": "Chef's special",
+    "salad": "Salads",
+    "soup": "Soups",
+    "pizza": "Pizza",
+    "burger": "Burgers",
+    "baguette": "Sandwiches",
+    "sausage": "Hot dogs",
+    "meat": "Meat",
+    "grill": "Grills",
+    "fish": "Fish",
+    "egg-fried": "Breakfast",
+    "bread": "Bakery",
+    "bowl-chopsticks": "Noodles",
+    "bowl-spoon": "Bowls",
+    "cheese": "Cheese",
+    "carrot": "Vegetables",
+    "leaf": "Vegan",
+    "flame": "Spicy",
+    "apple": "Fruit",
+    "cake": "Cakes",
+    "ice-cream": "Ice cream",
+    "cookie": "Sweets",
+    "coffee": "Coffee",
+    "teapot": "Tea",
+    "milkshake": "Milkshakes",
+    "glass-full": "Juices",
+    "glass-cocktail": "Cocktails",
+    "beer": "Beer",
+    "bottle": "Soft drinks"
   }
 }

@@ -1,0 +1,198 @@
+{
+  "page": {
+    "description": "Dishes guests put together from parts: a pizza half and half, three scoops of their choice.",
+    "add": "New build",
+    "emptyTitle": "Let guests build a dish",
+    "emptyDescription": "Guests pick each part, and the menu works out the price.",
+    "emptyPizza": "A pizza half and half: Margherita on one side, Pepperoni on the other.",
+    "emptyScoops": "Three scoops: any flavours, each at its own price.",
+    "addFirst": "Make your first build",
+    "removeTitle": "Delete this build?",
+    "removeDescription": "Guests will no longer build {{dish}} this way. The dish stays on your menu.",
+    "removeConfirm": "Delete build",
+    "atLimit": "You have used every dish your package allows, and each build is a dish. Delete a dish to make another.",
+    "noCategories": "A build is a dish on your menu, so it needs a category: add one on the Categories page first.",
+    "removeDishTitle": "Delete {{dish}}?",
+    "removeDishDescription": "It leaves your menu.",
+    "removeDishConfirm": "Delete dish",
+    "atBuildLimit_one": "You have {{count}} build, as many as your restaurant may have. Delete it to make another.",
+    "atBuildLimit_other": "You have {{count}} builds, as many as your restaurant may have. Delete one to make another."
+  },
+  "card": {
+    "from": "From <price />",
+    "edit": "Edit {{name}} on {{dish}}",
+    "delete": "Delete {{name}} on {{dish}}",
+    "hidden": "Guests can't see it yet",
+    "hiddenHint": "Guests see it once at least 2 choices can be picked.",
+    "untitled": "Untitled"
+  },
+  "summary": {
+    "whole": "whole",
+    "halves": "halves",
+    "thirds": "thirds",
+    "quarters": "quarters",
+    "parts_one": "{{count}} part",
+    "parts_other": "{{count}} parts",
+    "pieces_one": "{{counts}} piece",
+    "pieces_other": "{{counts}} pieces",
+    "noSizes": "No sizes yet",
+    "category": "{{sizes}}, from {{category}}",
+    "own_one": "{{sizes}}, your own list of {{count}}",
+    "own_other": "{{sizes}}, your own list of {{count}}",
+    "categorySome": "{{sizes}}, {{shown}} of {{total}} from {{category}}"
+  },
+  "editor": {
+    "titleNew": "New build",
+    "titleEdit": "Edit build",
+    "back": "Build your own",
+    "backLabel": "Back to your builds",
+    "previous": "Back",
+    "next": "Next",
+    "add": "Add build",
+    "save": "Save build",
+    "leaveTitle": "Leave without saving?",
+    "leaveDescription": "What you changed in this build will be lost.",
+    "leaveConfirm": "Leave"
+  },
+  "stepper": {
+    "label": "Build steps"
+  },
+  "steps": {
+    "kind": "What",
+    "choices": "Choices",
+    "sizes": "Sizes",
+    "menu": "On your menu",
+    "review": "Review"
+  },
+  "headings": {
+    "kind": "What do guests build?",
+    "choices": "What can guests choose from?",
+    "sizes": "How it is made and its sizes",
+    "menu": "On your menu",
+    "review": "Review"
+  },
+  "kinds": {
+    "label": "What guests build",
+    "pizza": {
+      "name": "A pizza, half and half",
+      "hint": "One pizza with a different flavour on each part, picked from your pizzas."
+    },
+    "pieces": {
+      "name": "Scoops or pieces",
+      "hint": "Separate items picked one by one, like three scoops of ice cream."
+    },
+    "other": {
+      "name": "Something else",
+      "hint": "Start with nothing filled in and set it up your way."
+    }
+  },
+  "choices": {
+    "label": "Where the choices come from",
+    "category": "From a category",
+    "categoryHint": "The dishes of one category, at the prices they already have.",
+    "own": "Type your own list",
+    "ownHint": "Names and prices you write here, like flavours.",
+    "categoryField": "Category",
+    "categoryPlaceholder": "Choose a category",
+    "offered": "Guests will choose from",
+    "noDishes": "No dish in this category can be picked yet: it needs to be available and priced in {{currency}}.",
+    "fewDishes": "Guests see this build once at least 2 dishes here can be picked.",
+    "listHint": "2 to {{max}} choices. Drag one to change the order guests see.",
+    "rowName": "Choice {{number}}",
+    "rowPrice": "Choice {{number}}, price",
+    "rowPlaceholder": "e.g. Vanilla",
+    "remove": "Remove choice {{number}}",
+    "add": "Add a choice",
+    "ticked": "{{shown}} of {{total}}",
+    "tickHint": "Untick a dish to leave it out of this build.",
+    "fewTicked": "Tick at least 2 dishes: guests see this build only then."
+  },
+  "sizes": {
+    "shape": "How it is made",
+    "shapes": {
+      "split": "Like a pizza: one item in different parts",
+      "pieces": "Like ice cream: separate pieces"
+    },
+    "shapeHints": {
+      "split": "Each part can be a different choice, and costs its share.",
+      "pieces": "Each piece is a whole item at its own price."
+    },
+    "splitLabel": "How guests can have it",
+    "piecesLabel": "How many",
+    "whole": "Whole",
+    "halves": "Half & half",
+    "thirds": "Thirds",
+    "quarters": "Quarters",
+    "parts_one": "{{count}} part",
+    "parts_other": "{{count}} parts",
+    "pieces_one": "{{count}} piece",
+    "pieces_other": "{{count}} pieces",
+    "more": "More",
+    "fewer": "Fewer",
+    "shareLine": "Each part costs its share of the whole price.",
+    "ownPrices": "Set your own prices",
+    "ownPricesHint": "Give a choice its own price for a part, like a Margherita half at 7.00. An empty box keeps the share it shows.",
+    "partPrice": "{{choice}}, price for one of {{count}} parts",
+    "share": "{{price}} auto"
+  },
+  "menu": {
+    "name": "Name on the menu",
+    "optional": "Optional",
+    "icon": "Icon",
+    "iconHint": "Shown beside its name above the search on your menu."
+  },
+  "partName": {
+    "2": "Half",
+    "3": "Third",
+    "4": "Quarter",
+    "other": "1/{{count}}"
+  },
+  "fraction": {
+    "2": "half {{name}}",
+    "3": "a third {{name}}",
+    "4": "a quarter {{name}}",
+    "other": "1/{{count}} {{name}}"
+  },
+  "review": {
+    "preview": "What guests see",
+    "summary": "Your build",
+    "kind": "What guests build",
+    "dish": "Dish",
+    "choices": "Choices",
+    "fromCategory_one": "From {{category}}: {{count}} dish guests can pick",
+    "fromCategory_other": "From {{category}}: {{count}} dishes guests can pick",
+    "ownList_one": "Your own list: {{count}} choice",
+    "ownList_other": "Your own list: {{count}} choices",
+    "sizes": "Sizes",
+    "edit": "Edit",
+    "editStep": "Edit {{step}}",
+    "everyChoice": "Every choice",
+    "part": "Part {{number}}",
+    "nothingYet": "Add choices with a price to see what guests pay.",
+    "add": "Add <price />"
+  },
+  "errors": {
+    "kindRequired": "Pick what guests build.",
+    "dishNameRequired": "Give the dish a name in {{language}}.",
+    "categoryRequired": "Choose a category.",
+    "needChoices": "A list needs 2 to {{max}} choices.",
+    "choiceNameRequired": "Give every choice a name in {{language}}.",
+    "choicePriceRequired": "Give every choice a price.",
+    "partsRequired": "Pick at least one size.",
+    "priceInvalid": "Enter a price, or leave it empty.",
+    "priceNegative": "A price cannot be negative.",
+    "priceTooHigh": "That price is too high."
+  },
+  "fields": {
+    "name": "name",
+    "dishName": "dish name",
+    "choiceName": "choice's name"
+  },
+  "toast": {
+    "added": "Build added",
+    "saved": "Build saved",
+    "removed": "Build deleted",
+    "saveFailed": "Could not save the build",
+    "removeFailed": "Could not delete the build"
+  }
+}

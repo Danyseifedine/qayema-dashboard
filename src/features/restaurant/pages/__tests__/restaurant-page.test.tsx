@@ -6,7 +6,7 @@ import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { EMPTY_PLAN, makeSessionUser } from '@/test/factories/session'
+import { EMPTY_PLAN, makeSessionUser, makeWritingHelp } from '@/test/factories/session'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { restaurantKeys } from '@/features/restaurant/hooks/restaurant-keys'
 import { RestaurantPage } from '@/features/restaurant/pages/restaurant-page'
@@ -43,6 +43,8 @@ type SettingsFixture = {
   phone: string | null
   country_code: string | null
   currency: string
+  second_currency?: string | null
+  exchange_rate?: string | null
   timezone: string
   opening_hours: Record<string, { open: string; close: string }[] | null>
   logo_url: string | null
@@ -125,7 +127,7 @@ describe('RestaurantPage', () => {
     mock.onPost('/api/writing/translate').reply(200, { data: { text: 'بيت قايمة', left: 28 } })
     const user = userEvent.setup()
     renderWithProviders(
-      <WritingHelpProvider uses={{ limit: 30, left: 30 }} onLeft={() => {}}>
+      <WritingHelpProvider uses={makeWritingHelp({ limit: 30, left: 30 })} onLeft={() => {}}>
         <RestaurantPage />
       </WritingHelpProvider>,
     )
@@ -203,6 +205,73 @@ describe('RestaurantPage', () => {
       // The slug has its own call, and an untouched image sends no key at all.
       expect(body).not.toHaveProperty('slug')
       expect(body).not.toHaveProperty('logo_key')
+      // No second currency.
+      expect(body.second_currency).toBeNull()
+      expect(body.exchange_rate).toBeNull()
+    })
+  })
+
+  describe('a second currency', () => {
+    it('shows the saved one with its rate, the side worth more as the 1', async () => {
+      stub({ currency: 'USD', second_currency: 'LBP', exchange_rate: '0.0000112360' })
+      renderWithProviders(<RestaurantPage />)
+
+      expect(await screen.findByRole('combobox', { name: /Second currency/ })).toHaveValue('LBP')
+      expect(screen.getByRole('spinbutton', { name: /Exchange rate/ })).toHaveValue(89000)
+      expect(screen.getByText('1 USD =')).toBeInTheDocument()
+    })
+
+    it('saves an untouched rate exactly as it came', async () => {
+      stub({ currency: 'USD', second_currency: 'LBP', exchange_rate: '0.0000112360' })
+      mock.onPatch('/api/restaurant').reply(200, { data: settings })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      await user.type(await screen.findByLabelText(/^Restaurant name/), '!')
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      await waitFor(() => expect(mock.history.patch).toHaveLength(1))
+      const body = JSON.parse(mock.history.patch[0]!.data as string)
+      expect(body.second_currency).toBe('LBP')
+      expect(body.exchange_rate).toBe('0.0000112360')
+    })
+
+    it('saves a new one as main per one second', async () => {
+      stub({ currency: 'LBP' })
+      mock.onPatch('/api/restaurant').reply(200, { data: settings })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      await user.click(await screen.findByRole('combobox', { name: /Second currency/ }))
+      await user.click(screen.getByRole('option', { name: /^USD/ }))
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      await waitFor(() => expect(mock.history.patch).toHaveLength(1))
+      const body = JSON.parse(mock.history.patch[0]!.data as string)
+      expect(body.second_currency).toBe('USD')
+      expect(body.exchange_rate).toBe(89000)
+    })
+
+    it('says why the server keeps it: dishes are still priced in it', async () => {
+      stub({ currency: 'LBP', second_currency: 'USD', exchange_rate: '89000.0000000000' })
+      mock.onPatch('/api/restaurant').reply(422, {
+        message: 'The given data was invalid.',
+        code: 'validation_failed',
+        errors: { second_currency: ['3 dishes are priced in USD. Move them to LBP first.'] },
+      })
+      const user = userEvent.setup()
+      renderWithProviders(<RestaurantPage />)
+
+      await user.click(await screen.findByRole('combobox', { name: /Second currency/ }))
+      await user.click(screen.getByRole('option', { name: 'None' }))
+      await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+      expect(
+        await screen.findByText('3 dishes are priced in USD. Move them to LBP first.'),
+      ).toBeInTheDocument()
+      const body = JSON.parse(mock.history.patch[0]!.data as string)
+      expect(body.second_currency).toBeNull()
+      expect(body.exchange_rate).toBeNull()
     })
   })
 
@@ -526,7 +595,11 @@ describe('RestaurantPage', () => {
 
   it('opens again on the restaurant it already has, without refilling the form twice', async () => {
     stub()
-    const { rerender } = renderWithProviders(<RestaurantPage />)
+    const { rerender, queryClient } = renderWithProviders(<RestaurantPage />)
+    // As the app's client has it (lib/query/client.ts): data this fresh is not asked for again.
+    queryClient.setDefaultOptions({
+      queries: { ...queryClient.getDefaultOptions().queries, staleTime: 30_000 },
+    })
     expect(await screen.findByLabelText(/^Restaurant name/)).toHaveValue('Beit Qayema')
 
     // Opened again in development's StrictMode, which runs each effect twice

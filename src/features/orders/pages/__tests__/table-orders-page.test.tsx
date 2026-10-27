@@ -65,6 +65,28 @@ describe('TableOrdersPage', () => {
     expect(within(cards[1]!).getByRole('button', { name: 'Served' })).toBeInTheDocument()
   })
 
+  it('sorts the tables again with the next page, a table waiting longer coming first', async () => {
+    mock.onGet('/api/orders', { params: { kind: 'table' } }).reply(200, {
+      data: [order(3, 'Table 2'), order(2, 'Table 4', { status: 'done' })],
+      meta: { open: 2, current_page: 1, last_page: 2 },
+    })
+    mock.onGet('/api/orders', { params: { kind: 'table', page: 2 } }).reply(200, {
+      data: [order(1, 'Table 4')],
+      meta: { open: 2, current_page: 2, last_page: 2 },
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<TableOrdersPage onOpenTables={() => {}} onOpenFeatures={() => {}} />)
+
+    await screen.findAllByRole('article')
+    expect(cardTitles()).toEqual(['Table 2', 'Table 4'])
+
+    await user.click(screen.getByRole('button', { name: 'Show more' }))
+
+    // Table 4's older order was waiting all along, on the next page.
+    await waitFor(() => expect(cardTitles()).toEqual(['Table 4', 'Table 4', 'Table 2']))
+    expect(screen.queryByRole('button', { name: 'Show more' })).not.toBeInTheDocument()
+  })
+
   it('switches to delivery and pickup while the restaurant takes both, and only then', async () => {
     mock
       .onGet('/api/orders', { params: { kind: 'table' } })
@@ -157,6 +179,8 @@ describe('TableOrdersPage', () => {
         guest_updates: 0,
       }),
     )
+    // The toast names the step as the card does.
+    expect(await screen.findByText(/marked Preparing/)).toBeInTheDocument()
   })
 
   it('says a load failed, and tries again on request', async () => {

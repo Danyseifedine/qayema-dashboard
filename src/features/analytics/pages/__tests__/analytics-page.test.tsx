@@ -233,9 +233,9 @@ describe('AnalyticsPage', () => {
       stubAdvanced()
       renderWithProviders(<AnalyticsPage locale="en" advanced onOpenPackage={vi.fn()} />)
 
-      await waitFor(() => expect(tile('Menu views')).toHaveTextContent('↑ 20%'))
-      expect(tile('QR scans')).toHaveTextContent('↓ 10%')
-      expect(tile('Visitors')).toHaveTextContent('Same as before')
+      await waitFor(() => expect(tile('Menu views')).toHaveTextContent('+20%vs before'))
+      expect(tile('QR scans')).toHaveTextContent('-10%vs before')
+      expect(tile('Visitors')).toHaveTextContent('0%vs before')
       // 12 orders from none has no percentage.
       expect(tile('Orders')).toHaveTextContent('Nothing to compare yet')
     })

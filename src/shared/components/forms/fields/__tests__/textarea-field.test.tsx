@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useForm, useWatch } from 'react-hook-form'
 import { describe, expect, it } from 'vitest'
@@ -45,14 +45,15 @@ describe('TextareaField', () => {
     expect(box()).toHaveValue('')
   })
 
-  it('counts characters under the control', async () => {
+  it('counts characters under the control once the text nears the limit', async () => {
     const user = userEvent.setup()
     render(<Harness rows={2} />)
 
-    expect(screen.getByText('0 / 200')).toBeInTheDocument()
     await user.type(box(), 'Hi')
+    expect(screen.queryByText('2 / 200')).not.toBeInTheDocument()
+    fireEvent.change(box(), { target: { value: 'a'.repeat(170) } })
 
-    expect(screen.getByText('2 / 200')).toBeInTheDocument()
+    expect(screen.getByText('170 / 200')).toBeInTheDocument()
     expect(box()).toHaveAttribute('rows', '2')
   })
 

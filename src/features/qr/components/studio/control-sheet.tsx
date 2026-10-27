@@ -1,6 +1,6 @@
-import { useId, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal } from '@/shared/components/feedback'
+import { Modal, ModalHeader } from '@/shared/components/feedback'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -21,13 +21,11 @@ export type ControlSheetProps = {
  */
 export function ControlSheet({ open, title, onClose, preview, children }: ControlSheetProps) {
   const { t } = useTranslation('qr')
-  const id = useId()
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      labelledBy={id}
       className={cn(
         'm-0 mt-auto max-h-[88dvh] w-full max-w-none overflow-y-auto rounded-b-none',
         'sm:m-auto sm:w-[min(92vw,520px)] sm:rounded-card',
@@ -36,9 +34,7 @@ export function ControlSheet({ open, title, onClose, preview, children }: Contro
       {open ? (
         <div className="flex flex-col gap-4 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 id={id} className="font-display text-[20px] leading-tight">
-              {title}
-            </h2>
+            <ModalHeader title={title} />
             <Button size="sm" onClick={onClose}>
               {t('page.done')}
             </Button>

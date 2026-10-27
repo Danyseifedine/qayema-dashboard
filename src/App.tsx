@@ -1,14 +1,16 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useDeferredValue, useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AuthenticatedLayout } from '@/app/layouts/authenticated/authenticated-layout'
 import {
   navItem,
   isNavItemHidden,
+  isNavKey,
   isOnPlan,
   navLock,
   OPEN_WHILE_OFFLINE,
   type NavItem,
+  type NavKey,
 } from '@/app/layouts/authenticated/nav-items'
 import { MenuGoingOffline, MenuOfflinePage } from '@/app/layouts/authenticated/menu-offline'
 import { MorePage } from '@/app/layouts/authenticated/more-page'
@@ -17,14 +19,15 @@ import { tierOf } from '@/app/layouts/authenticated/topbar/package-tier'
 import { usePageKey } from '@/app/layouts/authenticated/use-page-key'
 import { SessionGate, useWritingHelpLeft } from '@/features/auth'
 import { useLogout, useOrderingMode, useTableOrderingMode } from '@/features/auth'
-import type { AuthUser } from '@/features/auth'
+import type { AuthRestaurant, AuthUser, Plan } from '@/features/auth'
 import { useOrderPulse } from '@/features/orders'
 import { OrdersPage, TableOrdersPage } from '@/features/orders/pages'
 import { ErrorBoundary, PageSkeleton } from '@/shared/components/feedback'
 // Straight from its file: the forms barrel would bring every field into the shell.
 import { WritingHelpProvider } from '@/shared/components/forms/translatable/writing-help-provider'
-import { Alert, Button } from '@/shared/components/ui'
-import { translated } from '@/shared/utils/string/translated'
+import { Alert } from '@/shared/components/ui'
+import type { Locale } from '@/shared/constants/locales'
+import { nameOr } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
 
 /**
@@ -40,6 +43,8 @@ const PAGES = {
   qr: () => import('@/features/qr/pages'),
   package: () => import('@/features/package/pages'),
   socialLinks: () => import('@/features/social-links/pages'),
+  offers: () => import('@/features/offers/pages'),
+  buildYourOwn: () => import('@/features/build-your-own/pages'),
   account: () => import('@/features/account/pages'),
   restaurant: () => import('@/features/restaurant/pages'),
   appearance: () => import('@/features/appearance/pages'),
@@ -57,12 +62,117 @@ const PackagePage = lazy(() => PAGES.package().then((m) => ({ default: m.Package
 const SocialLinksPage = lazy(() =>
   PAGES.socialLinks().then((m) => ({ default: m.SocialLinksPage })),
 )
+const OffersPage = lazy(() => PAGES.offers().then((m) => ({ default: m.OffersPage })))
+const BuildYourOwnPage = lazy(() =>
+  PAGES.buildYourOwn().then((m) => ({ default: m.BuildYourOwnPage })),
+)
 const AccountPage = lazy(() => PAGES.account().then((m) => ({ default: m.AccountPage })))
 const RestaurantPage = lazy(() => PAGES.restaurant().then((m) => ({ default: m.RestaurantPage })))
 const FeaturesPage = lazy(() => PAGES.restaurant().then((m) => ({ default: m.FeaturesPage })))
 const AppearancePage = lazy(() => PAGES.appearance().then((m) => ({ default: m.AppearancePage })))
 const DesignPage = lazy(() => PAGES.design().then((m) => ({ default: m.DesignPage })))
 const TablesPage = lazy(() => PAGES.tables().then((m) => ({ default: m.TablesPage })))
+
+/** What the pages are drawn from: the restaurant, the reader's language and the way to another page. */
+type PageContext = {
+  restaurant: AuthRestaurant
+  plan: Plan
+  switchedOff: readonly string[]
+  hasTemplate: boolean
+  /** The dashboard's language. */
+  locale: Locale
+  /** Menu text's language: the dashboard's when the menu is written in it, the main one otherwise. */
+  contentLocale: Locale
+  ordersWaiting: ReturnType<typeof useOrderPulse>
+  /** Both kinds of order are taken, so their two pages switch between each other. */
+  bothOrders: boolean
+  /** Opens a page by its key; a string that names none is ignored. */
+  open: (key: string) => void
+}
+
+/**
+ * Each page by its nav key, with what it is handed. Keyed by `NavKey`, so a
+ * nav item without a page here does not compile. Adding a page is one line.
+ */
+const PAGE_VIEWS: Record<NavKey, (page: PageContext) => ReactNode> = {
+  overview: ({ restaurant, plan, switchedOff, ordersWaiting, open }) => (
+    <OverviewPage
+      limits={restaurant.limits}
+      switchedOff={switchedOff}
+      onOpen={open}
+      ordersWaiting={ordersWaiting}
+      showToday={plan.analytics && !switchedOff.includes('analytics')}
+    />
+  ),
+  analytics: ({ locale, plan, open }) => (
+    <AnalyticsPage
+      locale={locale}
+      advanced={plan.advanced_analytics}
+      onOpenPackage={() => open('package')}
+    />
+  ),
+  design: ({ locale, open }) => (
+    <DesignPage locale={locale} onOpenPackage={() => open('package')} />
+  ),
+  appearance: ({ locale }) => <AppearancePage locale={locale} />,
+  categories: ({ contentLocale, open }) => (
+    <CategoriesPage locale={contentLocale} onOpenDishes={() => open('dishes')} />
+  ),
+  dishes: ({ contentLocale, open }) => (
+    <DishesPage
+      locale={contentLocale}
+      onOpenCategories={() => open('categories')}
+      onOpenBuilds={() => open('build-your-own')}
+      onOpenOffers={() => open('offers')}
+    />
+  ),
+  orders: ({ bothOrders, open }) => (
+    <OrdersPage
+      onOpenFeatures={() => open('features')}
+      onOpenTableOrders={bothOrders ? () => open('table-orders') : undefined}
+    />
+  ),
+  'table-orders': ({ bothOrders, open }) => (
+    <TableOrdersPage
+      onOpenTables={() => open('tables')}
+      onOpenFeatures={() => open('features')}
+      onOpenOrders={bothOrders ? () => open('orders') : undefined}
+    />
+  ),
+  tables: ({ open }) => <TablesPage onOpenFeatures={() => open('features')} />,
+  qr: ({ locale, open }) => (
+    <QrPage
+      locale={locale}
+      onOpenFeatures={() => open('features')}
+      onOpenPackage={() => open('package')}
+    />
+  ),
+  'social-links': () => <SocialLinksPage />,
+  offers: ({ contentLocale, open }) => (
+    <OffersPage locale={contentLocale} onOpenCategories={() => open('categories')} />
+  ),
+  'build-your-own': ({ contentLocale }) => <BuildYourOwnPage locale={contentLocale} />,
+  package: ({ locale }) => <PackagePage locale={locale} />,
+  restaurant: () => <RestaurantPage />,
+  features: ({ restaurant, plan, switchedOff, open }) => (
+    <FeaturesPage
+      off={switchedOff}
+      plan={plan}
+      mainLocale={restaurant.main_locale}
+      secondLocale={restaurant.second_locale}
+      defaultLocale={restaurant.default_locale}
+      ordering={restaurant.ordering}
+      onOpenPackage={() => open('package')}
+      onOpenTables={() => open('tables')}
+      onOpenRestaurant={() => open('restaurant')}
+      onOpenDishes={() => open('dishes')}
+    />
+  ),
+  more: ({ hasTemplate, plan, switchedOff, open }) => (
+    <MorePage hasTemplate={hasTemplate} plan={plan} off={switchedOff} onOpen={open} />
+  ),
+  account: () => <AccountPage />,
+}
 
 /** A phone that asked to save data, or on a 2G/3G connection (where the browser says). */
 function onSlowConnection(): boolean {
@@ -122,6 +232,10 @@ function Dashboard({ user }: { user: AuthUser }) {
   // A section switched off while it was open hands over to the overview.
   const hidden = isNavItemHidden(chosenKey, switchedOff)
   const activeKey = hidden ? 'overview' : chosenKey
+  // The page drawn below. The sidebar moves at once; the page that was open
+  // stays until the next one's code has arrived, so a page change shows only
+  // that page's own skeleton, never a generic one before it.
+  const shownKey = useDeferredValue(activeKey)
   useEffect(() => {
     if (hidden) setActiveKey('overview', { replace: true })
   }, [hidden, setActiveKey])
@@ -139,12 +253,12 @@ function Dashboard({ user }: { user: AuthUser }) {
   )
   usePrefetchPages()
 
-  const lock = navLock(activeKey, { hasTemplate, plan })
+  const lock = navLock(shownKey, { hasTemplate, plan })
   // An ended package keeps the menu online for a few days, then takes it
   // offline: every page but Package and Account asks to renew.
   const lapsed = restaurant.lapsed
-  const offline = lapsed?.offline === true && !OPEN_WHILE_OFFLINE.includes(activeKey)
-  const activeItem = navItem(activeKey)
+  const offline = lapsed?.offline === true && !OPEN_WHILE_OFFLINE.includes(shownKey)
+  const shownItem = navItem(shownKey)
   // Both kinds of order taken: their two pages switch between each other.
   const bothOrders = ['orders', 'table-orders'].every(
     (key) => !isNavItemHidden(key, switchedOff) && isOnPlan(navItem(key)!, plan),
@@ -157,9 +271,9 @@ function Dashboard({ user }: { user: AuthUser }) {
   // it, and in its main language (the one every name has) otherwise.
   const contentLocale = restaurant.languages.includes(locale) ? locale : restaurant.main_locale
 
-  // The topbar pill names the package in the reader's language, falling back
-  // to the slug for a package that has no name in either.
-  const packageName = translated(restaurant.package.name, locale)
+  const open = (key: string) => {
+    if (isNavKey(key)) setActiveKey(key)
+  }
 
   return (
     <AuthenticatedLayout
@@ -167,10 +281,14 @@ function Dashboard({ user }: { user: AuthUser }) {
       onNavigate={(item: NavItem) => setActiveKey(item.key)}
       user={{ name: user.name, login: user.email ?? user.username ?? '' }}
       packageDaysLeft={restaurant.package.days_left}
-      packageName={
-        packageName.missing ? (restaurant.package.slug ?? t('app.freePackage')) : packageName.text
-      }
-      packageTier={tierOf(restaurant.package.slug)}
+      // The package in the reader's language, else its slug, for a package
+      // that has no name in either.
+      packageName={nameOr(
+        restaurant.package.name,
+        locale,
+        restaurant.package.slug ?? t('app.freePackage'),
+      )}
+      packageTier={tierOf(restaurant.package)}
       publicUrl={restaurant.public_url}
       hasTemplate={hasTemplate}
       plan={plan}
@@ -196,118 +314,53 @@ function Dashboard({ user }: { user: AuthUser }) {
       ) : null}
 
       <WritingHelpProvider uses={restaurant.writing_help} onLeft={setWritingHelpLeft}>
-        {/* Keyed by the page: a page that broke is left behind when another opens. */}
-        <ErrorBoundary key={activeKey}>
-          <Suspense fallback={<PageSkeleton />}>
+        {/* Outside the keyed boundary, so it stays mounted from page to page
+            (a new one would show its fallback on every change). Keyed by the
+            page: a page that broke is left behind when another opens. */}
+        <Suspense fallback={<PageSkeleton />}>
+          <ErrorBoundary key={shownKey}>
             {offline && lapsed ? (
               <MenuOfflinePage
                 lapsed={lapsed}
                 locale={locale}
                 onOpenPackage={() => setActiveKey('package')}
               />
-            ) : lock === 'plan' && activeItem ? (
+            ) : lock === 'plan' && shownItem ? (
               <PlanLockedPage
-                item={activeItem}
+                item={shownItem}
                 locale={locale}
                 onOpenPackage={() => setActiveKey('package')}
               >
-                {activeKey === 'analytics' ? <AnalyticsTeaser locale={locale} /> : null}
+                {shownKey === 'analytics' ? <AnalyticsTeaser locale={locale} /> : null}
               </PlanLockedPage>
             ) : lock === 'template' ? (
-              <div>
-                <Alert variant="info" title={t('app.lockedTitle')}>
-                  {t('app.lockedBody')}
-                </Alert>
-                <Button className="mt-4" onClick={() => setActiveKey('design')}>
-                  {t('app.browseDesigns')}
-                </Button>
-              </div>
-            ) : activeKey === 'overview' ? (
-              <OverviewPage
-                limits={restaurant.limits}
-                switchedOff={switchedOff}
-                onOpen={setActiveKey}
-                ordersWaiting={ordersWaiting}
-                showToday={plan.analytics && !switchedOff.includes('analytics')}
-              />
-            ) : activeKey === 'analytics' ? (
-              <AnalyticsPage
-                locale={locale}
-                advanced={plan.advanced_analytics}
-                onOpenPackage={() => setActiveKey('package')}
-              />
-            ) : activeKey === 'design' ? (
-              <DesignPage locale={locale} onOpenPackage={() => setActiveKey('package')} />
-            ) : activeKey === 'appearance' ? (
-              <AppearancePage locale={locale} />
-            ) : activeKey === 'categories' ? (
-              <CategoriesPage locale={contentLocale} onOpenDishes={() => setActiveKey('dishes')} />
-            ) : activeKey === 'dishes' ? (
-              <DishesPage
-                locale={contentLocale}
-                onOpenCategories={() => setActiveKey('categories')}
-              />
-            ) : activeKey === 'orders' ? (
-              <OrdersPage
-                onOpenFeatures={() => setActiveKey('features')}
-                onOpenTableOrders={bothOrders ? () => setActiveKey('table-orders') : undefined}
-              />
-            ) : activeKey === 'table-orders' ? (
-              <TableOrdersPage
-                onOpenTables={() => setActiveKey('tables')}
-                onOpenFeatures={() => setActiveKey('features')}
-                onOpenOrders={bothOrders ? () => setActiveKey('orders') : undefined}
-              />
-            ) : activeKey === 'tables' ? (
-              <TablesPage onOpenFeatures={() => setActiveKey('features')} />
-            ) : activeKey === 'qr' ? (
-              <QrPage
-                locale={locale}
-                onOpenFeatures={() => setActiveKey('features')}
-                onOpenPackage={() => setActiveKey('package')}
-              />
-            ) : activeKey === 'social-links' ? (
-              <SocialLinksPage />
-            ) : activeKey === 'package' ? (
-              <PackagePage locale={locale} />
-            ) : activeKey === 'restaurant' ? (
-              <RestaurantPage />
-            ) : activeKey === 'features' ? (
-              <FeaturesPage
-                off={switchedOff}
-                plan={plan}
-                mainLocale={restaurant.main_locale}
-                secondLocale={restaurant.second_locale}
-                defaultLocale={restaurant.default_locale}
-                ordering={restaurant.ordering}
-                onOpenPackage={() => setActiveKey('package')}
-                onOpenTables={() => setActiveKey('tables')}
-                onOpenRestaurant={() => setActiveKey('restaurant')}
-                onOpenDishes={() => setActiveKey('dishes')}
-              />
-            ) : activeKey === 'more' ? (
-              <MorePage
-                hasTemplate={hasTemplate}
-                plan={plan}
-                off={switchedOff}
-                onOpen={setActiveKey}
-              />
-            ) : activeKey === 'account' ? (
-              <AccountPage />
-            ) : (
-              <Alert variant="info" title={t('app.notBuiltTitle')}>
-                {t('app.notBuiltBody')}
+              <Alert
+                variant="warning"
+                title={t('app.lockedTitle')}
+                action={{ label: t('app.browseDesigns'), onClick: () => setActiveKey('design') }}
+              >
+                {t('app.lockedBody')}
               </Alert>
+            ) : (
+              PAGE_VIEWS[shownKey]({
+                restaurant,
+                plan,
+                switchedOff,
+                hasTemplate,
+                locale,
+                contentLocale,
+                ordersWaiting,
+                bothOrders,
+                open,
+              })
             )}
-          </Suspense>
-        </ErrorBoundary>
+          </ErrorBoundary>
+        </Suspense>
       </WritingHelpProvider>
     </AuthenticatedLayout>
   )
 }
 
-function App() {
+export function App() {
   return <SessionGate>{(user) => <Dashboard user={user} />}</SessionGate>
 }
-
-export default App

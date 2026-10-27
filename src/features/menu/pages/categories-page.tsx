@@ -1,7 +1,8 @@
 import { IconFolderPlus } from '@tabler/icons-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { isAtLimit, LimitNotice } from '@/shared/components/data-display'
+import { LimitHeader } from '@/shared/components/data-display'
+import { isAtLimit } from '@/shared/utils/limits/is-at-limit'
 import { CategoryDialog } from '@/features/menu/categories/components/dialogs/category-dialog'
 import { CategoryCard } from '@/features/menu/categories/components/list/category-card'
 import {
@@ -11,8 +12,14 @@ import {
 } from '@/features/menu/categories/hooks/use-categories'
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
-import { ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
-import { Alert, Button, PageSwitch } from '@/shared/components/ui'
+import { MenuSwitch } from '@/features/menu/components/nav/menu-switch'
+import {
+  ConfirmDialog,
+  ErrorState,
+  PictureEmptyState,
+  SkeletonList,
+} from '@/shared/components/feedback'
+import { Alert, Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 
 export type CategoriesPageProps = {
@@ -49,30 +56,21 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <PageSwitch
-        label={t('nav.menu', { ns: 'common' })}
-        value="categories"
-        options={[
-          { value: 'dishes', label: t('nav.dishes', { ns: 'common' }) },
-          { value: 'categories', label: t('nav.categories', { ns: 'common' }) },
-        ]}
-        onOpen={onOpenDishes}
-      />
+      <MenuSwitch value="categories" onOpen={onOpenDishes} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <LimitNotice
-          used={categories.data?.meta.used ?? 0}
-          limit={categories.data?.meta.limit ?? null}
-        />
-        <Button
-          className="ms-auto"
-          leadingIcon={<IconFolderPlus className="size-[18px]" />}
-          disabled={atLimit}
-          onClick={() => setDialog({ open: true, category: null })}
-        >
-          {t('categoriesPage.add')}
-        </Button>
-      </div>
+      <LimitHeader
+        used={categories.data?.meta.used ?? 0}
+        limit={categories.data?.meta.limit ?? null}
+        action={
+          <Button
+            leadingIcon={<IconFolderPlus className="size-[18px]" />}
+            disabled={atLimit}
+            onClick={() => setDialog({ open: true, category: null })}
+          >
+            {t('categoriesPage.add')}
+          </Button>
+        }
+      />
 
       {atLimit ? <Alert variant="warning">{t('categoriesPage.atLimit')}</Alert> : null}
 
@@ -84,13 +82,13 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
           onRetry={() => void categories.refetch()}
         />
       ) : list.length === 0 ? (
-        <EmptyState
+        <PictureEmptyState
           fill
-          icon={IconFolderPlus}
+          picture="/assets/images/dashboard/no_categories.webp"
           title={t('categoriesPage.emptyTitle')}
           description={t('categoriesPage.emptyDescription')}
           action={
-            <Button onClick={() => setDialog({ open: true, category: null })}>
+            <Button block onClick={() => setDialog({ open: true, category: null })}>
               {t('categoriesPage.emptyAction')}
             </Button>
           }

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
+import { ProgressBar } from '@/shared/components/data-display'
+import type { Locale } from '@/shared/constants/locales'
 import { formatNumber } from '@/shared/utils/format/number'
-import { usePreferencesStore } from '@/stores/preferences.store'
 
 export type RankedItem = {
   /** Unique within the list. */
@@ -14,19 +15,20 @@ export type RankedItem = {
 export type RankedListProps = {
   items: RankedItem[]
   /** Said when there is nothing to rank. */
-  empty: ReactNode
+  empty?: ReactNode
+  /** What a full bar stands for (the funnel's visitors); left out, the largest value. */
+  max?: number
+  locale: Locale
   'aria-label': string
 }
 
-/** A short ranked list with a bar under each row, sized against the first. */
-export function RankedList({ items, empty, ...aria }: RankedListProps) {
-  const locale = usePreferencesStore((state) => state.locale)
-
+/** A short ranked list with a bar under each row, sized against the first or `max`. */
+export function RankedList({ items, empty, max, locale, ...aria }: RankedListProps) {
   if (items.length === 0) {
     return <p className="py-2 text-[13px] text-[var(--muted)]">{empty}</p>
   }
 
-  const top = Math.max(...items.map((item) => item.value), 1)
+  const top = max ?? Math.max(...items.map((item) => item.value), 1)
 
   return (
     <ol className="flex flex-col gap-2.5" {...aria}>
@@ -41,12 +43,8 @@ export function RankedList({ items, empty, ...aria }: RankedListProps) {
               <span className="font-semibold">{formatNumber(item.value, locale)}</span>
             </span>
           </div>
-          <div aria-hidden className="h-1.5 overflow-hidden rounded-full bg-[var(--hover-wash)]">
-            <div
-              className="h-full rounded-full bg-[var(--accent-text)] transition-[width] duration-500"
-              style={{ width: `${(item.value / top) * 100}%` }}
-            />
-          </div>
+          {/* The number is written above it, so the bar is only a picture of it. */}
+          <ProgressBar value={item.value} max={top} />
         </li>
       ))}
     </ol>

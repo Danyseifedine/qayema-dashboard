@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconExternalLink } from '@tabler/icons-react'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -7,9 +6,8 @@ import { imageChanges } from '@/features/uploads'
 import { useSession } from '@/features/auth'
 import { Form, FormActions } from '@/shared/components/forms'
 import { ErrorState, SkeletonList } from '@/shared/components/feedback'
-import { Alert, Button } from '@/shared/components/ui'
+import { Alert, Button, ExternalLink } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
-import { cn } from '@/shared/utils/dom/cn'
 import { ContactSection } from '@/features/restaurant/components/contact/contact-section'
 import { MoneyTimeSection } from '@/features/restaurant/components/hours/money-time-section'
 import { OpeningHoursSection } from '@/features/restaurant/components/hours/opening-hours-section'
@@ -17,6 +15,7 @@ import { BrandingSection } from '@/features/restaurant/components/branding/brand
 import { LinkSection } from '@/features/restaurant/components/identity/link-section'
 import { IdentitySection } from '@/features/restaurant/components/identity/identity-section'
 import { useSaveRestaurant, useRestaurant } from '@/features/restaurant/hooks/use-restaurant'
+import { toExchangeRate, toRateForm } from '@/features/restaurant/utils/exchange-rate'
 import { DEFAULT_MAIN_LANGUAGE } from '@/shared/constants/menu-languages'
 import { useMenuLanguages } from '@/features/auth'
 import { toMenuTextForm } from '@/shared/utils/string/menu-text'
@@ -40,6 +39,9 @@ const EMPTY: RestaurantFormValues = {
   country_code: '',
   phone: '',
   currency: 'USD',
+  second_currency: '',
+  rate_one: 'second',
+  rate: null,
   timezone: 'UTC',
   opening_hours: CLOSED_WEEK,
   logo: null,
@@ -59,6 +61,8 @@ function toFormValues(settings: Restaurant): RestaurantFormValues {
     country_code: settings.country_code ?? '',
     phone: settings.phone ?? '',
     currency: settings.currency,
+    second_currency: settings.second_currency ?? '',
+    ...toRateForm(settings.exchange_rate),
     timezone: settings.timezone,
     // A closed day keeps usable defaults in its boxes, so switching it on
     // does not start from an empty field.
@@ -113,6 +117,8 @@ export function RestaurantPage() {
   }, [data, form])
 
   const onSubmit = form.handleSubmit((values) => {
+    // The form only shows once the restaurant is in.
+    if (data === undefined) return
     clearFormError()
     // Only the menu's languages are sent; text in any other language stays
     // on the server, hidden.
@@ -126,6 +132,8 @@ export function RestaurantPage() {
         country_code: values.country_code || null,
         phone: values.phone,
         currency: values.currency,
+        second_currency: values.second_currency || null,
+        exchange_rate: toExchangeRate(values, data),
         timezone: values.timezone,
         opening_hours: Object.fromEntries(
           WEEKDAYS.map((day) => {
@@ -152,9 +160,7 @@ export function RestaurantPage() {
 
   if (settings.isError) {
     return (
-      <div className="flex flex-1 flex-col">
-        <ErrorState description={settings.error.message} onRetry={() => void settings.refetch()} />
-      </div>
+      <ErrorState description={settings.error.message} onRetry={() => void settings.refetch()} />
     )
   }
 
@@ -164,19 +170,9 @@ export function RestaurantPage() {
     <div className="flex flex-1 flex-col gap-5">
       <div className="flex flex-wrap items-end justify-end gap-3">
         {data ? (
-          <a
-            href={publicUrl ?? `/${data.slug}`}
-            target="_blank"
-            rel="noreferrer noopener"
-            className={cn(
-              'force-ltr inline-flex items-center gap-1.5 text-[12.5px] text-[var(--muted)]',
-              'hover:text-accent hover:underline',
-              'focus-ring',
-            )}
-          >
+          <ExternalLink href={publicUrl ?? `/${data.slug}`} className="force-ltr">
             /{data.slug}
-            <IconExternalLink aria-hidden className="size-3" />
-          </a>
+          </ExternalLink>
         ) : null}
       </div>
 

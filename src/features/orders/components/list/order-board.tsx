@@ -1,17 +1,26 @@
-import type { TablerIcon } from '@tabler/icons-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { IconChevronDown, type TablerIcon } from '@tabler/icons-react'
+import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
+import { Alert, Button } from '@/shared/components/ui'
 import { StatusFilter } from '@/features/orders/components/filters/status-filter'
-import { WaitingBar } from '@/features/orders/components/notices/waiting-bar'
 import { WhatsAppNotice } from '@/features/orders/components/notices/whatsapp-notice'
-import { EditOrderDialog } from '@/features/orders/components/edit/edit-order-dialog'
 import { CancelOrderDialog } from '@/features/orders/components/dialogs/cancel-order-dialog'
 import { DeleteOrderDialog } from '@/features/orders/components/dialogs/delete-order-dialog'
 import { OrderCard } from '@/features/orders/components/list/order-card'
 import { useOrderActions } from '@/features/orders/hooks/use-order-actions'
 import { useOrders } from '@/features/orders/hooks/use-orders'
 import type { Order, OrderKind, OrderStatus } from '@/features/orders/schemas/order.schema'
+
+/**
+ * The order editor (its dish and build pickers) loads the first time an
+ * order is edited: the Orders page is part of the first download.
+ */
+const EditOrderDialog = lazy(() =>
+  import('@/features/orders/components/edit/edit-order-dialog').then((module) => ({
+    default: module.EditOrderDialog,
+  })),
+)
 
 export type OrderBoardProps = {
   kind: OrderKind
@@ -36,8 +45,9 @@ export type OrderBoardProps = {
 /**
  * A page of orders of one kind, to work through: the status filter, how many
  * are waiting, the cards with their one next step, and the dialogs behind
- * their ⋮. While new ones go to WhatsApp it says so, and still lists those
- * placed here before the switch, so they can be finished.
+ * their ⋮. The newest 30 come first, "Show more" adds the next 30. While new
+ * ones go to WhatsApp it says so, and still lists those placed here before
+ * the switch, so they can be finished.
  */
 export function OrderBoard({
   kind,
@@ -52,12 +62,15 @@ export function OrderBoard({
   const [filter, setFilter] = useState<OrderStatus | null>(null)
   const orders = useOrders(kind, filter)
   const actions = useOrderActions()
+  // Once loaded it stays mounted, so closing it is as before.
+  const [editorWanted, setEditorWanted] = useState(false)
+  if (actions.editDialog.order && !editorWanted) setEditorWanted(true)
 
   const list = useMemo(() => {
-    const received = orders.data?.data ?? []
+    const received = orders.data?.orders ?? []
     return sort ? sort(received) : received
   }, [orders.data, sort])
-  const openCount = orders.data?.meta.open ?? 0
+  const openCount = orders.data?.open ?? 0
   const nothingHere = orders.isSuccess && list.length === 0 && filter === null
 
   const notice = (description: string) => (
@@ -82,7 +95,7 @@ export function OrderBoard({
       {orders.isPending ? (
         <SkeletonList
           count={2}
-          className="grid grid-cols-1 gap-3 lg:grid-cols-2"
+          className="grid grid-cols-1 gap-3 lg:grid-cols-2 min-[106rem]:grid-cols-3"
           itemClassName="h-48"
         />
       ) : orders.isError ? (
@@ -91,7 +104,6 @@ export function OrderBoard({
         empty
       ) : list.length === 0 ? (
         <EmptyState
-          fill
           icon={filteredIcon}
           title={t('empty.filteredTitle')}
           description={t('empty.filteredDescription')}
@@ -99,13 +111,13 @@ export function OrderBoard({
       ) : (
         <>
           {openCount > 0 && filter !== 'placed' ? (
-            <WaitingBar
-              text={t('waiting', { count: openCount })}
-              onShow={() => setFilter('placed')}
-            />
+            // A tap shows only those.
+            <Alert variant="warning" onClick={() => setFilter('placed')}>
+              {t('waiting', { count: openCount })}
+            </Alert>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 min-[106rem]:grid-cols-3">
             {list.map((order) => (
               <OrderCard
                 key={order.id}
@@ -118,12 +130,28 @@ export function OrderBoard({
               />
             ))}
           </div>
+
+          {orders.hasNextPage ? (
+            <Button
+              variant="secondary"
+              className="self-center"
+              loading={orders.isFetchingNextPage}
+              leadingIcon={<IconChevronDown aria-hidden className="size-4" />}
+              onClick={() => void orders.fetchNextPage()}
+            >
+              {t('showMore')}
+            </Button>
+          ) : null}
         </>
       )}
 
       <CancelOrderDialog {...actions.cancelDialog} />
       <DeleteOrderDialog {...actions.deleteDialog} />
-      <EditOrderDialog {...actions.editDialog} />
+      {editorWanted ? (
+        <Suspense fallback={null}>
+          <EditOrderDialog {...actions.editDialog} />
+        </Suspense>
+      ) : null}
     </div>
   )
 }

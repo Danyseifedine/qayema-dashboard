@@ -51,6 +51,10 @@ export function usePageHero(key: string, ownerName: string): TopbarHero {
         return t('page.description', { ns: 'package' })
       case 'account':
         return t('page.description', { ns: 'account' })
+      case 'offers':
+        return t('page.description', { ns: 'offers' })
+      case 'build-your-own':
+        return t('page.description', { ns: 'build-your-own' })
       case 'social-links':
         return t('page.limitDescription', { ns: 'social-links' })
       // Its line changes with what is on the page, so the heading uses the

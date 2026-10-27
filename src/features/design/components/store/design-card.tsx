@@ -1,10 +1,14 @@
-import { IconCheck, IconCrown, IconPhotoOff, IconLock } from '@tabler/icons-react'
+import { IconCheck, IconCrown, IconSparkles, IconPhotoOff, IconLock } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
-import { translated } from '@/shared/utils/string/translated'
+import { nameOr, translated } from '@/shared/utils/string/translated'
 import type { Design } from '@/features/design/schemas/design.schema'
+
+/** A chip on the photo's corner: made for you, or premium. */
+const PHOTO_CHIP =
+  'absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-medium text-gold ring-[0.5px] ring-white/15'
 
 export type DesignCardProps = {
   template: Design
@@ -14,6 +18,8 @@ export type DesignCardProps = {
   busy?: boolean
   /** The package that includes a premium design, by name. */
   unlockedBy: string | null
+  /** Premium designs were turned off for this restaurant by an admin. */
+  turnedOff?: boolean
   onSelect: () => void
   onOpenPackage: () => void
 }
@@ -23,7 +29,7 @@ export type DesignCardProps = {
  *
  * Three states: the design in use, any other design, which is one tap away,
  * and a premium design the package does not include, which points to the
- * package that does.
+ * package that does (or, turned off by an admin, says so and leads nowhere).
  */
 export function DesignCard({
   template,
@@ -31,11 +37,12 @@ export function DesignCard({
   locale,
   busy = false,
   unlockedBy,
+  turnedOff = false,
   onSelect,
   onOpenPackage,
 }: DesignCardProps) {
   const { t } = useTranslation('design')
-  const name = translated(template.name, locale)
+  const name = nameOr(template.name, locale, template.slug)
   const description = translated(template.description, locale)
 
   return (
@@ -61,8 +68,13 @@ export function DesignCard({
           </div>
         )}
 
-        {template.is_premium ? (
-          <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-medium text-gold ring-[0.5px] ring-white/15">
+        {template.made_for_you ? (
+          <span className={PHOTO_CHIP}>
+            <IconSparkles aria-hidden className="size-3" />
+            {t('card.madeForYou')}
+          </span>
+        ) : template.is_premium ? (
+          <span className={PHOTO_CHIP}>
             <IconCrown aria-hidden className="size-3" />
             {t('card.premium')}
           </span>
@@ -79,9 +91,7 @@ export function DesignCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-1 p-3.5 pt-1">
-        <h3 className="font-display text-[19px] leading-tight">
-          {name.missing ? template.slug : name.text}
-        </h3>
+        <h3 className="font-display text-[19px] leading-tight">{name}</h3>
         {!description.missing ? (
           <p className="line-clamp-2 text-[12.5px] leading-relaxed text-[var(--muted)]">
             {description.text}
@@ -92,6 +102,15 @@ export function DesignCard({
           {active ? (
             <Button variant="secondary" block disabled>
               {t('card.currentlyInUse')}
+            </Button>
+          ) : template.locked && turnedOff ? (
+            <Button
+              variant="secondary"
+              block
+              disabled
+              leadingIcon={<IconLock aria-hidden className="size-4" />}
+            >
+              {t('card.turnedOff')}
             </Button>
           ) : template.locked ? (
             <Button

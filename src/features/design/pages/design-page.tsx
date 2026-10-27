@@ -1,10 +1,10 @@
-import { IconPalette } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import { CardGridSkeleton, EmptyState, ErrorState } from '@/shared/components/feedback'
+import { CardGridSkeleton, ErrorState, PictureEmptyState } from '@/shared/components/feedback'
 import { Alert } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
-import { usePackageFor } from '@/features/package'
-import { translated } from '@/shared/utils/string/translated'
+import { useTurnedOff } from '@/features/auth'
+import { TurnedOffNotice, usePackageFor } from '@/features/package'
+import { nameOr } from '@/shared/utils/string/translated'
 import { DesignCard } from '@/features/design/components/store/design-card'
 import type { Design } from '@/features/design/schemas/design.schema'
 import { useSelectDesign, useDesigns } from '@/features/design/hooks/use-designs'
@@ -20,13 +20,15 @@ export type DesignPageProps = {
  * A new restaurant has no design, and most of the dashboard stays locked until
  * one is chosen, so this is where a new owner starts. Every design is open on
  * every package except one marked premium, which needs the package that
- * includes premium designs.
+ * includes premium designs. When an admin turned premium designs off for
+ * this restaurant, the locked ones say so, with the way to ask for them back.
  */
 export function DesignPage({ locale, onOpenPackage }: DesignPageProps) {
   const { t } = useTranslation('design')
   const designs = useDesigns()
   const select = useSelectDesign()
   const unlockedBy = usePackageFor('premium_designs', locale)
+  const turnedOff = useTurnedOff('premium_designs')
 
   const list = designs.data?.data ?? []
   const current = designs.data?.meta.current ?? null
@@ -40,7 +42,7 @@ export function DesignPage({ locale, onOpenPackage }: DesignPageProps) {
   const needsDesign = designs.isSuccess && current === null
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4">
       {designs.isSuccess ? (
         <p className="text-[13px] text-[var(--muted)]">
           {needsDesign ? t('page.pickPrompt') : t('page.switchFree')}
@@ -48,14 +50,18 @@ export function DesignPage({ locale, onOpenPackage }: DesignPageProps) {
       ) : null}
 
       {needsDesign ? (
-        <Alert variant="info" title={t('needsDesign.title')}>
+        <Alert variant="warning" title={t('needsDesign.title')}>
           {t('needsDesign.description')}
         </Alert>
       ) : null}
 
+      {turnedOff && list.some((d) => d.locked) ? (
+        <TurnedOffNotice flag="premium_designs" locale={locale} />
+      ) : null}
+
       {chosen && fallback ? (
         <Alert variant="warning" title={t('fallback.title', { design: nameOf(chosen, locale) })}>
-          {t('fallback.description', {
+          {t(turnedOff ? 'fallback.turnedOff' : 'fallback.description', {
             design: nameOf(chosen, locale),
             fallback: nameOf(fallback, locale),
           })}
@@ -73,8 +79,9 @@ export function DesignPage({ locale, onOpenPackage }: DesignPageProps) {
       ) : designs.isError ? (
         <ErrorState description={designs.error.message} onRetry={() => void designs.refetch()} />
       ) : list.length === 0 ? (
-        <EmptyState
-          icon={IconPalette}
+        <PictureEmptyState
+          fill
+          picture="/assets/images/dashboard/more/design.webp"
           title={t('empty.title')}
           description={t('empty.description')}
         />
@@ -88,6 +95,7 @@ export function DesignPage({ locale, onOpenPackage }: DesignPageProps) {
               locale={locale}
               busy={select.isPending && select.variables === template.id}
               unlockedBy={unlockedBy}
+              turnedOff={turnedOff}
               onSelect={() => select.mutate(template.id)}
               onOpenPackage={onOpenPackage}
             />
@@ -99,6 +107,5 @@ export function DesignPage({ locale, onOpenPackage }: DesignPageProps) {
 }
 
 function nameOf(design: Design, locale: Locale): string {
-  const name = translated(design.name, locale)
-  return name.missing ? design.slug : name.text
+  return nameOr(design.name, locale, design.slug)
 }

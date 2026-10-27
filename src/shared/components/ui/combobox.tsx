@@ -11,7 +11,7 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
-import { controlClass } from '@/shared/components/ui/control-class'
+import { controlClass, menuItemClass, menuPanelClass } from '@/shared/components/ui/control-class'
 import { FieldShell, type FieldTone } from '@/shared/components/ui/field-shell'
 
 export type ComboboxOption = {
@@ -213,7 +213,7 @@ export function Combobox({
       style={place}
       className={cn(
         'fixed z-50 flex max-h-[280px] flex-col gap-0.5 overflow-y-auto',
-        'rounded-[12px] border-[0.5px] border-[var(--line)] bg-[var(--surface)] p-1.5 shadow-pop',
+        menuPanelClass,
         embedded
           ? 'w-[min(320px,calc(100vw-32px))]'
           : 'w-max max-w-[min(320px,calc(100vw-32px))]',
@@ -231,8 +231,8 @@ export function Combobox({
                 key={option.value}
                 {...getItemProps({ item: option, index })}
                 className={cn(
-                  'flex cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2.5 text-[14px]',
-                  'text-[var(--text)] transition-colors',
+                  menuItemClass,
+                  'cursor-pointer text-[var(--text)]',
                   highlightedIndex === index && 'bg-[var(--hover-wash)]',
                   active && 'bg-accent-wash text-accent',
                   option.disabled && 'cursor-not-allowed opacity-50',
@@ -284,7 +284,7 @@ export function Combobox({
         disabled={disabled}
         {...getToggleButtonProps()}
         className={cn(
-          'absolute top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md',
+          'absolute top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-tile',
           // In a small box the arrow covers much of it; clicks pass to the
           // field, which opens the list just the same.
           size === 'sm' ? 'pointer-events-none end-0.5' : 'end-2.5',

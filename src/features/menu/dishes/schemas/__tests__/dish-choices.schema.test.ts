@@ -30,6 +30,7 @@ const valid = {
   price: 8,
   category_id: 1,
   is_available: true,
+  currency: 'USD',
   image: null,
   variants: [],
   addons: [],
@@ -166,7 +167,7 @@ describe('dish choices in the form', () => {
   })
 
   it('says plainly when a name runs long or a price is not one', () => {
-    const long = 'x'.repeat(61)
+    const long = 'x'.repeat(41)
     const option = (price: number) => ({ savedId: null, name: { en: 'Small' }, price })
     const result = dishFormSchema.safeParse({
       ...valid,
@@ -181,10 +182,10 @@ describe('dish choices in the form', () => {
       result.error!.issues.map((issue) => [issue.path.join('.'), issue.message]),
     )
     expect(messages).toMatchObject({
-      'variants.0.name.en': 'Keep the name under 60 characters.',
+      'variants.0.name.en': 'Keep the name under 40 characters.',
       'variants.0.options.0.price': 'Enter a price, or leave it empty.',
       'variants.0.options.1.price': 'That price is too high.',
-      'addons.0.name.en': 'Keep the name under 60 characters.',
+      'addons.0.name.en': 'Keep the name under 40 characters.',
     })
   })
 

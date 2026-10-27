@@ -14,10 +14,13 @@ import { Money } from '@/shared/components/data-display'
 import { Button, Combobox, HelperText } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { mainLanguageOf } from '@/shared/constants/menu-languages'
-import { translated } from '@/shared/utils/string/translated'
+import { cn } from '@/shared/utils/dom/cn'
+import { nameOr } from '@/shared/utils/string/translated'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
 import { ChoiceRow } from '@/features/menu/dishes/components/options/choice-row'
+import { TranslateChoicesButton } from '@/features/menu/dishes/components/options/translate-choices-button'
 import { VariantCard } from '@/features/menu/dishes/components/options/variant-card'
+import { languagesWithErrors } from '@/features/menu/dishes/utils/languages-with-errors'
 import {
   CHOICE_LIMITS,
   VARIANT_PRESETS,
@@ -43,30 +46,16 @@ export type DishChoicesSectionProps = {
   show: DishChoices
   /** Other dishes, to copy their variants and add-ons from. */
   dishes: Dish[]
-}
-
-/** Every language with something wrong somewhere in these errors. */
-function languagesWithErrors(errors: unknown, languages: readonly string[]): string[] {
-  const found = new Set<string>()
-  const walk = (node: unknown) => {
-    if (!node || typeof node !== 'object') return
-    for (const [key, value] of Object.entries(node)) {
-      if (key === 'ref') continue
-      if (languages.includes(key) && value && typeof value === 'object' && 'message' in value) {
-        found.add(key)
-      } else {
-        walk(value)
-      }
-    }
-  }
-  walk(errors)
-  return languages.filter((code) => found.has(code))
+  /** Its saved builds price the dish: its variants are extras, and no range is shown. */
+  pricedByBuilds: boolean
 }
 
 /**
  * A dish's variants (Size, Spice level: guests pick one option of each) and
- * add-ons (Extra cheese: guests pick any), in the dish form. One set of
- * language tabs switches every name at once, so each row stays one line.
+ * add-ons (Extra cheese: guests pick any), in the dish form, a line
+ * between the two. One set of language tabs switches every name at once, so
+ * each row stays one line, and one AI button beside them translates every
+ * name written in one language only.
  */
 export function DishChoicesSection({
   form,
@@ -75,6 +64,7 @@ export function DishChoicesSection({
   locale,
   show,
   dishes,
+  pricedByBuilds,
 }: DishChoicesSectionProps) {
   const { t } = useTranslation('menu')
   const { control } = form
@@ -95,9 +85,11 @@ export function DishChoicesSection({
     control,
     name: ['price', 'variants', 'addons'],
   })
-  // With no price of its own the dish is priced by its first variant.
+  // With no price of its own the dish is priced by its first variant. A
+  // build's price is its own to show, so no range then.
   const priced = price !== null && price !== undefined
   const range =
+    pricedByBuilds ||
     (variantValues.length === 0 && addonValues.length === 0) ||
     (!priced && variantValues.length === 0)
       ? null
@@ -116,22 +108,22 @@ export function DishChoicesSection({
   return (
     <section
       aria-labelledby="dish-choices-title"
-      className="mt-5 flex flex-col gap-4 border-t-[0.5px] border-[var(--line)] pt-4"
+      className="mt-5 flex flex-col gap-4 border-t-[0.5px] border-[var(--line)] pt-3"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h3 id="dish-choices-title" className="font-display text-[16px] leading-tight">
-            {t('choices.title')}
-          </h3>
-          <p className="text-[12.5px] text-[var(--muted)]">{t('choices.description')}</p>
-        </div>
+        <h3 id="dish-choices-title" className="min-w-0 font-display text-[16px] leading-tight">
+          {t('choices.title')}
+        </h3>
         {languages.length > 1 ? (
-          <LocaleTabs
-            languages={languages}
-            value={language}
-            onChange={setChosen}
-            incomplete={incomplete}
-          />
+          <div className="flex items-center gap-1.5">
+            <TranslateChoicesButton form={form} languages={languages} onTranslated={setChosen} />
+            <LocaleTabs
+              languages={languages}
+              value={language}
+              onChange={setChosen}
+              incomplete={incomplete}
+            />
+          </div>
         ) : null}
       </div>
 
@@ -141,13 +133,10 @@ export function DishChoicesSection({
           placeholder={t('choices.copyFrom')}
           value={null}
           onChange={copy}
-          options={copyable.map((dish) => {
-            const name = translated(dish.name, locale)
-            return {
-              value: String(dish.id),
-              label: name.missing ? t('dishCard.untitled') : name.text,
-            }
-          })}
+          options={copyable.map((dish) => ({
+            value: String(dish.id),
+            label: nameOr(dish.name, locale, t('dishCard.untitled')),
+          }))}
         />
       ) : null}
 
@@ -174,6 +163,7 @@ export function DishChoicesSection({
                       language={language}
                       currency={currency}
                       handle={handle}
+                      pricedByBuilds={pricedByBuilds}
                       onRemove={() => variants.remove(index)}
                     />
                   )}
@@ -210,7 +200,12 @@ export function DishChoicesSection({
       ) : null}
 
       {show.addons ? (
-        <div className="flex flex-col gap-2.5">
+        <div
+          className={cn(
+            'flex flex-col gap-2.5',
+            show.variants && 'border-t-[0.5px] border-[var(--line)] pt-4',
+          )}
+        >
           <div>
             <h4 className="text-[13.5px] font-semibold">{t('choices.addons')}</h4>
             <HelperText>{t('choices.addonsHint')}</HelperText>
@@ -260,27 +255,13 @@ export function DishChoicesSection({
       ) : null}
 
       {range ? (
-        <p className="rounded-[10px] bg-[var(--hover-wash)] px-3 py-2 text-[13px]">
+        <p className="rounded-tile bg-[var(--hover-wash)] px-3 py-2 text-[13px]">
           <Trans
             t={t}
             i18nKey={range.min === range.max ? 'choices.guestsPay' : 'choices.guestsPayRange'}
             components={{
-              min: (
-                <Money
-                  amount={range.min}
-                  currency={currency}
-                  locale={locale}
-                  className="font-semibold"
-                />
-              ),
-              max: (
-                <Money
-                  amount={range.max}
-                  currency={currency}
-                  locale={locale}
-                  className="font-semibold"
-                />
-              ),
+              min: <Money amount={range.min} currency={currency} className="font-semibold" />,
+              max: <Money amount={range.max} currency={currency} className="font-semibold" />,
             }}
           />
         </p>

@@ -30,13 +30,19 @@ function renderTopbar(props: Partial<TopbarProps> = {}) {
 }
 
 describe('tierOf', () => {
-  it('draws Free in bronze, Pro in silver, Premium and Custom in gold', () => {
-    expect(tierOf('free')).toBe('bronze')
-    expect(tierOf('pro')).toBe('silver')
-    expect(tierOf('premium')).toBe('gold')
-    expect(tierOf('custom')).toBe('gold')
-    expect(tierOf(null)).toBe('bronze')
-    expect(tierOf('something-new')).toBe('bronze')
+  it('draws the metal the admin gave the package', () => {
+    expect(tierOf({ slug: 'starter', tier: 'silver' })).toBe('silver')
+    expect(tierOf({ slug: 'free', tier: 'gold' })).toBe('gold')
+  })
+
+  it('from a server from before it: Free in bronze, Pro in silver, Premium and Custom in gold', () => {
+    const before = (slug: string | null) => tierOf({ slug, tier: null })
+    expect(before('free')).toBe('bronze')
+    expect(before('pro')).toBe('silver')
+    expect(before('premium')).toBe('gold')
+    expect(before('custom')).toBe('gold')
+    expect(before(null)).toBe('bronze')
+    expect(before('something-new')).toBe('bronze')
   })
 })
 

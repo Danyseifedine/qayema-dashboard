@@ -37,13 +37,15 @@
   "notOnPackage": "Not on your package",
   "availableOn": "Available on {{package}}",
   "packageChip": "{{note}}. See packages",
+  "turnedOff": "Turned off by Qayema",
+  "turnedOffNote": "Qayema turned this off for your restaurant. Contact us if you need it back.",
   "orders": {
     "label": "Delivery and pickup",
     "description": "Guests order from home, for delivery or to pick up.",
     "offNote": "Guests can't order for delivery or pickup. Your past orders are kept.",
     "modeLabel": "How guests send orders",
     "whatsapp": "WhatsApp",
-    "menu": "In your menu",
+    "dashboard": "Dashboard",
     "whatsappHint": "Guests send you the order on WhatsApp. It won't appear on your Orders page.",
     "menuHint": "Guests order inside your menu. Orders appear on your Orders page with a sound.",
     "typesLabel": "You take",
@@ -66,7 +68,6 @@
     "offNote": "Guests can still open your menu from their table, but can't order.",
     "openTables": "Set up your tables",
     "modeLabel": "Where table orders go",
-    "dashboard": "Dashboard",
     "dashboardHint": "They appear on your Table orders page with a sound, and guests can follow their order.",
     "whatsappHint": "They come to your WhatsApp with the table's name. Guests can't follow their order.",
     "needsNumber": "WhatsApp needs your restaurant's phone number.",
@@ -119,5 +120,6 @@
     "openingLabel": "Menu opens in",
     "saved": "Menu languages saved",
     "saveFailed": "Could not save your menu languages"
-  }
+  },
+  "seePackages": "See packages"
 }

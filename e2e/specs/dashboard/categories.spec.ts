@@ -71,6 +71,33 @@ test.describe('categories', () => {
     await expect(card(page, 'Cold mezze')).toContainText('Served from noon')
   })
 
+  test('an owner gives a category an icon, and the menu shows it @matrix', async ({
+    page,
+    owner,
+  }) => {
+    const { restaurant } = await owner({
+      package: 'free',
+      categories: [{ name: { en: 'Pizza' }, dishes: [{ name: { en: 'Margherita' } }] }],
+    })
+    await page.goto('/categories')
+
+    await card(page, 'Pizza').getByRole('button', { name: /Pizza/ }).first().click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByRole('radio', { name: either('No icon', 'بلا أيقونة') })).toBeChecked()
+    await dialog.getByTitle(either('Pizza', 'بيتزا')).click()
+    await dialog.getByRole('button', { name: either('Save', 'حفظ') }).click()
+    await expect(dialog).toBeHidden()
+    // The card wears it.
+    await expect(card(page, 'Pizza').locator('.tabler-icon-pizza')).toBeVisible()
+
+    await page.goto(restaurant.public_url)
+    await expect(
+      page.getByRole('button', { name: 'Pizza', exact: true }).locator('.tab-icon svg'),
+    ).toBeVisible()
+    // Only the tab: the section heading stays plain.
+    await expect(page.getByRole('heading', { name: 'Pizza' }).locator('svg')).toHaveCount(0)
+  })
+
   test('a category needs an English name', async ({ page, owner }) => {
     await owner({ package: 'free' })
     await page.goto('/categories')

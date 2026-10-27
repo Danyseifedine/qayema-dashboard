@@ -1,3 +1,4 @@
+import { IconLink } from '@tabler/icons-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -5,8 +6,8 @@ import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { t as translate } from '@/lib/i18n'
 import { ConfirmDialog } from '@/shared/components/feedback'
-import { FormSection, TextField } from '@/shared/components/forms'
-import { Button } from '@/shared/components/ui'
+import { Form, FormSection, TextField } from '@/shared/components/forms'
+import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useChangeSlug } from '@/features/restaurant/hooks/use-restaurant'
 
@@ -42,7 +43,7 @@ export function LinkSection({ slug, publicUrl }: LinkSectionProps) {
     resolver: zodResolver(linkSchema),
     defaultValues: { slug },
   })
-  const { formError, applyApiError } = useApiFormErrors(form.setError)
+  const { formError, applyApiError, clearFormError } = useApiFormErrors(form.setError)
 
   // A link changed (here, or by an admin) is the new starting point.
   useEffect(() => {
@@ -53,18 +54,23 @@ export function LinkSection({ slug, publicUrl }: LinkSectionProps) {
   const unchanged = typed === slug
 
   return (
-    <FormSection title={t('link.title')} description={t('link.description')}>
-      <form
-        noValidate
+    <FormSection
+      icon={<IconLink aria-hidden className="size-[18px]" />}
+      title={t('link.title')}
+      description={t('link.description')}
+    >
+      {formError ? <Alert variant="error">{formError}</Alert> : null}
+
+      <Form
         onSubmit={form.handleSubmit((values) => setAsking(values.slug.trim()))}
-        className="flex flex-col gap-3 sm:flex-row sm:items-start"
+        className="gap-3 sm:flex-row sm:items-start"
       >
         <TextField
           control={form.control}
           name="slug"
           label={t('link.label')}
           placeholder={t('link.placeholder')}
-          hint={formError ?? t('link.hint')}
+          hint={t('link.hint')}
           leadingIcon={<span className="text-[13px] text-[var(--muted)]">{host}</span>}
           forceLtr
           autoComplete="off"
@@ -73,7 +79,7 @@ export function LinkSection({ slug, publicUrl }: LinkSectionProps) {
         <Button type="submit" variant="secondary" disabled={unchanged} className="sm:mt-9">
           {t('link.change')}
         </Button>
-      </form>
+      </Form>
 
       <ConfirmDialog
         open={asking !== null}
@@ -84,6 +90,7 @@ export function LinkSection({ slug, publicUrl }: LinkSectionProps) {
         onCancel={() => setAsking(null)}
         onConfirm={() => {
           if (asking === null) return
+          clearFormError()
           change.mutate(asking, {
             onSuccess: () => setAsking(null),
             onError: (error) => {

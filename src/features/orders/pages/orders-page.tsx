@@ -1,9 +1,9 @@
 import { IconReceipt } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { useOrderingMode } from '@/features/auth'
-import { EmptyState } from '@/shared/components/feedback'
+import { PictureEmptyState } from '@/shared/components/feedback'
 import { OrderBoard } from '@/features/orders/components/list/order-board'
-import { OrdersSwitch } from '@/features/orders/components/list/orders-switch'
+import { OrdersSwitch } from '@/features/orders/components/nav/orders-switch'
 
 export type OrdersPageProps = {
   /** Opens the Features page, where the owner picks how orders come in. */
@@ -36,9 +36,9 @@ export function OrdersPage({ onOpenFeatures, onOpenTableOrders }: OrdersPageProp
         onOpenFeatures={onOpenFeatures}
         filteredIcon={IconReceipt}
         empty={
-          <EmptyState
+          <PictureEmptyState
             fill
-            icon={IconReceipt}
+            picture="/assets/images/dashboard/no_takeaway_delivery_orders.webp"
             title={t('empty.title')}
             description={t('empty.description')}
           />

@@ -4,7 +4,7 @@
  * submitted currency against exactly these keys, so the select must not offer
  * anything outside this list.
  */
-export type Currency = {
+type Currency = {
   code: string
   name: string
 }

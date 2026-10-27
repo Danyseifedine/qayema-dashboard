@@ -1,6 +1,12 @@
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
-import { FieldLeading, FieldPrefix, FieldShell, FieldTrailing, type FieldTone } from '@/shared/components/ui/field-shell'
+import {
+  FieldLeading,
+  FieldPrefix,
+  FieldShell,
+  FieldTrailing,
+  type FieldTone,
+} from '@/shared/components/ui/field-shell'
 import { controlClass } from '@/shared/components/ui/control-class'
 
 export type InputProps = Omit<ComponentProps<'input'>, 'prefix' | 'size'> & {
@@ -36,6 +42,8 @@ export function Input({
         className={cn(
           controlClass,
           (leadingIcon || prefix) && 'ps-1',
+          // On one baseline with the prefix (FieldPrefix).
+          prefix && 'self-baseline',
           trailing && 'pe-0',
           className,
         )}

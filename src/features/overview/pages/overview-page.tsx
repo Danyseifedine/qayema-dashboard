@@ -1,8 +1,7 @@
-import { IconChevronRight } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Alert, Collapse } from '@/shared/components/ui'
 import { useSession, type AuthRestaurant } from '@/features/auth'
-import { useDishes } from '@/features/menu'
 import { useRestaurant } from '@/features/restaurant'
 import { ErrorState, Skeleton } from '@/shared/components/feedback'
 import { ContentCounts } from '@/features/overview/components/counts/content-counts'
@@ -31,7 +30,7 @@ const NONE_WAITING = { orders: 0, tables: 0 }
  * Home, under the greeting in the topbar: the menu's link to share first,
  * the orders waiting, today's numbers, then only the next thing to set up
  * (the whole list a tap away), then what is on the menu against what the
- * package allows, each a tap from its page.
+ * package allows and the AI credits left, each a tap from its page.
  */
 export function OverviewPage({
   limits,
@@ -42,8 +41,8 @@ export function OverviewPage({
 }: OverviewPageProps) {
   const { t } = useTranslation('overview')
   const settings = useRestaurant()
-  const dishes = useDishes()
-  const publicUrl = useSession().data?.restaurant?.public_url ?? null
+  const restaurant = useSession().data?.restaurant
+  const publicUrl = restaurant?.public_url ?? null
   const [stepsShown, setStepsShown] = useState(false)
   const waiting = ordersWaiting.orders + ordersWaiting.tables
 
@@ -52,35 +51,26 @@ export function OverviewPage({
       {publicUrl ? <MenuLinkCard publicUrl={publicUrl} onOpenQr={() => onOpen('qr')} /> : null}
 
       {waiting > 0 ? (
-        <button
-          type="button"
+        <Alert
+          variant="warning"
           onClick={() => onOpen(ordersWaiting.orders > 0 ? 'orders' : 'table-orders')}
-          className="flex items-center gap-3 rounded-card bg-[var(--status-warn-wash)] px-4 py-3.5 text-start font-semibold text-[var(--status-warn)] focus-ring"
         >
-          <span aria-hidden className="size-2.5 rounded-full bg-current" />
-          <span className="flex-1">{t('waiting', { count: waiting })}</span>
-          <IconChevronRight aria-hidden className="size-4 rtl:rotate-180" />
-        </button>
+          {t('waiting', { count: waiting })}
+        </Alert>
       ) : null}
 
       {showToday ? <TodayNumbers onOpen={() => onOpen('analytics')} /> : null}
 
-      {settings.isPending || dishes.isPending ? (
+      {settings.isPending ? (
         <Skeleton className="h-[220px]" />
-      ) : settings.isError || dishes.isError ? (
-        <ErrorState
-          description={(settings.error ?? dishes.error)?.message}
-          onRetry={() => {
-            if (settings.isError) void settings.refetch()
-            if (dishes.isError) void dishes.refetch()
-          }}
-        />
+      ) : settings.isError ? (
+        <ErrorState description={settings.error.message} onRetry={() => void settings.refetch()} />
       ) : (
         <SetUp
           items={menuChecklist({
             settings: settings.data,
-            dishes: dishes.data.data,
             limits,
+            withoutPhoto: restaurant?.dishes_without_photo ?? 0,
           }).filter((item) => !switchedOff.includes(item.action.target))}
           stepsShown={stepsShown}
           onToggleSteps={() => setStepsShown((shown) => !shown)}
@@ -88,7 +78,11 @@ export function OverviewPage({
         />
       )}
 
-      <ContentCounts limits={limits} onOpen={onOpen} />
+      <ContentCounts
+        limits={limits}
+        credits={restaurant?.writing_help?.credits ?? null}
+        onOpen={onOpen}
+      />
     </div>
   )
 }
@@ -107,20 +101,22 @@ function SetUp({
 }) {
   if (items.every((item) => item.done)) return null
 
+  // One block, so the steps sliding shut leave no gap behind them.
   return (
-    <>
+    <div className="flex flex-col">
       <NextStep
         items={items}
         onOpen={onOpen}
         stepsShown={stepsShown}
         onToggleSteps={onToggleSteps}
       />
-      {stepsShown ? (
-        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <SetupStepper items={items} onOpen={onOpen} />
-          <HowItWorks />
-        </div>
-      ) : null}
-    </>
+      <Collapse
+        open={stepsShown}
+        className="grid items-start gap-4 pt-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]"
+      >
+        <SetupStepper items={items} onOpen={onOpen} />
+        <HowItWorks />
+      </Collapse>
+    </div>
   )
 }

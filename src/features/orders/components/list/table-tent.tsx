@@ -2,8 +2,6 @@ import { useId } from 'react'
 import { cn } from '@/shared/utils/dom/cn'
 import { QR_GROUND } from '@/shared/constants/pictures'
 
-/** The dark marble table the QR page's code stands on. */
-
 /**
  * What a table's tent card shows: the number in its name ("Table 12" → 12),
  * else its first letter.

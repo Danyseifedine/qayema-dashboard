@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { Package, PackageLimit } from '@/features/package/schemas/package.schema'
-import type { PackageRow } from '@/features/package/utils/package-rows'
+import { limitOf, type PackageRow } from '@/features/package/utils/package-rows'
 import { formatNumber } from '@/shared/utils/format/number'
 
 const NOUNS = {
@@ -8,6 +8,7 @@ const NOUNS = {
   category_limit: 'categories',
   social_link_limit: 'socialLinks',
   writing_help_limit: 'writingHelp',
+  writing_help_credits: 'writingHelpCredits',
 } as const satisfies Record<PackageLimit, string>
 
 /**
@@ -20,7 +21,7 @@ export function useRowText() {
   return (row: PackageRow, pkg: Package): string => {
     if (row.kind === 'flag') return t(`rows.${row.key}`)
 
-    const value = pkg.features[row.key]
+    const value = limitOf(pkg, row.key)
     const noun = NOUNS[row.key]
     return value === null
       ? t(`card.limits.${noun}Unlimited`)

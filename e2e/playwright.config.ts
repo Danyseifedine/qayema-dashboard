@@ -20,8 +20,9 @@ const E2E_DIST = '.test-output/e2e-dist'
  * The dashboard is Vite's dev server, or with E2E_BUILD=1 the production
  * build served by `vite preview` (what CI runs).
  *
- * Projects: `desktop` runs everything; `phone`, `arabic-rtl` and `dark` re-run
- * the flows tagged @matrix; `visual` holds the screenshot baselines.
+ * Projects: `desktop` runs everything; `phone` and `arabic-rtl` re-run the
+ * flows tagged @matrix; `visual` and `visual-phone` hold the screenshot
+ * baselines.
  */
 export default defineConfig<Options>({
   testDir: './specs',
@@ -64,15 +65,6 @@ export default defineConfig<Options>({
         ...devices['Desktop Chrome'],
         viewport: { width: 1440, height: 900 },
         uiLanguage: 'ar',
-      },
-      grep: /@matrix/,
-    },
-    {
-      name: 'dark',
-      use: {
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1440, height: 900 },
-        uiTheme: 'dark',
       },
       grep: /@matrix/,
     },

@@ -1,8 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { UserMenu, type UserMenuProps } from '@/app/layouts/authenticated/topbar/user-menu'
-import { usePreferencesStore } from '@/stores/preferences.store'
 
 function renderMenu(props: Partial<UserMenuProps> = {}) {
   const handlers = {
@@ -29,10 +28,6 @@ function renderMenu(props: Partial<UserMenuProps> = {}) {
 const trigger = () => screen.getByRole('button', { name: 'Account menu' })
 
 describe('UserMenu', () => {
-  afterEach(() => {
-    usePreferencesStore.getState().setTheme('light')
-  })
-
   it("shows the owner's initial, capitalised", () => {
     renderMenu({ name: '  dany ' })
     expect(trigger()).toHaveTextContent('D')
@@ -114,7 +109,7 @@ describe('UserMenu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
-  it('changes the language and the theme from its preferences', async () => {
+  it('changes the language from its preferences, and has no theme switch', async () => {
     const user = userEvent.setup()
     const { onLocaleChange, onLogout } = renderMenu()
 
@@ -123,8 +118,46 @@ describe('UserMenu', () => {
     await user.click(within(preferences).getByRole('tab', { name: 'ع' }))
     expect(onLocaleChange).toHaveBeenCalledWith('ar')
 
-    await user.click(within(preferences).getByRole('switch', { name: 'Dark mode' }))
-    expect(usePreferencesStore.getState().theme).toBe('dark')
+    // The dashboard is dark only.
+    expect(within(preferences).queryByRole('switch')).not.toBeInTheDocument()
     expect(onLogout).not.toHaveBeenCalled()
+  })
+
+  it('moves between its entries with the arrow keys, round from either end', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+
+    await user.click(trigger())
+    const publicMenu = screen.getByRole('menuitem', { name: /View public menu/ })
+    const account = screen.getByRole('menuitem', { name: /Account/ })
+    const logOut = screen.getByRole('menuitem', { name: /Log out/ })
+
+    await user.keyboard('{ArrowDown}')
+    expect(publicMenu).toHaveFocus()
+    await user.keyboard('{ArrowDown}')
+    expect(account).toHaveFocus()
+    await user.keyboard('{ArrowUp}{ArrowUp}')
+    expect(logOut).toHaveFocus()
+
+    trigger().focus()
+    await user.keyboard('{ArrowUp}')
+    expect(logOut).toHaveFocus()
+  })
+
+  it('leaves the arrow keys to the language switch, and does nothing while closed', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+
+    trigger().focus()
+    await user.keyboard('{ArrowDown}')
+    expect(trigger()).toHaveFocus()
+
+    await user.click(trigger())
+    const arabic = within(screen.getByRole('group', { name: 'Preferences' })).getByRole('tab', {
+      name: 'ع',
+    })
+    arabic.focus()
+    await user.keyboard('{ArrowDown}')
+    expect(arabic).toHaveFocus()
   })
 })

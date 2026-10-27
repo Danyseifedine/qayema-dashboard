@@ -34,7 +34,7 @@ export function PackagePage({ locale }: PackagePageProps) {
   const requesting: Package | null = list.find((pkg) => pkg.slug === requestingSlug) ?? null
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4">
       {restaurant !== null ? (
         <CurrentPackageCard
           restaurant={restaurant}
@@ -57,6 +57,9 @@ export function PackagePage({ locale }: PackagePageProps) {
                 pkg={pkg}
                 previous={list[index - 1]}
                 current={pkg.slug === current}
+                // A price of its own, set by an admin, is only ever this
+                // restaurant's for the package it is on.
+                yourPriceCents={pkg.slug === current ? packages.data.meta.your_price_cents : null}
                 locale={locale}
                 onRequest={() => setRequestingSlug(pkg.slug)}
               />
@@ -65,7 +68,7 @@ export function PackagePage({ locale }: PackagePageProps) {
 
           <section className="flex flex-col gap-3 pt-2">
             <div>
-              <h3 className="font-display text-[17px] leading-tight">{t('page.compareTitle')}</h3>
+              <h3 className="font-display text-[20px] leading-tight">{t('page.compareTitle')}</h3>
               <p className="mt-1 text-[13px] text-[var(--muted)]">{t('page.compareDescription')}</p>
             </div>
             <CompareTable packages={list} current={current} locale={locale} />

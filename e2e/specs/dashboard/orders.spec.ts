@@ -260,6 +260,47 @@ test.describe('orders', () => {
     await expect(card.getByRole('link', { name: '+971501234567' })).toBeVisible()
   })
 
+  test('without order tracking the guest is only told the number, and the owner still gets it', async ({
+    page,
+    browser,
+    owner,
+  }) => {
+    const restaurant = await owner({
+      package: 'premium',
+      order_mode: 'menu',
+      order_types: ['pickup'],
+      categories: [GRILLS],
+      overrides: [{ feature: 'order_tracking', value: 0 }],
+    })
+    const { guest, close } = await openGuestMenu(browser, restaurant)
+    const cart = guest.locator('.col-aside')
+
+    await guest.getByRole('button', { name: 'Add Kafta' }).click()
+    await cart.getByLabel('Your name').fill('Rami')
+    await cart.getByLabel('Phone number').fill('70 123 456')
+    const placed = guest.waitForResponse(
+      (response) => response.url().endsWith('/order') && response.request().method() === 'POST',
+    )
+    await cart.getByRole('button', { name: /Place order/ }).click()
+    const data = (
+      (await (await placed).json()) as { data: { reference: string; tracking_url: string | null } }
+    ).data
+    expect(data.tracking_url).toBeNull()
+
+    const toast = guest.getByRole('status').filter({ hasText: 'Order sent' })
+    await expect(toast).toContainText(data.reference)
+    await expect(toast.getByRole('link', { name: 'Track your order' })).toHaveCount(0)
+    // No way back to it, and the next cart is a new order.
+    await guest.reload()
+    await expect(guest.getByRole('link', { name: /Track your order/ })).toHaveCount(0)
+    await guest.getByRole('button', { name: 'Add Kafta' }).click()
+    await expect(cart).not.toContainText('Adding to your order')
+    await close()
+
+    await page.goto('/orders')
+    await expect(page.getByRole('article').getByText(data.reference, { exact: true })).toBeVisible()
+  })
+
   test('a guest changes their order until it is accepted, and the owner can tell', async ({
     page,
     browser,
@@ -412,9 +453,9 @@ test.describe('orders', () => {
         response.url().endsWith('/api/features/ordering') && response.request().method() === 'PUT',
     )
     const sendWay = page.getByRole('tablist', { name: 'How guests send orders' })
-    await sendWay.getByRole('tab', { name: 'In your menu' }).click()
+    await sendWay.getByRole('tab', { name: 'Dashboard' }).click()
     expect((await saved).ok()).toBeTruthy()
-    await expect(sendWay.getByRole('tab', { name: 'In your menu' })).toHaveAttribute(
+    await expect(sendWay.getByRole('tab', { name: 'Dashboard' })).toHaveAttribute(
       'aria-selected',
       'true',
     )
@@ -518,6 +559,31 @@ test.describe('orders', () => {
     // What was done persists.
     await page.reload()
     await expect(chips.getByRole('tab', { name: /^New/ })).toContainText('1')
+  })
+
+  test('the newest 30 orders come first, and "Show more" reaches the rest', async ({
+    page,
+    owner,
+  }) => {
+    await owner({ package: 'premium', order_mode: 'menu', orders: 31 })
+    await page.goto('/orders')
+
+    const cards = page.getByRole('article')
+    await expect(cards).toHaveCount(30)
+    // Every one still waits, the 31st too.
+    await expect(page.getByText('31 orders are still waiting.')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Show more' }).click()
+    await expect(cards).toHaveCount(31)
+    await expect(page.getByRole('button', { name: 'Show more' })).toHaveCount(0)
+
+    // Taking one on refreshes every page loaded, and keeps them all.
+    await cards.last().getByRole('button', { name: 'Accept', exact: true }).click()
+    await expect(page.getByText('30 orders are still waiting.')).toBeVisible()
+    await expect(cards).toHaveCount(31)
+    await expect(
+      cards.last().getByRole('button', { name: 'On its way', exact: true }),
+    ).toBeVisible()
   })
 
   test('backing out of the cancel confirm keeps the order open', async ({ page, owner }) => {

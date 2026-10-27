@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { NAV_ITEMS } from '@/app/layouts/authenticated/nav-items'
+import { isNavKey, type NavKey } from '@/app/layouts/authenticated/nav-items'
 
 const BASE = import.meta.env.BASE_URL
 
 /** "/categories" → "categories"; null for "/" or a path that is no page. */
-export function pageKeyFromPath(pathname: string): string | null {
+export function pageKeyFromPath(pathname: string): NavKey | null {
   const rest = pathname.startsWith(BASE) ? pathname.slice(BASE.length) : pathname
   const key = rest.replace(/^\/+|\/+$/g, '')
-  return NAV_ITEMS.some((item) => item.key === key) ? key : null
+  return isNavKey(key) ? key : null
 }
 
 function pathOf(key: string): string {
@@ -33,8 +33,8 @@ function holdHeight() {
  * `landing` is the page for "/" or a path that is no page; the URL is
  * rewritten to it, so it always names what is on screen.
  */
-export function usePageKey(landing: string) {
-  const [key, setKey] = useState(() => pageKeyFromPath(window.location.pathname) ?? landing)
+export function usePageKey(landing: NavKey) {
+  const [key, setKey] = useState<NavKey>(() => pageKeyFromPath(window.location.pathname) ?? landing)
 
   useEffect(() => {
     if (pageKeyFromPath(window.location.pathname) === null) {
@@ -80,7 +80,7 @@ export function usePageKey(landing: string) {
   }, [landing])
 
   /** `replace` swaps the current history entry, for a page handed over rather than chosen. */
-  const open = useCallback((next: string, { replace = false } = {}) => {
+  const open = useCallback((next: NavKey, { replace = false } = {}) => {
     if (window.location.pathname !== pathOf(next)) {
       holdHeight()
       window.history[replace ? 'replaceState' : 'pushState'](null, '', pathOf(next))

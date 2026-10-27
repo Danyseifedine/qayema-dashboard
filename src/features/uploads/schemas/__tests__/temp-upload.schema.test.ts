@@ -19,7 +19,7 @@ const picked: UploadedImage = {
 
 describe('temp upload schemas', () => {
   it('lists exactly the contexts the API accepts', () => {
-    expect(UPLOAD_CONTEXTS).toEqual(['logo', 'cover_image', 'dish', 'generic'])
+    expect(UPLOAD_CONTEXTS).toEqual(['logo', 'cover_image', 'dish', 'generic', 'offer'])
   })
 
   it('parses the flat upload response and refuses a key that is not a UUID', () => {

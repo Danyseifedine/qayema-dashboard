@@ -1,12 +1,20 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useId, useRef, type ReactNode } from 'react'
 import { FormActions } from '@/shared/components/forms/layout/form'
 import { cn } from '@/shared/utils/dom/cn'
 
+// On a phone a dialog keeps a 12px gutter on every side (GUTTER below).
 const WIDTH = {
-  sm: 'w-[min(92vw,420px)]',
-  md: 'w-[min(92vw,460px)]',
-  lg: 'w-[min(94vw,520px)]',
+  sm: 'w-[min(calc(100vw-24px),420px)]',
+  md: 'w-[min(calc(100vw-24px),460px)]',
+  lg: 'w-[min(calc(100vw-24px),520px)]',
 } as const
+
+/**
+ * The browser caps a modal `<dialog>` at the screen minus about 40px each way
+ * (`calc(100% - 6px - 2em)`), which leaves wide empty bands on a phone. This
+ * replaces that cap with a 12px gutter.
+ */
+const GUTTER = 'max-h-[calc(100dvh-24px)] max-w-[calc(100vw-24px)]'
 
 export type ModalProps = {
   open: boolean
@@ -15,27 +23,29 @@ export type ModalProps = {
   /** Something is being saved: the dialog stays open until it settles. */
   busy?: boolean
   size?: keyof typeof WIDTH
-  /** Its heading's id, when it has one. */
-  labelledBy?: string
   className?: string
   children: ReactNode
 }
+
+/** The id the dialog is named by, which its ModalHeader takes. */
+const ModalTitleId = createContext<string | undefined>(undefined)
 
 /**
  * Every dialog's frame, on the native `<dialog>`: the browser supplies the
  * top layer, the focus trap and Escape, which fires `cancel` and goes to
  * `onClose` like the backdrop does, so the caller always learns it closed.
+ * It is named by its heading, so a screen reader says which dialog opened.
  */
 export function Modal({
   open,
   onClose,
   busy = false,
   size = 'md',
-  labelledBy,
   className,
   children,
 }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
 
   useEffect(() => {
     // Set by the time effects run: the dialog is always on the page.
@@ -47,7 +57,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      aria-labelledby={labelledBy}
+      aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault()
         if (!busy) onClose()
@@ -59,25 +69,20 @@ export function Modal({
       className={cn(
         'm-auto rounded-card border-[0.5px] border-[var(--line)] p-0',
         'bg-[var(--surface)] text-[var(--text)] shadow-pop',
+        GUTTER,
         WIDTH[size],
         className,
       )}
     >
-      {children}
+      <ModalTitleId.Provider value={titleId}>{children}</ModalTitleId.Provider>
     </dialog>
   )
 }
 
 /** A dialog's title, and the line under it saying what it does. */
-export function ModalHeader({
-  id,
-  title,
-  description,
-}: {
-  id?: string
-  title: ReactNode
-  description?: ReactNode
-}) {
+export function ModalHeader({ title, description }: { title: ReactNode; description?: ReactNode }) {
+  const id = useContext(ModalTitleId)
+
   return (
     <div>
       <h2 id={id} className="font-display text-[19px] leading-tight">
@@ -88,6 +93,11 @@ export function ModalHeader({
       ) : null}
     </div>
   )
+}
+
+/** A dialog's content above its footer: its header, alerts and fields. */
+export function ModalBody({ className, children }: { className?: string; children: ReactNode }) {
+  return <div className={cn('p-5 pb-0', className)}>{children}</div>
 }
 
 /** A dialog's buttons, on a hairline across its foot. */

@@ -42,7 +42,7 @@ describe('ChoiceField', () => {
     expect(screen.getAllByRole('radio')).toHaveLength(3)
     expect(screen.getByRole('radio', { name: 'Round' })).toBeChecked()
     expect(screen.getByRole('radio', { name: 'Round' }).closest('label')).toHaveClass(
-      'border-[var(--gold-on)]',
+      'border-accent-border',
     )
     expect(screen.getByTestId('preview-round')).toBeInTheDocument()
   })

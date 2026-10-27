@@ -148,6 +148,27 @@ describe('LinkSection', () => {
     expect(field()).toHaveValue('olive')
   })
 
+  it('shows a failure that belongs to no field as an error, not as the hint', async () => {
+    mock
+      .onPut('/api/restaurant/slug')
+      .reply(500, { message: 'Something broke on our side.', code: 'server_error' })
+    const user = userEvent.setup()
+    renderSection()
+
+    await user.clear(field())
+    await user.type(field(), 'olive')
+    await user.click(changeButton())
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Change link' }),
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something broke on our side.')
+    // The hint under the field stays the hint.
+    expect(
+      screen.getByText('Letters, numbers and dashes. Spaces become dashes.'),
+    ).toBeInTheDocument()
+  })
+
   it('starts again from a link changed elsewhere', () => {
     const { rerender } = renderSection()
 

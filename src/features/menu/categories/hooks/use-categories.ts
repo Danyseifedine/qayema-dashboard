@@ -15,14 +15,14 @@ import { categoryKeys } from '@/features/menu/categories/hooks/category-keys'
 import { dishKeys } from '@/features/menu/dishes/hooks/dish-keys'
 
 /**
- * Every category for the restaurant. Both menu pages read this, so the stale
- * window stops a refetch each time the owner steps between them.
+ * Every category for the restaurant. Both menu pages read this, so the
+ * client's stale window (`lib/query/client.ts`) stops a refetch each time
+ * the owner steps between them.
  */
 export function useCategories(): UseQueryResult<CategoryList, ApiError> {
   return useQuery<CategoryList, ApiError>({
     queryKey: categoryKeys.list(),
     queryFn: ({ signal }) => fetchCategories(signal),
-    staleTime: 30_000,
   })
 }
 

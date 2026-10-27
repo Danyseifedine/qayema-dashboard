@@ -25,7 +25,7 @@ of re-implementing it, always report status truthfully.
    | Kind of state                                | Owner                  | Never put it in        |
    | -------------------------------------------- | ---------------------- | ---------------------- |
    | Server data (categories, stats, the session) | TanStack Query         | Zustand, React context |
-   | UI preferences (sidebar, theme, language)    | Zustand (`src/stores`) | Query cache            |
+   | UI preferences (sidebar, language)           | Zustand (`src/stores`) | Query cache            |
    | Form state                                   | React Hook Form + Zod  | Zustand                |
    | Which page is open                           | The URL (`usePageKey`) | Zustand, `useState`    |
 4. **Validate at every boundary.** Env vars, API responses and form input all
@@ -52,9 +52,11 @@ explained in §2 of the backend `CLAUDE.md`.
 
 | Sidebar (group)           | Feature folder · nav key · i18n namespace · query root | API                                               |
 | ------------------------- | ------------------------------------------------------ | ------------------------------------------------- |
-| Overview                  | `overview`                                             | `/api/user`, `/api/restaurant`, dishes            |
+| Overview                  | `overview`                                             | `/api/user`, `/api/restaurant`                    |
 | Analytics                 | `analytics`                                            | `/api/analytics[/advanced,/teaser]`               |
 | Categories, Dishes (MENU) | `menu` (sub-features `categories`, `dishes`)           | `/api/categories`, `/api/dishes`                  |
+| Offers (MENU)             | `offers`                                               | `/api/offers[/reorder,/{id}/active]`              |
+| Build your own (MENU)     | `build-your-own` (a build is its dish; `dishKeys`)     | `/api/dishes` (a dish with `builds`)              |
 | Design (LOOK)             | `design`                                               | `/api/templates` (a design is a `Template` row)   |
 | Appearance (LOOK)         | `appearance`                                           | `/api/appearance`                                 |
 | Orders (ORDERS)           | `orders`                                               | `/api/orders[/pulse]` (`?kind=away`)              |
@@ -78,7 +80,7 @@ qayema-dashboard/
 ├── CLAUDE.md                        Working rules for agents
 ├── docs/ARCHITECTURE.md             This file
 ├── e2e/                             Playwright, whole product (§7)
-│   ├── playwright.config.ts         Servers, projects (desktop, phone, arabic-rtl, dark, visual)
+│   ├── playwright.config.ts         Servers, projects (desktop, phone, arabic-rtl, visual, visual-phone)
 │   ├── global-setup.ts              composer e2e:reset before a run
 │   ├── specs/                       dashboard/, public/ (menu, portal, auth, onboarding),
 │   │                                admin/, quality/ (a11y, visual, errors)
@@ -90,10 +92,10 @@ qayema-dashboard/
     ├── App.tsx                      SessionGate, the shell, which page is open (§4)
     ├── vite-env.d.ts
     ├── config/env.ts                Zod-validated import.meta.env
-    ├── styles/                      globals.css, tokens.css (theme tokens), rtl.css
+    ├── styles/                      globals.css, tokens.css (colour tokens), rtl.css
     ├── assets/images/brand/         Wordmark and Q mark
     ├── locales/<code>/              meta.json + one JSON per namespace (§6)
-    ├── stores/                      preferences.store.ts (theme, locale), ui.store.ts (sidebar)
+    ├── stores/                      preferences.store.ts (locale), ui.store.ts (sidebar, the Overview guide)
     ├── lib/
     │   ├── api/                     axios client, request(), interceptors/{csrf,auth-redirect,locale},
     │   │                            report-error (errors to the backend's log)
@@ -107,23 +109,26 @@ qayema-dashboard/
     │       │                        more-page (the phone's More tab), plan-locked-page (a section the package
     │       │                        lacks), menu-offline (page and grace-days banner), impersonation-banner
     │       ├── bottom-tabs/         the phone's four tabs
-    │       ├── sidebar/             sidebar, sidebar-group, sidebar-item
+    │       ├── sidebar/             sidebar, sidebar-group, sidebar-item, rail-tooltip (a row's name on the rail)
     │       └── topbar/              topbar (every page's heading), use-page-hero (its words), user-menu,
     │                                package-pill, package-tier, language-switcher
     ├── shared/                      Used by more than one feature; knows nothing about features
     │   ├── components/ui/           Primitives: button, input, switch, combobox, segmented, alert,
-    │   │                            action-menu (the ⋮), filter-chips…
-    │   ├── components/forms/        fields/ (text, price, color, choice…), layout/ (Form, FormSection, Field),
+    │   │                            action-menu (the ⋮), filter-chips, stepper (an editor's steps)…
+    │   ├── components/forms/        fields/ (text, price, color, choice, date, time…), layout/ (Form, FormSection, Field),
     │   │                            translatable/ (TranslatableTextField, LocaleTabs, writing help), index.ts
     │   ├── components/feedback/     dialogs/{modal,confirm-dialog}, skeletons/{skeleton,card-grid,page},
     │   │                            states/{empty,picture-empty,error,error-boundary,locked,gold-notice},
     │   │                            toasts/{toast,copy-with-toast}, index.ts
-    │   ├── components/data-display/ badges/{limit-badge,limit-notice}, formatters/money, stats/stat-tile
+    │   ├── components/data-display/ badges/{limit-badge,limit-notice}, formatters/money,
+    │   │                            stats/{stat-tile,change-line (a number's change vs before)}
     │   ├── constants/               countries, currencies, locales (UI languages), menu-languages
     │   ├── hooks/                   use-api-form-errors, use-dismiss, use-submit-once, use-writing-help
     │   ├── types/                   api.ts
-    │   └── utils/                   dom/cn, color/contrast, format/{money,change,date,number}, string/{menu-text,translated}
-    ├── features/                    One folder per row of the vocabulary table (§3)
+    │   └── utils/                   dom/cn, color/contrast, format/{money,change,date,number,clock}, string/{menu-text,translated},
+    │                                limits/is-at-limit (a package's allowance used up)
+    ├── features/                    One folder per row of the vocabulary table (§3); build-your-own/
+    │                                (components/editor: the steps; components/list: the cards)
     └── test/                        setup.ts, render-with-providers.tsx, sortable.ts (keyboard drags in jsdom),
                                      factories/{session (FULL_PLAN, EMPTY_PLAN), packages, menu}
 ```
@@ -139,7 +144,8 @@ features/restaurant/
 ├── api/          restaurant.api.ts, features.api.ts, menu-languages.api.ts   # HTTP + response schemas
 ├── schemas/      restaurant.schema.ts                                        # response + form schemas
 ├── hooks/        restaurant-keys.ts, use-restaurant.ts, use-features.ts, …   # queries and mutations
-├── components/   identity/ contact/ hours/ branding/                          # grouped by area
+├── components/   identity/ contact/ hours/ branding/ features/                # grouped by area
+├── utils/        time-options.ts, describe-language.ts                        # not components
 ├── pages/        restaurant-page.tsx, features-page.tsx, __tests__/,          # what App.tsx renders
 │                 index.ts (the pages, for App.tsx only)
 └── index.ts      the ONLY path other features may import from (never a page)
@@ -156,6 +162,11 @@ features/restaurant/
   file. Dialogs always sit in `dialogs/`, filters in `filters/`. A file that
   is not a component (`qr/utils/qr-options.ts`, `analytics/utils/chart-style.ts`)
   lives in `utils/`, not under `components/`.
+- A page file holds the page and the tables it reads (the Features page's
+  `GROUPS` and `ROWS`); each part it is built from is a component of its
+  own in its area (`restaurant/components/features/`: `FeatureRow`,
+  `OrderingChoice`, `MainLanguageField`…; `qr/components/studio/`:
+  `QrStudio`, `StudioLocked`), with its tests beside it.
 - The barrel exports only what someone outside actually imports: hooks, key
   factories and a few types; never a whole folder and **never a page**. A
   page in a barrel comes along with every hook another feature imports from
@@ -164,9 +175,11 @@ features/restaurant/
   `lazy()` chunk (`src/__tests__/App.pages.test.ts` holds both rules).
 - `menu` is the one composite feature: `categories/` and `dishes/` are
   sub-features with the same shape, and `menu/components/` holds what both
-  share (`dnd/`, and `filters/` with the category filter). Its two pages sit in `menu/pages`.
+  share (`dnd/`, `filters/` with the category filter, and `nav/` with
+  `MenuSwitch`, the phone's switch between the two pages). Its two pages sit in `menu/pages`.
   `dishes/components/` has `dialogs/` (the dish form), `list/` (the card) and
-  `options/` (the dish form's variants and add-ons section).
+  `options/` (the dish form's variants and add-ons section, whose rows
+  `build-your-own` reuses from the barrel).
 
 ---
 
@@ -178,8 +191,9 @@ reads and writes it with the History API: opening a page pushes its path, the
 back and forward buttons follow `popstate`, and a refresh or a shared link
 opens the same page. `/` or a path that is no page lands on Overview (Design
 before a design is chosen) and the URL is rewritten to say so. `App.tsx` calls
-the hook, the sidebar calls `onNavigate`, and a long conditional renders the
-page. A page handed over rather than chosen (a section switched off while
+the hook, the sidebar calls `onNavigate`, and `PAGE_VIEWS` (one line per
+nav key, each drawing its page from what App hands it) renders the page
+once the locks and the offline screen have had their say. A page handed over rather than chosen (a section switched off while
 open) replaces the history entry instead of pushing one.
 
 The host serving `dist/` must answer every path with `index.html` (the SPA
@@ -192,8 +206,8 @@ sidebar, the topbar title, the locks and the Features switches:
   Appearance, Orders, QR code, Restaurant). Design is always open: it is
   the way out.
 - `requiresPlan`: locked unless `restaurant.plan[flag]` is true (Analytics
-  needs `analytics`, Appearance `appearance`, Orders `ordering`). Gating a new
-  section is one line here, not a new branch.
+  needs `analytics`, Appearance `appearance`, Orders `ordering`, Build your own
+  `build_your_own`). Gating a new section is one line here, not a new branch.
 
 `navLock(key, access)` says why a section is closed, and the two reasons look
 different on purpose:
@@ -204,7 +218,9 @@ different on purpose:
   group is left empty; the Package page is where an owner sees what more
   packages bring. Opened by a link, the page is `PlanLockedPage`: what the
   section gives, the package that has it, and "See packages". Analytics adds
-  this week's views (`AnalyticsTeaser`, `GET /api/analytics/teaser`).
+  this week's views (`AnalyticsTeaser`, `GET /api/analytics/teaser`). A flag
+  no package carries (`useOnNoPackage`, e.g. `build_your_own`) is asked for
+  instead: `TurnedOffNotice` with `ask="on"`, "Ask us to turn it on".
 
 "The package that has it" is `usePackageFor(flag, locale)` from the package
 barrel: the first package in the catalogue's order with the flag on. In-page
@@ -212,6 +228,17 @@ locks use the same component, `LockedState` (`shared/components/feedback`):
 the QR studio, advanced analytics. The Design page marks a premium design and
 points a locked one to the Package page; the Features page marks a switch the
 package lacks and hides the language pickers without `multiple_languages`.
+
+**Turned off** is a fourth word: a flag an admin forced off for one
+restaurant (`restaurant.turned_off`, already false in `plan`). It locks
+exactly what a missing flag locks, but is never sold: `useTurnedOff(flag)`
+(`features/auth`) swaps the upsell for `TurnedOffNotice` (package barrel:
+"Turned off for your restaurant", "Contact us" opening the package request
+with a note naming the feature) on `PlanLockedPage`, the QR studio, advanced
+analytics and the Design page (whose locked premium cards are then disabled);
+the Features page's chip (`PackageChip`), the analytics range tooltip and the
+Package page's "On your package" list say "turned off" instead of naming a
+package.
 
 - `hideable`: leaves the sidebar when its key is in `restaurant.switched_off`
   (Analytics, Orders). A page switched off while open hands over to Overview.
@@ -251,9 +278,10 @@ Sanctum stateful auth. The SPA's responsibilities:
   (`setLanguage`), and `main.tsx` waits for the owner's language before the
   first paint (`languageReady`). The tests load every language up front.
 - Namespaces are the feature folders: `common` (the shell and shared
-  components), `overview`, `analytics`, `menu`, `design`, `appearance`, `orders`, `qr`,
-  `social-links`, `restaurant`, `features`, `package`, `account`. A new
-  namespace is registered once in `lib/i18n/resources.ts`, which types the keys.
+  components), `overview`, `analytics`, `menu`, `offers`, `build-your-own`, `design`,
+  `appearance`, `orders`, `qr`, `social-links`, `restaurant`, `features`, `package`,
+  `account`. A new namespace is registered once in `lib/i18n/resources.ts`, which
+  types the keys.
 - `lib/i18n/__tests__/translations.test.ts` fails on any key missing from a language or
   any plural form missing (Arabic needs zero/one/two/few/many/other).
 - Preference stored by `stores/preferences.store.ts` and mirrored onto
@@ -309,8 +337,8 @@ backend's side of it lives in `../qayema/tests/E2e/`.
   there, never copied.
 - **Each test builds its own owner** and never changes shared data (packages,
   designs, the admin), so tests run in parallel and in any order. No retries.
-- Projects: `desktop` runs everything; `phone`, `arabic-rtl` and `dark` re-run
-  tests tagged `@matrix` (use `either()` or roles there); `visual` and
+- Projects: `desktop` runs everything; `phone` and `arabic-rtl` re-run tests
+  tagged `@matrix` (use `either()` or roles there); `visual` and
   `visual-phone` run `@visual` screenshot tests. After an intended design
   change: `npm run e2e:update-snapshots`, look at the new baselines, keep them.
 - `E2E_SKIP_RESET=1` keeps the current e2e data (to run one spec while another
@@ -329,12 +357,11 @@ test:coverage && build && e2e`.
 | -------------------------------------------------------------------------------- | --------------------------------------------- |
 | `react`, `react-dom` (19)                                                        | UI                                            |
 | `@tanstack/react-query`                                                          | Server state, caching, optimistic updates     |
-| `zustand`                                                                        | UI preferences (theme, locale, sidebar)       |
+| `zustand`                                                                        | UI preferences (locale, sidebar)              |
 | `axios`                                                                          | HTTP                                          |
 | `zod` (v4)                                                                       | Validation for env, API responses, forms      |
 | `react-hook-form`, `@hookform/resolvers`                                         | Forms bound to Zod schemas                    |
 | `i18next`, `react-i18next`                                                       | Bilingual EN/AR                               |
-| `tailwindcss`, `@tailwindcss/vite` (v4)                                          | Styling with logical properties for RTL       |
 | `class-variance-authority`, `clsx`, `tailwind-merge`, `@tabler/icons-react`      | Primitives in `shared/components/ui`          |
 | `downshift`                                                                      | The combobox                                  |
 | `sonner`                                                                         | Toasts                                        |
@@ -344,14 +371,15 @@ test:coverage && build && e2e`.
 
 ### Dev / tooling
 
-| Package                                                                              | Purpose                   |
-| ------------------------------------------------------------------------------------ | ------------------------- |
-| `typescript`, `vite`, `@vitejs/plugin-react`, `oxlint`, `prettier`                   | Build, lint, format       |
-| `husky`, `lint-staged`                                                               | Pre-commit lint/format    |
-| `vitest`, `@vitest/coverage-v8`, `jsdom`                                             | Unit and component tests  |
-| `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom` | Component testing         |
-| `axios-mock-adapter`                                                                 | API mocking in tests      |
-| `@playwright/test`, `@axe-core/playwright`                                           | End-to-end, accessibility |
+| Package                                                                              | Purpose                                                  |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| `typescript`, `vite`, `@vitejs/plugin-react`, `oxlint`, `prettier`                   | Build, lint, format                                      |
+| `tailwindcss`, `@tailwindcss/vite` (v4)                                              | Styling, built into the CSS (logical properties for RTL) |
+| `husky`, `lint-staged`                                                               | Pre-commit lint/format                                   |
+| `vitest`, `@vitest/coverage-v8`, `jsdom`                                             | Unit and component tests                                 |
+| `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom` | Component testing                                        |
+| `axios-mock-adapter`                                                                 | API mocking in tests                                     |
+| `@playwright/test`, `@axe-core/playwright`                                           | End-to-end, accessibility                                |
 
 Do not add a dependency without the owner's approval.
 
@@ -367,7 +395,7 @@ Do not add a dependency without the owner's approval.
 - **Exports:** named only; each feature exposes an `index.ts` barrel.
 - **Imports:** always `@/…`, never relative, even within a feature.
 - **Components:** function components, props typed as `type XProps`, no default
-  exports (except `App`), no prop spreading onto DOM outside `ui/` primitives.
+  exports, no prop spreading onto DOM outside `ui/` primitives.
 - **Async:** toasts live in the mutation hook; a write-and-wait mutation toasts
   on success and error, an optimistic one on error only. Every query has a
   skeleton and an `ErrorState` with retry.

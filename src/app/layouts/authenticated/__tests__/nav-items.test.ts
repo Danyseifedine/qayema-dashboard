@@ -27,13 +27,41 @@ describe('navLock', () => {
     expect(navLock('orders', FREE)).toBe('plan')
     expect(navLock('analytics', FREE)).toBe('plan')
     expect(navLock('appearance', FREE)).toBe('plan')
+    // On no package: an admin turns it on for one restaurant.
+    expect(navLock('build-your-own', FREE)).toBe('plan')
+    expect(
+      navLock('build-your-own', { ...FREE, plan: { ...FREE.plan, build_your_own: true } }),
+    ).toBeNull()
   })
 
   it('gates each section on its own flag only', () => {
-    const access = { hasTemplate: true, plan: { ...FULL_PLAN, ordering: false } }
+    const access = { hasTemplate: true, plan: { ...FULL_PLAN, analytics: false } }
 
-    expect(navLock('orders', access)).toBe('plan')
-    expect(navLock('analytics', access)).toBeNull()
+    expect(navLock('analytics', access)).toBe('plan')
+    expect(navLock('orders', access)).toBeNull()
+  })
+
+  it('opens the orders pages with either way of taking them', () => {
+    const none = {
+      ...FULL_PLAN,
+      ordering: false,
+      menu_ordering: false,
+      dine_in: false,
+      dine_in_whatsapp: false,
+    }
+
+    expect(navLock('orders', { hasTemplate: true, plan: none })).toBe('plan')
+    expect(
+      navLock('orders', { hasTemplate: true, plan: { ...none, menu_ordering: true } }),
+    ).toBeNull()
+    expect(navLock('orders', { hasTemplate: true, plan: { ...none, ordering: true } })).toBeNull()
+    for (const key of ['table-orders', 'tables']) {
+      expect(navLock(key, { hasTemplate: true, plan: none })).toBe('plan')
+      expect(
+        navLock(key, { hasTemplate: true, plan: { ...none, dine_in_whatsapp: true } }),
+      ).toBeNull()
+      expect(navLock(key, { hasTemplate: true, plan: { ...none, dine_in: true } })).toBeNull()
+    }
   })
 
   it('reports the missing design before the missing package', () => {

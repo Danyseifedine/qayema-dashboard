@@ -24,6 +24,7 @@
   },
   "waiting_one": "{{count}} order is still waiting.",
   "waiting_other": "{{count}} orders are still waiting.",
+  "showMore": "Show more",
   "cancelDialog": {
     "title": "Cancel this order?",
     "description": "It stays in your history, marked cancelled. The guest's order page will say it was cancelled; call them if they need to know why.",
@@ -49,7 +50,9 @@
     "delete": "Delete order {{reference}}",
     "deleteShort": "Delete",
     "actions": "More for order {{reference}}",
-    "ownerChanged": "Changed by you at {{time}}"
+    "ownerChanged": "Changed by you at {{time}}",
+    "onOffer": "{{offer}}, was {{was}}",
+    "rate": "Rate: {{rate}}"
   },
   "toast": {
     "updated": "Order {{reference}} marked {{status}}",
@@ -103,6 +106,21 @@
     "total": "Total",
     "save": "Save changes",
     "cancel": "Cancel",
-    "empty": "An order needs at least one dish. To call it off, cancel it."
+    "empty": "An order needs at least one dish. To call it off, cancel it.",
+    "build": {
+      "count": "{{build}}: how many",
+      "countPlaceholder": "How many?",
+      "choose": "Choose",
+      "part": "{{build}}, part {{number}}",
+      "partShort": "Part {{number}}",
+      "whole": "Whole",
+      "halves": "Half & half",
+      "thirds": "Thirds",
+      "quarters": "Quarters",
+      "parts_one": "{{count}} part",
+      "parts_other": "{{count}} parts",
+      "pieces_one": "{{count}} piece",
+      "pieces_other": "{{count}} pieces"
+    }
   }
 }

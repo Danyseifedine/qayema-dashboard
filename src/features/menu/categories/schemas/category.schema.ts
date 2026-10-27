@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { t } from '@/lib/i18n'
 import { menuTextField, menuTextSchema, requireMainLanguage } from '@/shared/utils/string/menu-text'
+import { MENU_TEXT_LIMITS } from '@/shared/constants/menu-text-limits'
 
 /**
  * Mirrors ../qayema/app/Http/Resources/CategoryResource.php and the
@@ -12,6 +13,8 @@ const categorySchema = z.object({
   name: menuTextSchema,
   /** One optional line under the heading on the public menu. */
   description: menuTextSchema,
+  /** One of the menu's category icons (constants/category-icons.ts), or none. */
+  icon: z.string().nullable(),
   // Always sent in practice, but the resource marks it conditional.
   dishes_count: z.number().int().optional(),
 })
@@ -35,23 +38,32 @@ export type CategoryList = z.infer<typeof categoryListSchema>
 
 /**
  * Form input, one entry per menu language. The server requires the name in
- * English, so the same rule is applied here rather than waiting for the 422.
+ * the menu's main language, so the same rule is applied here rather than
+ * waiting for the 422; `anyLanguage` while saving translates it in.
  */
-export const categoryFormSchema = z
-  .object({
-    name: menuTextField(255, () => t('menu:fields.name')),
-    description: menuTextField(300, () => t('menu:fields.description')),
-  })
-  .superRefine(
-    (values, ctx) =>
-      requireMainLanguage(
-        values.name,
-        'name',
-        (language) => t('menu:categorySchema.nameRequired', { language }),
-        ctx,
+export function makeCategoryFormSchema(anyLanguage = false) {
+  return z
+    .object({
+      name: menuTextField(MENU_TEXT_LIMITS.categoryName, () => t('menu:fields.name')),
+      description: menuTextField(MENU_TEXT_LIMITS.categoryDescription, () =>
+        t('menu:fields.description'),
       ),
-    // Also when the description is wrong, so one submit shows both.
-    { when: () => true },
-  )
+      icon: z.string().nullable(),
+    })
+    .superRefine(
+      (values, ctx) =>
+        requireMainLanguage(
+          values.name,
+          'name',
+          (language) => t('menu:categorySchema.nameRequired', { language }),
+          ctx,
+          anyLanguage,
+        ),
+      // Also when the description is wrong, so one submit shows both.
+      { when: () => true },
+    )
+}
+
+export const categoryFormSchema = makeCategoryFormSchema()
 
 export type CategoryFormValues = z.infer<typeof categoryFormSchema>

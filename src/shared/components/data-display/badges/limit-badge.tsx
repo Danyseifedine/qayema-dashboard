@@ -4,9 +4,12 @@ export type LimitBadgeProps = {
   used: number
   /** Null means unlimited on this plan. */
   limit: number | null
-  /** A larger pill in a gold hairline, for the count beside a page's add button. */
+  /** A pill in a gold hairline, for the count beside a page's add button. */
   outlined?: boolean
 }
+
+/** "7,500": Western digits and a thousands separator, whatever the language. */
+const COUNT = new Intl.NumberFormat('en')
 
 /**
  * "7 / 20" with the count of what the owner has against what the plan allows.
@@ -28,17 +31,17 @@ export function LimitBadge({ used, limit, outlined = false }: LimitBadgeProps) {
       dir="ltr"
       className={cn(
         'inline-flex items-center rounded-full font-medium tabular-nums',
-        outlined ? 'border-[0.5px] px-3 py-1 text-[13px]' : 'px-2 py-0.5 text-[11.5px]',
+        outlined ? 'border-[0.5px] px-2 py-px text-[11px]' : 'px-2 py-0.5 text-[11.5px]',
         full && 'border-status-danger-border bg-status-danger-wash text-status-danger',
-        near && 'border-[var(--accent-border)] bg-accent-wash text-accent',
+        near && 'border-accent-border bg-accent-wash text-accent',
         !full &&
           !near &&
           (outlined
-            ? 'border-[var(--accent-border)] bg-[var(--surface)] text-[var(--text)]'
+            ? 'border-accent-border bg-[var(--surface)] text-[var(--text)]'
             : 'bg-[var(--hover-wash)] text-[var(--muted)]'),
       )}
     >
-      {used} / {limit}
+      {COUNT.format(used)} / {COUNT.format(limit)}
     </span>
   )
 }

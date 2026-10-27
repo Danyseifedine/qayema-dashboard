@@ -46,6 +46,11 @@ export class ApiError extends Error {
     return this.number('retry_after')
   }
 
+  /** The month's AI credits left, on a 429 `writing_help_credits`. */
+  get creditsLeft(): number | null {
+    return this.number('credits_left')
+  }
+
   /** 422: the server rejected the submitted fields. */
   get isValidation(): boolean {
     return this.status === 422 && this.errors !== null

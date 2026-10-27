@@ -34,7 +34,7 @@ test.describe('design', () => {
       .getByRole('button', { name: either('Use this design', 'استخدم هذا التصميم') })
       .click()
 
-    await expect(classic.getByText(either('In use', 'مُستخدم'), { exact: true })).toBeVisible()
+    await expect(classic.getByText(either('In use', 'مستخدم الآن'), { exact: true })).toBeVisible()
     await expect(
       classic.getByRole('button', { name: either('Currently in use', 'مُستخدم حاليًا') }),
     ).toBeDisabled()
@@ -45,7 +45,7 @@ test.describe('design', () => {
     // It stays chosen.
     await page.reload()
     await expect(
-      design(page, 'Classic').getByText(either('In use', 'مُستخدم'), { exact: true }),
+      design(page, 'Classic').getByText(either('In use', 'مستخدم الآن'), { exact: true }),
     ).toBeVisible()
   })
 

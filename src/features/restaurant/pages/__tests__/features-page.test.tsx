@@ -3,12 +3,11 @@ import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSession } from '@/features/auth'
-import { i18n } from '@/lib/i18n'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { PACKAGE_CATALOGUE } from '@/test/factories/packages'
-import { FULL_PLAN, WHATSAPP_FIELDS_OFF, makeSessionUser } from '@/test/factories/session'
+import { FULL_PLAN, makeSessionUser } from '@/test/factories/session'
 import { FeaturesPage, type FeaturesPageProps } from '@/features/restaurant/pages/features-page'
 
 let mock: MockAdapter
@@ -16,18 +15,7 @@ let mock: MockAdapter
 const ALL = FULL_PLAN
 
 /** How orders come in, as the session sends it: table orders on the dashboard. */
-const ORDERING = {
-  mode: 'whatsapp',
-  types: ['delivery', 'pickup'],
-  dine_in: 'menu',
-  whatsapp_number: true,
-  whatsapp_fields: WHATSAPP_FIELDS_OFF,
-} satisfies FeaturesPageProps['ordering']
-
-/** One of the "what to ask" choices: Name, Phone or Delivery address. */
-function askTab(field: string, level: string) {
-  return tabOf(`${field}: what to ask`, level)
-}
+const ORDERING = makeSessionUser().restaurant!.ordering
 
 /** A tab of one choice: delivery and pickup's, or the table's. */
 function tabOf(group: string, name: string) {
@@ -47,7 +35,7 @@ function page(props: Partial<FeaturesPageProps> = {}) {
       mainLocale="en"
       secondLocale="ar"
       defaultLocale="en"
-      ordering={{ ...ORDERING, mode: 'whatsapp', types: ['delivery', 'pickup'] }}
+      ordering={ORDERING}
       onOpenPackage={() => {}}
       onOpenTables={() => {}}
       onOpenRestaurant={() => {}}
@@ -166,41 +154,6 @@ describe('FeaturesPage', () => {
     expect(screen.getByText(/plain QR code/)).toBeInTheDocument()
   })
 
-  it('chooses the second language inside the languages row', async () => {
-    mock
-      .onPut('/api/menu-languages')
-      .reply(200, languages({ languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' }))
-    const user = userEvent.setup()
-    renderWithProviders(page())
-
-    await user.click(screen.getByRole('combobox', { name: /Which language/ }))
-    await user.click(await screen.findByRole('option', { name: /French/ }))
-
-    await waitFor(() => expect(mock.history.put).toHaveLength(1))
-    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-      main_locale: 'en',
-      second_locale: 'fr',
-      default_locale: 'en',
-    })
-  })
-
-  it('sets which language the menu opens in', async () => {
-    mock
-      .onPut('/api/menu-languages')
-      .reply(200, languages({ languages: ['en', 'ar'], second_locale: 'ar', default_locale: 'ar' }))
-    const user = userEvent.setup()
-    renderWithProviders(page())
-
-    await user.click(screen.getByRole('tab', { name: 'Arabic' }))
-
-    await waitFor(() => expect(mock.history.put).toHaveLength(1))
-    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-      main_locale: 'en',
-      second_locale: 'ar',
-      default_locale: 'ar',
-    })
-  })
-
   it('hides the language choice while multiple languages are off', () => {
     renderWithProviders(page({ off: ['languages'] }))
 
@@ -214,14 +167,15 @@ describe('FeaturesPage', () => {
     expect(screen.getByText('Not on your package')).toBeInTheDocument()
   })
 
-  it('shows a feature the package lacks as off, and it cannot be switched', () => {
-    // The owner never switched QR Studio off; without the package it is off
-    // anyway, and nothing is sent until the package includes it.
+  it('shows a feature the package lacks with where it comes from, not a switch', () => {
+    // The owner never switched QR Studio off; without the package there is
+    // nothing to switch, and nothing is sent until the package includes it.
     renderWithProviders(page({ plan: { ...ALL, qr_studio: false } }))
 
-    const qr = screen.getByRole('switch', { name: 'QR Studio on' })
-    expect(qr).toHaveAttribute('aria-checked', 'false')
-    expect(qr).toBeDisabled()
+    expect(screen.queryByRole('switch', { name: 'QR Studio on' })).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Not on your package. See packages' }),
+    ).toHaveTextContent('Not on your package')
     // Its "while this is off" warning is about switching it off yourself.
     expect(screen.queryByText(/QR code goes back to plain/)).not.toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Delivery and pickup on' })).toBeEnabled()
@@ -234,24 +188,31 @@ describe('FeaturesPage', () => {
     })
     renderWithProviders(page({ plan: { ...ALL, ordering: false, analytics: false } }))
 
-    // The first package that has it: Orders are Premium, Analytics start on Pro.
-    expect(
-      await screen.findByRole('button', { name: 'Available on Premium. See packages' }),
-    ).toHaveTextContent('Premium')
+    // Analytics, missing whole, names the first package that has it.
+    expect(await screen.findByText('Available on Pro')).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Available on Pro. See packages' }),
-    ).toHaveTextContent('Pro')
+    ).toBeInTheDocument()
+    // A way of ordering the package lacks is left out, not offered locked.
+    expect(
+      screen.queryByRole('tablist', { name: 'How guests send orders' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Available on Premium. See packages' }),
+    ).not.toBeInTheDocument()
     expect(screen.queryByText('Not on your package')).not.toBeInTheDocument()
   })
 
-  it('opens the Package page from a feature the package lacks', async () => {
-    const onOpenPackage = vi.fn()
-    const user = userEvent.setup()
-    renderWithProviders(page({ plan: { ...ALL, ordering: false }, onOpenPackage }))
+  it('says a feature Qayema turned off is turned off, with no way to a package', async () => {
+    const plan = { ...ALL, analytics: false }
+    mock.onGet('/api/user').reply(200, {
+      data: makeSessionUser({ plan, turned_off: ['analytics'] }),
+    })
+    renderWithProviders(page({ plan }))
 
-    await user.click(screen.getByRole('button', { name: /See packages$/ }))
-
-    expect(onOpenPackage).toHaveBeenCalledOnce()
+    expect(await screen.findByText('Turned off by Qayema.')).toBeInTheDocument()
+    expect(screen.getByText(/Contact us if you need it back/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /See packages/ })).not.toBeInTheDocument()
   })
 
   it('hides the language pickers when the package has no second language', () => {
@@ -310,508 +271,19 @@ describe('FeaturesPage', () => {
     expect(await screen.findByText('Could not update your features')).toBeInTheDocument()
   })
 
-  it('writes the saved languages into the session, so the pickers follow', async () => {
-    mock.onGet('/api/user').reply(200, { data: makeSessionUser() })
-    mock
-      .onPut('/api/menu-languages')
-      .reply(200, languages({ languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'en' }))
-    const user = userEvent.setup()
-    renderWithProviders(<FromSession />)
-
-    await user.click(await screen.findByRole('combobox', { name: /Which language/ }))
-    // Earlier tests' toasts can still be up, so count the new one.
-    const toasts = screen.queryAllByText('Menu languages saved').length
-    await user.click(await screen.findByRole('option', { name: /French/ }))
-
-    expect(await screen.findByRole('tab', { name: 'French' })).toBeInTheDocument()
-    expect(screen.queryByRole('tab', { name: 'Arabic' })).not.toBeInTheDocument()
-    await waitFor(() =>
-      expect(screen.queryAllByText('Menu languages saved')).toHaveLength(toasts + 1),
-    )
-  })
-
-  it('says so when the languages cannot be saved', async () => {
-    mock.onPut('/api/menu-languages').reply(500, { message: 'Server down', code: 'server_error' })
-    const user = userEvent.setup()
-    renderWithProviders(page())
-
-    await user.click(screen.getByRole('tab', { name: 'Arabic' }))
-
-    expect(await screen.findByText('Could not save your menu languages')).toBeInTheDocument()
-  })
-
-  it('keeps the menu opening in the second language when that language changes', async () => {
-    mock
-      .onPut('/api/menu-languages')
-      .reply(200, languages({ languages: ['en', 'fr'], second_locale: 'fr', default_locale: 'fr' }))
-    const user = userEvent.setup()
-    renderWithProviders(page({ defaultLocale: 'ar' }))
-
-    expect(screen.getByRole('tab', { name: 'Arabic' })).toHaveAttribute('aria-selected', 'true')
-    await user.click(screen.getByRole('combobox', { name: /Which language/ }))
-    await user.click(await screen.findByRole('option', { name: /French/ }))
-
-    await waitFor(() => expect(mock.history.put).toHaveLength(1))
-    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-      main_locale: 'en',
-      second_locale: 'fr',
-      default_locale: 'fr',
-    })
-  })
-
-  it('offers no opening language before a second one is chosen', () => {
-    renderWithProviders(page({ secondLocale: null }))
-
-    expect(screen.getByRole('combobox', { name: /Which language/ })).toBeInTheDocument()
-    expect(screen.queryByRole('tablist', { name: 'Menu opens in' })).not.toBeInTheDocument()
-  })
-
-  it('chooses the main language for every package, a second one not needed', async () => {
-    mock
-      .onPut('/api/menu-languages')
-      .reply(200, languages({ languages: ['fr'], second_locale: null, default_locale: 'fr' }))
-    const user = userEvent.setup()
-    renderWithProviders(page({ plan: { ...ALL, multiple_languages: false }, secondLocale: null }))
-
-    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
-    await user.click(await screen.findByRole('option', { name: /French/ }))
-    // A brand-new language asks first: what is written keeps its old text.
-    const dialog = await screen.findByRole('dialog')
-    expect(dialog).toHaveTextContent('Write your menu in French?')
-    await user.click(screen.getByRole('button', { name: 'Switch to French' }))
-
-    await waitFor(() => expect(mock.history.put).toHaveLength(1))
-    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-      main_locale: 'fr',
-      second_locale: null,
-      default_locale: 'fr',
-    })
-  })
-
-  it('makes the second language the main one at once, swapping the two', async () => {
-    mock
-      .onPut('/api/menu-languages')
-      .reply(200, languages({ languages: ['ar', 'en'], second_locale: 'en', default_locale: 'ar' }))
-    const user = userEvent.setup()
-    renderWithProviders(page())
-
-    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
-    await user.click(await screen.findByRole('option', { name: /Arabic/ }))
-
-    await waitFor(() => expect(mock.history.put).toHaveLength(1))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-      main_locale: 'ar',
-      second_locale: 'en',
-      default_locale: 'ar',
-    })
-  })
-
-  it('on a package with one language, makes the written second language the main one alone', async () => {
-    // Free keeps no second language (the server refuses one), so the swap
-    // sends the main language only; the other text stays saved.
-    mock
-      .onPut('/api/menu-languages')
-      .reply(200, languages({ languages: ['ar'], second_locale: null, default_locale: 'ar' }))
-    const user = userEvent.setup()
-    renderWithProviders(page({ plan: { ...ALL, multiple_languages: false } }))
-
-    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
-    await user.click(await screen.findByRole('option', { name: /Arabic/ }))
-
-    await waitFor(() => expect(mock.history.put).toHaveLength(1))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-      main_locale: 'ar',
-      second_locale: null,
-      default_locale: 'ar',
-    })
-  })
-
-  it('on a package with one language, a new main language leaves a kept second one out', async () => {
-    mock
-      .onPut('/api/menu-languages')
-      .reply(200, languages({ languages: ['fr'], second_locale: null, default_locale: 'fr' }))
-    const user = userEvent.setup()
-    renderWithProviders(page({ plan: { ...ALL, multiple_languages: false }, defaultLocale: 'ar' }))
-
-    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
-    await user.click(await screen.findByRole('option', { name: /French/ }))
-    await user.click(await screen.findByRole('button', { name: 'Switch to French' }))
-
-    await waitFor(() => expect(mock.history.put).toHaveLength(1))
-    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-      main_locale: 'fr',
-      second_locale: null,
-      default_locale: 'fr',
-    })
-  })
-
-  it('cancels a new main language without saving', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(page())
-
-    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
-    await user.click(await screen.findByRole('option', { name: /German/ }))
-    await user.click(await screen.findByRole('button', { name: 'Cancel' }))
-
-    expect(mock.history.put).toHaveLength(0)
-  })
-
-  it('says how much is left to write in a new main language, with the way to Dishes', async () => {
-    mock.onGet('/api/menu-languages').reply(
-      200,
-      languages({
-        languages: ['fr'],
-        second_locale: null,
-        default_locale: 'fr',
-        missing: { categories: 1, dishes: 12 },
-      }),
-    )
-    const onOpenDishes = vi.fn()
-    const user = userEvent.setup()
-    renderWithProviders(page({ mainLocale: 'fr', secondLocale: null, onOpenDishes }))
+  it('has no choice to make while orders are off', () => {
+    renderWithProviders(page({ off: ['orders'] }))
 
     expect(
-      await screen.findByText(
-        '1 category and 12 dishes have no French name yet. Guests see their old name until you write one.',
-      ),
-    ).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Open Dishes' }))
-    expect(onOpenDishes).toHaveBeenCalledOnce()
-  })
-
-  it('keeps the menu opening in the second language when a new main one arrives', async () => {
-    mock
-      .onPut('/api/menu-languages')
-      .reply(200, languages({ languages: ['de', 'ar'], second_locale: 'ar', default_locale: 'ar' }))
-    const user = userEvent.setup()
-    renderWithProviders(page({ defaultLocale: 'ar' }))
-
-    await user.click(screen.getByRole('combobox', { name: /Your menu is written in/ }))
-    await user.click(await screen.findByRole('option', { name: /German/ }))
-    await user.click(await screen.findByRole('button', { name: 'Switch to German' }))
-
-    await waitFor(() => expect(mock.history.put).toHaveLength(1))
-    expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-      main_locale: 'de',
-      second_locale: 'ar',
-      default_locale: 'ar',
-    })
-  })
-
-  it('saves nothing when the main language box is cleared', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(page())
-
-    const box = screen.getByRole('combobox', { name: /Your menu is written in/ })
-    box.focus()
-    await user.keyboard('{Escape}')
-
-    // Nothing to switch to: the box keeps English, no question, nothing sent.
-    await waitFor(() => expect(box).toHaveDisplayValue(/English/))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(mock.history.put).toHaveLength(0)
-  })
-
-  it('saves nothing when the second language box is cleared', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(page())
-
-    const box = screen.getByRole('combobox', { name: /Which language/ })
-    box.focus()
-    await user.keyboard('{Escape}')
-
-    // An empty choice is no language: the menu keeps Arabic and nothing is sent.
-    await waitFor(() => expect(box).toHaveDisplayValue(/Arabic/))
-    expect(screen.getByRole('tab', { name: 'Arabic' })).toBeInTheDocument()
-    expect(mock.history.put).toHaveLength(0)
-  })
-
-  it('never offers the main language as the second one', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(page({ mainLocale: 'ar', secondLocale: 'en', defaultLocale: 'ar' }))
-
-    await user.click(screen.getByRole('combobox', { name: /Which language/ }))
-    expect(screen.queryByRole('option', { name: /Arabic/ })).not.toBeInTheDocument()
-    expect(screen.getByRole('option', { name: /English/ })).toBeInTheDocument()
-  })
-
-  it('names each language once when the dashboard already speaks it', async () => {
-    await i18n.changeLanguage('ar')
-    try {
-      const user = userEvent.setup()
-      renderWithProviders(page({ secondLocale: null }))
-
-      await user.click(
-        screen.getByRole('combobox', {
-          name: new RegExp(i18n.t('features:languages.secondLabel')),
-        }),
-      )
-      // In Arabic, Arabic's own name and its dashboard name are the same word.
-      expect(await screen.findByRole('option', { name: 'العربية' })).toBeInTheDocument()
-    } finally {
-      await i18n.changeLanguage('en')
-    }
-  })
-
-  describe('how guests send their orders', () => {
-    it('chooses ordering in the menu, with both kinds of order', async () => {
-      mock.onPut('/api/features/ordering').reply(200, {
-        data: { mode: 'menu', types: ['delivery', 'pickup'] },
-      })
-      const user = userEvent.setup()
-      renderWithProviders(page())
-
-      expect(screen.getByText(/won't appear on your Orders page/)).toBeInTheDocument()
-      await user.click(orderTab('In your menu'))
-
-      await waitFor(() => expect(mock.history.put).toHaveLength(1))
-      expect(mock.history.put[0]!.url).toBe('/api/features/ordering')
-      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-        mode: 'menu',
-        types: ['delivery', 'pickup'],
-      })
-    })
-
-    it('takes pickup only', async () => {
-      mock.onPut('/api/features/ordering').reply(200, { data: { mode: 'menu', types: ['pickup'] } })
-      const user = userEvent.setup()
-      renderWithProviders(
-        page({ ordering: { ...ORDERING, mode: 'menu', types: ['delivery', 'pickup'] } }),
-      )
-
-      expect(screen.getByText(/Orders appear on your Orders page with a sound/)).toBeInTheDocument()
-      expect(screen.getByRole('switch', { name: 'Delivery' })).toHaveAttribute(
-        'aria-checked',
-        'true',
-      )
-      await user.click(screen.getByRole('switch', { name: 'Delivery' }))
-
-      await waitFor(() => expect(mock.history.put).toHaveLength(1))
-      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-        mode: 'menu',
-        types: ['pickup'],
-      })
-    })
-
-    it('takes pickup again next to delivery, in the order the server keeps', async () => {
-      mock.onPut('/api/features/ordering').reply(200, {
-        data: { mode: 'menu', types: ['delivery', 'pickup'] },
-      })
-      const user = userEvent.setup()
-      renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu', types: ['delivery'] } }))
-
-      expect(screen.getByRole('switch', { name: 'Pickup' })).toHaveAttribute(
-        'aria-checked',
-        'false',
-      )
-      await user.click(screen.getByRole('switch', { name: 'Pickup' }))
-
-      await waitFor(() => expect(mock.history.put).toHaveLength(1))
-      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-        mode: 'menu',
-        types: ['delivery', 'pickup'],
-      })
-    })
-
-    it('saves nothing when the way already chosen is picked again', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(page())
-
-      await user.click(orderTab('WhatsApp'))
-
-      expect(orderTab('WhatsApp')).toHaveAttribute('aria-selected', 'true')
-      expect(mock.history.put).toHaveLength(0)
-    })
-
-    it('keeps the last kind of order on, so guests can always order', () => {
-      renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu', types: ['pickup'] } }))
-
-      expect(screen.getByRole('switch', { name: 'Pickup' })).toBeDisabled()
-      expect(screen.getByRole('switch', { name: 'Delivery' })).toBeEnabled()
-      // Ordering at the table is its own feature, not one of these.
-      expect(screen.queryByRole('switch', { name: 'At the table' })).not.toBeInTheDocument()
-    })
-
-    it('asks nothing about delivery while orders go to WhatsApp', () => {
-      renderWithProviders(page())
-
-      expect(orderTab('WhatsApp')).toHaveAttribute('aria-selected', 'true')
-      expect(screen.queryByRole('group', { name: 'You take' })).not.toBeInTheDocument()
-    })
-
-    it('locks ordering in the menu without the package and names the one that has it', async () => {
-      mock.onGet('/api/packages').reply(200, { data: PACKAGE_CATALOGUE, meta: { current: 'pro' } })
-      const onOpenPackage = vi.fn()
-      const user = userEvent.setup()
-      renderWithProviders(page({ plan: { ...ALL, menu_ordering: false }, onOpenPackage }))
-
-      expect(orderTab('In your menu')).toBeDisabled()
-      await user.click(
-        await screen.findByRole('button', { name: 'Available on Premium. See packages' }),
-      )
-      expect(onOpenPackage).toHaveBeenCalledOnce()
-    })
-
-    it('has no choice to make while orders are off', () => {
-      renderWithProviders(page({ off: ['orders'] }))
-
-      expect(
-        screen.queryByRole('tablist', { name: 'How guests send orders' }),
-      ).not.toBeInTheDocument()
-    })
-
-    it('moves at once, and snaps back with a reason when the save fails', async () => {
-      mock.onGet('/api/user').reply(200, {
-        data: makeSessionUser({
-          ordering: { ...ORDERING, mode: 'whatsapp', types: ['delivery', 'pickup'] },
-        }),
-      })
-      const answer = held()
-      mock.onPut('/api/features/ordering').reply(answer.reply)
-      const user = userEvent.setup()
-      renderWithProviders(<FromSession />)
-
-      await user.click(await screen.findByRole('tab', { name: 'In your menu' }))
-      expect(orderTab('In your menu')).toHaveAttribute('aria-selected', 'true')
-
-      answer.release([500, { message: 'Server down', code: 'server_error' }])
-      await waitFor(() => expect(orderTab('WhatsApp')).toHaveAttribute('aria-selected', 'true'))
-      // The toaster outlives a test, so the one before may still show its own.
-      expect((await screen.findAllByText('Could not update your features')).length).toBeGreaterThan(
-        0,
-      )
-      expect(mock.history.put).toHaveLength(1)
-    })
-  })
-
-  describe('what a WhatsApp order asks the guest for', () => {
-    it('asks for a name, a phone and an address only while orders go to WhatsApp', () => {
-      const { unmount } = renderWithProviders(page())
-
-      const group = screen.getByRole('group', { name: 'Ask guests for' })
-      expect(
-        within(group)
-          .getAllByRole('tablist')
-          .map((list) => list.getAttribute('aria-label')),
-      ).toEqual(['Name: what to ask', 'Phone: what to ask', 'Delivery address: what to ask'])
-      expect(askTab('Name', 'Off')).toHaveAttribute('aria-selected', 'true')
-      expect(within(group).getByText(/before WhatsApp opens/)).toBeInTheDocument()
-      expect(within(group).getByText(/The address is only asked for delivery/)).toBeInTheDocument()
-      unmount()
-
-      renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu' } }))
-      expect(screen.queryByRole('group', { name: 'Ask guests for' })).not.toBeInTheDocument()
-    })
-
-    it('saves the whole set when one is changed', async () => {
-      const saved = {
-        away: { name: 'required', phone: 'off', address: 'off' },
-        table: { name: 'off', phone: 'off' },
-      }
-      mock.onPut('/api/features/whatsapp-fields').reply(200, { data: saved })
-      const user = userEvent.setup()
-      renderWithProviders(page())
-
-      await user.click(askTab('Name', 'Required'))
-
-      await waitFor(() => expect(mock.history.put).toHaveLength(1))
-      expect(mock.history.put[0]!.url).toBe('/api/features/whatsapp-fields')
-      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual(saved)
-    })
-
-    it('saves nothing when the level already chosen is picked again', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(page())
-
-      await user.click(askTab('Phone', 'Off'))
-
-      expect(askTab('Phone', 'Off')).toHaveAttribute('aria-selected', 'true')
-      expect(mock.history.put).toHaveLength(0)
-    })
-
-    it('lets guests choose delivery or pickup once the address is asked', async () => {
-      mock.onGet('/api/user').reply(200, { data: makeSessionUser({ ordering: ORDERING }) })
-      mock.onPut('/api/features/whatsapp-fields').reply(200, {
-        data: {
-          ...WHATSAPP_FIELDS_OFF,
-          away: { ...WHATSAPP_FIELDS_OFF.away, address: 'optional' },
-        },
-      })
-      mock.onPut('/api/features/ordering').reply(200, {
-        data: { mode: 'whatsapp', types: ['delivery'] },
-      })
-      const user = userEvent.setup()
-      renderWithProviders(<FromSession />)
-
-      await screen.findByRole('group', { name: 'Ask guests for' })
-      expect(screen.queryByRole('group', { name: 'You take' })).not.toBeInTheDocument()
-      await user.click(askTab('Delivery address', 'Optional'))
-
-      const types = await screen.findByRole('group', { name: 'You take' })
-      expect(within(types).getByText('Guests give their address.')).toBeInTheDocument()
-      await user.click(within(types).getByRole('switch', { name: 'Pickup' }))
-
-      await waitFor(() => expect(mock.history.put).toHaveLength(2))
-      expect(mock.history.put[1]!.url).toBe('/api/features/ordering')
-      expect(JSON.parse(mock.history.put[1]!.data as string)).toEqual({
-        mode: 'whatsapp',
-        types: ['delivery'],
-      })
-    })
-
-    it('asks table guests for a name and a phone only while table orders go to WhatsApp', async () => {
-      mock.onPut('/api/features/whatsapp-fields').reply(200, {
-        data: { ...WHATSAPP_FIELDS_OFF, table: { name: 'off', phone: 'optional' } },
-      })
-      const user = userEvent.setup()
-      const { unmount } = renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu' } }))
-      expect(screen.queryByRole('group', { name: 'Ask guests for' })).not.toBeInTheDocument()
-      unmount()
-
-      renderWithProviders(page({ ordering: { ...ORDERING, mode: 'menu', dine_in: 'whatsapp' } }))
-      const group = screen.getByRole('group', { name: 'Ask guests for' })
-      expect(
-        within(group)
-          .getAllByRole('tablist')
-          .map((list) => list.getAttribute('aria-label')),
-      ).toEqual(['Name: what to ask', 'Phone: what to ask'])
-      await user.click(askTab('Phone', 'Optional'))
-
-      await waitFor(() => expect(mock.history.put).toHaveLength(1))
-      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
-        away: { name: 'off', phone: 'off', address: 'off' },
-        table: { name: 'off', phone: 'optional' },
-      })
-    })
-
-    it('moves at once, and snaps back with a reason when the save fails', async () => {
-      mock.onGet('/api/user').reply(200, { data: makeSessionUser({ ordering: ORDERING }) })
-      const answer = held()
-      mock.onPut('/api/features/whatsapp-fields').reply(answer.reply)
-      const user = userEvent.setup()
-      renderWithProviders(<FromSession />)
-
-      await screen.findByRole('group', { name: 'Ask guests for' })
-      await user.click(askTab('Name', 'Required'))
-      expect(askTab('Name', 'Required')).toHaveAttribute('aria-selected', 'true')
-
-      answer.release([500, { message: 'Server down', code: 'server_error' }])
-      await waitFor(() => expect(askTab('Name', 'Off')).toHaveAttribute('aria-selected', 'true'))
-      expect((await screen.findAllByText('Could not update your features')).length).toBeGreaterThan(
-        0,
-      )
-    })
+      screen.queryByRole('tablist', { name: 'How guests send orders' }),
+    ).not.toBeInTheDocument()
   })
 
   describe('ordering at the table', () => {
     it('is a feature of its own, switched off like any other', async () => {
       mock.onPut('/api/features').reply(200, { data: { off: ['dine_in'] } })
       const user = userEvent.setup()
-      renderWithProviders(
-        page({ ordering: { ...ORDERING, mode: 'whatsapp', types: ['delivery', 'pickup'] } }),
-      )
+      renderWithProviders(page())
 
       await user.click(screen.getByRole('switch', { name: 'Ordering at the table on' }))
 
@@ -856,73 +328,7 @@ describe('FeaturesPage', () => {
       expect(tabOf('Where table orders go', 'WhatsApp')).toHaveAttribute('aria-selected', 'true')
       expect(screen.getByText(/with the table's name/)).toBeInTheDocument()
       // Delivery and pickup keep their own way in.
-      expect(orderTab('In your menu')).toHaveAttribute('aria-selected', 'true')
-    })
-
-    it('saves nothing when the way already chosen is picked again', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(page())
-
-      await user.click(tabOf('Where table orders go', 'Dashboard'))
-
-      expect(mock.history.put).toHaveLength(0)
-    })
-
-    it('waits for a number before WhatsApp, with the way to add one', async () => {
-      const onOpenRestaurant = vi.fn()
-      const user = userEvent.setup()
-      renderWithProviders(
-        page({ ordering: { ...ORDERING, whatsapp_number: false }, onOpenRestaurant }),
-      )
-
-      expect(tabOf('Where table orders go', 'WhatsApp')).toBeDisabled()
-      expect(screen.getByText(/WhatsApp needs your restaurant's phone number/)).toBeInTheDocument()
-      await user.click(screen.getByRole('button', { name: 'Add it on the Restaurant page' }))
-      expect(onOpenRestaurant).toHaveBeenCalledOnce()
-    })
-
-    it('says table orders stay here while WhatsApp has no number, and can move back', async () => {
-      mock.onPut('/api/features/dine-in').reply(200, { data: { dine_in: 'menu' } })
-      const user = userEvent.setup()
-      renderWithProviders(
-        page({ ordering: { ...ORDERING, dine_in: 'whatsapp', whatsapp_number: false } }),
-      )
-
-      expect(screen.getByText(/so table orders come to your dashboard/)).toBeInTheDocument()
-      expect(tabOf('Where table orders go', 'WhatsApp')).toBeEnabled()
-      await user.click(tabOf('Where table orders go', 'Dashboard'))
-
-      await waitFor(() => expect(mock.history.put).toHaveLength(1))
-      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({ mode: 'menu' })
-    })
-
-    it('moves at once, and snaps back with a reason when the save fails', async () => {
-      mock.onGet('/api/user').reply(200, { data: makeSessionUser({ ordering: ORDERING }) })
-      const answer = held()
-      mock.onPut('/api/features/dine-in').reply(answer.reply)
-      const user = userEvent.setup()
-      renderWithProviders(<FromSession />)
-
-      await screen.findByRole('tablist', { name: 'Where table orders go' })
-      await user.click(tabOf('Where table orders go', 'WhatsApp'))
-      expect(tabOf('Where table orders go', 'WhatsApp')).toHaveAttribute('aria-selected', 'true')
-
-      answer.release([
-        422,
-        {
-          message: 'Add your WhatsApp number on the Restaurant page first.',
-          code: 'validation_failed',
-        },
-      ])
-      await waitFor(() =>
-        expect(tabOf('Where table orders go', 'Dashboard')).toHaveAttribute(
-          'aria-selected',
-          'true',
-        ),
-      )
-      expect((await screen.findAllByText('Could not update your features')).length).toBeGreaterThan(
-        0,
-      )
+      expect(orderTab('Dashboard')).toHaveAttribute('aria-selected', 'true')
     })
   })
 })

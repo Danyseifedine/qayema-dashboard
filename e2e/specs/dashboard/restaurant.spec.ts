@@ -274,7 +274,7 @@ test.describe('restaurant', () => {
     await expect(timezone).toHaveValue('Asia/Calcutta')
 
     const guest = await guestMenu(browser, restaurant)
-    await expect(guest.locator('article.dish .price')).toHaveText('L.L.12')
+    await expect(guest.locator('article.dish .price')).toHaveText('L.L 12')
     await guest.context().close()
   })
 

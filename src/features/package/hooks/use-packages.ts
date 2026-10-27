@@ -7,9 +7,10 @@ import {
   requestPackage,
   type PackageRequestPayload,
 } from '@/features/package/api/package.api'
-import type { PackageFlag, PackageList } from '@/features/package/schemas/package.schema'
+import type { Plan } from '@/features/auth'
+import type { PackageList } from '@/features/package/schemas/package.schema'
 import type { Locale } from '@/shared/constants/locales'
-import { translated } from '@/shared/utils/string/translated'
+import { nameOr } from '@/shared/utils/string/translated'
 import { packageKeys } from '@/features/package/hooks/package-keys'
 
 export function usePackages(): UseQueryResult<PackageList, ApiError> {
@@ -36,16 +37,30 @@ export function useRequestPackage() {
   })
 }
 
+/** Whether a package carries a plan flag; one no package has (`build_your_own`) is never on. */
+export function packageHas(features: object, flag: keyof Plan): boolean {
+  return (features as Partial<Record<keyof Plan, unknown>>)[flag] === true
+}
+
 /**
  * The first package, in the catalogue's order, that includes a feature (the
  * one a locked feature points the owner to), by name in the reader's language.
  * Null while the catalogue loads, or when no package has it.
  */
-export function usePackageFor(flag: PackageFlag, locale: Locale): string | null {
+export function usePackageFor(flag: keyof Plan, locale: Locale): string | null {
   const packages = usePackages()
-  const found = packages.data?.data.find((pkg) => pkg.features[flag])
+  const found = packages.data?.data.find((pkg) => packageHas(pkg.features, flag))
 
-  if (found === undefined) return null
-  const name = translated(found.name, locale)
-  return name.missing ? found.slug : name.text
+  return found === undefined ? null : nameOr(found.name, locale, found.slug)
+}
+
+/**
+ * Whether the catalogue is in and no package on it has the feature: one
+ * Qayema turns on for a restaurant when asked, never sold.
+ */
+export function useOnNoPackage(flag: keyof Plan): boolean {
+  const packages = usePackages()
+  return (
+    packages.data !== undefined && !packages.data.data.some((pkg) => packageHas(pkg.features, flag))
+  )
 }

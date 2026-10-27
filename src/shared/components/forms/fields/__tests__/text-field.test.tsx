@@ -39,14 +39,15 @@ describe('TextField', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('')
   })
 
-  it('counts characters against the maximum', async () => {
+  it('counts characters under the field only once the text nears the maximum', async () => {
     const user = userEvent.setup()
     render(<Harness maxLength={10} />)
 
-    expect(screen.getByText('0 / 10')).toBeInTheDocument()
     await user.type(screen.getByRole('textbox'), 'Soup')
+    expect(screen.queryByText('4 / 10')).not.toBeInTheDocument()
+    await user.type(screen.getByRole('textbox'), ' bowl')
 
-    expect(screen.getByText('4 / 10')).toBeInTheDocument()
+    expect(screen.getByText('9 / 10')).toBeInTheDocument()
     expect(screen.getByRole('textbox')).toHaveAttribute('maxLength', '10')
   })
 
@@ -56,8 +57,6 @@ describe('TextField', () => {
 
     const input = container.querySelector('input')!
     expect(input).toHaveAttribute('type', 'password')
-    // The reveal toggle takes the trailing slot over the counter.
-    expect(screen.queryByText('0 / 10')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Show password' }))
     expect(input).toHaveAttribute('type', 'text')
@@ -82,12 +81,6 @@ describe('TextField', () => {
     expect(screen.getByRole('textbox')).not.toHaveAttribute('dir')
   })
 
-  it('can be named without a visible label', () => {
-    render(<Harness label={undefined} aria-label="Monday opening" />)
-
-    expect(screen.getByRole('textbox', { name: 'Monday opening' })).toBeInTheDocument()
-  })
-
   it('passes the rest of its props to the control', () => {
     render(
       <Harness
@@ -95,7 +88,6 @@ describe('TextField', () => {
         hint="Shown on the menu."
         required
         optionalText="Optional"
-        disabled
         autoComplete="off"
         leadingIcon={<svg data-testid="icon" />}
       />,
@@ -105,7 +97,6 @@ describe('TextField', () => {
     expect(input).toHaveAttribute('placeholder', 'e.g. Soup')
     expect(input).toHaveAttribute('autoComplete', 'off')
     expect(input).toHaveAccessibleDescription('Shown on the menu.')
-    expect(input).toBeDisabled()
     expect(screen.getByText('Optional')).toBeInTheDocument()
     expect(screen.getByText('*')).toBeInTheDocument()
     expect(screen.getByTestId('icon')).toBeInTheDocument()

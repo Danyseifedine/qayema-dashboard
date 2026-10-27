@@ -10,6 +10,9 @@ import { MIN_CONTRAST, contrast } from '@/shared/utils/color/contrast'
  * Both are tested against the same cases: change one, change both.
  */
 
+/** What a code is drawn from, for a feature that draws one without the library itself. */
+export type QrCodeOptions = Options
+
 /** How much of the code the logo covers, by the owner's size choice. */
 const LOGO_SHARE: Record<LogoSize, number> = { small: 0.25, medium: 0.35, large: 0.45 }
 

@@ -1,17 +1,18 @@
-import { IconPlus, IconX } from '@tabler/icons-react'
+import { IconClock, IconPlus, IconX } from '@tabler/icons-react'
 import type { Control } from 'react-hook-form'
 import { useController, useFieldArray, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { FormSection } from '@/shared/components/forms'
-import { Button, Switch } from '@/shared/components/ui'
+import { Button, HelperText, Switch } from '@/shared/components/ui'
 import {
   WEEKDAYS,
   weekdayLabel,
   type RestaurantFormValues,
   type Weekday,
 } from '@/features/restaurant/schemas/restaurant.schema'
-import { MAX_SHIFTS, nextShift, runsPastMidnight } from '@/features/restaurant/utils/time-options'
-import { TimePicker } from '@/features/restaurant/components/hours/time-picker'
+import { TimeField } from '@/shared/components/forms'
+import { runsPastMidnight } from '@/shared/utils/format/clock'
+import { MAX_SHIFTS, nextShift } from '@/features/restaurant/utils/time-options'
 
 export type OpeningHoursSectionProps = {
   control: Control<RestaurantFormValues>
@@ -21,7 +22,7 @@ export type OpeningHoursSectionProps = {
  * When the restaurant is open: one shift per day, or up to MAX_SHIFTS for a
  * day it closes in the afternoon and opens again for dinner.
  *
- * Each time is picked like a clock reads it (TimePicker: hour, minutes,
+ * Each time is picked like a clock reads it (TimeField: hour, minutes,
  * AM or PM), with the part of the day beside it, and a day whose last shift
  * closes after midnight says so. A closed day shows only its name and
  * switch, but keeps whatever shifts it had in the form rather than clearing
@@ -32,7 +33,11 @@ export function OpeningHoursSection({ control }: OpeningHoursSectionProps) {
   const { t } = useTranslation('restaurant')
 
   return (
-    <FormSection title={t('openingHours.title')} description={t('openingHours.description')}>
+    <FormSection
+      icon={<IconClock aria-hidden className="size-[18px]" />}
+      title={t('openingHours.title')}
+      description={t('openingHours.description')}
+    >
       <div className="flex flex-col gap-2">
         {WEEKDAYS.map((day) => (
           <DayRow key={day} control={control} day={day} />
@@ -99,11 +104,10 @@ function DayRow({ control, day }: { control: Control<RestaurantFormValues>; day:
                 {/* One under the other on a phone; side by side once the day
                 has the room for both, so a week is not a long scroll. */}
                 <div className="grid gap-3 @min-[32rem]:grid-cols-2 @min-[32rem]:gap-6">
-                  <TimePicker
+                  <TimeField
                     control={control}
-                    day={day}
-                    shift={index}
-                    which="open"
+                    name={`opening_hours.${day}.shifts.${index}.open`}
+                    defaultMeridiem="am"
                     title={t('openingHours.opens')}
                     label={
                       split
@@ -111,11 +115,10 @@ function DayRow({ control, day }: { control: Control<RestaurantFormValues>; day:
                         : t('openingHours.dayOpens', { day: label })
                     }
                   />
-                  <TimePicker
+                  <TimeField
                     control={control}
-                    day={day}
-                    shift={index}
-                    which="close"
+                    name={`opening_hours.${day}.shifts.${index}.close`}
+                    defaultMeridiem="pm"
                     title={t('openingHours.closes')}
                     label={
                       split
@@ -129,7 +132,7 @@ function DayRow({ control, day }: { control: Control<RestaurantFormValues>; day:
           })}
 
       {!closed && last && runsPastMidnight(last.open, last.close) ? (
-        <p className="text-[12px] text-[var(--muted)]">{t('openingHours.pastMidnight')}</p>
+        <HelperText>{t('openingHours.pastMidnight')}</HelperText>
       ) : null}
 
       {!closed && shifts.fields.length < MAX_SHIFTS ? (

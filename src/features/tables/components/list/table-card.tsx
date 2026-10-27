@@ -7,18 +7,17 @@ import {
   IconTrash,
   type TablerIcon,
 } from '@tabler/icons-react'
-import type { Options } from 'qr-code-styling'
 import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { QrCode, type QrCodeOptions } from '@/features/qr'
 import { Button } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
-import { TableQr } from '@/features/tables/components/list/table-qr'
 import type { DiningTable } from '@/features/tables/schemas/table.schema'
 
 export type TableCardProps = {
   table: DiningTable
   /** The QR design's options, without the table's link. */
-  options: Options
+  options: QrCodeOptions
   onDownload: (table: DiningTable) => void
   onPrint: (table: DiningTable) => void
   onRename: (table: DiningTable) => void
@@ -38,22 +37,23 @@ export const TableCard = memo(function TableCard({
 }: TableCardProps) {
   const { t } = useTranslation('tables')
 
-  // Its own link on the page's look, kept between renders: TableQr redraws
+  // Its own link on the page's look, kept between renders: QrCode redraws
   // the code whenever this changes.
   const qrOptions = useMemo(() => ({ ...options, data: table.url }), [options, table.url])
 
   return (
-    <article className="flex min-w-0 flex-col items-center gap-3 glass-card rounded-card p-3 sm:p-4">
+    <article className="flex min-w-0 flex-col items-center gap-3 glass-card rounded-card p-3.5 sm:p-4">
       {/* The code as it will print, on its own colour. */}
       <div
         className="w-full rounded-tile p-1.5"
         style={{ background: options.backgroundOptions?.color ?? '#FFFFFF' }}
       >
-        <TableQr
+        {/* Fills the card's width; an SVG, so it stays sharp. */}
+        <QrCode
           options={qrOptions}
           size={240}
-          fill
           label={t('card.qrLabel', { name: table.name })}
+          className="w-full"
         />
       </div>
       <div className="flex w-full flex-col items-center gap-1.5">
@@ -117,7 +117,7 @@ function Action({
         'aspect-square h-auto w-full max-w-9 justify-self-center rounded-tile border-[0.5px] px-0',
         danger
           ? 'border-status-danger-border bg-status-danger-wash text-status-danger hover:brightness-110'
-          : 'border-[var(--line)] bg-[color-mix(in_srgb,var(--bg)_45%,transparent)] text-[var(--text)] hover:bg-[var(--hover-wash)]',
+          : 'frost-tile text-[var(--text)] hover:bg-[var(--hover-wash)]',
       )}
     >
       <Icon aria-hidden className="size-3.5 sm:size-4" />

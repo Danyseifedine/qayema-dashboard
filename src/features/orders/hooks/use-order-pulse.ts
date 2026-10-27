@@ -18,7 +18,9 @@ export const FALLBACK_INTERVAL = 60_000
  * cannot be heard, the dashboard asks once a minute instead. Either way a
  * new or changed order plays the chime, says so in a toast and refreshes
  * the Orders page, and the number still waiting goes into the tab's title,
- * so a dashboard left in a background tab still shows it.
+ * so a dashboard left in a background tab still shows it. The order lists
+ * never poll on their own: Pusher refreshes them on every change, and
+ * while it cannot be heard each minute's check does.
  *
  * Off (`enabled` false) while nothing is ordered in the menu: orders going
  * to WhatsApp never arrive here, while orders at the table always do.
@@ -116,6 +118,23 @@ export function useOrderPulse(enabled: boolean, restaurantId: number): OrdersWai
     }
     void queryClient.invalidateQueries({ queryKey: orderKeys.lists() })
   }, [latest, changed, queryClient])
+
+  // While Pusher cannot be heard, every check after the first refreshes the
+  // lists too: a status moved in another tab changes no count worth a
+  // chime, but the list still has to show it. A refresh already on its way
+  // (a new order, just above) is not asked for twice.
+  const checkedAt = enabled ? pulse.dataUpdatedAt : 0
+  const lastCheck = useRef(0)
+
+  useEffect(() => {
+    if (live || checkedAt === 0) return
+
+    const before = lastCheck.current
+    lastCheck.current = checkedAt
+    if (before === 0 || before === checkedAt) return
+
+    void queryClient.invalidateQueries({ queryKey: orderKeys.lists() }, { cancelRefetch: false })
+  }, [checkedAt, live, queryClient])
 
   const open = enabled ? (pulse.data?.open ?? 0) : 0
   const atTables = enabled ? (pulse.data?.table_open ?? 0) : 0

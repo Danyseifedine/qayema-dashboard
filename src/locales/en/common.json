@@ -5,9 +5,7 @@
     "logoutFailed": "Could not log out",
     "lockedTitle": "Choose a menu design first",
     "lockedBody": "Your menu, QR code and settings open up once you pick a design. Picking one is free, and you can switch whenever you like.",
-    "browseDesigns": "Browse designs",
-    "notBuiltTitle": "This page is not available",
-    "notBuiltBody": "Choose a page from the menu on the side."
+    "browseDesigns": "Browse designs"
   },
   "nav": {
     "overview": "Overview",
@@ -16,6 +14,8 @@
     "menu": "Menu",
     "categories": "Categories",
     "dishes": "Dishes",
+    "offers": "Offers",
+    "buildYourOwn": "Build your own",
     "look": "Look",
     "design": "Design",
     "appearance": "Appearance",
@@ -60,7 +60,6 @@
     "viewPublicMenu": "View public menu",
     "preferences": "Preferences",
     "language": "Language",
-    "darkMode": "Dark mode",
     "logOut": "Log out",
     "account": "Account"
   },
@@ -79,8 +78,12 @@
     "writeFirst": "Write the text in either language first.",
     "usesUsed": "You've used {{used}} of {{limit}} AI uses today",
     "spent": "Come back tomorrow for more AI help.",
+    "creditsLeft": "{{left}} of {{limit}} AI credits left this month",
+    "creditsSpent": "You've used this month's AI credits. They come back on {{date}}.",
+    "creditsShort": "Not enough AI credits left this month for this. They come back on {{date}}.",
     "translateFailed": "Could not translate",
-    "writeFailed": "Could not write the description"
+    "writeFailed": "Could not write the description",
+    "oneLanguage": "Write in {{first}} or {{second}}, one is enough. When you save, AI fills in the other."
   },
   "menuLanguages": {
     "en": "English",
@@ -131,9 +134,6 @@
   "combobox": {
     "noMatches": "No matches"
   },
-  "confirmDialog": {
-    "cancel": "Cancel"
-  },
   "errorBoundary": {
     "body": "Something on this page went wrong. We have been told; try again."
   },
@@ -141,9 +141,8 @@
     "title": "That did not load",
     "retry": "Try again"
   },
-  "statTile": {
+  "change": {
     "nothingToCompare": "Nothing to compare yet",
-    "same": "Same as before",
     "vsBefore": "vs before"
   },
   "limitNotice": {
@@ -253,6 +252,14 @@
         "two": "Orders arrive grouped by table, with a sound",
         "three": "Works whether your other orders go to WhatsApp or your menu"
       }
+    },
+    "offers": {
+      "title": "Put your offers on the menu",
+      "includes": {
+        "one": "A banner, a pop-up or a short ad",
+        "two": "On a schedule: every Friday night, a lunch hour, two weeks",
+        "three": "A real discount on the dishes you choose, in the cart too"
+      }
     }
   },
   "menuOffline": {
@@ -278,6 +285,8 @@
       "table-orders": "Orders guests place at their table",
       "categories": "The sections of your menu",
       "dishes": "Everything you sell",
+      "offers": "Banners, pop-ups and deals",
+      "build-your-own": "Half and half pizzas, scoops and more",
       "design": "Pick how your menu looks",
       "appearance": "Colours and fonts",
       "qr": "Style it, download it",
@@ -295,5 +304,26 @@
     "afternoon": "Good afternoon,",
     "evening": "Good evening,",
     "subtitle": "Here's what's happening with your restaurant today."
+  },
+  "time": {
+    "periods": {
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "night": "Night"
+    },
+    "am": "AM",
+    "pm": "PM",
+    "hourOf": "{{what}}: hour",
+    "minutesOf": "{{what}}: minutes",
+    "meridiemOf": "{{what}}: AM or PM"
+  },
+  "dialog": {
+    "cancel": "Cancel"
+  },
+  "stepper": {
+    "step": "Step {{number}}: {{name}}",
+    "stepDone": "Step {{number}}: {{name}}, done",
+    "progress": "Step {{number}} of {{total}}: {{name}}"
   }
 }

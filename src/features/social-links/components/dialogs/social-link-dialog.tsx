@@ -2,9 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
-import { ComboboxField, Form, UrlField } from '@/shared/components/forms'
-import { Alert, Button } from '@/shared/components/ui'
+import { FormDialog } from '@/shared/components/feedback'
+import { ComboboxField, UrlField } from '@/shared/components/forms'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 import { useSaveSocialLink } from '@/features/social-links/hooks/use-social-links'
@@ -97,49 +96,34 @@ export function SocialLinkDialog({ open, link, taken, onClose }: SocialLinkDialo
   )
 
   return (
-    <Modal open={open} onClose={onClose} busy={save.isPending}>
-      <Form onSubmit={onSubmit} className="gap-0">
-        <div className="p-5 pb-0">
-          <ModalHeader
-            title={link ? t('dialog.editTitle') : t('dialog.addTitle')}
-            description={t('dialog.description')}
-          />
+    <FormDialog
+      open={open}
+      onClose={onClose}
+      busy={save.isPending}
+      title={link ? t('dialog.editTitle') : t('dialog.addTitle')}
+      description={t('dialog.description')}
+      error={formError}
+      onSubmit={onSubmit}
+      submitLabel={link ? t('dialog.saveSubmit') : t('dialog.addSubmit')}
+    >
+      <ComboboxField
+        control={form.control}
+        name="platform"
+        label={t('dialog.platformLabel')}
+        required
+        searchable={false}
+        options={available.map((value) => ({ value, label: PLATFORM_LABELS[value] }))}
+        placeholder={t('dialog.platformPlaceholder')}
+      />
 
-          {formError ? (
-            <Alert variant="error" className="mt-3">
-              {formError}
-            </Alert>
-          ) : null}
-
-          <ComboboxField
-            control={form.control}
-            name="platform"
-            label={t('dialog.platformLabel')}
-            required
-            searchable={false}
-            options={available.map((value) => ({ value, label: PLATFORM_LABELS[value] }))}
-            placeholder={t('dialog.platformPlaceholder')}
-          />
-
-          <UrlField
-            control={form.control}
-            name="url"
-            label={t('dialog.linkLabel')}
-            required
-            placeholder={PLACEHOLDERS[platform] ?? 'https://'}
-            hint={t('dialog.linkHint')}
-          />
-        </div>
-
-        <ModalFooter>
-          <Button variant="ghost" onClick={onClose} disabled={save.isPending}>
-            {t('dialog.cancel')}
-          </Button>
-          <Button type="submit" loading={save.isPending}>
-            {link ? t('dialog.saveSubmit') : t('dialog.addSubmit')}
-          </Button>
-        </ModalFooter>
-      </Form>
-    </Modal>
+      <UrlField
+        control={form.control}
+        name="url"
+        label={t('dialog.linkLabel')}
+        required
+        placeholder={PLACEHOLDERS[platform] ?? 'https://'}
+        hint={t('dialog.linkHint')}
+      />
+    </FormDialog>
   )
 }

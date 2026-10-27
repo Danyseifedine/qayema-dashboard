@@ -15,12 +15,10 @@ describe('ToastProvider', () => {
     act(() => {
       toast.dismiss()
       usePreferencesStore.getState().setLocale('en')
-      usePreferencesStore.getState().setTheme('light')
     })
   })
 
-  it('sits top right in a left-to-right language, in the current theme', async () => {
-    act(() => usePreferencesStore.getState().setTheme('dark'))
+  it('sits top right in a left-to-right language, dark', async () => {
     render(<ToastProvider />)
 
     act(() => {

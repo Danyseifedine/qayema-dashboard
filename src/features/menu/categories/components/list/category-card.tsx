@@ -1,10 +1,12 @@
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { StatusChip } from '@/shared/components/data-display'
 import { RowActions } from '@/shared/components/ui'
 import { localeLabel, type Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
+import { categoryIcon } from '@/features/menu/categories/constants/category-icons'
 
 export type CategoryCardProps = {
   category: Category
@@ -37,10 +39,19 @@ export const CategoryCard = memo(function CategoryCard({
   const name = translated(category.name, locale)
   const description = translated(category.description, locale)
   const count = category.dishes_count ?? 0
+  const Icon = categoryIcon(category.icon)
 
   return (
     <div className="flex items-center gap-1 glass-card rounded-card py-2.5 ps-1 pe-2 sm:pe-2.5">
       {handle}
+      {Icon ? (
+        <span
+          aria-hidden
+          className="ms-0.5 grid size-9 shrink-0 place-items-center rounded-tile bg-accent-wash text-accent"
+        >
+          <Icon className="size-[18px]" stroke={1.8} />
+        </span>
+      ) : null}
 
       <button
         type="button"
@@ -60,12 +71,12 @@ export const CategoryCard = memo(function CategoryCard({
             {name.missing ? t('categoryCard.untitled') : name.text}
           </span>
           {name.isFallback ? (
-            <span
+            <StatusChip
+              tone="warning"
               title={t('categoryCard.notTranslated', { language: localeLabel(locale) })}
-              className="shrink-0 rounded-full bg-status-warn-wash px-1.5 py-0.5 text-[10px] font-medium text-status-warn"
             >
               {name.language?.toUpperCase()}
-            </span>
+            </StatusChip>
           ) : null}
         </span>
         {!description.missing ? (

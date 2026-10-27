@@ -9,16 +9,23 @@ import {
   type FieldValues,
 } from 'react-hook-form'
 import { HelperText, Input, Label, Textarea } from '@/shared/components/ui'
+import { CharacterCount } from '@/shared/components/forms/layout/field'
+import { isNearLimit } from '@/shared/utils/limits/is-near-limit'
+import { cn } from '@/shared/utils/dom/cn'
 import { mainLanguageOf, languageDir, languageName } from '@/shared/constants/menu-languages'
 import { LocaleTabs } from '@/shared/components/forms/translatable/locale-tabs'
 import { useWritingHelp } from '@/shared/hooks/use-writing-help'
-import { WritingHelpButtons } from '@/shared/components/forms/translatable/writing-help-buttons'
+import {
+  WritingHelpButtons,
+  WritingHelpSpentNote,
+  type WritingHelpButtonsProps,
+} from '@/shared/components/forms/translatable/writing-help-buttons'
 
 export type TranslatableFieldProps<T extends FieldValues> = {
   control: Control<T>
   /** Base path of the `{en, fr, …}` object, e.g. `name`. */
   name: FieldPath<T>
-  /** The menu's languages, English first. One language shows no tabs. */
+  /** The menu's languages, its main one first. One language shows no tabs. */
   languages: readonly string[]
   label: ReactNode
   hint?: ReactNode
@@ -37,6 +44,11 @@ export type TranslatableFieldProps<T extends FieldValues> = {
    */
   write?:
     { kind: 'category'; name: Record<string, string | null | undefined> } | { kind: 'restaurant' }
+  /**
+   * Rewrites the text when the owner leaves the control, e.g. a dish's
+   * ingredients into a clean list, so they see what will be saved.
+   */
+  tidy?: (text: string, language: string) => string
 }
 
 /**
@@ -48,9 +60,11 @@ export type TranslatableFieldProps<T extends FieldValues> = {
  * message appears under the control.
  *
  * While the writing help is on (`WritingHelpProvider`), a menu in two
- * languages gets "Translate", either way: the open tab's text into the other
- * language (which opens to show it), or the other's into an empty open tab.
- * Nothing is saved until the form is.
+ * languages gets a small "Translate" beside the tabs, either way: the open
+ * tab's text into the other language (which opens to show it), or the
+ * other's into an empty open tab. Nothing is saved until the form is.
+ *
+ * The count of characters shows only once the text nears the limit.
  */
 export function TranslatableTextField<T extends FieldValues>({
   control,
@@ -65,6 +79,7 @@ export function TranslatableTextField<T extends FieldValues>({
   multiline = false,
   rows = 4,
   write,
+  tidy,
 }: TranslatableFieldProps<T>) {
   const main = mainLanguageOf(languages)
   const [chosen, setChosen] = useState<string>(main)
@@ -103,15 +118,40 @@ export function TranslatableTextField<T extends FieldValues>({
   )
 
   const hidden = languages.find((code) => code !== active && errorOf(code))
+  const nearLimit = isNearLimit(value.length, maxLength)
   const controlId = `${String(name)}-${active}`
   const describedBy = error ? `${controlId}-error` : hint ? `${controlId}-hint` : undefined
+
+  const helpProps: WritingHelpButtonsProps = {
+    active,
+    text: value.trim(),
+    peer,
+    peerText: peer ? (all[peer] ?? '').trim() : '',
+    write:
+      write?.kind === 'category'
+        ? {
+            kind: 'category',
+            subject: (write.name[active] ?? '').trim() || (write.name[main] ?? '').trim(),
+          }
+        : (write ?? null),
+    maxLength,
+    onTranslated: (code, text) => {
+      setTranslated({ code, text })
+      setChosen(code)
+    },
+    onWritten: onChange,
+  }
 
   const shared = {
     id: controlId,
     name: current.field.name,
     value,
     onChange: current.field.onChange,
-    onBlur: current.field.onBlur,
+    onBlur: () => {
+      const tidied = tidy?.(value, active)
+      if (tidied !== undefined && tidied !== value) current.field.onChange(tidied)
+      current.field.onBlur()
+    },
     dir: languageDir(active),
     lang: active,
     // A language with no example of its own borrows the English one.
@@ -122,72 +162,79 @@ export function TranslatableTextField<T extends FieldValues>({
     tone: error ? ('error' as const) : ('default' as const),
   }
 
-  return (
+  // The AI buttons, when the writing help is on: Translate beside the tabs,
+  // "Write with AI" inside a description's box, in its bottom end corner.
+  const field = (ai: { translate: ReactNode; write: ReactNode } | null) => (
     <div className="flex flex-col gap-2 pt-2">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
         <Label htmlFor={controlId} required={required} optionalText={optionalText}>
           {label}
         </Label>
-        {languages.length > 1 ? (
-          <LocaleTabs
-            languages={languages}
-            value={active}
-            onChange={setChosen}
-            incomplete={incomplete}
-          />
-        ) : null}
+        <div className="flex items-center gap-1.5">
+          {multiline ? null : ai?.write}
+          {ai?.translate}
+          {languages.length > 1 ? (
+            <LocaleTabs
+              languages={languages}
+              value={active}
+              onChange={setChosen}
+              incomplete={incomplete}
+            />
+          ) : null}
+        </div>
       </div>
 
       {multiline ? (
-        <Textarea {...shared} ref={current.field.ref} rows={rows} />
+        // Its rows set its height, a short list's too.
+        <div className="relative">
+          <Textarea
+            {...shared}
+            ref={current.field.ref}
+            rows={rows}
+            // Room under the text for "Write with AI", which takes the
+            // corner the resize handle would.
+            className={cn('min-h-0', ai?.write && 'resize-none pb-11')}
+          />
+          {ai?.write ? <div className="absolute end-2 bottom-2">{ai.write}</div> : null}
+        </div>
       ) : (
         <Input {...shared} ref={current.field.ref} />
       )}
 
       {helpOn && (peer || write) ? (
-        <WritingHelpButtons
-          active={active}
-          text={value.trim()}
-          peer={peer}
-          peerText={peer ? (all[peer] ?? '').trim() : ''}
-          write={
-            write?.kind === 'category'
-              ? {
-                  kind: 'category',
-                  subject: (write.name[active] ?? '').trim() || (write.name[main] ?? '').trim(),
-                }
-              : (write ?? null)
-          }
-          maxLength={maxLength}
-          onTranslated={(code, text) => {
-            setTranslated({ code, text })
-            setChosen(code)
-          }}
-          onWritten={onChange}
+        <WritingHelpSpentNote
+          actions={[
+            ...(peer ? (['translation'] as const) : []),
+            ...(write ? (['description'] as const) : []),
+          ]}
         />
       ) : null}
 
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          {error ? (
-            <HelperText id={`${controlId}-error`} tone="error">
-              {error}
-            </HelperText>
-          ) : hint ? (
-            <HelperText id={`${controlId}-hint`}>{hint}</HelperText>
-          ) : null}
-          {!error && hidden ? (
-            <HelperText tone="error">
-              {languageName(hidden)}: {errorOf(hidden)}
-            </HelperText>
-          ) : null}
+      {error || hint || hidden || nearLimit ? (
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            {error ? (
+              <HelperText id={`${controlId}-error`} tone="error">
+                {error}
+              </HelperText>
+            ) : hint ? (
+              <HelperText id={`${controlId}-hint`}>{hint}</HelperText>
+            ) : null}
+            {!error && hidden ? (
+              <HelperText tone="error">
+                {languageName(hidden)}: {errorOf(hidden)}
+              </HelperText>
+            ) : null}
+          </div>
+          <CharacterCount length={value.length} max={maxLength} />
         </div>
-        <HelperText className="shrink-0 tabular-nums">
-          <span dir="ltr">
-            {value.length} / {maxLength}
-          </span>
-        </HelperText>
-      </div>
+      ) : null}
     </div>
+  )
+
+  return helpOn && (peer || write) ? (
+    <WritingHelpButtons {...helpProps}>{field}</WritingHelpButtons>
+  ) : (
+    field(null)
   )
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Button } from '@/shared/components/ui/button'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type FieldTone = 'default' | 'error'
@@ -26,7 +27,7 @@ export function FieldShell({
     <div
       data-disabled={disabled || undefined}
       className={cn(
-        'relative flex items-center rounded-[var(--radius-field)] border-[0.5px]',
+        'relative flex items-center rounded-field border-[0.5px]',
         'bg-[var(--field)] transition-[border-color,box-shadow,background-color] duration-200',
         '[transition-timing-function:var(--ease-qayema)]',
         tone === 'default' && [
@@ -56,10 +57,17 @@ export function FieldLeading({ children }: { children: ReactNode }) {
   )
 }
 
-/** Static text before the control, e.g. a currency code or `https://`. */
+/**
+ * Static text before the control, e.g. a currency code or `https://`. It
+ * sits on the control's baseline (`self-baseline`, with the control's own in
+ * `Input`), so it lines up with what is typed and with the smaller
+ * placeholder, rather than each being centred on its own.
+ */
 export function FieldPrefix({ children }: { children: ReactNode }) {
   return (
-    <span className="ms-3.5 shrink-0 select-none text-[14px] text-[var(--faint)]">{children}</span>
+    <span className="ms-3.5 shrink-0 self-baseline select-none text-[14px] leading-5 text-[var(--faint)]">
+      {children}
+    </span>
   )
 }
 
@@ -78,23 +86,21 @@ export function FieldTrailingButton({
   onClick,
   children,
 }: {
+  /** Its name, read out and shown as its tooltip. */
   label: string
   onClick: () => void
   children: ReactNode
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="icon-xs"
       aria-label={label}
+      title={label}
       onClick={onClick}
-      className={cn(
-        'grid shrink-0 place-items-center rounded-lg p-1.5 text-[var(--muted)]',
-        'transition-[color,background-color] duration-150 hover:bg-[var(--hover-wash)] hover:text-[var(--text)]',
-        'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--gold-on)]',
-        '[&>svg]:size-4',
-      )}
+      className="text-[var(--muted)] hover:text-[var(--text)]"
     >
       {children}
-    </button>
+    </Button>
   )
 }

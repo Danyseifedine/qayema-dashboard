@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useWatch, type UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ChoiceField, ColorField, type ChoiceOption } from '@/shared/components/forms'
-import { Switch } from '@/shared/components/ui'
+import { SwitchRow } from '@/shared/components/ui'
 import type { GradientType, QrFormValues } from '@/features/qr/schemas/qr.schema'
 
 /** Where the gradient starts when it is switched on: the brand's violet. */
@@ -10,7 +10,7 @@ const GRADIENT_START = '#7C3AED'
 
 const GRADIENT_PREVIEWS: Record<GradientType, ReactNode> = {
   linear: (
-    <span className="block size-7 rounded-[6px] bg-gradient-to-br from-current to-transparent" />
+    <span className="block size-7 rounded-tile bg-gradient-to-br from-current to-transparent" />
   ),
   radial: (
     <span className="block size-7 rounded-full bg-[radial-gradient(circle,currentColor,transparent_75%)]" />
@@ -37,24 +37,15 @@ export function ColorControls({ form }: { form: UseFormReturn<QrFormValues> }) {
         <ColorField control={control} name="eye_color" label={t('colors.cornerCentres')} />
       </div>
 
-      <div className="flex items-center justify-between gap-3.5 pt-2">
-        <div className="flex flex-col gap-0.5">
-          <span id="qr-gradient-label" className="text-[14px] text-[var(--text)]">
-            {t('colors.gradient')}
-          </span>
-          <span id="qr-gradient-desc" className="text-[12px] leading-[1.45] text-[var(--muted)]">
-            {t('colors.gradientDescription')}
-          </span>
-        </div>
-        <Switch
-          checked={on}
-          onChange={(checked) =>
-            setValue('dot_gradient', checked ? GRADIENT_START : null, { shouldDirty: true })
-          }
-          aria-labelledby="qr-gradient-label"
-          aria-describedby="qr-gradient-desc"
-        />
-      </div>
+      <SwitchRow
+        className="pt-2"
+        checked={on}
+        onChange={(checked) =>
+          setValue('dot_gradient', checked ? GRADIENT_START : null, { shouldDirty: true })
+        }
+        label={t('colors.gradient')}
+        description={t('colors.gradientDescription')}
+      />
 
       {on ? (
         <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
-import { HelperText, Textarea } from '@/shared/components/ui'
+import { Textarea } from '@/shared/components/ui'
 import { Field } from '@/shared/components/forms/layout/field'
 
 export type TextareaFieldProps<T extends FieldValues> = {
@@ -13,7 +13,7 @@ export type TextareaFieldProps<T extends FieldValues> = {
   maxLength: number
 }
 
-/** Multi-line text with a character counter under the control. */
+/** Multi-line text; its count shows under it once it nears the limit. */
 export function TextareaField<T extends FieldValues>({
   control,
   name,
@@ -27,29 +27,27 @@ export function TextareaField<T extends FieldValues>({
   const value = (field.value as string | null | undefined) ?? ''
 
   return (
-    <Field label={label} optionalText={optionalText} error={fieldState.error?.message}>
+    <Field
+      label={label}
+      optionalText={optionalText}
+      error={fieldState.error?.message}
+      count={{ length: value.length, max: maxLength }}
+    >
       {({ id, describedBy, invalid }) => (
-        <div className="flex flex-col gap-1.5">
-          <Textarea
-            id={id}
-            name={field.name}
-            ref={field.ref}
-            value={value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-            rows={rows}
-            placeholder={placeholder}
-            maxLength={maxLength}
-            aria-describedby={describedBy}
-            aria-invalid={invalid || undefined}
-            tone={invalid ? 'error' : 'default'}
-          />
-          <HelperText className="text-end tabular-nums">
-            <span dir="ltr">
-              {value.length} / {maxLength}
-            </span>
-          </HelperText>
-        </div>
+        <Textarea
+          id={id}
+          name={field.name}
+          ref={field.ref}
+          value={value}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          rows={rows}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
+          tone={invalid ? 'error' : 'default'}
+        />
       )}
     </Field>
   )

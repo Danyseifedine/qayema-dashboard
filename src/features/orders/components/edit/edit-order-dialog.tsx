@@ -3,26 +3,28 @@ import { IconX } from '@tabler/icons-react'
 import { useEffect, useMemo } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
-import { useDishChoices } from '@/features/auth'
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '@/shared/components/feedback'
 import { useDishes } from '@/features/menu'
-import { Money } from '@/shared/components/data-display'
+import { Money, StatusChip } from '@/shared/components/data-display'
 import { Form } from '@/shared/components/forms'
 import { Alert, Button } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 import { cn } from '@/shared/utils/dom/cn'
+import { formatMoney } from '@/shared/utils/format/money'
 import { translated } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { DishPicker } from '@/features/orders/components/edit/dish-picker'
 import { QuantityStepper } from '@/features/orders/components/edit/quantity-stepper'
 import { useEditOrder } from '@/features/orders/hooks/use-orders'
+import { usePickChoices } from '@/features/orders/hooks/use-pick-choices'
 import {
   editOrderFormSchema,
   type EditOrderFormValues,
 } from '@/features/orders/schemas/edit-order.schema'
 import type { Order } from '@/features/orders/schemas/order.schema'
-import { unitPrice } from '@/features/orders/utils/order-edit'
+import { buildsToPick, builtParts, orderTotal, unitPrice } from '@/features/orders/utils/order-edit'
+import { choiceParts } from '@/features/orders/utils/order-text'
 
 export type EditOrderDialogProps = {
   /** Null keeps it closed. */
@@ -39,7 +41,7 @@ export type EditOrderDialogProps = {
 export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
   const { t } = useTranslation('orders')
   const locale = usePreferencesStore((state) => state.locale)
-  const choices = useDishChoices()
+  const choices = usePickChoices()
   const dishes = useDishes()
   const edit = useEditOrder()
   const open = order !== null
@@ -67,15 +69,33 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
   const byId = useMemo(() => new Map(menu.map((dish) => [dish.id, dish])), [menu])
   const dishOf = (id: number) => byId.get(id)
 
-  const total =
-    (order?.items ?? []).reduce(
-      (sum, item, index) => sum + Number(item.unit_price) * (lines[index]?.quantity ?? 0),
-      0,
-    ) +
-    adds.reduce((sum, line) => {
-      const dish = dishOf(line.dish_id)
-      return dish ? sum + unitPrice(dish, line.options, line.addons, choices) * line.quantity : sum
-    }, 0)
+  // In the order's currency: each line in its own, one in the second currency
+  // at the rate the order was placed at (today's, for an order without one).
+  const total = order
+    ? orderTotal(
+        [
+          ...order.items.map((item, index) => ({
+            amount: Number(item.unit_price) * (lines[index]?.quantity ?? 0),
+            currency: item.currency,
+          })),
+          ...adds.flatMap((line) => {
+            const dish = dishOf(line.dish_id)
+            return dish
+              ? [
+                  {
+                    amount:
+                      unitPrice(dish, line.options, line.addons, choices, line.builds, menu) *
+                      line.quantity,
+                    currency: dish.currency,
+                  },
+                ]
+              : []
+          }),
+        ],
+        order.currency,
+        order.exchange_rate ?? dishes.data?.meta.exchange_rate ?? null,
+      )
+    : 0
 
   const once = useSubmitOnce()
 
@@ -106,8 +126,8 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
       {order ? (
         // Never taller than the screen: the middle scrolls, so the total and
         // Save stay in view on a short phone.
-        <Form onSubmit={onSubmit} className="max-h-[calc(100dvh-2.5rem)] gap-0">
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 pb-0 sm:p-5 sm:pb-0">
+        <Form onSubmit={onSubmit} className="max-h-[calc(100dvh-24px)] gap-0">
+          <ModalBody className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
             <ModalHeader
               title={t('edit.title', { reference: order.reference })}
               description={
@@ -135,15 +155,15 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
                       </p>
                       <p className="text-[12px] text-[var(--muted)]">
                         {[
-                          ...(item.options?.variants.map((variant) => variant.choice) ?? []),
-                          ...(item.options?.addons.map((addon) => `+ ${addon.name}`) ?? []),
-                        ]
-                          .concat([
-                            t('edit.each', {
-                              price: Number(item.unit_price).toFixed(2),
-                            }),
-                          ])
-                          .join(' · ')}
+                          ...choiceParts(
+                            item.options?.variants ?? [],
+                            item.options?.addons ?? [],
+                            item.options?.builds,
+                          ),
+                          t('edit.each', {
+                            price: formatMoney(Number(item.unit_price), item.currency),
+                          }),
+                        ].join(' · ')}
                       </p>
                     </div>
                     <QuantityStepper
@@ -163,23 +183,28 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
                   <li key={field.id} className="flex items-center justify-between gap-3 py-2.5">
                     <div className="min-w-0">
                       <p className="text-[13.5px]">
-                        {name}{' '}
-                        <span className="rounded-full bg-status-success-wash px-1.5 py-0.5 text-[11px] text-status-success">
-                          {t('edit.new')}
-                        </span>
+                        {name} <StatusChip tone="success">{t('edit.new')}</StatusChip>
                       </p>
                       {dish ? (
                         <p className="text-[12px] text-[var(--muted)]">
-                          {[
-                            ...dish.variants.flatMap((variant) =>
+                          {choiceParts(
+                            dish.variants.flatMap((variant) =>
                               variant.options
                                 .filter((option) => field.options.includes(option.id))
-                                .map((option) => translated(option.name, locale).text),
+                                .map((option) => ({
+                                  name: translated(variant.name, locale).text,
+                                  choice: translated(option.name, locale).text,
+                                })),
                             ),
-                            ...dish.addons
+                            dish.addons
                               .filter((addon) => field.addons.includes(addon.id))
-                              .map((addon) => `+ ${translated(addon.name, locale).text}`),
-                          ].join(' · ')}
+                              .map((addon) => ({ name: translated(addon.name, locale).text })),
+                            builtParts(
+                              buildsToPick(dish, choices, menu),
+                              field.builds ?? [],
+                              locale,
+                            ),
+                          ).join(' · ')}
                         </p>
                       ) : null}
                     </div>
@@ -192,8 +217,8 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
                       />
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="size-8 text-[var(--muted)]"
+                        size="icon-sm"
+                        className="text-[var(--muted)]"
                         aria-label={t('edit.removeAdded', { name })}
                         onClick={() => added.remove(index)}
                       >
@@ -212,7 +237,6 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
               ) : (
                 <DishPicker
                   dishes={menu}
-                  currency={order.currency}
                   onAdd={(line) => {
                     added.append(line)
                     void form.trigger('lines')
@@ -220,7 +244,7 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
                 />
               )}
             </div>
-          </div>
+          </ModalBody>
 
           <ModalFooter align="between" className="shrink-0 items-center">
             <p className="text-[13px] text-[var(--muted)]">
@@ -228,7 +252,6 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
               <Money
                 amount={total}
                 currency={order.currency}
-                locale={locale}
                 className="text-[15px] font-medium text-accent"
               />
             </p>

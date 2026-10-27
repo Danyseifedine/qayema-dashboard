@@ -7,7 +7,8 @@ type MenuText = { en: string; ar?: string }
 
 /** What POST /__e2e/scenario accepts (see E2eController::scenario). */
 export type ScenarioInput = {
-  package?: 'free' | 'pro' | 'premium' | 'custom'
+  /** One of the four, or the slug of one an admin made in the test. */
+  package?: 'free' | 'pro' | 'premium' | 'custom' | (string & {})
   package_starts_at?: string
   package_ends_at?: string
   template?: 'classic' | 'midnight' | null
@@ -28,17 +29,39 @@ export type ScenarioInput = {
   categories?: {
     name: MenuText
     description?: MenuText
+    /** One of the category icons (../qayema/app/Support/CategoryIcons.php). */
+    icon?: string
     dishes?: {
       name: MenuText
       /** Null for none (a dish priced by its variants); 10 when left out. */
       price?: number | null
+      /** Priced in the restaurant's second currency (its code); the main one when left out. */
+      currency?: string
       ingredients?: MenuText
       is_available?: boolean
       variants?: { name: MenuText; options: { name: MenuText; price?: number }[] }[]
       addons?: { name: MenuText; price?: number }[]
+      /** Built from parts: from a scenario category (its English name) or a list of its own. */
+      builds?: {
+        name: MenuText
+        shape?: 'split' | 'pieces'
+        parts?: number[]
+        category?: string
+        choices?: { name: MenuText; price?: number; part_prices?: Record<string, string> }[]
+        /** A category dish's own price per part size, by its English name. */
+        part_prices?: Record<string, Record<string, string>>
+      }[]
     }[]
   }[]
   social_links?: { platform: string; url: string }[]
+  /** An admin's override: a limit (null unlimited) or an on/off feature (0 off, 1 on). */
+  overrides?: { feature: string; value: number | null }[]
+  /** The restaurant's own price, in cents, instead of its package's. */
+  price_cents?: number
+  /** The main currency (USD when left out), and a second one some dishes are priced in, with its rate (main per one second). */
+  currency?: string
+  second_currency?: string
+  exchange_rate?: string
   /** How guests send their orders: WhatsApp (the default) or in the menu. */
   order_mode?: 'whatsapp' | 'menu'
   /** What the menu takes when guests order in it; both when left out. */
@@ -55,18 +78,66 @@ export type ScenarioInput = {
   logo?: boolean
   /** AI writing uses already spent today (tests/E2e/E2eController). */
   writing_help_used?: number
+  /** Logged AI use with its cost in dollars, for the admin's spending figures. */
+  writing_help_days?: {
+    days_ago?: number
+    uses: number
+    input_tokens: number
+    output_tokens: number
+    cost: string
+    /** The month's AI credits they took. */
+    credits?: number
+  }[]
+  /** Offers on the menu (Premium); `dishes` names the scenario's dishes in English. */
+  offers?: {
+    title: MenuText
+    description?: MenuText
+    /** False: a picture alone, its words drawn into it (needs `image`). */
+    show_text?: boolean
+    /** A wide picture. */
+    image?: boolean
+    placements: ('banner' | 'popup' | 'ad')[]
+    banner_shape?: 'rectangle' | 'square'
+    popup_shape?: 'square' | 'tall'
+    action?: 'none' | 'dishes' | 'link'
+    action_url?: string
+    show_again?: 'every_visit' | 'daily' | 'once'
+    delay_seconds?: number
+    /** The ad's wait: after the pop-up closes, or the menu opens. */
+    ad_delay_seconds?: number
+    ad_seconds?: number
+    discount_type?: 'none' | 'percent' | 'amount'
+    discount_value?: number
+    dishes?: string[]
+    /** UTC, "2026-11-01 18:00:00". */
+    starts_at?: string
+    ends_at?: string
+    repeat?: 'always' | 'weekly' | 'monthly'
+    weekdays?: string[]
+    month_days?: number[]
+    time_windows?: { from: string; to: string }[]
+    is_active?: boolean
+    /** The offer's own dish (its deal), its one dish; `category` names a scenario category in English. */
+    deal?: {
+      name: MenuText
+      price: number
+      category: string
+      ingredients?: MenuText
+    }
+  }[]
 }
 
 export type Owner = {
   user: { email: string; password: string }
   restaurant: { id: number; slug: string; public_url: string }
   categories: { id: number; dishes: { id: number }[] }[]
+  /** `deal_id`: the offer's deal dish, null without one. */
+  offers: { id: number; deal_id: number | null }[]
 }
 
 export type Options = {
   /** The dashboard's interface language, as the owner picked it. */
   uiLanguage: 'en' | 'ar'
-  uiTheme: 'light' | 'dark'
 }
 
 type Fixtures = {
@@ -100,26 +171,19 @@ async function post(request: APIRequestContext, path: string, data: object) {
 
 export const test = base.extend<Fixtures & Options>({
   uiLanguage: ['en', { option: true }],
-  uiTheme: ['light', { option: true }],
 
-  page: async ({ page, uiLanguage, uiTheme }, provide) => {
-    await page.addInitScript(
-      ([language, theme]) => {
-        // Only a first visit: a switch the owner makes during the test must
-        // survive a reload, as it does for them.
-        try {
-          if (localStorage.getItem('qayema.dashboard.locale.v1') === null) {
-            localStorage.setItem('qayema.dashboard.locale.v1', language)
-          }
-          if (localStorage.getItem('qayema.dashboard.theme.v1') === null) {
-            localStorage.setItem('qayema.dashboard.theme.v1', theme)
-          }
-        } catch {
-          // A page that forbids storage simply keeps its defaults.
+  page: async ({ page, uiLanguage }, provide) => {
+    await page.addInitScript((language) => {
+      // Only a first visit: a switch the owner makes during the test must
+      // survive a reload, as it does for them.
+      try {
+        if (localStorage.getItem('qayema.dashboard.locale.v1') === null) {
+          localStorage.setItem('qayema.dashboard.locale.v1', language)
         }
-      },
-      [uiLanguage, uiTheme],
-    )
+      } catch {
+        // A page that forbids storage simply keeps its defaults.
+      }
+    }, uiLanguage)
 
     // Any uncaught error in the browser is a bug, whatever the test checks.
     const errors: string[] = []
@@ -172,7 +236,12 @@ export const test = base.extend<Fixtures & Options>({
       const results = await (include ? builder.include(include) : builder).analyze()
       const serious = results.violations
         .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
-        .map((violation) => `${violation.id}: ${violation.help} (${violation.nodes.length})`)
+        .map(
+          (violation) =>
+            `${violation.id}: ${violation.help} (${violation.nodes.length}): ${violation.nodes
+              .map((node) => node.target.join(' '))
+              .join(', ')}`,
+        )
       expect(serious, 'serious accessibility violations').toEqual([])
     })
   },

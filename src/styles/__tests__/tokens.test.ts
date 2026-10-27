@@ -12,7 +12,7 @@ import { contrast, MIN_CONTRAST } from '@/shared/utils/color/contrast'
 // Read from disk: the test config turns CSS imports off (`css: false`).
 const css = readFileSync(resolve(process.cwd(), 'src/styles/tokens.css'), 'utf8')
 
-function theme(selector: string): Record<string, string> {
+function colours(selector: string): Record<string, string> {
   const start = css.indexOf(`${selector} {`)
   const block = css.slice(start, css.indexOf('\n}', start))
   return Object.fromEntries(
@@ -45,11 +45,8 @@ function over(top: string, bottom: string): string {
     .join('')}`
 }
 
-describe.each([
-  ['light', ":root,\nhtml[data-theme='light']"],
-  ['dark', "html[data-theme='dark']"],
-])('%s theme text colours', (_name, selector) => {
-  const tokens = theme(selector)
+describe('text colours', () => {
+  const tokens = colours(':root')
   const surfaces = [tokens.bg!, tokens.surface!, tokens.field!]
   const washes = surfaces.flatMap((surface) => [
     over(tokens['hover-wash']!, surface),

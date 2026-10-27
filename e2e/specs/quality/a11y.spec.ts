@@ -73,7 +73,7 @@ async function openDashboardPage(page: Page, key: string, heading: string | RegE
 }
 
 test.describe('accessibility: the dashboard', () => {
-  // Every page in every look: phone (the drawer), Arabic (RTL) and dark (contrast).
+  // Every page in every look: phone and Arabic (RTL).
   for (const [key, english, arabic] of DASHBOARD_PAGES) {
     test(`${key} @matrix`, async ({ page, owner, expectAccessible }) => {
       await owner(FULL)
@@ -119,6 +119,11 @@ test.describe('accessibility: the dashboard', () => {
 })
 
 test.describe('accessibility: what guests see', () => {
+  // The website fades its sections in as they scroll into view; axe would
+  // sometimes measure text halfway in. With reduced motion everything shows
+  // at once (landing.css), so the colours checked are the ones guests read.
+  test.use({ reducedMotion: 'reduce' })
+
   test('the public menu in English @matrix', async ({ page, scenario, expectAccessible }) => {
     const created = await scenario(FULL)
     await page.goto(`${created.restaurant.public_url}?lang=en`)

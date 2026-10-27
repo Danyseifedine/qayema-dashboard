@@ -1,16 +1,19 @@
 import {
-  IconChevronRight,
   IconLayoutGrid,
   IconLink,
+  IconSparkles,
   IconToolsKitchen2,
   type TablerIcon,
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import { LimitBadge } from '@/shared/components/data-display'
+import { LimitBadge, ProgressBar } from '@/shared/components/data-display'
 import type { AuthRestaurant } from '@/features/auth'
+import type { WritingHelpCredits } from '@/shared/hooks/use-writing-help'
+import { formatDay, todayDay } from '@/shared/utils/format/date'
 import { formatNumber } from '@/shared/utils/format/number'
-import { cn } from '@/shared/utils/dom/cn'
 import { usePreferencesStore } from '@/stores/preferences.store'
+import { HomeTile, HomeTiles } from '@/features/overview/components/counts/home-tile'
+
 type Limits = AuthRestaurant['limits']
 
 const ITEMS: {
@@ -50,67 +53,37 @@ const ITEMS: {
 
 export type ContentCountsProps = {
   limits: Limits
+  /** The month's AI credits; their tile shows only while the AI is on and capped. */
+  credits?: WritingHelpCredits | null
   /** Opens the section a tile counts. */
   onOpen: (key: string) => void
 }
 
 /**
  * Quick: how much is on the menu (dishes and categories against what the
- * package allows), each a tap from its page.
+ * package allows), and the AI credits left this month, each a tap from its
+ * page.
  */
-export function ContentCounts({ limits, onOpen }: ContentCountsProps) {
+export function ContentCounts({ limits, credits = null, onOpen }: ContentCountsProps) {
   const { t } = useTranslation('overview')
   const locale = usePreferencesStore((state) => state.locale)
+  const capped = credits?.limit != null ? { ...credits, limit: credits.limit } : null
 
   return (
-    <section aria-labelledby="quick-title" className="flex flex-col gap-2.5">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-0.5">
-        <h3 id="quick-title" className="text-[20px] leading-tight">
-          {t('quick.title')}
-        </h3>
-        <p className="text-[11px] text-[var(--muted)]">{t('quick.description')}</p>
-      </div>
-      <div className="grid grid-cols-3 gap-1.5 min-[380px]:gap-2">
-        {ITEMS.map(({ key, page, label, icon: Icon, tint, showsLimit }) => {
-          const { used, limit } = limits[key]
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onOpen(page)}
-              className={cn(
-                '@container flex min-w-0 flex-col gap-2 glass-card rounded-card p-2 text-start min-[380px]:p-2.5',
-                'transition-colors hover:bg-[var(--hover-wash)]',
-                'focus-ring',
-              )}
-            >
-              {/* The label and the number beside the icon, the arrow at the end of
-                  the number's line (short, so the label keeps the width); on the
-                  narrowest phones all under the icon. */}
-              <span className="grid grid-cols-1 gap-y-1 @min-[5rem]:grid-cols-[auto_minmax(0,1fr)_auto] @min-[5rem]:items-center @min-[5rem]:gap-x-1 @min-[5rem]:gap-y-0.5">
-                <span
-                  aria-hidden
-                  className={cn(
-                    'grid size-6 shrink-0 place-items-center rounded-full @min-[5rem]:row-span-2 @min-[6.5rem]:size-8',
-                    tint,
-                  )}
-                >
-                  <Icon className="size-3 @min-[6.5rem]:size-4" stroke={1.7} />
-                </span>
-                <span className="ps-0.5 text-[11px] leading-tight @min-[5rem]:col-span-2 @min-[6.5rem]:text-[12px]">
-                  {t(`counts.${label}`)}
-                </span>
-                <IconChevronRight
-                  aria-hidden
-                  className="hidden size-3.5 shrink-0 text-[var(--faint)] @min-[5rem]:col-start-3 @min-[5rem]:row-start-2 @min-[5rem]:block rtl:rotate-180"
-                />
-                <span className="ps-0.5 text-[20px] leading-none font-semibold tabular-nums @min-[5rem]:col-start-2 @min-[5rem]:row-start-2">
-                  {formatNumber(used, locale)}
-                </span>
-              </span>
-              {/* At the tile's foot, so the three line up. */}
-              {showsLimit ? (
-                <span className="mt-auto text-[11px] leading-snug text-[var(--muted)]">
+    <HomeTiles title={t('quick.title')} note={t('quick.description')} columns={capped ? 4 : 3}>
+      {ITEMS.map(({ key, page, label, icon, tint, showsLimit }) => {
+        const { used, limit } = limits[key]
+        return (
+          <HomeTile
+            key={key}
+            icon={icon}
+            tint={tint}
+            label={t(`counts.${label}`)}
+            value={formatNumber(used, locale)}
+            onClick={() => onOpen(page)}
+            foot={
+              showsLimit ? (
+                <span className="text-[var(--muted)]">
                   {limit === null ? (
                     t('counts.noLimit')
                   ) : (
@@ -120,11 +93,56 @@ export function ContentCounts({ limits, onOpen }: ContentCountsProps) {
                     </span>
                   )}
                 </span>
-              ) : null}
-            </button>
-          )
-        })}
-      </div>
-    </section>
+              ) : null
+            }
+          />
+        )
+      })}
+      {capped ? <CreditsTile credits={capped} onOpen={() => onOpen('package')} /> : null}
+    </HomeTiles>
+  )
+}
+
+/**
+ * The AI credits left this month out of the package's, a bar of what is
+ * left, and once none are, the day they come back. Credits, never money.
+ */
+function CreditsTile({
+  credits,
+  onOpen,
+}: {
+  credits: WritingHelpCredits & { limit: number }
+  onOpen: () => void
+}) {
+  const { t } = useTranslation('overview')
+  const locale = usePreferencesStore((state) => state.locale)
+  // Back once their day comes, whatever an open tab still holds.
+  const back = todayDay() >= credits.resets_on
+  const left = back ? credits.limit : (credits.left ?? credits.limit)
+  // Too few for even a translation is as good as none.
+  const spent = left < credits.prices.translation
+
+  return (
+    <HomeTile
+      icon={IconSparkles}
+      tint="bg-accent-wash text-accent"
+      label={t('counts.aiCredits')}
+      value={formatNumber(left, locale)}
+      onClick={onOpen}
+      foot={
+        <span className="flex flex-col gap-1.5">
+          <ProgressBar value={left} max={credits.limit} />
+          {spent ? (
+            <span className="font-medium text-status-danger">
+              {t('counts.creditsBack', { date: formatDay(credits.resets_on, locale) })}
+            </span>
+          ) : (
+            <span className="text-[var(--muted)]">
+              {t('counts.creditsLeft', { limit: formatNumber(credits.limit, locale) })}
+            </span>
+          )}
+        </span>
+      }
+    />
   )
 }

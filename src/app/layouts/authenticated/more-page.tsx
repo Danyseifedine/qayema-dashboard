@@ -27,6 +27,7 @@ const ART: Record<string, string> = {
   appearance: `${ART_DIR}/Appearance.webp`,
   // From the Features page's pictures: no picture of their own here.
   dishes: '/assets/images/dashboard/features/dish.webp',
+  'build-your-own': `${ART_DIR}/build-your-own.webp`,
   orders: '/assets/images/dashboard/features/orders.webp',
   qr: `${ART_DIR}/qr-studio.webp`,
   tables: `${ART_DIR}/table-order.webp`,
@@ -44,7 +45,11 @@ const ART: Record<string, string> = {
  * included, so More is the whole dashboard on one page.
  */
 const GROUPS: { key: string; label: GroupLabel; items: string[] }[] = [
-  { key: 'menu', label: 'nav.menu', items: ['categories', 'dishes'] },
+  {
+    key: 'menu',
+    label: 'nav.menu',
+    items: ['categories', 'dishes', 'offers', 'build-your-own'],
+  },
   { key: 'look', label: 'nav.look', items: ['design', 'appearance'] },
   { key: 'sharing', label: 'nav.sharing', items: ['qr', 'social-links'] },
   { key: 'orders', label: 'nav.ordersGroup', items: ['orders', 'table-orders', 'tables'] },
@@ -124,7 +129,6 @@ function MoreCard({
   onOpen: (key: string) => void
 }) {
   const { t } = useTranslation()
-  const Icon = locked ? IconLock : item.icon
   const art = ART[item.key]
   // A half-width card with a picture shows it whole, as a band across the top.
   const banner = art !== undefined && !wide
@@ -155,13 +159,13 @@ function MoreCard({
       aria-describedby={`more-hint-${item.key}`}
       className={cn(
         '@container glass-card relative isolate flex min-w-0 overflow-hidden rounded-card text-start',
-        // Without a picture, a phone's half-width card stacks the icon over
+        // Without a picture, a phone's half-width card stacks a lock over
         // the text, so the words get the whole width; a roomier card puts
         // them side by side.
         banner
           ? 'flex-col'
           : wide
-            ? 'col-span-2 min-h-[80px] items-center gap-3 p-3'
+            ? 'col-span-2 min-h-[80px] items-center gap-3 p-3 ps-4'
             : 'min-h-[116px] flex-col gap-2.5 p-3 @min-[13rem]:flex-row @min-[13rem]:gap-3',
         'transition-colors hover:bg-[var(--hover-wash)] disabled:cursor-not-allowed disabled:opacity-55',
         'focus-ring',
@@ -178,7 +182,7 @@ function MoreCard({
           />
           {/* The photo says what the section is; only a lock is added. */}
           {locked ? (
-            <span className="gold-chip absolute start-2 top-2 grid size-8 place-items-center rounded-[10px]">
+            <span className="gold-chip absolute start-2 top-2 grid size-8 place-items-center rounded-tile">
               <IconLock className="size-4" stroke={1.7} />
             </span>
           ) : null}
@@ -198,12 +202,15 @@ function MoreCard({
               className="pointer-events-none absolute inset-y-0 end-0 -z-10 h-full w-[45%] object-cover [mask-image:linear-gradient(to_left,#000_40%,transparent)] rtl:-scale-x-100"
             />
           ) : null}
-          <span
-            aria-hidden
-            className="gold-chip grid size-9 shrink-0 place-items-center rounded-[11px]"
-          >
-            <Icon className="size-[18px]" stroke={1.7} />
-          </span>
+          {/* The words say what the section is; only a lock is added. */}
+          {locked ? (
+            <span
+              aria-hidden
+              className="gold-chip grid size-9 shrink-0 place-items-center rounded-tile"
+            >
+              <IconLock className="size-[18px]" stroke={1.7} />
+            </span>
+          ) : null}
         </>
       )}
       {label}

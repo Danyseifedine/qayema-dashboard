@@ -1,5 +1,11 @@
 export { ConfirmDialog } from '@/shared/components/feedback/dialogs/confirm-dialog'
-export { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback/dialogs/modal'
+export { FormDialog } from '@/shared/components/feedback/dialogs/form-dialog'
+export {
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+} from '@/shared/components/feedback/dialogs/modal'
 export { CardGridSkeleton } from '@/shared/components/feedback/skeletons/card-grid-skeleton'
 export { PageSkeleton } from '@/shared/components/feedback/skeletons/page-skeleton'
 export { Skeleton, SkeletonList } from '@/shared/components/feedback/skeletons/skeleton'

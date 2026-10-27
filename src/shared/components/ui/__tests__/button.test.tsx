@@ -9,7 +9,8 @@ describe('Button', () => {
 
     const button = screen.getByRole('button', { name: 'Save' })
     expect(button).toHaveAttribute('type', 'button')
-    expect(button).toHaveClass('bg-gold', 'py-2.5')
+    // A size smaller on a phone, field height from `sm` up.
+    expect(button).toHaveClass('bg-gold', 'py-2', 'sm:py-2.5')
     expect(button).not.toHaveClass('w-full')
     expect(button).not.toHaveAttribute('aria-busy')
     expect(button).toBeEnabled()
@@ -48,7 +49,7 @@ describe('Button', () => {
 
   it.each([
     ['xs', 'h-7'],
-    ['sm', 'h-9'],
+    ['sm', 'h-8'],
     ['icon', 'size-10'],
   ] as const)('sizes to %s', (size, className) => {
     render(<Button size={size}>Go</Button>)

@@ -186,10 +186,13 @@ test.describe('public menu', () => {
     })
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
 
+    // A later tap waits with the others, and goes when the guest leaves the
+    // page (or every 30 seconds), so a visit costs few requests.
     const next = sent()
-    await page.evaluate(() =>
-      document.dispatchEvent(new CustomEvent('qayema:track', { detail: { type: 'map' } })),
-    )
+    await page.evaluate(() => {
+      document.dispatchEvent(new CustomEvent('qayema:track', { detail: { type: 'map' } }))
+      window.dispatchEvent(new Event('pagehide'))
+    })
     const after = (await next).postDataJSON() as Record<string, unknown>
     expect(after.visit).toBeUndefined()
     expect(after.visitor).toBe(body.visitor)

@@ -4,12 +4,13 @@ import { useWatch, type UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Switch } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
-import type {
-  CardTheme,
-  CornerStyle,
-  DotStyle,
-  EyeStyle,
-  QrFormValues,
+import {
+  CARD_THEMES,
+  type CardTheme,
+  type CornerStyle,
+  type DotStyle,
+  type EyeStyle,
+  type QrFormValues,
 } from '@/features/qr/schemas/qr.schema'
 
 /** The sheets a tile opens, each holding every choice of its kind. */
@@ -141,9 +142,9 @@ export function CustomiseTiles({ form, logoUrl, brandColor, onOpen }: CustomiseT
                 setValue('eye_style', look.eye_style, change)
               }}
               className={cn(
-                'grid size-8 place-items-center rounded-[9px] border-[0.5px] transition-colors',
+                'grid size-8 place-items-center rounded-tile border-[0.5px] transition-colors',
                 preset === key
-                  ? 'border-[var(--accent-border)] bg-accent-wash text-accent shadow-[inset_0_0_0_1px_var(--accent-border)]'
+                  ? 'border-accent-border bg-accent-wash text-accent shadow-[inset_0_0_0_1px_var(--accent-border)]'
                   : 'border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)]',
                 'focus-ring',
               )}
@@ -193,7 +194,7 @@ export function CustomiseTiles({ form, logoUrl, brandColor, onOpen }: CustomiseT
           <TileLabel>{t('page.card')}</TileLabel>
         </span>
         <div role="radiogroup" aria-labelledby={cardId} className="flex gap-1.5">
-          {(['light', 'dark', 'brand'] as const).map((theme) => (
+          {CARD_THEMES.map((theme) => (
             <button
               key={theme}
               type="button"
@@ -202,7 +203,7 @@ export function CustomiseTiles({ form, logoUrl, brandColor, onOpen }: CustomiseT
               aria-label={t(`card.${theme}`)}
               onClick={() => setValue('card_theme', theme, change)}
               className={cn(
-                'size-8 rounded-[9px] border-[0.5px] border-[var(--line)] transition-shadow',
+                'size-8 rounded-tile border-[0.5px] border-[var(--line)] transition-shadow',
                 cardTheme === theme &&
                   'shadow-[0_0_0_2px_var(--bg),0_0_0_3.5px_var(--accent-text)]',
                 'focus-ring',

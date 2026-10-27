@@ -29,17 +29,13 @@ export function AppearancePage({ locale }: AppearancePageProps) {
   }
 
   if (page.isError) {
-    return (
-      <div className="flex flex-1 flex-col">
-        <ErrorState description={page.error.message} onRetry={() => void page.refetch()} />
-      </div>
-    )
+    return <ErrorState description={page.error.message} onRetry={() => void page.refetch()} />
   }
 
   const designName = translated(page.data.design.name as TranslatableValue, locale)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4">
       <DesignSettingsCard
         designName={designName.text}
         settings={page.data.settings}

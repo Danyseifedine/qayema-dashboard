@@ -1,11 +1,10 @@
 import type { TFunction } from 'i18next'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StatTile } from '@/shared/components/data-display'
+import { Money, StatTile } from '@/shared/components/data-display'
 import { FormSection } from '@/shared/components/forms'
 import type { Locale } from '@/shared/constants/locales'
 import { changeBetween } from '@/shared/utils/format/change'
-import { formatMoney } from '@/shared/utils/format/money'
 import { formatNumber, formatShare } from '@/shared/utils/format/number'
 import { BusyTimesChart } from '@/features/analytics/components/charts/busy-times-chart'
 import { RankedList } from '@/features/analytics/components/charts/ranked-list'
@@ -23,7 +22,7 @@ export type MenuOrdersProps = {
  */
 export function MenuOrders({ orders, locale }: MenuOrdersProps) {
   const { t } = useTranslation('analytics')
-  const money = (amount: number) => formatMoney(amount, orders.currency, locale)
+  const money = (amount: number) => <Money amount={amount} currency={orders.currency} />
   const { statuses } = orders
   const outcomes = [
     { id: 'done', value: statuses.done },
@@ -71,6 +70,7 @@ export function MenuOrders({ orders, locale }: MenuOrdersProps) {
           <Group title={t('menuOrders.topOrdered.title')}>
             <RankedList
               aria-label={t('menuOrders.topOrdered.title')}
+              locale={locale}
               empty={t('menuOrders.topOrdered.empty')}
               items={orders.top_ordered.map((dish) => ({
                 id: dish.name,
@@ -83,6 +83,7 @@ export function MenuOrders({ orders, locale }: MenuOrdersProps) {
           <Group title={t('menuOrders.outcomes.title')}>
             <RankedList
               aria-label={t('menuOrders.outcomes.title')}
+              locale={locale}
               empty={t('menuOrders.outcomes.empty')}
               items={
                 placed === 0
@@ -99,6 +100,7 @@ export function MenuOrders({ orders, locale }: MenuOrdersProps) {
           <Group title={t('menuOrders.fulfilment.title')}>
             <RankedList
               aria-label={t('menuOrders.fulfilment.title')}
+              locale={locale}
               empty={t('menuOrders.fulfilment.empty')}
               items={orders.fulfilment.map((row) => ({
                 id: row.key,

@@ -16,6 +16,8 @@ export type ComboboxFieldProps<T extends FieldValues> = {
   numeric?: boolean
   searchable?: boolean
   emptyText?: string
+  /** Told of each choice the owner makes, for fields that follow this one. */
+  onValueChange?: (value: string | null) => void
 }
 
 /** A searchable select bound to a React Hook Form field. */
@@ -31,6 +33,7 @@ export function ComboboxField<T extends FieldValues>({
   numeric = false,
   searchable = true,
   emptyText,
+  onValueChange,
 }: ComboboxFieldProps<T>) {
   const { field, fieldState } = useController({ control, name })
   const value = field.value as string | number | null | undefined
@@ -44,6 +47,7 @@ export function ComboboxField<T extends FieldValues>({
           inputRef={field.ref}
           value={value === null || value === undefined ? null : String(value)}
           onChange={(next) => {
+            onValueChange?.(next)
             if (!numeric) return field.onChange(next)
             if (next === null) return field.onChange(null)
             const parsed = Number(next)

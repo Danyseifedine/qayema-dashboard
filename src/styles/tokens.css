@@ -10,12 +10,12 @@
   --color-gold: #f8d38d;
   --color-gold-deep: #e9bd66;
 
-  /* ---- Neutrals (light) ---- */
+  /* ---- Ink, the dark text on gold; paper and sand, the image placeholders ---- */
   --color-ink: #141109;
   --color-paper: #fbfaf6;
   --color-sand: #e8dccb;
 
-  /* ---- The filled danger button, the same in both themes. Everything else
+  /* ---- The filled danger button. Everything else
      uses the semantic --status-* tokens below. ---- */
   --color-danger: #b45040;
 
@@ -38,96 +38,10 @@
 }
 
 /* ------------------------------------------------------------
-   Theme surfaces. The portal switches on html[data-theme]; we do
-   the same so a single attribute flips the whole dashboard, and
-   default to light when the attribute is absent.
+   Surfaces. The dashboard is dark only, like the website.
    ------------------------------------------------------------ */
-:root,
-html[data-theme='light'] {
-  --bg: #fbfaf6;
-  --surface: #ffffff;
-  --field: #fbfaf6;
-  --text: #141109;
-  /* Both are text colours, so both clear WCAG AA's 4.5:1 on every surface
-     and wash they sit on (tokens.test.ts); --faint is the quieter of the two. */
-  --muted: rgba(20, 17, 9, 0.62);
-  --faint: rgba(20, 17, 9, 0.6);
-  --placeholder: rgba(20, 17, 9, 0.32);
-  --line: rgba(20, 17, 9, 0.1);
-  --line-strong: rgba(20, 17, 9, 0.18);
-  --line-2: rgba(20, 17, 9, 0.06);
-  --gold-on: #b08a2c;
-  --hover-wash: rgba(20, 17, 9, 0.04);
-  /* A panel set into a card (`inset-tile`). */
-  --inset-fill: rgba(20, 17, 9, 0.05);
-  --disabled-wash: rgba(20, 17, 9, 0.04);
-  --ring-accent: rgba(248, 211, 141, 0.35);
-  --ring-danger: rgba(180, 80, 64, 0.1);
-
-  /* ---- Accent, theme-aware ----
-     `--accent-text` is gold dark enough to read on a pale surface, and on
-     an accent wash over it (4.5:1 or more, pinned by tokens.test.ts);
-     `--accent-fill` is the bright gold used behind ink. Selection washes are
-     one step stronger than a status wash because they mark state, not news. */
-  --accent-text: #82631b;
-  --accent-fill: #f8d38d;
-  --accent-wash: rgba(233, 189, 102, 0.16);
-  --accent-wash-hover: rgba(233, 189, 102, 0.24);
-  --accent-border: rgba(233, 189, 102, 0.55);
-
-  /* ---- Status, theme-aware. One alpha convention: wash .10, border .30.
-     Each colour reads at 4.5:1 on its own wash (tokens.test.ts). */
-  --status-danger: #a3483a;
-  --status-danger-wash: rgba(163, 72, 58, 0.1);
-  --status-danger-border: rgba(163, 72, 58, 0.3);
-  --status-warn: #9a5b12;
-  --status-warn-wash: rgba(154, 91, 18, 0.1);
-  --status-warn-border: rgba(154, 91, 18, 0.3);
-  --status-success: #506c46;
-  --status-success-wash: rgba(80, 108, 70, 0.1);
-  --status-success-border: rgba(80, 108, 70, 0.3);
-  --status-info: #4a6b86;
-  --status-info-wash: rgba(74, 107, 134, 0.1);
-  --status-info-border: rgba(74, 107, 134, 0.3);
-
-  /* ---- Home's tints: "is live" and a rise in green, the QR scans in violet.
-     Each reads at 4.5:1 on its own wash (tokens.test.ts). ---- */
-  --live: #1d6f3f;
-  --live-wash: rgba(29, 111, 63, 0.1);
-  --tint-violet: #5a46a8;
-  --tint-violet-wash: rgba(90, 70, 168, 0.1);
-  /* Home's cards: lifted off the page by a small shadow instead of a
-     border, and the phone picture's own shadow, light on a pale page. */
-  /* On a light page a card rests close to it: a hairline of shade right
-     under it and a wide, faint fall-off, never a dark band at its foot. */
-  --card-lift: 0 1px 2px rgba(20, 17, 9, 0.05), 0 8px 24px -14px rgba(20, 17, 9, 0.14);
-  --phone-shadow: -4px 10px 14px rgba(20, 17, 9, 0.12);
-  /* Home: a soft light falling from the top of the screen, and cards with a
-     see-through fill and light catching their top edge. */
-  --top-light: rgba(255, 255, 255, 0.7);
-  /* The phone's bottom bar, finished like Home's cards (.tab-bar): light on
-     its top edge, no border; the open tab a gold-tinted card with a small
-     shadow. */
-  --tabbar-edge:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 -1px 0 rgba(20, 17, 9, 0.04),
-    0 -10px 24px -16px rgba(20, 17, 9, 0.16);
-  --tab-on: linear-gradient(160deg, rgba(233, 189, 102, 0.3), rgba(233, 189, 102, 0.14));
-  --tab-on-edge: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 6px -4px rgba(20, 17, 9, 0.16);
-  --home-dot: rgba(20, 17, 9, 0.09);
-  --glass-fill: rgba(255, 255, 255, 0.55);
-  /* A gold-lit panel (.gold-panel): a warm fill, lighter where the glow
-     falls, inside a gold rim. */
-  --gold-panel-from: #fffaf0;
-  --gold-panel-to: #f6ecd8;
-  --gold-panel-glow: rgba(233, 189, 102, 0.24);
-  --gold-panel-rim: rgba(201, 154, 70, 0.7);
-
-  /* ---- Elevation ---- */
-  --pop-shadow: 0 24px 60px -20px rgba(20, 17, 9, 0.35), 0 4px 12px rgba(20, 17, 9, 0.06);
-  --lift-shadow: 0 12px 32px -8px rgba(20, 17, 9, 0.18), 0 2px 8px -2px rgba(20, 17, 9, 0.08);
-}
-
-html[data-theme='dark'] {
+:root {
+  color-scheme: dark;
   --bg: #000000;
   --surface: #0a0a0a;
   --field: #111111;

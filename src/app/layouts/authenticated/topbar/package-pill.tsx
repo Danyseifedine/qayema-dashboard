@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { PackageTier } from '@/app/layouts/authenticated/topbar/package-tier'
 import { cn } from '@/shared/utils/dom/cn'
 
-/** Each metal's fill and the ink on it, the same in both themes. */
+/** Each metal's fill and the ink on it. */
 const METAL: Record<PackageTier, string> = {
   bronze:
     'bg-[linear-gradient(135deg,#f3c191_0%,#c07a3a_55%,#7b4519_100%)] text-[#2a1405] shadow-[inset_0_1px_0_rgb(255_255_255/0.45)]',
@@ -19,7 +19,7 @@ const EDGE: Record<PackageTier, string> = {
   gold: 'border-[#f7c843]',
 }
 
-/** From this many days left the count turns amber. */
+/** From this many days left the number turns amber. */
 const ENDING_SOON_DAYS = 7
 
 export type PackagePillProps = {
@@ -35,8 +35,9 @@ export type PackagePillProps = {
  * Which package the restaurant is on, always visible because every limit in
  * the dashboard comes from it: a crown in its metal (bronze Free, silver Pro,
  * gold Premium), no text, and on its corner a small round count of the days
- * until it is paid again, edged in the same metal (amber in the last week). Clicking it opens the package
- * page.
+ * until it is paid again, edged in the same metal. The disc stays dark on
+ * every metal; in the last week its number turns amber (an amber disc
+ * vanished on the gold crown). Clicking it opens the package page.
  */
 export function PackagePill({ label, tier, daysLeft = null, onClick }: PackagePillProps) {
   const { t } = useTranslation()
@@ -73,10 +74,10 @@ export function PackagePill({ label, tier, daysLeft = null, onClick }: PackagePi
             'leading-none font-bold tabular-nums',
             daysLeft > 99 ? 'text-[7px]' : 'text-[8.5px]',
             EDGE[tier],
-            // Dark in both themes, with a faint edge so it still shows on black.
-            endingSoon
-              ? 'bg-[var(--status-warn)] text-white'
-              : 'bg-[#1a1712] text-[#f5f1e8] shadow-[inset_0_0_0_0.5px_rgb(255_255_255/0.28)]',
+            // Always dark, so it stands off any metal, with a faint edge so
+            // it still shows on black; the number says when it ends soon.
+            'bg-[#1a1712] shadow-[inset_0_0_0_0.5px_rgb(255_255_255/0.28)]',
+            endingSoon ? 'text-status-warn' : 'text-[#f5f1e8]',
           )}
         >
           {daysLeft > 99 ? '99+' : daysLeft}

@@ -3,11 +3,17 @@ import { Skeleton } from '@/shared/components/feedback/skeletons/skeleton'
 /**
  * Placeholder for a page whose code is still on its way: a heading and a
  * few blocks, so the layout holds still until the page itself (and then its
- * own skeleton) takes over.
+ * own skeleton) takes over. Shown only once the code is a moment late
+ * (that is the only time it is seen: a page change keeps the last page up
+ * meanwhile), so a quick first load goes straight to the page's skeleton.
  */
 export function PageSkeleton() {
   return (
-    <div aria-hidden className="flex flex-col gap-4" data-testid="page-skeleton">
+    <div
+      aria-hidden
+      className="flex flex-col gap-4 opacity-0 animate-[page-wait_200ms_ease-out_350ms_forwards]"
+      data-testid="page-skeleton"
+    >
       <Skeleton className="h-7 w-48 rounded" />
       <Skeleton className="h-4 w-80 max-w-full rounded" />
       <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -24,13 +24,27 @@ type UiState = {
   sidebarCollapsed: boolean
   /** The Overview's "How it works" guide, put away by the owner. */
   guideHidden: boolean
+  /**
+   * A dish whose builds the Build your own page brings into view as it
+   * opens (the dish window's way there); null once shown. Not remembered.
+   */
+  buildsDishId: number | null
+  /**
+   * An offer the Offers page opens in its editor as it opens (a deal dish's
+   * window's way there); null once open. Not remembered.
+   */
+  offerToEdit: number | null
   toggleSidebar: () => void
   setGuideHidden: (hidden: boolean) => void
+  showBuildsOf: (dishId: number | null) => void
+  editOffer: (offerId: number | null) => void
 }
 
 export const useUiStore = create<UiState>((set, get) => ({
   sidebarCollapsed: readFlag(COLLAPSED_KEY),
   guideHidden: readFlag(GUIDE_KEY),
+  buildsDishId: null,
+  offerToEdit: null,
   toggleSidebar: () => {
     const next = !get().sidebarCollapsed
     persistFlag(COLLAPSED_KEY, next)
@@ -40,4 +54,6 @@ export const useUiStore = create<UiState>((set, get) => ({
     persistFlag(GUIDE_KEY, hidden)
     set({ guideHidden: hidden })
   },
+  showBuildsOf: (dishId) => set({ buildsDishId: dishId }),
+  editOffer: (offerId) => set({ offerToEdit: offerId }),
 }))

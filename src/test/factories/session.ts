@@ -1,3 +1,4 @@
+import type { WritingHelpCredits, WritingHelpUses } from '@/shared/hooks/use-writing-help'
 import type { AuthUser, Plan, WhatsAppFields } from '@/features/auth'
 
 /** Every flag on: the tests of a page are about the page, not its lock. */
@@ -13,6 +14,12 @@ export const FULL_PLAN: Plan = {
   dine_in: true,
   analytics: true,
   advanced_analytics: true,
+  offers: true,
+  dine_in_whatsapp: true,
+  order_tracking: true,
+  offer_schedules: true,
+  offer_discounts: true,
+  build_your_own: true,
 }
 
 /** A WhatsApp order asking the guest for nothing, as a new restaurant starts. */
@@ -34,6 +41,12 @@ export const EMPTY_PLAN: Plan = {
   dine_in: false,
   analytics: false,
   advanced_analytics: false,
+  offers: false,
+  dine_in_whatsapp: false,
+  order_tracking: false,
+  offer_schedules: false,
+  offer_discounts: false,
+  build_your_own: false,
 }
 
 /**
@@ -60,6 +73,7 @@ export function makeSessionUser(
       public_url: 'https://qayema.test/beit-qayema',
       package: {
         slug: 'free',
+        tier: null,
         name: { en: 'Free', ar: null },
         is_contact_only: false,
         ends_at: null,
@@ -71,8 +85,12 @@ export function makeSessionUser(
         dishes: { used: 0, limit: 40 },
         categories: { used: 0, limit: 10 },
         social_links: { used: 0, limit: 2 },
+        // Room for the builds the tests' menus carry (the server's default is 3).
+        builds: { used: 0, limit: 10 },
       },
+      dishes_without_photo: 0,
       switched_off: [],
+      turned_off: [],
       ordering: {
         mode: 'whatsapp',
         types: ['delivery', 'pickup'],
@@ -83,6 +101,29 @@ export function makeSessionUser(
       plan: FULL_PLAN,
       writing_help: null,
       ...restaurant,
+    },
+  }
+}
+
+/**
+ * The writing help's state as the session sends it: the uses a day (30, all
+ * left, unless given) and the month's credits, uncapped unless given, so a
+ * test that is not about credits sees no credits line.
+ */
+export function makeWritingHelp(
+  uses: Partial<Pick<WritingHelpUses, 'limit' | 'left'>> = {},
+  credits: Partial<WritingHelpCredits> = {},
+): WritingHelpUses {
+  return {
+    limit: 30,
+    left: 30,
+    ...uses,
+    credits: {
+      limit: null,
+      left: null,
+      resets_on: '2099-11-01',
+      prices: { translation: 1, description: 3 },
+      ...credits,
     },
   }
 }

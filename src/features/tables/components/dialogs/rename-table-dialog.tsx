@@ -2,9 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
-import { Form, TextField } from '@/shared/components/forms'
-import { Alert, Button } from '@/shared/components/ui'
+import { FormDialog } from '@/shared/components/feedback'
+import { TextField } from '@/shared/components/forms'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 import { useRenameTable } from '@/features/tables/hooks/use-tables'
@@ -53,32 +52,26 @@ export function RenameTableDialog({ table, onClose }: RenameTableDialogProps) {
   )
 
   return (
-    <Modal open={open} onClose={onClose} busy={rename.isPending} size="sm">
-      <Form onSubmit={onSubmit} className="gap-0">
-        <div className="flex flex-col gap-3 p-5 pb-0">
-          <ModalHeader
-            title={t('dialog.renameTitle')}
-            description={t('dialog.renameDescription')}
-          />
-          {formError ? <Alert variant="error">{formError}</Alert> : null}
-          <TextField
-            control={form.control}
-            name="name"
-            label={t('dialog.name')}
-            placeholder={t('dialog.namePlaceholder')}
-            required
-            maxLength={TABLE_NAME_MAX}
-          />
-        </div>
-        <ModalFooter>
-          <Button variant="ghost" onClick={onClose} disabled={rename.isPending}>
-            {t('dialog.cancel')}
-          </Button>
-          <Button type="submit" loading={rename.isPending}>
-            {t('dialog.save')}
-          </Button>
-        </ModalFooter>
-      </Form>
-    </Modal>
+    <FormDialog
+      open={open}
+      onClose={onClose}
+      busy={rename.isPending}
+      size="sm"
+      title={t('dialog.renameTitle')}
+      description={t('dialog.renameDescription')}
+      error={formError}
+      onSubmit={onSubmit}
+      submitLabel={t('dialog.save')}
+    >
+      <TextField
+        className="mt-3"
+        control={form.control}
+        name="name"
+        label={t('dialog.name')}
+        placeholder={t('dialog.namePlaceholder')}
+        required
+        maxLength={TABLE_NAME_MAX}
+      />
+    </FormDialog>
   )
 }

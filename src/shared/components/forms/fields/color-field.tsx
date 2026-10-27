@@ -54,8 +54,8 @@ export function ColorField<T extends FieldValues>({
       className={cn(
         'shrink-0 cursor-pointer border-[0.5px] border-[var(--line)] bg-[var(--surface)] [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0',
         layout === 'tile'
-          ? 'size-9 rounded-[9px] p-0 sm:size-11 [&::-moz-color-swatch]:rounded-[9px] [&::-webkit-color-swatch]:rounded-[9px]'
-          : 'size-10 rounded-[var(--radius-control)] p-1 [&::-moz-color-swatch]:rounded-[6px] [&::-webkit-color-swatch]:rounded-[6px]',
+          ? 'size-9 rounded-tile p-0 sm:size-11 [&::-moz-color-swatch]:rounded-tile [&::-webkit-color-swatch]:rounded-tile'
+          : 'size-10 rounded-control p-1 [&::-moz-color-swatch]:rounded-tile [&::-webkit-color-swatch]:rounded-tile',
       )}
     />
   )

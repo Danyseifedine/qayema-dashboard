@@ -15,7 +15,8 @@ import {
   type TablerIcon,
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/shared/components/ui'
+import { ProgressBar } from '@/shared/components/data-display'
+import { Button, SectionCard } from '@/shared/components/ui'
 import type { ChecklistItem, ChecklistTarget } from '@/features/overview/utils/menu-checklist-items'
 
 export type NextStepProps = {
@@ -56,41 +57,24 @@ export function NextStep({ items, onOpen, stepsShown, onToggleSteps }: NextStepP
   const Icon = ICONS[next.id] ?? IconCircleCheck
 
   return (
-    <section
-      aria-labelledby="setup-title"
-      className="flex flex-col gap-3 glass-card rounded-card p-3.5 sm:gap-4 sm:p-5"
-    >
-      <div className="flex items-center gap-3">
-        <span
-          aria-hidden
-          className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-wash text-accent sm:size-11"
-        >
+    <SectionCard
+      icon={
+        <span className="grid size-9 place-items-center rounded-full bg-accent-wash sm:size-11">
           <IconCircleCheck className="size-[18px] sm:size-[22px]" stroke={1.6} />
         </span>
-        <h3 id="setup-title" className="min-w-0 flex-1 text-[18px] leading-tight sm:text-[22px]">
-          {t('setup.title')}
-        </h3>
+      }
+      title={t('setup.title')}
+      action={
         <span className="shrink-0 text-[12px] text-[var(--muted)] tabular-nums sm:text-[13px]">
           {t('setup.progress', { done, total: items.length })}
         </span>
-      </div>
-      <div
-        role="progressbar"
-        aria-label={t('setup.progressLabel')}
-        aria-valuemin={0}
-        aria-valuemax={items.length}
-        aria-valuenow={done}
-        className="h-1.5 overflow-hidden rounded-full bg-[var(--hover-wash)] sm:h-2"
-      >
-        <div
-          className="h-full rounded-full bg-gold transition-[width] duration-500"
-          style={{ width: `${(done / items.length) * 100}%` }}
-        />
-      </div>
+      }
+    >
+      <ProgressBar value={done} max={items.length} label={t('setup.progressLabel')} />
       <button
         type="button"
         onClick={() => onOpen(next.action.target)}
-        className="flex items-center gap-3 rounded-tile border-[0.5px] border-[var(--line)] bg-[var(--hover-wash)] p-2.5 text-start sm:p-3 focus-ring"
+        className="flex items-center gap-3 inset-tile rounded-tile p-2.5 text-start sm:p-3 focus-ring"
       >
         <span
           aria-hidden
@@ -128,6 +112,6 @@ export function NextStep({ items, onOpen, stepsShown, onToggleSteps }: NextStepP
         {stepsShown ? t('next.hideSteps') : t('next.showSteps')}
         <IconArrowRight aria-hidden className="size-4 rtl:rotate-180" />
       </Button>
-    </section>
+    </SectionCard>
   )
 }

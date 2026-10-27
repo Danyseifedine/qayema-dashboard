@@ -6,33 +6,24 @@ export type EmptyStateProps = {
   icon: TablerIcon
   title: ReactNode
   description: ReactNode
-  /** Usually the button that fills the emptiness. */
+  /** Usually the button that clears what hides everything. */
   action?: ReactNode
-  /**
-   * Grows into whatever height is left in its flex column and centres itself
-   * there, instead of sitting as a short box under the page heading. The
-   * parent has to be a flex column with a height for this to do anything.
-   */
-  fill?: boolean
 }
 
-/** Shown when a list has nothing in it yet. */
-export function EmptyState({
-  icon: Icon,
-  title,
-  description,
-  action,
-  fill = false,
-}: EmptyStateProps) {
+/**
+ * Shown when a filtered list matches nothing (an empty list gets a
+ * PictureEmptyState). It grows into the height left in its flex column and
+ * centres itself there.
+ */
+export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
     <div
       className={cn(
         'flex flex-col items-center gap-3 rounded-card border-[1.5px] border-dashed border-[var(--line-strong)]',
-        'bg-[var(--field)] px-6 py-12 text-center',
-        fill && 'flex-1 justify-center',
+        'flex-1 justify-center bg-[var(--field)] px-6 py-12 text-center',
       )}
     >
-      <span className="grid size-11 place-items-center rounded-xl bg-[var(--hover-wash)] text-[var(--muted)]">
+      <span className="grid size-11 place-items-center rounded-card bg-[var(--hover-wash)] text-[var(--muted)]">
         <Icon aria-hidden className="size-[18px]" />
       </span>
       <div className="flex flex-col gap-1">

@@ -6,7 +6,7 @@ import { formatMoney } from '@/shared/utils/format/money'
 import { DishCard, type DishCardProps } from '@/features/menu/dishes/components/list/dish-card'
 import type { Dish } from '@/features/menu/dishes/schemas/dish.schema'
 
-const usd = (amount: number) => formatMoney(amount, 'USD', 'en')
+const usd = (amount: number) => formatMoney(amount, 'USD')
 
 function renderCard(dish: Dish, props: Partial<DishCardProps> = {}) {
   const callbacks = {
@@ -17,7 +17,6 @@ function renderCard(dish: Dish, props: Partial<DishCardProps> = {}) {
   render(
     <DishCard
       dish={dish}
-      currency="USD"
       locale="en"
       handle={<span>drag</span>}
       showVariants
@@ -122,6 +121,12 @@ describe('DishCard', () => {
     expect(screen.queryByText(/add-on/)).not.toBeInTheDocument()
   })
 
+  it('shows the price in the currency of the dish', () => {
+    renderCard(makeDish({ price: '450000.00', currency: 'LBP' }))
+
+    expect(screen.getByText(/^LBP\s450,000$/)).toBeInTheDocument()
+  })
+
   it('names a dish without a name plainly, in the card and its controls', () => {
     renderCard(makeDish({ name: { en: null, ar: null }, price: null }))
 
@@ -131,5 +136,48 @@ describe('DishCard', () => {
     expect(screen.getByRole('switch', { name: 'Dish is available' })).toBeInTheDocument()
     // No photo yet: a placeholder stands in.
     expect(document.querySelector('img')).toBeNull()
+  })
+})
+
+describe('a deal dish on its card', () => {
+  const madeBy = (offer: Partial<NonNullable<Dish['offer']>>) =>
+    makeDish({
+      name: { en: 'Family meal' },
+      offer: { id: 1, title: { en: 'Pizza night' }, status: 'live', next_start: null, ...offer },
+    })
+
+  it('says it is an offer deal, on the menu while its offer runs', () => {
+    renderCard(madeBy({}))
+    expect(screen.getByText('Offer deal')).toBeInTheDocument()
+    expect(screen.getByText('On your menu while “Pizza night” runs')).toBeInTheDocument()
+  })
+
+  it('says when it comes back with its offer', () => {
+    renderCard(madeBy({ status: 'scheduled', next_start: '2026-11-13T18:00' }))
+    expect(
+      screen.getByText(/^Hidden now\. Back Nov 13, 6:00\sPM with “Pizza night”$/),
+    ).toBeInTheDocument()
+  })
+
+  it('says it is hidden while its offer is paused or over', () => {
+    renderCard(madeBy({ status: 'paused' }))
+    expect(screen.getByText('Hidden: “Pizza night” is paused')).toBeInTheDocument()
+  })
+
+  it('says when the package keeps its offer off the menu', () => {
+    renderCard(madeBy({ status: 'off' }))
+    expect(
+      screen.getByText('Hidden: your package keeps “Pizza night” off the menu'),
+    ).toBeInTheDocument()
+  })
+
+  it('reads an offer that will not start again, or has no title, as ended', () => {
+    renderCard(madeBy({ status: 'scheduled', next_start: null, title: { en: null } }))
+    expect(screen.getByText('Hidden: “Untitled offer” has ended')).toBeInTheDocument()
+  })
+
+  it('says nothing of offers on a dish of its own', () => {
+    renderCard(makeDish())
+    expect(screen.queryByText('Offer deal')).toBeNull()
   })
 })

@@ -11,6 +11,7 @@
     "dishes": "الأطباق",
     "categories": "الأقسام",
     "socialLinks": "روابط التواصل الاجتماعي",
+    "aiCredits": "أرصدة الذكاء الاصطناعي هذا الشهر",
     "forever": "بلا تاريخ انتهاء.",
     "foreverDefault": "لك ما دمت تريد.",
     "until": "حتى <date>{{date}}</date>",
@@ -25,10 +26,11 @@
     "extend": "اطلب التمديد",
     "lapsedTitle": "انتهت باقة {{name}} في {{date}}",
     "lapsedGrace": "تبقى قائمتك متاحة حتى <date>{{date}}</date>، ثم تتوقف حتى تجدّد. كل ما أنشأته محفوظ.",
-    "lapsedOffline": "قائمتك متوقفة: لا يستطيع الضيوف فتحها حتى تجدّد. كل ما أنشأته محفوظ ويعود مع {{name}}.",
+    "lapsedOffline": "قائمتك متوقفة: لا يستطيع الزبائن فتحها حتى تجدّد. كل ما أنشأته محفوظ ويعود مع {{name}}.",
     "renew": "اطلب التجديد",
     "upcoming": "تبدأ {{name}} في <date>{{date}}</date>.",
-    "includedTitle": "في باقتك"
+    "includedTitle": "في باقتك",
+    "turnedOff": "متوقفة"
   },
   "card": {
     "letsTalk": "لنتحدّث",
@@ -62,7 +64,14 @@
       "writingHelp_few": "{{number}} استخدامات يوميًا للذكاء الاصطناعي",
       "writingHelp_many": "{{number}} استخدامًا يوميًا للذكاء الاصطناعي",
       "writingHelp_other": "{{number}} استخدام يوميًا للذكاء الاصطناعي",
-      "writingHelpUnlimited": "مساعدة في الكتابة بالذكاء الاصطناعي بلا حدود"
+      "writingHelpUnlimited": "مساعدة في الكتابة بالذكاء الاصطناعي بلا حدود",
+      "writingHelpCredits_zero": "بلا أرصدة للذكاء الاصطناعي",
+      "writingHelpCredits_one": "رصيد واحد شهريًا للذكاء الاصطناعي",
+      "writingHelpCredits_two": "رصيدان شهريًا للذكاء الاصطناعي",
+      "writingHelpCredits_few": "{{number}} أرصدة شهريًا للذكاء الاصطناعي",
+      "writingHelpCredits_many": "{{number}} رصيدًا شهريًا للذكاء الاصطناعي",
+      "writingHelpCredits_other": "{{number}} رصيد شهريًا للذكاء الاصطناعي",
+      "writingHelpCreditsUnlimited": "أرصدة ذكاء اصطناعي بلا حدود"
     },
     "yours": "باقتك",
     "includedForEveryone": "متاحة للجميع",
@@ -74,12 +83,11 @@
   },
   "request": {
     "title": "استفسار عن {{name}}",
-    "description": "سنقرأ رسالتك ونردّ عليك بالبريد الإلكتروني لتفعيل باقتك. لن يتغيّر شيء ولن يُحتسب أي مبلغ قبل ذلك.",
+    "description": "سنقرأ رسالتك ونردّ عليك بالبريد الإلكتروني لتشغيل باقتك. لن يتغيّر شيء ولن يُحتسب أي مبلغ قبل ذلك.",
     "messageLabel": "هل من شيء يجب أن نعرفه؟",
     "optional": "اختياري",
     "placeholder": "كم مطعمًا لديك، وما حجم قائمتك، ومتى تحتاج الباقة.",
     "messageTooLong": "اجعل الرسالة أقل من 2000 حرف.",
-    "cancel": "إلغاء",
     "submit": "إرسال الطلب"
   },
   "toast": {
@@ -87,27 +95,67 @@
     "sentDescription": "سنتواصل معك قريبًا لإعداد ذلك.",
     "failed": "تعذّر إرسال الطلب"
   },
+  "turnedOff": {
+    "title": "متوقفة لمطعمك",
+    "description": "أوقفنا هذه الميزة لمطعمك. تواصل معنا إذا احتجت إليها من جديد.",
+    "contact": "تواصل معنا",
+    "dialogTitle": "اطلب منا إعادة تشغيلها",
+    "dialogDescription": "سنقرأ رسالتك ونردّ عليك بالبريد الإلكتروني. لن يتغيّر شيء ولن يُحتسب أي مبلغ قبل ذلك.",
+    "message": "أرجو إعادة تشغيل {{feature}} لمطعمي.",
+    "names": {
+      "multiple_languages": "اللغة الثانية للقائمة",
+      "variants": "خيارات الأطباق",
+      "addons": "إضافات الأطباق",
+      "appearance": "الألوان والخطوط",
+      "premium_designs": "التصاميم المميزة",
+      "qr_studio": "تصميم رمز QR",
+      "ordering": "الطلبات عبر واتساب (التوصيل والاستلام)",
+      "menu_ordering": "الطلب من داخل القائمة",
+      "dine_in": "طلبات الطاولات من داخل القائمة",
+      "analytics": "الإحصاءات",
+      "advanced_analytics": "الإحصاءات المتقدمة",
+      "offers": "العروض",
+      "dine_in_whatsapp": "طلبات الطاولات عبر واتساب",
+      "order_tracking": "تتبع الطلب",
+      "offer_schedules": "تحديد أوقات العروض",
+      "offer_discounts": "الخصم في العروض",
+      "build_your_own": "ميزة اصنعه على ذوقك (بيتزا نصف ونصف، كرات بوظة)"
+    }
+  },
+  "askOn": {
+    "title": "اطلب منا تفعيلها",
+    "description": "لا توجد باقة تشمل هذه الميزة: نفعّلها للمطعم عند الطلب. اطلب منا تفعيلها لمطعمك.",
+    "contact": "اطلب منا",
+    "dialogTitle": "اطلب منا تفعيلها",
+    "message": "الرجاء تفعيل {{feature}} لمطعمي."
+  },
   "rows": {
     "dish_limit": "الأطباق",
     "category_limit": "الأقسام",
     "social_link_limit": "روابط التواصل الاجتماعي",
     "writing_help_limit": "المساعدة في الكتابة بالذكاء الاصطناعي يوميًا",
+    "writing_help_credits": "أرصدة الذكاء الاصطناعي شهريًا",
     "multiple_languages": "لغة ثانية للقائمة",
     "variants": "خيارات الطبق",
     "addons": "إضافات الطبق (جبنة إضافية)",
     "appearance": "ألوانك وخطوطك",
     "premium_designs": "تصاميم مميّزة",
-    "qr_studio": "استوديو QR",
+    "qr_studio": "تصميم رمز QR",
     "ordering": "الطلبات عبر واتساب",
     "menu_ordering": "الطلبات من داخل قائمتك",
-    "dine_in": "الطلبات من الطاولة",
-    "analytics": "الإحصائيات",
-    "advanced_analytics": "تحليلات متقدمة"
+    "dine_in": "طلبات الطاولات من داخل قائمتك",
+    "analytics": "الإحصاءات",
+    "advanced_analytics": "إحصاءات متقدمة",
+    "offers": "العروض على قائمتك",
+    "dine_in_whatsapp": "طلبات الطاولات عبر واتساب",
+    "order_tracking": "تتبع الطلب للزبائن",
+    "offer_schedules": "عروض في أوقات تختارها",
+    "offer_discounts": "خصم على الأطباق في العروض"
   },
   "groups": {
     "menu": "قائمتك",
     "look": "المظهر",
-    "guests": "الضيوف",
+    "guests": "الزبائن",
     "numbers": "الأرقام"
   },
   "compare": {

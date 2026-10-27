@@ -59,15 +59,23 @@ export function toMenuTextForm(
  * menu's main language is the one every name must have. It is the form
  * text's first entry, as `toMenuTextForm()` orders it by the menu's
  * languages. `message` gets that language's name ("French").
+ *
+ * `anyLanguage`: text in either language will do, while saving fills the
+ * main one in with the writing help (useTranslateOnSave). The error still
+ * names the main language, should that fail and nothing be in it.
  */
 export function requireMainLanguage(
   text: MenuTextForm,
   path: string,
   message: (language: string) => string,
   ctx: z.RefinementCtx,
+  anyLanguage = false,
 ): void {
   const main = Object.keys(text)[0]
-  if (main !== undefined && (text[main] ?? '').trim() === '') {
+  const written = anyLanguage
+    ? Object.values(text).some((value) => (value ?? '').trim() !== '')
+    : (text[main ?? ''] ?? '').trim() !== ''
+  if (main !== undefined && !written) {
     ctx.addIssue({ code: 'custom', path: [path, main], message: message(languageName(main)) })
   }
 }

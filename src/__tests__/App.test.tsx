@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import App from '@/App'
+import { App } from '@/App'
 import type { AuthUser } from '@/features/auth'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
@@ -92,6 +92,9 @@ vi.mock('@/features/appearance/pages', () => ({
 vi.mock('@/features/design/pages', () => ({
   DesignPage: stubPage('design'),
 }))
+vi.mock('@/features/offers/pages', () => ({
+  OffersPage: stubPage('offers'),
+}))
 
 type Restaurant = NonNullable<AuthUser['restaurant']>
 
@@ -162,6 +165,7 @@ describe('App', () => {
         dishes: { used: 3, limit: 40 },
         categories: { used: 1, limit: 8 },
         social_links: { used: 0, limit: 1 },
+        builds: { used: 0, limit: 3 },
       },
     })
     renderWithProviders(<App />)
@@ -206,6 +210,8 @@ describe('App', () => {
     { path: '/qr', name: 'qr', action: 'onOpenFeatures', lands: 'features' },
     { path: '/qr', name: 'qr', action: 'onOpenPackage', lands: 'package' },
     { path: '/social-links', name: 'social-links' },
+    { path: '/offers', name: 'offers', action: 'onOpenCategories', lands: 'categories' },
+    { path: '/dishes', name: 'dishes', action: 'onOpenOffers', lands: 'offers' },
     { path: '/features', name: 'features', action: 'onOpenPackage', lands: 'package' },
     { path: '/features', name: 'features', action: 'onOpenTables', lands: 'tables' },
     { path: '/features', name: 'features', action: 'onOpenDishes', lands: 'dishes' },
@@ -366,6 +372,7 @@ describe('App', () => {
   describe('an ended package', () => {
     const lapsed = (offline: boolean) => ({
       slug: 'pro',
+      tier: null,
       name: { en: 'Pro', ar: null },
       ended_at: '2026-09-01T10:00:00+00:00',
       offline_at: '2026-09-04T10:00:00+00:00',
@@ -440,6 +447,7 @@ describe('App', () => {
       signIn({
         package: {
           slug: 'pro',
+          tier: null,
           name: { en: 'Pro', ar: 'برو' },
           is_contact_only: false,
           ends_at: '2026-10-05T00:00:00Z',
@@ -459,6 +467,7 @@ describe('App', () => {
       signIn({
         package: {
           slug: 'pro',
+          tier: null,
           name: { en: 'Pro', ar: null },
           is_contact_only: false,
           ends_at: '2026-12-01T00:00:00Z',
@@ -484,6 +493,7 @@ describe('App', () => {
       signIn({
         package: {
           slug: 'pro',
+          tier: null,
           name: { en: 'Pro', ar: 'برو' },
           is_contact_only: false,
           ends_at: null,
@@ -501,6 +511,7 @@ describe('App', () => {
       const unnamed = (slug: string | null) => ({
         package: {
           slug,
+          tier: null,
           name: { en: null, ar: null },
           is_contact_only: false,
           starts_at: null,

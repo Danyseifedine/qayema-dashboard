@@ -51,6 +51,29 @@ describe('ComboboxField', () => {
     expect(onSubmit.mock.calls[0]![0]).toEqual({ category_id: 2 })
   })
 
+  it('tells the page of each choice, for the fields that follow it', async () => {
+    const onValueChange = vi.fn()
+    function Told() {
+      const form = useForm<{ pick: string | null }>({ defaultValues: { pick: null } })
+      return (
+        <ComboboxField
+          control={form.control}
+          name="pick"
+          label="Category"
+          options={OPTIONS}
+          onValueChange={onValueChange}
+        />
+      )
+    }
+    const user = userEvent.setup()
+    render(<Told />)
+
+    await user.click(screen.getByRole('combobox', { name: /Category/ }))
+    await user.click(screen.getByRole('option', { name: 'Mains' }))
+
+    expect(onValueChange).toHaveBeenCalledWith('2')
+  })
+
   it('surfaces the schema error when nothing is chosen', async () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()

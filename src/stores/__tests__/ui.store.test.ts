@@ -53,4 +53,25 @@ describe('useUiStore', () => {
     expect(() => store.getState().toggleSidebar()).not.toThrow()
     expect(store.getState().sidebarCollapsed).toBe(true)
   })
+  it('hands the Build your own page a dish to show, once, and never remembers it', async () => {
+    const store = await loadStore()
+    expect(store.getState().buildsDishId).toBeNull()
+
+    store.getState().showBuildsOf(12)
+    expect(store.getState().buildsDishId).toBe(12)
+    store.getState().showBuildsOf(null)
+    expect(store.getState().buildsDishId).toBeNull()
+    expect(localStorage.length).toBe(0)
+  })
+
+  it('hands the Offers page an offer to open, once, and never remembers it', async () => {
+    const store = await loadStore()
+    expect(store.getState().offerToEdit).toBeNull()
+
+    store.getState().editOffer(4)
+    expect(store.getState().offerToEdit).toBe(4)
+    store.getState().editOffer(null)
+    expect(store.getState().offerToEdit).toBeNull()
+    expect(localStorage.length).toBe(0)
+  })
 })

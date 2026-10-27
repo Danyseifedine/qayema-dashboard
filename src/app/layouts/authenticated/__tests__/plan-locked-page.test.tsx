@@ -7,6 +7,7 @@ import { NAV_ITEMS, type NavItem } from '@/app/layouts/authenticated/nav-items'
 import { PlanLockedPage } from '@/app/layouts/authenticated/plan-locked-page'
 import { AnalyticsTeaser } from '@/features/analytics/components/stats/analytics-teaser'
 import { PACKAGE_CATALOGUE } from '@/test/factories/packages'
+import { EMPTY_PLAN, makeSessionUser } from '@/test/factories/session'
 import { renderWithProviders } from '@/test/render-with-providers'
 
 let mock: MockAdapter
@@ -65,6 +66,36 @@ describe('PlanLockedPage', () => {
     )
 
     expect(screen.getByText('Not on your package yet.')).toBeInTheDocument()
+  })
+
+  it('says a section the admin turned off is turned off, with no way to the packages', async () => {
+    mock.onGet('/api/user').reply(200, {
+      data: makeSessionUser({ plan: EMPTY_PLAN, turned_off: ['analytics'] }),
+    })
+    mock.onGet('/api/analytics/teaser').reply(200, { data: { views: 212 } })
+    renderWithProviders(
+      <PlanLockedPage item={item('analytics')} locale="en" onOpenPackage={vi.fn()}>
+        <AnalyticsTeaser locale="en" />
+      </PlanLockedPage>,
+    )
+
+    expect(await screen.findByText('Turned off for your restaurant')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Contact us' })).toBeInTheDocument()
+    expect(screen.queryByText('See how guests use your menu')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'See packages' })).not.toBeInTheDocument()
+    // The teaser sells the section; it is left out.
+    expect(screen.queryByText(/opened your menu this week/)).not.toBeInTheDocument()
+  })
+
+  it('offers to ask Qayema for a section no package has, never the packages', async () => {
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser({ plan: EMPTY_PLAN }) })
+    renderWithProviders(
+      <PlanLockedPage item={item('build-your-own')} locale="en" onOpenPackage={vi.fn()} />,
+    )
+
+    expect(await screen.findByText('Ask us to turn it on')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Ask us' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'See packages' })).not.toBeInTheDocument()
   })
 
   it('falls back to the section name for a section with no copy of its own', async () => {

@@ -1,51 +1,41 @@
 import { useTranslation } from 'react-i18next'
+import type { Locale } from '@/shared/constants/locales'
+import { formatShare } from '@/shared/utils/format/number'
+import { RankedList } from '@/features/analytics/components/charts/ranked-list'
 import type { AdvancedStats } from '@/features/analytics/schemas/analytics.schema'
-import { formatNumber, formatShare } from '@/shared/utils/format/number'
-import { usePreferencesStore } from '@/stores/preferences.store'
 
 export type OrderFunnelProps = {
   funnel: NonNullable<AdvancedStats['funnel']>
+  locale: Locale
 }
 
 /**
  * From opening the menu to ordering. Each step says what share of the
- * visitors got that far.
+ * visitors got that far, its bar measured against them.
  */
-export function OrderFunnel({ funnel }: OrderFunnelProps) {
+export function OrderFunnel({ funnel, locale }: OrderFunnelProps) {
   const { t } = useTranslation('analytics')
-  const locale = usePreferencesStore((state) => state.locale)
-  const steps = [
-    { id: 'visitors', label: t('funnel.visitors'), value: funnel.visitors },
-    { id: 'carted', label: t('funnel.carted'), value: funnel.carted },
-    {
-      id: 'ordered',
-      label: t(funnel.channel === 'whatsapp' ? 'funnel.sentToWhatsapp' : 'funnel.ordered'),
-      value: funnel.ordered,
-    },
-  ]
+  const step = (id: string, label: string, value: number) => ({
+    id,
+    label,
+    value,
+    detail: formatShare(funnel.visitors > 0 ? Math.min(value / funnel.visitors, 1) : 0),
+  })
 
   return (
-    <ol className="flex flex-col gap-3" aria-label={t('funnel.title')}>
-      {steps.map((step) => {
-        const share = funnel.visitors > 0 ? Math.min(step.value / funnel.visitors, 1) : 0
-        return (
-          <li key={step.id} className="flex flex-col gap-1">
-            <div className="flex items-baseline justify-between gap-3 text-[13px]">
-              <span>{step.label}</span>
-              <span className="shrink-0 tabular-nums">
-                <span className="me-2 text-[12px] text-[var(--muted)]">{formatShare(share)}</span>
-                <span className="font-semibold">{formatNumber(step.value, locale)}</span>
-              </span>
-            </div>
-            <div aria-hidden className="h-2 overflow-hidden rounded-full bg-[var(--hover-wash)]">
-              <div
-                className="h-full rounded-full bg-[var(--status-success)] transition-[width] duration-500"
-                style={{ width: `${share * 100}%` }}
-              />
-            </div>
-          </li>
-        )
-      })}
-    </ol>
+    <RankedList
+      aria-label={t('funnel.title')}
+      locale={locale}
+      max={funnel.visitors}
+      items={[
+        step('visitors', t('funnel.visitors'), funnel.visitors),
+        step('carted', t('funnel.carted'), funnel.carted),
+        step(
+          'ordered',
+          t(funnel.channel === 'whatsapp' ? 'funnel.sentToWhatsapp' : 'funnel.ordered'),
+          funnel.ordered,
+        ),
+      ]}
+    />
   )
 }

@@ -235,12 +235,17 @@ test.describe('navigation', () => {
     const sidebar = nav(page)
     await sidebar.getByRole('button', { name: 'Collapse sidebar' }).click()
     await expect(sidebar.getByRole('button', { name: 'Expand sidebar' })).toBeVisible()
-    // The rail shows icons only; each keeps its name for assistive technology.
-    await expect(sidebar.getByRole('button', { name: 'Dishes', exact: true })).toHaveAttribute(
-      'title',
-      'Dishes',
-    )
+    // The rail shows icons only; each keeps its name for assistive
+    // technology, and shows it beside the icon on hover.
+    const dishes = sidebar.getByRole('button', { name: 'Dishes', exact: true })
     await expect(sidebar.getByText('Dishes', { exact: true })).toHaveCount(0)
+    await dishes.hover()
+    const tip = page.locator('body > [aria-hidden="true"]', { hasText: 'Dishes' })
+    await expect(tip).toBeVisible()
+    const [row, box] = [await dishes.boundingBox(), await tip.boundingBox()]
+    expect(box!.x).toBeGreaterThan(row!.x + row!.width)
+    await page.mouse.move(800, 600)
+    await expect(tip).toHaveCount(0)
 
     await page.reload()
     await expect(sidebar.getByRole('button', { name: 'Expand sidebar' })).toBeVisible()
@@ -285,29 +290,14 @@ test.describe('navigation', () => {
     expect(await page.evaluate(() => localStorage.getItem('qayema.dashboard.locale.v1'))).toBe('en')
   })
 
-  test('dark mode switches on and off and is remembered', async ({ page, owner }) => {
+  test('the dashboard is dark only, with no theme switch', async ({ page, owner }) => {
     await owner({ package: 'pro' })
     await page.goto('/overview')
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
 
-    let menu = await openUserMenu(page)
-    const dark = menu.getByRole('switch', { name: 'Dark mode' })
-    await expect(dark).not.toBeChecked()
-    await dark.click()
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-    await expect(dark).toBeChecked()
-
-    const again = await page.context().newPage()
-    await again.goto('/overview')
-    await expect(again.locator('html')).toHaveAttribute('data-theme', 'dark')
-    await again.close()
-
-    await page.keyboard.press('Escape')
-    menu = await openUserMenu(page)
-    await menu.getByRole('switch', { name: 'Dark mode' }).click()
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
-    expect(await page.evaluate(() => localStorage.getItem('qayema.dashboard.theme.v1'))).toBe(
-      'light',
+    const menu = await openUserMenu(page)
+    await expect(menu.getByRole('switch')).toHaveCount(0)
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme)).toBe(
+      'dark',
     )
   })
 

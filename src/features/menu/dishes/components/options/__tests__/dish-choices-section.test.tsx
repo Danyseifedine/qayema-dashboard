@@ -46,9 +46,12 @@ function open(
       categories={CATEGORIES}
       defaultCategoryId={null}
       currency="USD"
+      secondCurrency={null}
       locale="en"
       onClose={vi.fn()}
       onOpenCategories={vi.fn()}
+      onOpenBuilds={vi.fn()}
+      onOpenOffers={vi.fn()}
     />,
   )
 }

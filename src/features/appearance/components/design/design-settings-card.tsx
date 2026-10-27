@@ -20,7 +20,7 @@ import { Button, HelperText, SectionCard } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { MIN_CONTRAST, contrast } from '@/shared/utils/color/contrast'
 import { cn } from '@/shared/utils/dom/cn'
-import { translated, type TranslatableValue } from '@/shared/utils/string/translated'
+import { nameOr, type TranslatableValue } from '@/shared/utils/string/translated'
 
 const HEX = /^#[0-9a-fA-F]{6}$/
 
@@ -47,8 +47,7 @@ function humanise(key: string): string {
 }
 
 function labelOf(setting: DesignSetting, locale: Locale): string {
-  const label = translated(setting.label as TranslatableValue, locale)
-  return label.missing ? humanise(setting.key) : label.text
+  return nameOr(setting.label as TranslatableValue, locale, humanise(setting.key))
 }
 
 /** What the form holds for a setting: never null, so every field is controlled. */
@@ -206,7 +205,7 @@ export function DesignSettingsCard({
       {dirty || saving ? (
         <FormActions
           align="between"
-          className="rounded-tile border-[0.5px] border-[var(--accent-border)] bg-accent-wash p-2.5 ps-3.5"
+          className="rounded-tile border-[0.5px] border-accent-border bg-accent-wash p-2.5 ps-3.5"
         >
           <span className="text-[13px] font-medium text-accent">{t('settings.unsaved')}</span>
           <Button type="submit" size="sm" loading={saving}>
@@ -261,9 +260,9 @@ function Tile({
   return (
     <div
       className={cn(
-        'flex flex-col rounded-tile border-[0.5px] border-[var(--line)] p-3',
-        // Frosted: the card's photo shows through it, blurred.
-        'bg-[color-mix(in_srgb,var(--bg)_45%,transparent)] backdrop-blur-md',
+        'flex flex-col rounded-tile p-3',
+        // Frosted: the card's photo shows through it, blurred (as a font's row).
+        'frost-tile',
         wide && 'col-span-full',
         span && '@min-[20rem]:col-span-2 @min-[48rem]:col-span-1',
       )}

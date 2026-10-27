@@ -1,6 +1,8 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { FontScript } from '@/features/appearance/schemas/appearance.schema'
+import { StatusChip } from '@/shared/components/data-display'
+import { optionCardClass } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
 
 export type FontOptionsProps = {
@@ -40,11 +42,10 @@ export function FontOptions({ legend, script, onChange }: FontOptionsProps) {
             <label
               key={option.family}
               className={cn(
-                'flex cursor-pointer items-center gap-3 rounded-tile border-[0.5px] p-2.5 transition-colors',
-                'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--gold-on)]',
-                checked
-                  ? 'border-[var(--gold-on)] bg-accent-wash shadow-[inset_0_0_0_0.5px_var(--gold-on)]'
-                  : 'border-[var(--line)] bg-[color-mix(in_srgb,var(--bg)_45%,transparent)] backdrop-blur-md hover:bg-[var(--hover-wash)]',
+                'flex items-center gap-3 rounded-tile p-2.5',
+                optionCardClass(checked),
+                // Frosted, as a setting's tile on the design's card.
+                !checked && 'frost-tile hover:bg-[var(--hover-wash)]',
               )}
             >
               <input
@@ -58,7 +59,7 @@ export function FontOptions({ legend, script, onChange }: FontOptionsProps) {
               <span
                 aria-hidden
                 dir="auto"
-                className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-[var(--hover-wash)] text-[18px] text-accent sm:size-11 sm:text-[20px]"
+                className="grid size-10 shrink-0 place-items-center rounded-tile bg-[var(--hover-wash)] text-[18px] text-accent sm:size-11 sm:text-[20px]"
                 style={font}
               >
                 {glyph}
@@ -78,9 +79,7 @@ export function FontOptions({ legend, script, onChange }: FontOptionsProps) {
                 </span>
               </span>
               {option.family === script.default ? (
-                <span className="shrink-0 rounded-full border-[0.5px] border-[var(--line-strong)] px-2 py-0.5 text-[10.5px] text-[var(--muted)]">
-                  {t('fonts.default')}
-                </span>
+                <StatusChip tone="faded">{t('fonts.default')}</StatusChip>
               ) : null}
             </label>
           )

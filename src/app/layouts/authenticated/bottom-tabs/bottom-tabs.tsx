@@ -68,7 +68,7 @@ export function BottomTabs({ tabs, activeKey, onSelect, counts = NO_COUNTS }: Bo
           aria-hidden
           style={{ '--tab': index } as CSSProperties}
           className={cn(
-            'pointer-events-none absolute inset-y-0 start-0 w-[calc((100%-1.125rem)/4)] rounded-[14px]',
+            'pointer-events-none absolute inset-y-0 start-0 w-[calc((100%-1.125rem)/4)] rounded-card',
             'bg-[image:var(--tab-on)] shadow-[var(--tab-on-edge)]',
             '[transform:translateX(calc(var(--tab)*(100%+0.375rem)))]',
             'rtl:[transform:translateX(calc(var(--tab)*-1*(100%+0.375rem)))]',
@@ -86,7 +86,7 @@ export function BottomTabs({ tabs, activeKey, onSelect, counts = NO_COUNTS }: Bo
               onClick={() => select(tab.key)}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'relative grid justify-items-center gap-0.5 rounded-[14px] py-1.5 text-[11px]',
+                'relative grid justify-items-center gap-0.5 rounded-card py-1.5 text-[11px]',
                 'transition-colors duration-200',
                 'focus-ring',
                 active ? 'font-semibold text-accent' : 'font-medium text-[var(--muted)]',
@@ -108,7 +108,7 @@ export function BottomTabs({ tabs, activeKey, onSelect, counts = NO_COUNTS }: Bo
                 // Labelled like the sidebar's count, so the tab reads "Orders, 3 orders waiting".
                 <span
                   aria-label={t('sidebar.waiting', { count: waiting })}
-                  className="absolute top-1 start-[calc(50%+6px)] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[var(--status-warn)] px-1 text-[11px] font-bold text-white ring-2 ring-[var(--bg)] tabular-nums"
+                  className="absolute top-1 start-[calc(50%+6px)] grid h-[18px] min-w-[18px] place-items-center rounded-full bg-status-warn px-1 text-[11px] font-bold text-white ring-2 ring-[var(--bg)] tabular-nums"
                 >
                   {waiting}
                 </span>

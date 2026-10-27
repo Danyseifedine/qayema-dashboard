@@ -9,7 +9,7 @@ import {
   dishCollectionSchema,
   dishListSchema,
   dishResponseSchema,
-  type Dish,
+  type ApiDish,
   type DishList,
 } from '@/features/menu/dishes/schemas/dish.schema'
 
@@ -20,6 +20,8 @@ export type DishPayload = {
   price: number | null
   category_id: number
   is_available: boolean
+  /** The main currency or the second; left out without a second currency. */
+  currency?: string
   /** Temp-upload key from POST /api/uploads/temp. */
   image_key?: string
   delete_image?: boolean
@@ -38,7 +40,7 @@ export function fetchDishes(signal?: AbortSignal): Promise<DishList> {
   return request(dishListSchema, { method: 'GET', url: '/api/dishes', signal })
 }
 
-export async function createDish(payload: DishPayload): Promise<Dish> {
+export async function createDish(payload: DishPayload): Promise<ApiDish> {
   const { data } = await request(dishResponseSchema, {
     method: 'POST',
     url: '/api/dishes',
@@ -52,7 +54,7 @@ export async function createDish(payload: DishPayload): Promise<Dish> {
  * blank one clears it; a language the menu no longer uses is never sent and
  * stays saved on the server.
  */
-export async function updateDish(id: number, payload: DishPayload): Promise<Dish> {
+export async function updateDish(id: number, payload: DishPayload): Promise<ApiDish> {
   const { data } = await request(dishResponseSchema, {
     method: 'PATCH',
     url: `/api/dishes/${id}`,
@@ -66,7 +68,7 @@ export async function deleteDish(id: number): Promise<void> {
 }
 
 /** PATCH only; a PUT here is a 405. Returns the full dish. */
-export async function setDishAvailability(id: number, isAvailable: boolean): Promise<Dish> {
+export async function setDishAvailability(id: number, isAvailable: boolean): Promise<ApiDish> {
   const { data } = await request(dishResponseSchema, {
     method: 'PATCH',
     url: `/api/dishes/${id}/availability`,
@@ -79,7 +81,7 @@ export async function setDishAvailability(id: number, isAvailable: boolean): Pro
  * Renumbers `display_order` across the whole restaurant in the given order.
  * A dish changes category through the edit dialog, not through dragging.
  */
-export async function reorderDishes(ids: number[]): Promise<Dish[]> {
+export async function reorderDishes(ids: number[]): Promise<ApiDish[]> {
   const { data } = await request(dishCollectionSchema, {
     method: 'POST',
     url: '/api/dishes/reorder',

@@ -3,9 +3,10 @@ import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AuthRestaurant } from '@/features/auth'
+import type { Dish } from '@/features/menu'
 import { api } from '@/lib/api/client'
 import { makeDish } from '@/test/factories/menu'
-import { makeSessionUser } from '@/test/factories/session'
+import { FULL_PLAN, makeSessionUser } from '@/test/factories/session'
 import { renderWithProviders } from '@/test/render-with-providers'
 import { DishPicker } from '@/features/orders/components/edit/dish-picker'
 
@@ -35,12 +36,59 @@ const SOUP = makeDish({
   is_available: false,
 })
 
-function open(session: Partial<AuthRestaurant> = {}) {
+function built(overrides: Partial<Dish>, builds: Dish['builds']): Dish {
+  return makeDish({ ...overrides, builds })
+}
+
+// A pizza of two halves or whole, from the Pizzas category; Margherita has
+// a half priced at $7, Pepperoni pays half of $16.
+const PIZZA = built({ id: 100, name: { en: 'Pizza', ar: null }, price: '2.00', category_id: 2 }, [
+  {
+    id: 4,
+    name: { en: 'Your pizza' },
+    shape: 'split',
+    parts: [1, 2],
+    category_id: 2,
+    dish_ids: null,
+    choices: [{ id: 1, dish_id: 12, name: null, price: null, part_prices: { '2': '7.00' } }],
+  },
+])
+const MARGHERITA = makeDish({
+  id: 12,
+  name: { en: 'Margherita', ar: null },
+  price: '12.00',
+  category_id: 2,
+})
+const PEPPERONI = makeDish({
+  id: 13,
+  name: { en: 'Pepperoni', ar: null },
+  price: '16.00',
+  category_id: 2,
+})
+// Two scoops, no price but theirs.
+const SCOOPS = built({ id: 200, name: { en: 'Ice cream', ar: null }, price: null }, [
+  {
+    id: 5,
+    name: { en: 'Your scoops' },
+    shape: 'pieces',
+    parts: [2],
+    category_id: null,
+    dish_ids: null,
+    choices: [
+      { id: 50, dish_id: null, name: { en: 'Vanilla' }, price: '2.00', part_prices: {} },
+      { id: 51, dish_id: null, name: { en: 'Chocolate' }, price: '2.50', part_prices: {} },
+    ],
+  },
+])
+
+function open(session: Partial<AuthRestaurant> = {}, dishes: Dish[] = [BURGER, SOUP]) {
   mock.onGet('/api/user').reply(200, { data: makeSessionUser({ languages: ['en'], ...session }) })
   const onAdd = vi.fn()
-  renderWithProviders(<DishPicker dishes={[BURGER, SOUP]} currency="USD" onAdd={onAdd} />)
+  renderWithProviders(<DishPicker dishes={dishes} onAdd={onAdd} />)
   return { onAdd, user: userEvent.setup() }
 }
+
+const BUILT_MENU = [PIZZA, MARGHERITA, PEPPERONI, SCOOPS]
 
 describe('DishPicker', () => {
   beforeEach(() => {
@@ -74,7 +122,7 @@ describe('DishPicker', () => {
     expect(screen.getByText('$8.00')).toBeInTheDocument()
 
     await user.click(size)
-    expect(screen.getByRole('option', { name: /^Large/ })).toHaveTextContent('+3.00')
+    expect(screen.getByRole('option', { name: /^Large/ })).toHaveTextContent('+$3.00')
     // A free option shows no price beside it.
     expect(screen.getByRole('option', { name: 'Small' })).toBeInTheDocument()
     await user.click(screen.getByRole('option', { name: /^Large/ }))
@@ -82,7 +130,7 @@ describe('DishPicker', () => {
     expect(screen.getByText('$11.00')).toBeInTheDocument()
 
     const cheese = screen.getByRole('switch', { name: 'Extra cheese' })
-    expect(within(cheese.closest('li')!).getByText('+1.00')).toBeInTheDocument()
+    expect(within(cheese.closest('li')!).getByText('+$1.00')).toBeInTheDocument()
     await user.click(cheese)
     expect(screen.getByText('$12.00')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'How many +1' }))
@@ -160,6 +208,134 @@ describe('DishPicker', () => {
 
     expect(onAdd).toHaveBeenCalledExactlyOnceWith({
       dish_id: 5,
+      quantity: 1,
+      options: [],
+      addons: [],
+    })
+  })
+
+  it('asks for every part of a build before adding, prices it, and sends what was built', async () => {
+    const { onAdd, user } = open({}, BUILT_MENU)
+
+    await user.click(screen.getByRole('combobox', { name: 'Dish' }))
+    await user.click(await screen.findByRole('option', { name: 'Pizza' }))
+
+    const add = screen.getByRole('button', { name: 'Add' })
+    expect(add).toBeDisabled()
+    expect(screen.getByRole('group', { name: 'Your pizza' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('combobox', { name: 'Your pizza: how many' }))
+    expect(screen.getByRole('option', { name: 'Whole' })).toBeInTheDocument()
+    await user.click(screen.getByRole('option', { name: 'Half & half' }))
+
+    await user.click(screen.getByRole('combobox', { name: 'Your pizza, part 1' }))
+    // A set half price, else half of the whole.
+    expect(screen.getByRole('option', { name: /^Margherita/ })).toHaveTextContent('+$7.00')
+    expect(screen.getByRole('option', { name: /^Pepperoni/ })).toHaveTextContent('+$8.00')
+    await user.click(screen.getByRole('option', { name: /^Margherita/ }))
+    // One half is not a pizza yet.
+    expect(add).toBeDisabled()
+    expect(screen.getByText('$2.00')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('combobox', { name: 'Your pizza, part 2' }))
+    await user.click(screen.getByRole('option', { name: /^Pepperoni/ }))
+    expect(add).toBeEnabled()
+    expect(screen.getByText('$17.00')).toBeInTheDocument()
+    await user.click(add)
+
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith({
+      dish_id: 100,
+      quantity: 1,
+      options: [],
+      addons: [],
+      builds: [{ build: 4, parts: ['d12', 'd13'] }],
+    })
+    expect(screen.queryByRole('group', { name: 'Your pizza' })).not.toBeInTheDocument()
+  })
+
+  it('keeps the parts already picked when the count changes', async () => {
+    const { onAdd, user } = open({}, BUILT_MENU)
+
+    await user.click(screen.getByRole('combobox', { name: 'Dish' }))
+    await user.click(await screen.findByRole('option', { name: 'Pizza' }))
+    await user.click(screen.getByRole('combobox', { name: 'Your pizza: how many' }))
+    await user.click(screen.getByRole('option', { name: 'Half & half' }))
+    await user.click(screen.getByRole('combobox', { name: 'Your pizza, part 1' }))
+    await user.click(screen.getByRole('option', { name: /^Pepperoni/ }))
+
+    await user.click(screen.getByRole('combobox', { name: 'Your pizza: how many' }))
+    await user.click(screen.getByRole('option', { name: 'Whole' }))
+
+    // A whole is the choice alone, at its full price.
+    const whole = screen.getByRole('combobox', { name: 'Your pizza' })
+    expect(whole).toHaveValue('Pepperoni')
+    expect(screen.getByText('$18.00')).toBeInTheDocument()
+    await user.click(whole)
+    expect(screen.getByRole('option', { name: /^Margherita/ })).toHaveTextContent('+$12.00')
+    // Escape on the open list picks nothing new.
+    await user.keyboard('{Escape}')
+    expect(whole).toHaveValue('Pepperoni')
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ builds: [{ build: 4, parts: ['d13'] }] }),
+    )
+  })
+
+  it('asks no count when the build allows one, and sells a dish its build alone prices', async () => {
+    const { onAdd, user } = open({}, BUILT_MENU)
+
+    await user.click(screen.getByRole('combobox', { name: 'Dish' }))
+    await user.click(await screen.findByRole('option', { name: 'Ice cream' }))
+
+    expect(screen.queryByRole('combobox', { name: 'Your scoops: how many' })).toBeNull()
+    await user.click(screen.getByRole('combobox', { name: 'Your scoops, part 1' }))
+    expect(screen.getByRole('option', { name: /^Chocolate/ })).toHaveTextContent('+$2.50')
+    await user.click(screen.getByRole('option', { name: /^Chocolate/ }))
+    await user.click(screen.getByRole('combobox', { name: 'Your scoops, part 2' }))
+    await user.click(screen.getByRole('option', { name: /^Vanilla/ }))
+    expect(screen.getByText('$4.50')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'How many +1' }))
+    expect(screen.getByText('$9.00')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith({
+      dish_id: 200,
+      quantity: 2,
+      options: [],
+      addons: [],
+      builds: [{ build: 5, parts: ['c51', 'c50'] }],
+    })
+  })
+
+  it('forgets the parts of a build when another dish is picked', async () => {
+    const { user } = open({}, BUILT_MENU)
+
+    await user.click(screen.getByRole('combobox', { name: 'Dish' }))
+    await user.click(await screen.findByRole('option', { name: 'Ice cream' }))
+    await user.click(screen.getByRole('combobox', { name: 'Your scoops, part 1' }))
+    await user.click(screen.getByRole('option', { name: /^Chocolate/ }))
+
+    await user.click(screen.getByRole('combobox', { name: 'Dish' }))
+    await user.click(screen.getByRole('option', { name: 'Pizza' }))
+    await user.click(screen.getByRole('combobox', { name: 'Dish' }))
+    await user.click(screen.getByRole('option', { name: 'Ice cream' }))
+
+    expect(screen.getByRole('combobox', { name: 'Your scoops, part 1' })).toHaveValue('')
+  })
+
+  it('asks no builds without them on the package, and leaves out a dish only they price', async () => {
+    const { onAdd, user } = open({ plan: { ...FULL_PLAN, build_your_own: false } }, BUILT_MENU)
+
+    await user.click(screen.getByRole('combobox', { name: 'Dish' }))
+    expect(await screen.findByRole('option', { name: 'Pizza' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Ice cream' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('option', { name: 'Pizza' }))
+
+    expect(screen.queryByRole('group', { name: 'Your pizza' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith({
+      dish_id: 100,
       quantity: 1,
       options: [],
       addons: [],

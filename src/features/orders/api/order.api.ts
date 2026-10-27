@@ -11,15 +11,21 @@ import {
   type OrderStatus,
 } from '@/features/orders/schemas/order.schema'
 
+/** One page of orders of a kind, with a status or all; the first page asks no `page`. */
 export function fetchOrders(
   kind: OrderKind,
   status: OrderStatus | null,
+  page: number,
   signal?: AbortSignal,
 ): Promise<OrderList> {
   return request(orderListSchema, {
     method: 'GET',
     url: '/api/orders',
-    params: status === null ? { kind } : { kind, status },
+    params: {
+      kind,
+      ...(status === null ? {} : { status }),
+      ...(page > 1 ? { page } : {}),
+    },
     signal,
   })
 }
@@ -59,7 +65,14 @@ export async function setOrderStatus(
 export type OrderEdit = {
   /** Each line kept, with its quantity; a line left out (or at 0) goes. */
   items: { id: number; quantity: number }[]
-  add: { dish_id: number; quantity: number; options: number[]; addons: number[] }[]
+  add: {
+    dish_id: number
+    quantity: number
+    options: number[]
+    addons: number[]
+    /** A dish built from parts: each build and the key of each part's choice. */
+    builds?: { build: number; parts: string[] }[]
+  }[]
   /** The version the card showed, as with a status change. */
   guest_updates?: number
 }

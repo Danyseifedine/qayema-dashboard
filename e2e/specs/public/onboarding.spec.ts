@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test'
 import { either, expect, test, type Owner, type ScenarioInput } from '../../support/fixtures'
 import { API_URL, DASHBOARD_URL } from '../../support/urls'
-import { closeSidebar, fixtureFile, openSidebar } from '../../support/helpers'
+import { callApi, closeSidebar, fixtureFile, openSidebar } from '../../support/helpers'
 
 const ONBOARDING_URL = `${API_URL}/onboarding`
 
@@ -64,8 +64,11 @@ test.describe('onboarding', () => {
     const currency = page.getByLabel(/^\s*(Currency|العملة)/)
     await currency.click()
     await currency.fill('EUR')
-    await page.locator('.ui-menu-item', { hasText: 'Euro' }).click()
+    await page.locator('.ui-menu-item:visible', { hasText: 'Euro' }).click()
     await expect(page.locator('input[name="currency"]')).toHaveValue('EUR')
+    // Dollars are suggested beside euros, with the rate to type.
+    await expect(page.locator('input[name="second_currency"]')).toHaveValue('USD')
+    await page.locator('input#rate').fill('0.92')
     await w.next.click()
 
     // Step 3 (branding): a logo is required, a cover is optional.
@@ -102,6 +105,169 @@ test.describe('onboarding', () => {
     const menu = await page.request.get(`${API_URL}/${slug}`)
     expect(menu.status()).toBe(200)
     expect(await menu.text()).toContain(name)
+  })
+
+  test('step 2 suggests a second currency from the main one and the phone, with its rate', async ({
+    page,
+    scenario,
+    signIn,
+  }) => {
+    await startOnboarding(page, scenario, signIn)
+    const w = wizard(page)
+    const { name } = uniqueName('Two Coins')
+    await w.name.fill(name)
+    await expect(page.getByText('This link is available.')).toBeVisible()
+    await w.next.click()
+    await w.step(2)
+    await w.phone.fill('70 123 456')
+
+    const second = page.locator('input[name="second_currency"]')
+    const rate = page.locator('input#rate')
+    const rateRow = page.locator('.rate-wrap')
+    // A menu in dollars, a Lebanese phone: pounds beside, at the usual rate.
+    await expect(second).toHaveValue('LBP')
+    await expect(rate).toHaveValue('89000')
+    await expect(rateRow).toContainText('1 USD =')
+    await expect(rateRow).toContainText('LBP')
+
+    // A menu in pounds: dollars beside, the same rate the dollar way round.
+    const currency = page.getByLabel(/^\s*(Currency|العملة)/)
+    await currency.click()
+    await currency.fill('LBP')
+    await page.locator('.ui-menu-item:visible', { hasText: 'Lebanese Pound' }).click()
+    await expect(second).toHaveValue('USD')
+    await expect(rate).toHaveValue('89000')
+    await expect(rateRow).toContainText('1 USD =')
+
+    // Back to dollars with an Emirati phone: dirhams beside, a rate to type.
+    await currency.click()
+    await currency.fill('USD')
+    await page.locator('.ui-menu-item:visible', { hasText: 'US Dollar' }).click()
+    await page.locator('.ui-phone-trigger').click()
+    await page.locator('.ui-phone-item', { hasText: 'United Arab Emirates' }).click()
+    await expect(second).toHaveValue('AED')
+    await expect(rate).toHaveValue('')
+    await w.next.click()
+    await expect(w.error('Enter the exchange rate.')).toBeVisible()
+
+    await rate.fill('3.6725')
+    const saved = page.waitForResponse((response) => response.url().endsWith('/onboarding/advance'))
+    await w.next.click()
+    expect((await saved).ok()).toBeTruthy()
+    await w.step(3)
+  })
+
+  test('the second currency set up in onboarding is the one the dashboard and the menu use', async ({
+    page,
+    scenario,
+    signIn,
+  }) => {
+    await startOnboarding(page, scenario, signIn)
+    const w = wizard(page)
+    const { name, slug } = uniqueName('Beit Lira')
+    await w.name.fill(name)
+    await expect(page.getByText('This link is available.')).toBeVisible()
+    await w.next.click()
+
+    // Dollars and a Lebanese phone: pounds beside, at 89,000.
+    await w.step(2)
+    await w.phone.fill('70 123 456')
+    await expect(page.locator('input[name="second_currency"]')).toHaveValue('LBP')
+    await expect(page.locator('input#rate')).toHaveValue('89000')
+    await w.next.click()
+    await w.step(3)
+    await w.logo.setInputFiles(fixtureFile('logo.png'))
+    await expect(page.locator('input[name="logo_key"]')).toHaveCount(1)
+    await w.next.click()
+    await expect(page).toHaveURL(`${DASHBOARD_URL}/design`)
+    await page
+      .getByRole('article')
+      .filter({ has: page.getByRole('heading', { name: either('Classic', 'كلاسيك') }) })
+      .getByRole('button', { name: either('Use this design', 'استخدم هذا التصميم') })
+      .click()
+    await expect(
+      page.getByRole('button', { name: either('Currently in use', 'مُستخدم حاليًا') }),
+    ).toBeVisible()
+
+    // The Restaurant page reads it back the same way round.
+    await page.goto(`${DASHBOARD_URL}/restaurant`)
+    await expect(page.getByRole('combobox', { name: /Second currency/ })).toHaveValue(/LBP/)
+    await expect(page.getByRole('tab', { name: '1 USD' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByLabel(/Exchange rate/)).toHaveValue(/^89,?000$/)
+
+    // A dish in pounds and one in dollars, each in its own money on the menu.
+    const category = await callApi(page, 'POST', '/api/categories', { name: { en: 'Grills' } })
+    expect(category.status()).toBe(201)
+    const categoryId = ((await category.json()) as { data: { id: number } }).data.id
+    const kafta = await callApi(page, 'POST', '/api/dishes', {
+      name: { en: 'Kafta' },
+      price: 445000,
+      currency: 'LBP',
+      category_id: categoryId,
+    })
+    expect(kafta.status()).toBe(201)
+    expect(((await kafta.json()) as { data: { currency: string } }).data.currency).toBe('LBP')
+    await callApi(page, 'POST', '/api/dishes', {
+      name: { en: 'Burger' },
+      price: 5,
+      category_id: categoryId,
+    })
+
+    await page.goto(`${API_URL}/${slug}`)
+    await expect(page.locator('article.dish', { hasText: 'Kafta' }).locator('.price')).toHaveText(
+      'L.L 445,000',
+    )
+    await expect(page.locator('article.dish', { hasText: 'Burger' }).locator('.price')).toHaveText(
+      '$5',
+    )
+    // The pound dish carries the rate its cart line is counted at (dollars per pound).
+    await expect(page.locator('article.dish', { hasText: 'Kafta' })).toHaveAttribute(
+      'data-rate',
+      '0.000011235955',
+    )
+  })
+
+  test('no second currency asks for no rate, and stays chosen when coming back', async ({
+    page,
+    scenario,
+    signIn,
+  }) => {
+    await startOnboarding(page, scenario, signIn)
+    const w = wizard(page)
+    const { name } = uniqueName('Plain Coins')
+    await w.name.fill(name)
+    await expect(page.getByText('This link is available.')).toBeVisible()
+    await w.next.click()
+    await w.step(2)
+    await w.phone.fill('70 123 456')
+
+    const second = page.locator('input[name="second_currency"]')
+    await expect(second).toHaveValue('LBP')
+    const secondPicker = page.getByLabel(/^\s*Second currency/)
+    await secondPicker.click()
+    await page.locator('.ui-menu-item:visible', { hasText: 'None' }).click()
+    await expect(second).toHaveValue('')
+    await expect(page.locator('input#rate')).toBeHidden()
+
+    // The owner's "none" holds when the phone's country changes.
+    await page.locator('.ui-phone-trigger').click()
+    await page.locator('.ui-phone-item', { hasText: 'United Arab Emirates' }).click()
+    await expect(second).toHaveValue('')
+
+    await w.next.click()
+    await w.step(3)
+    await w.back.click()
+    await w.step(2)
+    await expect(second).toHaveValue('')
+    await expect(page.locator('input#rate')).toBeHidden()
+
+    // Saved as none: a reload (it opens on the furthest step) does not suggest pounds over it.
+    await page.reload()
+    await w.step(3)
+    await w.back.click()
+    await w.step(2)
+    await expect(second).toHaveValue('')
+    await expect(page.locator('input#rate')).toBeHidden()
   })
 
   test('a link someone already has is shown as taken and cannot be used', async ({
@@ -238,6 +404,8 @@ test.describe('onboarding', () => {
     // Without a cover (it is optional), a logo is enough to finish.
     await w.logo.setInputFiles(fixtureFile('logo.png'))
     await expect(page.locator('input[name="logo_key"]')).toHaveCount(1)
+    // The logo answers the error at once, not only on the next Finish.
+    await expect(w.error('Please upload a logo to continue.')).toHaveCount(0)
     await w.next.click()
     await expect(page).toHaveURL(`${DASHBOARD_URL}/design`)
   })

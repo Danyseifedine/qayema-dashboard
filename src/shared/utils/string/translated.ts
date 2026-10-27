@@ -23,3 +23,9 @@ export function translated(
 
   return { text: '', isFallback: false, missing: true, language: null }
 }
+
+/** The text for a language, or `fallback` (a slug, "Untitled") when it has none in any. */
+export function nameOr(value: TranslatableValue, locale: string, fallback: string): string {
+  const name = translated(value, locale)
+  return name.missing ? fallback : name.text
+}

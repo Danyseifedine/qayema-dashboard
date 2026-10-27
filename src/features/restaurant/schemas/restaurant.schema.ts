@@ -1,6 +1,8 @@
 import { z } from 'zod'
+import { MENU_TEXT_LIMITS } from '@/shared/constants/menu-text-limits'
 import { imageFieldSchema } from '@/features/uploads'
-import { MAX_SHIFTS, shiftProblem } from '@/features/restaurant/utils/time-options'
+import { shiftProblem } from '@/shared/utils/format/clock'
+import { MAX_SHIFTS } from '@/features/restaurant/utils/time-options'
 import { t } from '@/lib/i18n'
 import { CURRENCIES } from '@/shared/constants/currencies'
 import { COUNTRIES } from '@/shared/constants/countries'
@@ -74,6 +76,13 @@ export const restaurantResponseSchema = z.object({
     phone: z.string().nullable(),
     country_code: z.string().nullable(),
     currency: z.string(),
+    /** One more currency some dishes may be priced in; null for none. */
+    second_currency: z.string().nullable().default(null),
+    /**
+     * What one of the second currency is worth in the main one, as a decimal
+     * string (main LBP, second USD: "89000"); null without a second currency.
+     */
+    exchange_rate: z.string().nullable().default(null),
     opening_hours: openingHoursSchema,
     timezone: z.string(),
     logo_url: z.url().nullable(),
@@ -129,8 +138,12 @@ const dayFormSchema = z
 export const restaurantFormSchema = z
   .object({
     /** One entry per menu language; the main one is required. */
-    name: menuTextField(255, () => t('restaurant:fields.restaurantName')),
-    description: menuTextField(2000, () => t('restaurant:fields.description')),
+    name: menuTextField(MENU_TEXT_LIMITS.restaurantName, () =>
+      t('restaurant:fields.restaurantName'),
+    ),
+    description: menuTextField(MENU_TEXT_LIMITS.restaurantDescription, () =>
+      t('restaurant:fields.description'),
+    ),
 
     google_maps_url: z
       .union([
@@ -158,6 +171,15 @@ export const restaurantFormSchema = z
     currency: z.string().refine((value) => CURRENCY_CODES.includes(value), {
       error: () => t('restaurant:validation.chooseCurrency'),
     }),
+
+    /** Empty (or null, once cleared) for none. */
+    second_currency: z.string().nullable(),
+    /**
+     * The exchange rate as the owner types it: `rate_one` says which
+     * currency is the 1 ("1 USD = 89,000 LBP" or "1 LBP = ... USD").
+     */
+    rate_one: z.enum(['second', 'main']),
+    rate: z.number().nullable(),
 
     /** Replaced through a temp upload; the logo can never be cleared. */
     logo: imageFieldSchema,
@@ -187,10 +209,42 @@ export const restaurantFormSchema = z
         ctx,
       )
       checkNames(values.name, ctx)
+      checkSecondCurrency(values, ctx)
     },
     // Also when another field is wrong, so one submit shows every problem.
     { when: () => true },
   )
+
+/** A second currency is one on the list, not the main one, and comes with a rate above 0. */
+function checkSecondCurrency(
+  values: { currency: string; second_currency: string | null; rate: number | null },
+  ctx: z.RefinementCtx,
+): void {
+  if (!values.second_currency) return
+  if (
+    values.second_currency === values.currency ||
+    !CURRENCY_CODES.includes(values.second_currency)
+  ) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['second_currency'],
+      message: t('restaurant:validation.secondCurrencyInvalid'),
+    })
+  }
+  if (values.rate === null) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['rate'],
+      message: t('restaurant:validation.rateRequired'),
+    })
+  } else if (values.rate <= 0) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['rate'],
+      message: t('restaurant:validation.ratePositive'),
+    })
+  }
+}
 
 /** What the server checks on every written name: two characters, no control characters. */
 function checkNames(name: MenuTextForm, ctx: z.RefinementCtx): void {

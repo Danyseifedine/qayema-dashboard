@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import { StatTile } from '@/shared/components/data-display'
+import type { Locale } from '@/shared/constants/locales'
+import { cn } from '@/shared/utils/dom/cn'
 import { changeBetween } from '@/shared/utils/format/change'
 import { formatNumber } from '@/shared/utils/format/number'
 import type { StatsSummary } from '@/features/analytics/schemas/analytics.schema'
-import { usePreferencesStore } from '@/stores/preferences.store'
 
 export type SummaryTilesProps = {
   totals: StatsSummary['totals']
@@ -17,20 +18,35 @@ export type SummaryTilesProps = {
   previous?: StatsSummary['previous']
   /** "N today" under the views; left out when the range is today itself. */
   showToday?: boolean
+  locale: Locale
 }
 
 /** The headline numbers for the range. */
-export function SummaryTiles({ totals, channel, previous, showToday = true }: SummaryTilesProps) {
+export function SummaryTiles({
+  totals,
+  channel,
+  previous,
+  showToday = true,
+  locale,
+}: SummaryTilesProps) {
   const { t } = useTranslation('analytics')
-  const locale = usePreferencesStore((state) => state.locale)
   const change = (key: 'views' | 'unique_visitors' | 'qr_scans' | 'orders', current: number) => {
     if (previous === undefined) return undefined
     const before = previous?.[key]
     return before === null || before === undefined ? null : changeBetween(current, before)
   }
 
+  // Without orders there are three tiles: they share the row, and on a phone
+  // the third takes the full width, so no gap is left beside them.
+  const withOrders = totals.orders !== null
+
   return (
-    <dl className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+    <dl
+      className={cn(
+        'grid grid-cols-2 gap-2.5',
+        withOrders ? 'lg:grid-cols-4' : 'lg:grid-cols-3 max-lg:*:last:col-span-2',
+      )}
+    >
       <StatTile
         standalone
         label={t('summary.views')}

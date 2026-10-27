@@ -19,6 +19,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
     status: 'accepted',
     currency: 'USD',
     total: '24.00',
+    exchange_rate: null,
     note: null,
     fulfilment: 'pickup',
     table: null,
@@ -42,6 +43,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
         unit_price: '12.00',
         quantity: 2,
         line_total: '24.00',
+        currency: 'USD',
       },
     ],
     ...overrides,
@@ -110,7 +112,9 @@ describe('EditOrderDialog', () => {
 
     expect(within(dialog).getByRole('heading', { name: 'Edit order ABC234' })).toBeInTheDocument()
     expect(within(dialog).getByText(/Dishes already on it keep the price/)).toBeInTheDocument()
-    expect(within(dialog).getByText('Large · + Extra cheese · 12.00 each')).toBeInTheDocument()
+    expect(
+      within(dialog).getByText('Size: Large · + Extra cheese · $12.00 each'),
+    ).toBeInTheDocument()
     expect(within(dialog).getByText('$24.00')).toBeInTheDocument()
   })
 
@@ -127,7 +131,7 @@ describe('EditOrderDialog', () => {
 
     const added = within(dialog).getByText('Added').closest('li')!
     expect(added).toHaveTextContent('Wrap')
-    expect(within(added).getByText('Large · + Extra cheese · + Fries')).toBeInTheDocument()
+    expect(within(added).getByText('Size: Large · + Extra cheese · + Fries')).toBeInTheDocument()
     // 2 x 12.00 kept, plus 8.00 + 3.00 + 1.00 + 2.00 added.
     expect(within(dialog).getByText('$38.00')).toBeInTheDocument()
 
@@ -144,6 +148,180 @@ describe('EditOrderDialog', () => {
     })
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
     expect(await screen.findByText('Order ABC234 updated')).toBeInTheDocument()
+  })
+
+  describe('a dish built from parts', () => {
+    const PIZZA = {
+      ...makeDish({ id: 100, name: { en: 'Pizza', ar: null }, price: '2.00', category_id: 2 }),
+      builds: [
+        {
+          id: 4,
+          name: { en: 'Your pizza' },
+          shape: 'split',
+          parts: [2],
+          category_id: 2,
+          choices: [{ id: 1, dish_id: 12, name: null, price: null, part_prices: { '2': '7.00' } }],
+        },
+      ],
+    }
+    const MARGHERITA = makeDish({
+      id: 12,
+      name: { en: 'Margherita', ar: null },
+      price: '12.00',
+      category_id: 2,
+    })
+    const PEPPERONI = makeDish({
+      id: 13,
+      name: { en: 'Pepperoni', ar: null },
+      price: '16.00',
+      category_id: 2,
+    })
+
+    it('reads a built line on the order like the card', () => {
+      const { dialog } = open(
+        makeOrder({
+          items: [
+            {
+              id: 1,
+              name: 'Ice cream',
+              options: {
+                variants: [],
+                addons: [],
+                builds: [
+                  {
+                    name: 'Your scoops',
+                    shape: 'pieces',
+                    parts: [
+                      { choice: 'Vanilla', share: 1 },
+                      { choice: 'Chocolate', share: 1 },
+                      { choice: 'Vanilla', share: 1 },
+                    ],
+                    price: '6.50',
+                    build_id: 5,
+                    keys: ['c50', 'c51', 'c50'],
+                  },
+                ],
+              },
+              unit_price: '6.50',
+              quantity: 1,
+              line_total: '6.50',
+              currency: 'USD',
+            },
+          ],
+        }),
+      )
+
+      expect(
+        within(dialog).getByText('Your scoops: 2 × Vanilla, Chocolate · $6.50 each'),
+      ).toBeInTheDocument()
+    })
+
+    it('adds it with every part, names what was built, counts it and sends it', async () => {
+      mock.onGet('/api/dishes').reply(200, {
+        data: [PIZZA, MARGHERITA, PEPPERONI],
+        meta: { used: 3, limit: 40, currency: 'USD' },
+      })
+      mock.onPut('/api/orders/1/items').reply(200, { data: makeOrder({ total: '41.00' }) })
+      const { dialog, user } = open()
+
+      await pickDish(user, dialog, 'Pizza')
+      await user.click(await within(dialog).findByRole('combobox', { name: 'Your pizza, part 1' }))
+      await user.click(screen.getByRole('option', { name: /^Margherita/ }))
+      await user.click(within(dialog).getByRole('combobox', { name: 'Your pizza, part 2' }))
+      await user.click(screen.getByRole('option', { name: /^Pepperoni/ }))
+      await user.click(within(dialog).getByRole('button', { name: 'Add' }))
+
+      const added = within(dialog).getByText('Added').closest('li')!
+      expect(within(added).getByText('Your pizza: ½ Margherita + ½ Pepperoni')).toBeInTheDocument()
+      // 2 x 12.00 kept, plus 2.00 and halves at 7.00 and 8.00.
+      expect(within(dialog).getByText('$41.00')).toBeInTheDocument()
+
+      await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+
+      await waitFor(() => expect(mock.history.put).toHaveLength(1))
+      expect(JSON.parse(mock.history.put[0]!.data as string)).toEqual({
+        items: [{ id: 1, quantity: 2 }],
+        add: [
+          {
+            dish_id: 100,
+            quantity: 1,
+            options: [],
+            addons: [],
+            builds: [{ build: 4, parts: ['d12', 'd13'] }],
+          },
+        ],
+      })
+    })
+  })
+
+  describe('lines in two currencies', () => {
+    /** An LBP order with one line priced in USD at 89,000. */
+    const MIXED = makeOrder({
+      currency: 'LBP',
+      total: '2230000.00',
+      exchange_rate: '89000.0000000000',
+      items: [
+        {
+          id: 1,
+          name: 'Burger',
+          options: null,
+          unit_price: '10.00',
+          quantity: 2,
+          line_total: '20.00',
+          currency: 'USD',
+        },
+        {
+          id: 2,
+          name: 'Tea',
+          options: null,
+          unit_price: '450000.00',
+          quantity: 1,
+          line_total: '450000.00',
+          currency: 'LBP',
+        },
+      ],
+    })
+
+    it('shows each line in its currency and the total in the order one, at its rate', async () => {
+      mock.onGet('/api/dishes').reply(200, {
+        data: [makeDish({ id: 6, name: { en: 'Lentil soup', ar: null }, price: '4.00' })],
+        meta: {
+          used: 1,
+          limit: 40,
+          currency: 'LBP',
+          second_currency: 'USD',
+          exchange_rate: '90000.0000000000',
+        },
+      })
+      const { dialog, user } = open(MIXED)
+
+      expect(within(dialog).getByText('$10.00 each')).toBeInTheDocument()
+      expect(within(dialog).getByText(/^LBP\s450,000 each$/)).toBeInTheDocument()
+      // 2 x $10.00 at 89,000, plus LBP 450,000.
+      expect(within(dialog).getByText(/^LBP\s2,230,000$/)).toBeInTheDocument()
+
+      // An added USD dish counts at the order's rate too, not today's.
+      await pickDish(user, dialog, 'Lentil soup')
+      expect(within(dialog).getByText('$4.00')).toBeInTheDocument()
+      await user.click(within(dialog).getByRole('button', { name: 'Add' }))
+      expect(within(dialog).getByText(/^LBP\s2,586,000$/)).toBeInTheDocument()
+    })
+
+    it("counts at today's rate an order placed without one", async () => {
+      mock.onGet('/api/dishes').reply(200, {
+        data: [],
+        meta: {
+          used: 0,
+          limit: 40,
+          currency: 'LBP',
+          second_currency: 'USD',
+          exchange_rate: '90000.0000000000',
+        },
+      })
+      const { dialog } = open({ ...MIXED, exchange_rate: null })
+
+      expect(await within(dialog).findByText(/^LBP\s2,250,000$/)).toBeInTheDocument()
+    })
   })
 
   it('takes an added dish back off before saving', async () => {

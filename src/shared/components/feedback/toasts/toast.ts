@@ -25,10 +25,6 @@ export const toast = {
   error(fallback: string, error?: unknown) {
     sonner.error(fallback, { description: describe(error) })
   },
-
-  dismiss() {
-    sonner.dismiss()
-  },
 }
 
 function describe(error: unknown): string | undefined {

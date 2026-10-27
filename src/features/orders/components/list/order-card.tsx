@@ -14,13 +14,15 @@ import {
 } from '@tabler/icons-react'
 import { memo, useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Money } from '@/shared/components/data-display'
-import { ActionMenu, Button, type ActionMenuItem } from '@/shared/components/ui'
+import { Money, StatusChip, type ChipTone } from '@/shared/components/data-display'
+import { ActionMenu, Alert, Button, type ActionMenuItem } from '@/shared/components/ui'
 import { cn } from '@/shared/utils/dom/cn'
 import { formatDateTime, formatTime } from '@/shared/utils/format/date'
+import { formatMoney, formatRate } from '@/shared/utils/format/money'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import { TableTent } from '@/features/orders/components/list/table-tent'
 import type { Order, OrderStatus } from '@/features/orders/schemas/order.schema'
+import { choiceParts, statusLabel } from '@/features/orders/utils/order-text'
 
 export type OrderCardProps = {
   order: Order
@@ -33,12 +35,12 @@ export type OrderCardProps = {
 }
 
 /** New is the loudest; one being made is green; a finished one goes quiet. */
-const TONE: Record<Order['status'], string> = {
-  placed: 'border-transparent bg-gold text-ink',
-  accepted: 'border-status-success-border bg-status-success-wash text-status-success',
-  ready: 'border-status-success-border bg-status-success-wash text-status-success',
-  done: 'border-[var(--line)] text-[var(--muted)]',
-  cancelled: 'border-[var(--line)] bg-[var(--hover-wash)] text-[var(--muted)]',
+const TONE: Record<OrderStatus, ChipTone> = {
+  placed: 'gold',
+  accepted: 'success',
+  ready: 'success',
+  done: 'faded',
+  cancelled: 'neutral',
 }
 
 /**
@@ -60,6 +62,8 @@ export const OrderCard = memo(function OrderCard({
   const titleId = useId()
   const next = nextStep(order)
   const table = order.table
+  // A line in the restaurant's second currency, whose rate the card then says.
+  const second = order.items.find((item) => item.currency !== order.currency)?.currency
 
   const more: ActionMenuItem[] = [
     // A cancelled order is no longer anyone's to change.
@@ -89,7 +93,7 @@ export const OrderCard = memo(function OrderCard({
     <article
       aria-labelledby={titleId}
       className={cn(
-        '@container glass-card rounded-card p-3 sm:p-4',
+        '@container glass-card rounded-card p-3.5 sm:p-4',
         order.status === 'cancelled' && 'opacity-70',
       )}
     >
@@ -117,14 +121,7 @@ export const OrderCard = memo(function OrderCard({
                 >
                   {table ?? order.reference}
                 </span>
-                <span
-                  className={cn(
-                    'rounded-full border-[0.5px] px-2.5 py-0.5 text-[12px] font-medium',
-                    TONE[order.status],
-                  )}
-                >
-                  {t(statusLabel(order))}
-                </span>
+                <StatusChip tone={TONE[order.status]}>{t(statusLabel(order))}</StatusChip>
               </p>
               {order.placed_at !== null || table !== null ? (
                 <p className="mt-1 text-[12.5px] text-[var(--muted)]">
@@ -147,29 +144,20 @@ export const OrderCard = memo(function OrderCard({
           </div>
 
           {order.guest_updated_at !== null ? (
-            <p
-              className={cn(
-                'flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[12.5px] font-medium',
-                // Loud while it still waits to be accepted (a guest can only
-                // change it until then): the kitchen must read the new version.
-                order.status === 'placed'
-                  ? 'border-[0.5px] border-status-warn-border bg-status-warn-wash text-status-warn'
-                  : 'text-[var(--muted)]',
-              )}
-            >
-              <IconPencil aria-hidden className="size-3.5 shrink-0" />
+            // Loud while it still waits to be accepted (a guest can only
+            // change it until then): the kitchen must read the new version.
+            <Alert size="sm" variant={order.status === 'placed' ? 'warning' : 'info'}>
               {t('card.changed', {
                 count: order.guest_updates,
                 time: formatTime(order.guest_updated_at, locale),
               })}
-            </p>
+            </Alert>
           ) : null}
 
           {order.owner_updated_at !== null ? (
-            <p className="flex items-center gap-1.5 text-[12.5px] text-[var(--muted)]">
-              <IconPencil aria-hidden className="size-3.5 shrink-0" />
+            <Alert variant="info">
               {t('card.ownerChanged', { time: formatTime(order.owner_updated_at, locale) })}
-            </p>
+            </Alert>
           ) : null}
 
           {order.fulfilment !== null ? <GuestDetails order={order} /> : null}
@@ -182,26 +170,43 @@ export const OrderCard = memo(function OrderCard({
                   <span>{item.name}</span>
                   {item.options ? (
                     <span className="block text-[12.5px] text-[var(--muted)]">
-                      {[
-                        ...item.options.variants.map(
-                          (variant) => `${variant.name}: ${variant.choice}`,
+                      {choiceParts(
+                        item.options.variants,
+                        item.options.addons,
+                        item.options.builds,
+                      ).join(' · ')}
+                    </span>
+                  ) : null}
+                  {item.offer ? (
+                    <span className="block text-[12.5px] text-accent">
+                      {t('card.onOffer', {
+                        offer: item.offer.title,
+                        was: formatMoney(
+                          Number(item.offer.full_price) * item.quantity,
+                          item.currency,
                         ),
-                        ...item.options.addons.map((addon) => `+ ${addon.name}`),
-                      ].join(' · ')}
+                      })}
                     </span>
                   ) : null}
                 </span>
                 <Money
                   amount={Number(item.line_total)}
-                  currency={order.currency}
+                  currency={item.currency}
                   className="shrink-0 text-[14px]"
                 />
               </li>
             ))}
           </ul>
 
+          {second !== undefined && order.exchange_rate !== null ? (
+            // Lines in the second currency count in the total at this rate.
+            <p className="text-[12px] text-[var(--muted)]">
+              {t('card.rate', { rate: formatRate(order.currency, second, order.exchange_rate) })}
+            </p>
+          ) : null}
+
           {order.note !== null ? (
-            <p className="rounded-[10px] bg-[var(--field)] px-3 py-2 text-[12.5px] leading-relaxed text-[var(--muted)]">
+            <p className="inset-tile px-3 py-2 text-[12.5px] leading-relaxed text-[var(--muted)]">
               {order.note}
             </p>
           ) : null}
@@ -277,22 +282,6 @@ function nextStep(order: Order): NextStep | null {
 }
 
 /**
- * "Ready" is "On its way" for a delivery. At a table an order goes new,
- * preparing, served: "Accepted" reads "Preparing" and "Done" reads "Served"
- * (one moved to ready before reads as preparing still).
- */
-function statusLabel(
-  order: Order,
-): `status.${OrderStatus}` | 'status.onItsWay' | 'status.preparing' | 'status.served' {
-  if (order.fulfilment === 'dine_in') {
-    if (order.status === 'accepted' || order.status === 'ready') return 'status.preparing'
-    if (order.status === 'done') return 'status.served'
-  }
-  if (order.status === 'ready' && order.fulfilment === 'delivery') return 'status.onItsWay'
-  return `status.${order.status}`
-}
-
-/**
  * Who ordered, how to reach them and where the food goes, for an order
  * placed in the menu. The name, phone and address leave an order after 90
  * days, so any of them may be gone on an old one.
@@ -308,7 +297,7 @@ function GuestDetails({ order }: { order: Order }) {
   const link = 'inline-flex items-center gap-1.5 text-accent hover:underline'
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-tile bg-[var(--hover-wash)] px-3 py-2.5 text-[13px]">
+    <div className="flex flex-col gap-1.5 inset-tile px-3 py-2.5 text-[13px]">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         {order.name !== null ? (
           <span className="inline-flex min-w-0 items-center gap-1.5 font-medium">

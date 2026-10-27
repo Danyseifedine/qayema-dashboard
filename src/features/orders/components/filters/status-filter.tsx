@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { FilterChips } from '@/shared/components/ui'
 import { ORDER_STATUSES, type OrderStatus } from '@/features/orders/schemas/order.schema'
+import { statusLabel } from '@/features/orders/utils/order-text'
 
 export type StatusFilterProps = {
   /** Null means every status. */
@@ -16,23 +17,14 @@ export type StatusFilterProps = {
 }
 
 /** At a table there is no "ready": accepted reads "Preparing", done "Served". */
-const TABLE_STEPS: {
-  status: OrderStatus
-  label: 'status.placed' | 'status.preparing' | 'status.served' | 'status.cancelled'
-}[] = [
-  { status: 'placed', label: 'status.placed' },
-  { status: 'accepted', label: 'status.preparing' },
-  { status: 'done', label: 'status.served' },
-  { status: 'cancelled', label: 'status.cancelled' },
-]
+const TABLE_STEPS: readonly OrderStatus[] = ['placed', 'accepted', 'done', 'cancelled']
 
 /** Every order, or one step of it; New carries how many are waiting. */
 export function StatusFilter({ value, onChange, openCount, kind = 'away' }: StatusFilterProps) {
   const { t } = useTranslation('orders')
-  const steps =
-    kind === 'table'
-      ? TABLE_STEPS
-      : ORDER_STATUSES.map((status) => ({ status, label: `status.${status}` as const }))
+  const steps = kind === 'table' ? TABLE_STEPS : ORDER_STATUSES
+  // Named as the cards name them: a table's steps as a table order's.
+  const fulfilment = kind === 'table' ? 'dine_in' : null
 
   return (
     <FilterChips
@@ -41,9 +33,9 @@ export function StatusFilter({ value, onChange, openCount, kind = 'away' }: Stat
       onChange={onChange}
       chips={[
         { value: null, label: t('filter.all') },
-        ...steps.map(({ status, label }) => ({
+        ...steps.map((status) => ({
           value: status,
-          label: t(label),
+          label: t(statusLabel({ status, fulfilment })),
           badge: status === 'placed' ? openCount : undefined,
         })),
       ]}

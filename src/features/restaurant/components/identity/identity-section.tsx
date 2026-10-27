@@ -1,6 +1,8 @@
+import { IconBuildingStore } from '@tabler/icons-react'
 import type { Control } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { FormSection, TranslatableTextField } from '@/shared/components/forms'
+import { MENU_TEXT_LIMITS } from '@/shared/constants/menu-text-limits'
 import type { RestaurantFormValues } from '@/features/restaurant/schemas/restaurant.schema'
 
 export type IdentitySectionProps = {
@@ -14,14 +16,18 @@ export function IdentitySection({ control, languages }: IdentitySectionProps) {
   const { t } = useTranslation('restaurant')
 
   return (
-    <FormSection title={t('identity.title')} description={t('identity.description')}>
+    <FormSection
+      icon={<IconBuildingStore aria-hidden className="size-[18px]" />}
+      title={t('identity.title')}
+      description={t('identity.description')}
+    >
       <TranslatableTextField
         control={control}
         name="name"
         languages={languages}
         label={t('identity.nameLabel')}
         required
-        maxLength={255}
+        maxLength={MENU_TEXT_LIMITS.restaurantName}
         placeholder={{ en: 'Beit Qayema', ar: 'بيت قائمة' }}
         hint={t('identity.nameHint')}
       />
@@ -34,7 +40,7 @@ export function IdentitySection({ control, languages }: IdentitySectionProps) {
         optionalText={t('optional')}
         multiline
         rows={3}
-        maxLength={2000}
+        maxLength={MENU_TEXT_LIMITS.restaurantDescription}
         write={{ kind: 'restaurant' }}
         placeholder={{
           en: 'A sentence or two about your food.',

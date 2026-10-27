@@ -30,7 +30,7 @@ test.describe('social links', () => {
     await expect(
       dialog.getByRole('heading', { name: either('Add a social link', 'إضافة رابط تواصل') }),
     ).toBeVisible()
-    const platform = dialog.getByRole('combobox', { name: /Platform|المنصة/ })
+    const platform = dialog.getByRole('combobox', { name: /Platform|الموقع أو التطبيق/ })
     await expect(platform).toHaveValue('Instagram')
     await choose(page, platform, 'Facebook')
 

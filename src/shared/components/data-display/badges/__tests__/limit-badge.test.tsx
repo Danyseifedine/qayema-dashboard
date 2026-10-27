@@ -51,10 +51,7 @@ describe('LimitBadge', () => {
 
   it('can be a larger pill in a gold hairline, keeping its warning colours', () => {
     const { rerender } = render(<LimitBadge used={1} limit={10} outlined />)
-    expect(screen.getByText('1 / 10')).toHaveClass(
-      'border-[0.5px]',
-      'border-[var(--accent-border)]',
-    )
+    expect(screen.getByText('1 / 10')).toHaveClass('border-[0.5px]', 'border-accent-border')
     expect(screen.getByText('1 / 10')).not.toHaveClass('bg-[var(--hover-wash)]')
 
     rerender(<LimitBadge used={10} limit={10} outlined />)

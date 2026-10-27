@@ -6,13 +6,14 @@ import { t } from '@/lib/i18n'
  * ../qayema/config/image-optimization.php:
  *
  *   logo        contain 400x400,   <= 50 KB
- *   cover_image cover   1920x600,  quality 80
- *   dish        cover   1200x900,  <= 150 KB
+ *   cover_image contain 1920x1280, quality 80 (whole; the menu shows a band)
+ *   dish        contain 1200x1200, <= 150 KB
  *   generic     contain 1200x1200, <= 200 KB
+ *   offer       contain 2000x2000, <= 500 KB (words drawn in stay sharp)
  *
  * Anything else is rejected with a 422, so the list is closed.
  */
-export const UPLOAD_CONTEXTS = ['logo', 'cover_image', 'dish', 'generic'] as const
+export const UPLOAD_CONTEXTS = ['logo', 'cover_image', 'dish', 'generic', 'offer'] as const
 
 export type UploadContext = (typeof UPLOAD_CONTEXTS)[number]
 

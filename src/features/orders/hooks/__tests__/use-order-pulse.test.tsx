@@ -216,6 +216,29 @@ describe('useOrderPulse', () => {
     expect(document.title).toBe('Qayema Dashboard')
   })
 
+  // The lists never poll on their own: without Pusher, the minute's check
+  // refreshes them, so a status moved in another tab shows up.
+  it('refreshes the lists on every check after the first while Pusher cannot be heard', async () => {
+    const invalidate = vi.spyOn(QueryClient.prototype, 'invalidateQueries')
+    const refreshes = () =>
+      invalidate.mock.calls.filter(
+        ([filters, options]) =>
+          JSON.stringify(filters?.queryKey) === JSON.stringify(orderKeys.lists()) &&
+          options?.cancelRefetch === false,
+      ).length
+    answer(2, 41)
+    const { result, poll } = setup()
+    await waitFor(() => expect(result.current).toBe(2))
+    expect(refreshes()).toBe(0)
+
+    answer(2, 41)
+    await poll()
+    await waitFor(() => expect(refreshes()).toBe(1))
+    // Nothing new: no chime.
+    expect(play).not.toHaveBeenCalled()
+    invalidate.mockRestore()
+  })
+
   it('never polls when it starts switched off', () => {
     const { result } = setup(false)
 
@@ -240,6 +263,35 @@ describe('useOrderPulse', () => {
 
       unmount()
       expect(pusher.echo.leave).toHaveBeenCalledWith('orders.7')
+    })
+
+    it('leaves the lists to Pusher while it is heard', async () => {
+      fakeEcho()
+      answer(1, 40)
+      const { result, poll, queryClient } = setup()
+      await waitFor(() => expect(result.current).toBe(1))
+      await waitFor(() => expect(interval(queryClient)).toBe(false))
+      const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+
+      // A check of its own (the tab coming back into view).
+      await poll()
+
+      expect(invalidate).not.toHaveBeenCalled()
+    })
+
+    it('refreshes the lists on every change Pusher pushes', async () => {
+      const pusher = fakeEcho()
+      answer(1, 40)
+      const { result, queryClient } = setup()
+      await waitFor(() => expect(result.current).toBe(1))
+      await waitFor(() => expect(interval(queryClient)).toBe(false))
+      const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+
+      // A status moved in another tab: the same counts, a list to redraw.
+      act(() => pusher.send({ open: 1, latest: 40, changed: null }))
+
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: orderKeys.lists() })
+      expect(play).not.toHaveBeenCalled()
     })
 
     it('asks again when the connection comes back, for what it missed', async () => {

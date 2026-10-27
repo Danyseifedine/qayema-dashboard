@@ -1,10 +1,12 @@
 import type account from '@/locales/en/account.json'
 import type analytics from '@/locales/en/analytics.json'
 import type appearance from '@/locales/en/appearance.json'
+import type buildYourOwn from '@/locales/en/build-your-own.json'
 import type common from '@/locales/en/common.json'
 import type design from '@/locales/en/design.json'
 import type features from '@/locales/en/features.json'
 import type menu from '@/locales/en/menu.json'
+import type offers from '@/locales/en/offers.json'
 import type orders from '@/locales/en/orders.json'
 import type overview from '@/locales/en/overview.json'
 import type pkg from '@/locales/en/package.json'
@@ -27,6 +29,8 @@ declare module 'i18next' {
       overview: typeof overview
       analytics: typeof analytics
       menu: typeof menu
+      offers: typeof offers
+      'build-your-own': typeof buildYourOwn
       design: typeof design
       appearance: typeof appearance
       orders: typeof orders

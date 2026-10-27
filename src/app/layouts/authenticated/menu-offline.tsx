@@ -2,10 +2,10 @@ import { IconWorldOff } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import type { AuthRestaurant } from '@/features/auth'
 import { LockedState } from '@/shared/components/feedback'
-import { Alert, Button } from '@/shared/components/ui'
+import { Alert } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { formatDate } from '@/shared/utils/format/date'
-import { translated } from '@/shared/utils/string/translated'
+import { nameOr } from '@/shared/utils/string/translated'
 
 /** What renewing brings back, one line each, in common.json. */
 const COMES_BACK = ['one', 'two', 'three'] as const
@@ -19,10 +19,8 @@ export type MenuOfflineProps = {
 }
 
 function useEnded(lapsed: Lapsed, locale: Locale) {
-  const name = translated(lapsed.name, locale)
-
   return {
-    name: name.missing ? (lapsed.slug ?? '') : name.text,
+    name: nameOr(lapsed.name, locale, lapsed.slug ?? ''),
     date: lapsed.ended_at ? formatDate(lapsed.ended_at, locale) : '',
     offline: lapsed.offline_at ? formatDate(lapsed.offline_at, locale) : '',
   }
@@ -57,12 +55,10 @@ export function MenuGoingOffline({ lapsed, locale, onOpenPackage }: MenuOfflineP
     <Alert
       variant="warning"
       title={t('menuOffline.soonTitle', { name: ended.name, date: ended.date })}
+      action={{ label: t('menuOffline.renew'), onClick: onOpenPackage }}
       className="mb-4"
     >
-      <p>{t('menuOffline.soonBody', { date: ended.offline })}</p>
-      <Button variant="secondary" size="sm" className="mt-2" onClick={onOpenPackage}>
-        {t('menuOffline.renew')}
-      </Button>
+      {t('menuOffline.soonBody', { date: ended.offline })}
     </Alert>
   )
 }

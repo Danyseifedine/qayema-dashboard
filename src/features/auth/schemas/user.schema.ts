@@ -19,11 +19,24 @@ const planSchema = z.object({
   dine_in: z.boolean(),
   analytics: z.boolean(),
   advanced_analytics: z.boolean(),
+  offers: z.boolean(),
+  dine_in_whatsapp: z.boolean(),
+  order_tracking: z.boolean(),
+  offer_schedules: z.boolean(),
+  offer_discounts: z.boolean(),
+  /**
+   * Dishes may carry "build your own" (half and half pizzas). On no
+   * package: an admin switches it on per restaurant. False from a server
+   * from before it.
+   */
+  build_your_own: z.boolean().default(false),
 })
 
 /** A package named in the session, in both interface languages. */
 const packageSummary = {
   slug: z.string().nullable(),
+  /** Its crown's metal, as the admin set it; null from a server from before it. */
+  tier: z.enum(['bronze', 'silver', 'gold']).nullable().default(null),
   name: translatableTextSchema,
 }
 
@@ -81,9 +94,19 @@ const restaurantSchema = z.object({
     dishes: limit,
     categories: limit,
     social_links: limit,
+    /** Dishes guests build (Build your own); 3 unless an admin sets another. */
+    builds: limit.default({ used: 0, limit: 3 }),
   }),
+  /** Dishes still without a photo (Home's checklist), counted by the server. */
+  dishes_without_photo: z.number().int().default(0),
   /** Optional features the owner switched off on the Features page. */
   switched_off: z.array(z.string()),
+  /**
+   * The `plan` flags an admin turned off for this restaurant, whatever its
+   * package says (already false in `plan`). Said as "turned off for your
+   * restaurant", never as an upgrade. Empty from an API from before it.
+   */
+  turned_off: z.array(z.string()).default([]),
   /**
    * How guests send their orders while ordering is on: to WhatsApp, or in
    * the menu (only while the package includes it), and which kinds of order
@@ -108,10 +131,24 @@ const restaurantSchema = z.object({
   /**
    * The AI buttons (translate, write a description): null while off (no
    * provider, or none on the package), else the uses a day (null for no
-   * cap) and those left today.
+   * cap) and those left today, and the month's credits: how many and those
+   * left (null for no cap), the day they come back and each action's price
+   * (null from a server from before them).
    */
   writing_help: z
-    .object({ limit: z.number().int().nullable(), left: z.number().int().nullable() })
+    .object({
+      limit: z.number().int().nullable(),
+      left: z.number().int().nullable(),
+      credits: z
+        .object({
+          limit: z.number().int().nullable(),
+          left: z.number().int().nullable(),
+          resets_on: z.string(),
+          prices: z.object({ translation: z.number().int(), description: z.number().int() }),
+        })
+        .nullable()
+        .default(null),
+    })
     .nullable()
     .default(null),
 })

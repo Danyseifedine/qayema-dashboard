@@ -4,17 +4,20 @@ import MockAdapter from 'axios-mock-adapter'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { api } from '@/lib/api/client'
-import { useDishChoices } from '@/features/auth/hooks/use-dish-choices'
+import { useDishBuilds, useDishChoices } from '@/features/auth/hooks/use-dish-choices'
 import { EMPTY_PLAN, FULL_PLAN, makeSessionUser } from '@/test/factories/session'
 
 let mock: MockAdapter
 
-function render() {
+function wrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  const wrapper = ({ children }: { children: ReactNode }) => (
+  return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   )
-  return renderHook(() => useDishChoices(), { wrapper })
+}
+
+function render() {
+  return renderHook(() => useDishChoices(), { wrapper: wrapper() })
 }
 
 describe('useDishChoices', () => {
@@ -50,5 +53,35 @@ describe('useDishChoices', () => {
     const first = result.current
     rerender()
     expect(result.current).toBe(first)
+  })
+})
+
+describe('useDishBuilds', () => {
+  beforeEach(() => {
+    mock = new MockAdapter(api)
+  })
+
+  afterEach(() => mock.restore())
+
+  it('is on only where an admin switched it on for the restaurant', async () => {
+    mock.onGet('/api/user').reply(200, { data: makeSessionUser({ plan: FULL_PLAN }) })
+    const { result } = renderHook(() => useDishBuilds(), { wrapper: wrapper() })
+
+    // Off until the session says otherwise.
+    expect(result.current).toBe(false)
+    await waitFor(() => expect(result.current).toBe(true))
+  })
+
+  it('is off on any package without it, and from a server from before it', async () => {
+    const { build_your_own: _left, ...plan } = FULL_PLAN
+    mock
+      .onGet('/api/user')
+      .reply(200, { data: makeSessionUser({ plan: plan as typeof FULL_PLAN }) })
+    const { result } = renderHook(() => ({ builds: useDishBuilds(), choices: useDishChoices() }), {
+      wrapper: wrapper(),
+    })
+
+    await waitFor(() => expect(result.current.choices.variants).toBe(true))
+    expect(result.current.builds).toBe(false)
   })
 })

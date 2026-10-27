@@ -21,21 +21,16 @@
     "card": "Printable card",
     "resetToSimple": "Reset to simple",
     "save": "Save",
-    "lockedTitle": "Make the code your own",
-    "lockedDescription": "Your QR code works as it is. The studio lets you style it and print a card for your tables.",
+    "lockedTitle": "<gold>QR Studio</gold> comes with {{package}}",
+    "lockedDescription": "Your QR code works as it is. With QR Studio you can add your colours and logo, change the shapes, and print a card for your tables.",
     "offTitle": "<gold>QR Studio</gold> is off",
     "offDescription": "Your QR code still works. Turn on QR Studio in Features to customise it, add your logo, and create a printable table card.",
     "openFeatures": "Open Features",
     "simpleMode": "Simple mode active",
     "colors": "Colours",
-    "lockedIncludes": {
-      "colors": "Your colours, even a gradient",
-      "shapes": "Rounded dots and corner shapes",
-      "logo": "Your logo in the middle",
-      "card": "A printable card with your name"
-    },
     "seePackages": "See packages",
-    "done": "Done"
+    "done": "Done",
+    "lockedTitleNoPackage": "<gold>QR Studio</gold> is not on your package"
   },
   "contrast": {
     "title": "This may not scan",

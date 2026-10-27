@@ -1,11 +1,16 @@
-import { IconPlus, IconPrinter, IconToolsKitchen2 } from '@tabler/icons-react'
-import type { Options } from 'qr-code-styling'
+import { IconPlus, IconPrinter } from '@tabler/icons-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { downloadQr, qrOptions, useQr } from '@/features/qr'
-import { ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '@/shared/components/feedback'
+import { downloadQr, qrOptions, useQr, type QrCodeOptions } from '@/features/qr'
+import {
+  ConfirmDialog,
+  ErrorState,
+  PictureEmptyState,
+  SkeletonList,
+} from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
+import { isAtLimit } from '@/shared/utils/limits/is-at-limit'
 import { AddTablesDialog } from '@/features/tables/components/dialogs/add-tables-dialog'
 import { PrintSheet } from '@/features/tables/components/print/print-sheet'
 import { RenameTableDialog } from '@/features/tables/components/dialogs/rename-table-dialog'
@@ -19,7 +24,7 @@ export type TablesPageProps = {
 }
 
 /** Until the QR design arrives, the plain code: what every restaurant has. */
-const PLAIN: Options = {
+const PLAIN: QrCodeOptions = {
   margin: 0,
   qrOptions: { errorCorrectionLevel: 'M' },
   dotsOptions: { type: 'square', color: '#000000' },
@@ -49,10 +54,11 @@ export function TablesPage({ onOpenFeatures }: TablesPageProps) {
   const list = useMemo(() => tables.data?.data ?? [], [tables.data])
   const takesOrders = tables.data?.meta.takes_orders ?? true
   const limit = tables.data?.meta.limit ?? 0
+  const atLimit = isAtLimit({ used: list.length, limit })
 
   // The design as the QR page has it: the owner's while the studio is open,
   // the plain one otherwise. Each table adds its own link.
-  const options = useMemo<Options>(() => {
+  const options = useMemo<QrCodeOptions>(() => {
     if (!qr.data) return PLAIN
     const design = qr.data.unlocked ? qr.data.settings : qr.data.defaults
     return qrOptions(design, '', qr.data.unlocked ? qr.data.logo_data_url : null)
@@ -102,7 +108,7 @@ export function TablesPage({ onOpenFeatures }: TablesPageProps) {
         <Button
           className="flex-1 sm:flex-none"
           leadingIcon={<IconPlus className="size-[18px]" />}
-          disabled={tables.data === undefined || list.length >= limit}
+          disabled={tables.data === undefined || atLimit}
           onClick={() => setAdding(true)}
         >
           {t('page.add')}
@@ -110,15 +116,16 @@ export function TablesPage({ onOpenFeatures }: TablesPageProps) {
       </div>
 
       {tables.data && !takesOrders ? (
-        <Alert variant="info" title={t('page.notOrderingTitle')}>
-          <p>{t('page.notOrderingBody')}</p>
-          <Button size="sm" variant="secondary" className="mt-2.5" onClick={onOpenFeatures}>
-            {t('page.openFeatures')}
-          </Button>
+        <Alert
+          variant="warning"
+          title={t('page.notOrderingTitle')}
+          action={{ label: t('page.openFeatures'), onClick: onOpenFeatures }}
+        >
+          {t('page.notOrderingBody')}
         </Alert>
       ) : null}
 
-      {tables.data && list.length >= limit ? (
+      {tables.data && atLimit ? (
         <Alert variant="warning">{t('page.atLimit', { limit })}</Alert>
       ) : null}
 
@@ -131,12 +138,16 @@ export function TablesPage({ onOpenFeatures }: TablesPageProps) {
       ) : tables.isError ? (
         <ErrorState description={tables.error.message} onRetry={() => void tables.refetch()} />
       ) : list.length === 0 ? (
-        <EmptyState
+        <PictureEmptyState
           fill
-          icon={IconToolsKitchen2}
+          picture="/assets/images/dashboard/no_numbered_tables.webp"
           title={t('page.emptyTitle')}
           description={t('page.emptyDescription')}
-          action={<Button onClick={() => setAdding(true)}>{t('page.addFirst')}</Button>}
+          action={
+            <Button block onClick={() => setAdding(true)}>
+              {t('page.addFirst')}
+            </Button>
+          }
         />
       ) : (
         <>

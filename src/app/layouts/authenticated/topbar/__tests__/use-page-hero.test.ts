@@ -58,6 +58,8 @@ describe('usePageHero', () => {
       'features',
       'package',
       'account',
+      'offers',
+      'build-your-own',
     ]) {
       expect(renderHook(() => usePageHero(key, 'Dany')).result.current.subtitle, key).not.toBe('')
     }

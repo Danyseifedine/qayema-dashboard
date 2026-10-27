@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import { makeWritingHelp } from '@/test/factories/session'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { useState } from 'react'
@@ -11,7 +12,7 @@ import {
   type TranslatableFieldProps,
 } from '@/shared/components/forms/translatable/translatable-text-field'
 import { WritingHelpProvider } from '@/shared/components/forms/translatable/writing-help-provider'
-import type { WritingHelpUses } from '@/shared/hooks/use-writing-help'
+import { withLeft, type WritingHelpUses } from '@/shared/hooks/use-writing-help'
 import { renderWithProviders } from '@/test/render-with-providers'
 
 type Values = { name?: Record<string, string | null> }
@@ -180,14 +181,15 @@ describe('TranslatableTextField', () => {
     expect(screen.queryByText('French: Too long.')).not.toBeInTheDocument()
   })
 
-  it('counts characters against the maximum', async () => {
+  it('counts characters only once the text nears the maximum', async () => {
     const user = userEvent.setup()
-    render(<Harness maxLength={40} />)
+    render(<Harness maxLength={10} />)
 
-    expect(screen.getByText('0 / 40')).toBeInTheDocument()
     await user.type(control(), 'Soup')
-    expect(screen.getByText('4 / 40')).toBeInTheDocument()
-    expect(control()).toHaveAttribute('maxLength', '40')
+    expect(screen.queryByText('4 / 10')).not.toBeInTheDocument()
+    await user.type(control(), ' bowl')
+    expect(screen.getByText('9 / 10')).toBeInTheDocument()
+    expect(control()).toHaveAttribute('maxLength', '10')
   })
 
   it('renders a textarea when multiline', () => {
@@ -274,7 +276,7 @@ describe('TranslatableTextField writing help', () => {
     return (
       <WritingHelpProvider
         uses={uses}
-        onLeft={(left) => setUses((now) => (now ? { ...now, left } : now))}
+        onLeft={(left) => setUses((now) => (now ? withLeft(now, left) : now))}
       >
         <Harness {...props} />
       </WritingHelpProvider>
@@ -284,7 +286,7 @@ describe('TranslatableTextField writing help', () => {
   // No daily cap unless a test gives one, so no count shows.
   const helped = (
     props: Parameters<typeof Harness>[0] = {},
-    uses: WritingHelpUses | null = { limit: null, left: null },
+    uses: WritingHelpUses | null = makeWritingHelp({ limit: null, left: null }),
   ) => renderWithProviders(<Helped {...props} uses={uses} />)
   const button = (name: RegExp) => screen.getByRole('button', { name })
   const sent = (index = 0) => JSON.parse(mock.history.post[index]?.data as string) as unknown
@@ -352,12 +354,12 @@ describe('TranslatableTextField writing help', () => {
     expect(button(/^Translate from French$/)).toBeDisabled()
     expect(button(/^Translate from French$/)).toHaveAttribute(
       'title',
-      'Write the text in either language first.',
+      'Translate from French. Write the text in either language first.',
     )
 
     await user.type(control(), 'Soup')
     expect(button(/^Translate to French$/)).toBeEnabled()
-    expect(button(/^Translate to French$/)).not.toHaveAttribute('title')
+    expect(button(/^Translate to French$/)).toHaveAttribute('title', 'Translate to French')
   })
 
   it('writes a description from the name, then offers to improve it', async () => {
@@ -409,7 +411,7 @@ describe('TranslatableTextField writing help', () => {
 
     await waitFor(() => expect(control()).toHaveValue('Pizzas and salads for every appetite.'))
     expect(sent()).toEqual({ text: '', language: 'en' })
-    expect(button(/^Improve with AI$/)).not.toHaveAttribute('title')
+    expect(button(/^Improve with AI$/)).toHaveAttribute('title', 'Improve with AI')
   })
 
   it('needs a name before it can write', () => {
@@ -420,7 +422,10 @@ describe('TranslatableTextField writing help', () => {
     })
 
     expect(button(/^Write with AI$/)).toBeDisabled()
-    expect(button(/^Write with AI$/)).toHaveAttribute('title', 'Give the category a name first.')
+    expect(button(/^Write with AI$/)).toHaveAttribute(
+      'title',
+      'Write with AI. Give the category a name first.',
+    )
   })
 
   it('says why when it fails, and when the day’s uses are spent', async () => {
@@ -447,25 +452,32 @@ describe('TranslatableTextField writing help', () => {
     expect(control()).toHaveValue('Soup')
   })
 
-  it('shows the uses spent of the day’s on every button, counting up', async () => {
+  it('says the uses spent of the day’s on every button, counting up', async () => {
     const user = userEvent.setup()
     mock
       .onPost('/api/writing/category-description')
       .reply(200, { data: { text: 'Warm bowls to start.', left: 29 } })
     helped(
       { initial: { en: '', fr: '' }, write: { kind: 'category', name: { en: 'Soups' } } },
-      { limit: 30, left: 30 },
+      makeWritingHelp({ limit: 30, left: 30 }),
     )
 
-    expect(screen.getAllByText('0/30')).toHaveLength(2)
-    expect(button(/^Write with AI$/)).toHaveAttribute('title', "You've used 0 of 30 AI uses today")
+    expect(button(/^Write with AI$/)).toHaveAttribute(
+      'title',
+      "Write with AI. You've used 0 of 30 AI uses today",
+    )
 
     await user.click(button(/^Write with AI$/))
 
-    await waitFor(() => expect(screen.getAllByText('1/30')).toHaveLength(2))
-    expect(button(/^Improve with AI$/)).toHaveAttribute(
+    await waitFor(() =>
+      expect(button(/^Improve with AI$/)).toHaveAttribute(
+        'title',
+        "Improve with AI. You've used 1 of 30 AI uses today",
+      ),
+    )
+    expect(button(/^Translate to French$/)).toHaveAttribute(
       'title',
-      "You've used 1 of 30 AI uses today",
+      "Translate to French. You've used 1 of 30 AI uses today",
     )
   })
 
@@ -474,15 +486,15 @@ describe('TranslatableTextField writing help', () => {
     mock.onPost('/api/writing/translate').reply(200, { data: { text: 'Soupe', left: 0 } })
     helped(
       { initial: { en: 'Soup', fr: '' }, write: { kind: 'category', name: { en: 'Soups' } } },
-      { limit: 30, left: 1 },
+      makeWritingHelp({ limit: 30, left: 1 }),
     )
 
     await user.click(button(/^Translate to French$/))
 
-    await waitFor(() => expect(screen.getAllByText('30/30')).toHaveLength(2))
+    await waitFor(() => expect(button(/^Improve with AI$/)).toBeDisabled())
     for (const spent of [button(/^Improve with AI$/), button(/^Translate to English$/)]) {
       expect(spent).toBeDisabled()
-      expect(spent).toHaveAttribute('title', 'Come back tomorrow for more AI help.')
+      expect(spent.title).toMatch(/\. Come back tomorrow for more AI help\.$/)
       expect(spent.className).toContain('text-status-danger')
     }
     expect(screen.getByText('Come back tomorrow for more AI help.')).toBeInTheDocument()
@@ -498,7 +510,7 @@ describe('TranslatableTextField writing help', () => {
     })
     helped(
       { languages: ['en'], initial: { en: '' }, write: { kind: 'restaurant' } },
-      { limit: 10, left: 4 },
+      makeWritingHelp({ limit: 10, left: 4 }),
     )
 
     await user.click(button(/^Write with AI$/))
@@ -507,7 +519,7 @@ describe('TranslatableTextField writing help', () => {
       await screen.findByText('You have used today’s writing help. It comes back tomorrow.'),
     ).toBeInTheDocument()
     expect(button(/^Write with AI$/)).toBeDisabled()
-    expect(screen.getByText('10/10')).toBeInTheDocument()
+    expect(screen.getByText('Come back tomorrow for more AI help.')).toBeInTheDocument()
   })
 
   it('takes the note away once the day’s uses are back', async () => {
@@ -518,7 +530,10 @@ describe('TranslatableTextField writing help', () => {
       })
       const [left, setLeft] = useState<number | null>(0)
       return (
-        <WritingHelpProvider uses={{ limit: 5, left }} onLeft={setLeft}>
+        <WritingHelpProvider
+          uses={makeWritingHelp({ limit: 5, left })}
+          onLeft={(next) => setLeft(next.uses ?? null)}
+        >
           <TranslatableTextField
             control={form.control}
             name="name"
@@ -539,7 +554,10 @@ describe('TranslatableTextField writing help', () => {
 
     expect(screen.queryByText('Come back tomorrow for more AI help.')).not.toBeInTheDocument()
     expect(button(/^Translate to French$/)).toBeEnabled()
-    expect(screen.getByText('0/5')).toBeInTheDocument()
+    expect(button(/^Translate to French$/)).toHaveAttribute(
+      'title',
+      "Translate to French. You've used 0 of 5 AI uses today",
+    )
   })
 
   it('says to come back tomorrow once on a screen, not under every field', () => {
@@ -548,7 +566,7 @@ describe('TranslatableTextField writing help', () => {
         defaultValues: { name: { en: 'Soup' }, about: { en: '' } },
       })
       return (
-        <WritingHelpProvider uses={{ limit: 5, left: 0 }} onLeft={() => {}}>
+        <WritingHelpProvider uses={makeWritingHelp({ limit: 5, left: 0 })} onLeft={() => {}}>
           <TranslatableTextField
             control={form.control}
             name="name"
@@ -569,7 +587,7 @@ describe('TranslatableTextField writing help', () => {
     }
     const { unmount } = renderWithProviders(<TwoFields />)
 
-    expect(screen.getAllByText('5/5')).toHaveLength(3)
+    expect(screen.getAllByRole('button', { name: /with AI|Translate/ })).toHaveLength(3)
     expect(screen.getAllByText('Come back tomorrow for more AI help.')).toHaveLength(1)
     unmount()
   })
@@ -577,10 +595,59 @@ describe('TranslatableTextField writing help', () => {
   it('opens already locked when the day was spent before', () => {
     helped(
       { languages: ['en'], initial: { en: '' }, write: { kind: 'restaurant' } },
-      { limit: 10, left: 0 },
+      makeWritingHelp({ limit: 10, left: 0 }),
     )
 
     expect(button(/^Write with AI$/)).toBeDisabled()
     expect(screen.getByText('Come back tomorrow for more AI help.')).toBeInTheDocument()
+  })
+
+  it('says when the month’s credits come back once none are left', () => {
+    helped(
+      { languages: ['en', 'fr'], initial: { en: 'Soup' }, write: { kind: 'restaurant' } },
+      makeWritingHelp({ limit: 10, left: 4 }, { limit: 500, left: 0, resets_on: '2099-12-01' }),
+    )
+
+    expect(button(/^Improve with AI$/)).toBeDisabled()
+    expect(button(/^Translate to French$/)).toBeDisabled()
+    expect(
+      screen.getByText("You've used this month's AI credits. They come back on Dec 1."),
+    ).toBeInTheDocument()
+  })
+
+  it('says too few are left for a description while a translation still goes', () => {
+    helped(
+      { languages: ['en', 'fr'], initial: { en: 'Soup' }, write: { kind: 'restaurant' } },
+      makeWritingHelp({ limit: 10, left: 4 }, { limit: 500, left: 2 }),
+    )
+
+    expect(button(/^Improve with AI$/)).toBeDisabled()
+    expect(button(/^Translate to French$/)).toBeEnabled()
+    // In words, for a phone, which shows no tooltip.
+    expect(
+      screen.getByText('Not enough AI credits left this month for this. They come back on Nov 1.'),
+    ).toBeInTheDocument()
+  })
+
+  it('names the month, not tomorrow, when both are spent', () => {
+    helped(
+      { languages: ['en', 'fr'], initial: { en: 'Soup' } },
+      makeWritingHelp({ limit: 10, left: 0 }, { limit: 500, left: 0 }),
+    )
+
+    expect(
+      screen.getByText("You've used this month's AI credits. They come back on Nov 1."),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Come back tomorrow for more AI help.')).not.toBeInTheDocument()
+  })
+
+  it('takes the month’s credits as back once their day came, in a tab left open', () => {
+    helped(
+      { languages: ['en', 'fr'], initial: { en: 'Soup' } },
+      makeWritingHelp({ limit: 10, left: 4 }, { limit: 500, left: 0, resets_on: '2020-11-01' }),
+    )
+
+    expect(button(/^Translate to French$/)).toBeEnabled()
+    expect(screen.queryByText(/come back/i)).not.toBeInTheDocument()
   })
 })

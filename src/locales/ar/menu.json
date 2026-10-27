@@ -1,6 +1,5 @@
 {
   "shared": {
-    "cancel": "إلغاء",
     "delete": "حذف",
     "optional": "اختياري",
     "name": "الاسم",
@@ -42,7 +41,9 @@
     "description": "الوصف",
     "descriptionHint": "سطر واحد يظهر تحت العنوان في قائمتك.",
     "save": "حفظ",
-    "add": "إضافة القسم"
+    "add": "إضافة القسم",
+    "icon": "الأيقونة",
+    "iconHint": "تظهر قبل اسم القسم في أعلى قائمتك."
   },
   "categoryFilter": {
     "label": "تصفية الأطباق حسب القسم",
@@ -77,7 +78,8 @@
     "emptyFilteredDescription": "أضف طبقًا هنا، أو اختر قسمًا آخر من الأعلى.",
     "emptyAction": "أضف طبقًا",
     "deleteTitle": "حذف هذا الطبق؟",
-    "deleteDescription": "سيُحذف الطبق وصورته من قائمتك. لا يمكن التراجع عن ذلك."
+    "deleteDescription": "سيُحذف الطبق وصورته من قائمتك. لا يمكن التراجع عن ذلك.",
+    "deleteDeal": "إنه طبق العرض «{{title}}»؛ يبقى العرض، بلا طبق."
   },
   "dishCard": {
     "untitled": "طبق بلا اسم",
@@ -101,7 +103,16 @@
     "addons_two": "إضافتان",
     "addons_few": "{{count}} إضافات",
     "addons_many": "{{count}} إضافة",
-    "addons_other": "{{count}} إضافة"
+    "addons_other": "{{count}} إضافة",
+    "deal": {
+      "chip": "طبق عرض",
+      "live": "على قائمتك ما دام «{{title}}» ساريًا",
+      "scheduled": "مخفي الآن. يعود {{when}} مع «{{title}}»",
+      "paused": "مخفي: «{{title}}» موقوف",
+      "ended": "مخفي: «{{title}}» انتهى",
+      "untitledOffer": "عرض بلا عنوان",
+      "off": "مخفي: باقتك لا تُظهر «{{title}}» على القائمة"
+    }
   },
   "dishDialog": {
     "titleNew": "طبق جديد",
@@ -109,7 +120,7 @@
     "needsCategory": "كل طبق ينتمي إلى قسم.",
     "untitledCategory": "قسم بلا اسم",
     "ingredients": "المكوّنات",
-    "ingredientsHint": "نص حر يظهر تحت الطبق في قائمتك.",
+    "ingredientsHint": "افصل بينها بفواصل.",
     "price": "السعر",
     "priceHint": "اتركه فارغًا لإخفاء السعر.",
     "priceHintFromVariant": "بدون سعر للطبق: كل اختيار من {{variant}} هو السعر الكامل.",
@@ -119,18 +130,24 @@
     "photo": "الصورة",
     "photoHint": "نقصّها لتناسب بطاقة الطبق ونجعلها سريعة التحميل.",
     "available": "متوفر",
-    "availableDescription": "أوقفه لإبقاء الطبق في قائمتك مع وسمه بأنه نفد.",
+    "availableDescription": "أوقفه عندما ينفد: لا يراه الزبائن حتى تعيد تشغيله. لا يُحذف شيء.",
     "save": "حفظ الطبق",
-    "add": "إضافة الطبق"
+    "add": "إضافة الطبق",
+    "currency": "عملة الطبق",
+    "priceHintFromBuild": "بدون سعر للطبق: التركيبة التي يختارها الزبون هي السعر.",
+    "priceHintWithBuild": "يُضاف سعر التركيبة إلى هذا السعر. اتركه فارغًا لتسعير الطبق حسب التركيبة فقط.",
+    "builtByGuests": "يركّب الزبائن هذا الطبق. عدّل ذلك من صفحة اصنعه على ذوقك.",
+    "buildsAction": "فتح اصنعه على ذوقك",
+    "deal": "أنشأه العرض «{{title}}». يظهر على قائمتك فقط أثناء سريان العرض.",
+    "dealAction": "فتح العرض"
   },
   "choices": {
     "title": "الخيارات والإضافات",
-    "description": "اختيارات يقوم بها الزبون على هذا الطبق.",
     "copyFrom": "انسخ من طبق آخر",
     "variants": "الخيارات",
-    "variantsHint": "يختار الزبون اختيارًا واحدًا من كل خيار، مثل الحجم أو مستوى البهارات. الاختيار بدون سعر مجاني.",
+    "variantsHint": "يختار الزبون خيارًا واحدًا، مثل الحجم. الخيار بلا سعر مجاني.",
     "addons": "الإضافات",
-    "addonsHint": "إضافات يختارها الزبون، بقدر ما يشاء. الإضافة بدون سعر مجانية.",
+    "addonsHint": "إضافات يختارها الزبون. الإضافة بلا سعر مجانية.",
     "variantNumber": "الخيار {{number}}",
     "variantName": "اسم الخيار",
     "variantPlaceholder": "مثلًا: الحجم",
@@ -159,7 +176,9 @@
     "needTwo": "يحتاج كل خيار إلى اختيارين على الأقل.",
     "variantNameRequired": "اكتب اسم كل خيار باللغة {{language}}.",
     "optionNameRequired": "اكتب اسم كل اختيار باللغة {{language}}.",
-    "addonNameRequired": "اكتب اسم كل إضافة باللغة {{language}}."
+    "addonNameRequired": "اكتب اسم كل إضافة باللغة {{language}}.",
+    "translate": "ترجم كل الأسماء",
+    "nothingToTranslate": "كل الأسماء مكتوبة باللغتين."
   },
   "dishToast": {
     "added": "تمت إضافة الطبق",
@@ -183,5 +202,38 @@
     "name": "الاسم",
     "description": "الوصف",
     "ingredients": "المكونات"
+  },
+  "categoryIcons": {
+    "none": "بلا أيقونة",
+    "tools-kitchen-2": "أطباق رئيسية",
+    "chef-hat": "طبق الشيف",
+    "salad": "سلطات",
+    "soup": "شوربات",
+    "pizza": "بيتزا",
+    "burger": "برغر",
+    "baguette": "سندويشات",
+    "sausage": "هوت دوغ",
+    "meat": "لحوم",
+    "grill": "مشاوي",
+    "fish": "سمك",
+    "egg-fried": "فطور",
+    "bread": "مخبوزات",
+    "bowl-chopsticks": "نودلز",
+    "bowl-spoon": "أطباق في وعاء",
+    "cheese": "أجبان",
+    "carrot": "خضار",
+    "leaf": "نباتي",
+    "flame": "حار",
+    "apple": "فواكه",
+    "cake": "كيك",
+    "ice-cream": "بوظة",
+    "cookie": "حلويات",
+    "coffee": "قهوة",
+    "teapot": "شاي",
+    "milkshake": "ميلك شيك",
+    "glass-full": "عصائر",
+    "glass-cocktail": "كوكتيلات",
+    "beer": "بيرة",
+    "bottle": "مشروبات غازية"
   }
 }

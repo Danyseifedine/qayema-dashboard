@@ -6,15 +6,7 @@ import { SwitchField } from '@/shared/components/forms/fields/switch-field'
 
 type Values = { available?: boolean }
 
-function Harness({
-  initial,
-  description,
-  disabled,
-}: {
-  initial?: boolean
-  description?: string
-  disabled?: boolean
-}) {
+function Harness({ initial, description }: { initial?: boolean; description?: string }) {
   const form = useForm<Values>({ defaultValues: { available: initial } })
   const available = useWatch({ control: form.control, name: 'available' })
   return (
@@ -24,7 +16,6 @@ function Harness({
         name="available"
         label="Available"
         description={description}
-        disabled={disabled}
         className="mt-2"
       />
       <output data-testid="value">{String(available)}</output>
@@ -60,15 +51,6 @@ describe('SwitchField', () => {
     render(<Harness description="Guests can order it." />)
 
     expect(control()).toHaveAccessibleDescription('Guests can order it.')
-  })
-
-  it('does not toggle when disabled', async () => {
-    const user = userEvent.setup()
-    render(<Harness initial={false} disabled />)
-
-    await user.click(control())
-
-    expect(screen.getByTestId('value')).toHaveTextContent('false')
   })
 
   it('shows the field’s error', async () => {

@@ -2,9 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
-import { Form, TextField } from '@/shared/components/forms'
-import { Alert, Button, Segmented } from '@/shared/components/ui'
+import { FormDialog } from '@/shared/components/feedback'
+import { TextField } from '@/shared/components/forms'
+import { Segmented } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
 import { useAddTables } from '@/features/tables/hooks/use-tables'
@@ -91,87 +91,86 @@ export function AddTablesDialog({ open, existing, onClose }: AddTablesDialogProp
   )
 
   return (
-    <Modal open={open} onClose={onClose} busy={add.isPending}>
-      <Form onSubmit={onSubmit} className="gap-0">
-        <div className="flex flex-col gap-3 p-5 pb-0">
-          <ModalHeader title={t('dialog.addTitle')} description={t('dialog.addDescription')} />
+    <FormDialog
+      open={open}
+      onClose={onClose}
+      busy={add.isPending}
+      title={t('dialog.addTitle')}
+      description={t('dialog.addDescription')}
+      error={formError}
+      onSubmit={onSubmit}
+      submitLabel={
+        mode === 'numbered' && preview.length > 1
+          ? t('dialog.addMany', { count: preview.length })
+          : t('dialog.addOne')
+      }
+    >
+      <div className="mt-3 flex flex-col gap-3">
+        <Segmented
+          aria-label={t('dialog.modeLabel')}
+          value={mode}
+          onChange={(next) => {
+            form.setValue('mode', next)
+            form.clearErrors()
+            clearFormError()
+          }}
+          options={[
+            { value: 'numbered', label: t('dialog.numbered') },
+            { value: 'single', label: t('dialog.single') },
+          ]}
+        />
 
-          <Segmented
-            aria-label={t('dialog.modeLabel')}
-            value={mode}
-            onChange={(next) => {
-              form.setValue('mode', next)
-              form.clearErrors()
-              clearFormError()
-            }}
-            options={[
-              { value: 'numbered', label: t('dialog.numbered') },
-              { value: 'single', label: t('dialog.single') },
-            ]}
+        {mode === 'numbered' ? (
+          <>
+            {/* On a phone the name takes its own row: beside two numbers it
+                  was squeezed down to its counter. */}
+            <div className="grid grid-cols-2 items-start gap-2.5 sm:grid-cols-[minmax(0,1fr)_84px_84px]">
+              <TextField
+                className="col-span-2 sm:col-span-1"
+                control={form.control}
+                name="prefix"
+                label={t('dialog.prefix')}
+                placeholder={t('dialog.defaultPrefix')}
+                maxLength={TABLE_NAME_MAX - 4}
+              />
+              <TextField
+                control={form.control}
+                name="from"
+                label={t('dialog.from')}
+                placeholder="1"
+                inputMode="numeric"
+                forceLtr
+              />
+              <TextField
+                control={form.control}
+                name="to"
+                label={t('dialog.to')}
+                placeholder="10"
+                inputMode="numeric"
+                forceLtr
+              />
+            </div>
+            <p className="text-[12.5px] text-[var(--muted)]">
+              {preview.length > 0
+                ? t('dialog.preview', {
+                    count: preview.length,
+                    first: preview[0],
+                    last: preview[preview.length - 1],
+                  })
+                : t('dialog.previewNone')}
+            </p>
+          </>
+        ) : (
+          <TextField
+            control={form.control}
+            name="name"
+            label={t('dialog.name')}
+            required
+            maxLength={TABLE_NAME_MAX}
+            placeholder={t('dialog.namePlaceholder')}
           />
-
-          {formError ? <Alert variant="error">{formError}</Alert> : null}
-
-          {mode === 'numbered' ? (
-            <>
-              <div className="grid grid-cols-[minmax(0,1fr)_84px_84px] items-start gap-2.5">
-                <TextField
-                  control={form.control}
-                  name="prefix"
-                  label={t('dialog.prefix')}
-                  placeholder={t('dialog.defaultPrefix')}
-                  maxLength={TABLE_NAME_MAX - 4}
-                />
-                <TextField
-                  control={form.control}
-                  name="from"
-                  label={t('dialog.from')}
-                  placeholder="1"
-                  inputMode="numeric"
-                  forceLtr
-                />
-                <TextField
-                  control={form.control}
-                  name="to"
-                  label={t('dialog.to')}
-                  placeholder="10"
-                  inputMode="numeric"
-                  forceLtr
-                />
-              </div>
-              <p className="text-[12.5px] text-[var(--muted)]">
-                {preview.length > 0
-                  ? t('dialog.preview', {
-                      count: preview.length,
-                      first: preview[0],
-                      last: preview[preview.length - 1],
-                    })
-                  : t('dialog.previewNone')}
-              </p>
-            </>
-          ) : (
-            <TextField
-              control={form.control}
-              name="name"
-              label={t('dialog.name')}
-              required
-              maxLength={TABLE_NAME_MAX}
-              placeholder={t('dialog.namePlaceholder')}
-            />
-          )}
-        </div>
-
-        <ModalFooter>
-          <Button variant="ghost" onClick={onClose} disabled={add.isPending}>
-            {t('dialog.cancel')}
-          </Button>
-          <Button type="submit" loading={add.isPending}>
-            {mode === 'numbered' && preview.length > 1
-              ? t('dialog.addMany', { count: preview.length })
-              : t('dialog.addOne')}
-          </Button>
-        </ModalFooter>
-      </Form>
-    </Modal>
+        )}
+      </div>
+    </FormDialog>
   )
 }

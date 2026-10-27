@@ -16,7 +16,6 @@ describe('EmptyState', () => {
     expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
     expect(screen.getByText('No dishes yet')).toBeInTheDocument()
     expect(screen.getByText('Add your first dish.')).toBeInTheDocument()
-    expect(container.firstElementChild).not.toHaveClass('flex-1')
   })
 
   it('shows an action', () => {
@@ -32,9 +31,9 @@ describe('EmptyState', () => {
     expect(screen.getByRole('button', { name: 'Add dish' })).toBeInTheDocument()
   })
 
-  it('grows into the space left when asked to fill', () => {
+  it('grows into the space left', () => {
     const { container } = render(
-      <EmptyState icon={IconToolsKitchen2} title="Nothing" description="Nothing here." fill />,
+      <EmptyState icon={IconToolsKitchen2} title="Nothing" description="Nothing here." />,
     )
 
     expect(container.firstElementChild).toHaveClass('flex-1', 'justify-center')

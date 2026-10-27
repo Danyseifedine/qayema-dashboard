@@ -101,6 +101,52 @@ describe('OrdersPage', () => {
     expect(screen.getByText(/lands here, with a sound/)).toBeInTheDocument()
   })
 
+  it('lists the newest 30, and the next 30 on "Show more"', async () => {
+    const first = Array.from({ length: 30 }, (_, index) =>
+      order({ id: 31 - index, reference: `NEW${31 - index}` }),
+    )
+    mock.onGet('/api/orders', { params: { kind: 'away' } }).reply(200, {
+      data: first,
+      meta: { open: 31, current_page: 1, last_page: 2 },
+    })
+    let answer: (reply: [number, object]) => void = () => {}
+    mock.onGet('/api/orders', { params: { kind: 'away', page: 2 } }).reply(
+      () =>
+        new Promise<[number, object]>((resolve) => {
+          answer = resolve
+        }),
+    )
+    const user = userEvent.setup()
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    expect(await screen.findAllByRole('article')).toHaveLength(30)
+    const more = screen.getByRole('button', { name: 'Show more' })
+    await user.click(more)
+
+    // On its way: pressed once, with a spinner.
+    expect(more).toBeDisabled()
+    expect(more).toHaveAttribute('aria-busy', 'true')
+    answer([
+      200,
+      {
+        data: [order({ id: 1, reference: 'OLD001' })],
+        meta: { open: 31, current_page: 2, last_page: 2 },
+      },
+    ])
+
+    expect(await screen.findByText('OLD001')).toBeInTheDocument()
+    expect(screen.getAllByRole('article')).toHaveLength(31)
+    expect(screen.queryByRole('button', { name: 'Show more' })).not.toBeInTheDocument()
+  })
+
+  it('offers no "Show more" when everything fits on one page', async () => {
+    stub()
+    renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
+
+    expect(await screen.findByText('ABC234')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Show more' })).not.toBeInTheDocument()
+  })
+
   it('filters by status through the API', async () => {
     stub()
     const user = userEvent.setup()
@@ -241,7 +287,7 @@ describe('OrdersPage', () => {
     renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
 
     await pick(user, 'Edit order ABC234')
-    const dialog = screen.getByRole('dialog')
+    const dialog = await screen.findByRole('dialog')
     // House Bowl: 2 to 3. Daily Tart: off.
     await user.click(within(dialog).getByRole('button', { name: 'House Bowl +1' }))
     await user.click(within(dialog).getByRole('button', { name: 'Daily Tart -1' }))
@@ -268,7 +314,7 @@ describe('OrdersPage', () => {
     renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
 
     await pick(user, 'Edit order ABC234')
-    const dialog = screen.getByRole('dialog')
+    const dialog = await screen.findByRole('dialog')
     await user.click(within(dialog).getByRole('button', { name: 'House Bowl -1' }))
     await user.click(within(dialog).getByRole('button', { name: 'House Bowl -1' }))
     await user.click(within(dialog).getByRole('button', { name: 'Daily Tart -1' }))
@@ -336,7 +382,7 @@ describe('OrdersPage', () => {
     renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
 
     await pick(user, 'Edit order ABC234')
-    const dialog = screen.getByRole('dialog')
+    const dialog = await screen.findByRole('dialog')
     const asked = mock.history.get.filter((r) => r.url === '/api/orders').length
     await user.click(within(dialog).getByRole('button', { name: 'Save changes' }))
 

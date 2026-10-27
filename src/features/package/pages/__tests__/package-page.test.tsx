@@ -7,7 +7,7 @@ import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/c
 import { renderWithProviders } from '@/test/render-with-providers'
 import type { AuthUser } from '@/features/auth'
 import { makePackage, PACKAGE_CATALOGUE } from '@/test/factories/packages'
-import { EMPTY_PLAN, makeSessionUser } from '@/test/factories/session'
+import { EMPTY_PLAN, makeSessionUser, makeWritingHelp } from '@/test/factories/session'
 import { PackagePage } from '@/features/package/pages/package-page'
 
 let mock: MockAdapter
@@ -21,6 +21,7 @@ function session(restaurant: Partial<Restaurant> = {}) {
         dishes: { used: 12, limit: 40 },
         categories: { used: 3, limit: 8 },
         social_links: { used: 1, limit: 1 },
+        builds: { used: 0, limit: 3 },
       },
       plan: EMPTY_PLAN,
       ...restaurant,
@@ -32,6 +33,7 @@ function onPackage(slug: string, name: string, dates: Partial<Restaurant['packag
   return {
     package: {
       slug,
+      tier: null,
       name: { en: name, ar: null },
       is_contact_only: false,
       ends_at: null,
@@ -191,6 +193,7 @@ describe('PackagePage', () => {
     stub('pro', {
       lapsed: {
         slug: 'pro',
+        tier: null,
         name: { en: 'Pro', ar: null },
         ended_at: '2026-09-01T10:00:00+00:00',
         offline_at: '2026-09-04T10:00:00+00:00',
@@ -213,6 +216,7 @@ describe('PackagePage', () => {
     stub('pro', {
       lapsed: {
         slug: 'pro',
+        tier: null,
         name: { en: 'Pro', ar: null },
         ended_at: '2026-09-01T10:00:00+00:00',
         offline_at: '2026-09-04T10:00:00+00:00',
@@ -231,6 +235,7 @@ describe('PackagePage', () => {
     session({
       lapsed: {
         slug: 'pro',
+        tier: null,
         name: { en: 'Pro', ar: null },
         ended_at: '2026-09-01T10:00:00+00:00',
         offline_at: '2026-09-04T10:00:00+00:00',
@@ -259,6 +264,7 @@ describe('PackagePage', () => {
     stub('free', {
       upcoming: {
         slug: 'premium',
+        tier: null,
         name: { en: 'Premium', ar: null },
         starts_at: '2026-10-05T10:00:00+00:00',
       },
@@ -290,6 +296,47 @@ describe('PackagePage', () => {
     expect(chips.getByText('QR studio').closest('li')).toHaveTextContent('Included')
     expect(chips.getByText('QR studio').closest('li')).not.toHaveTextContent('Not included')
     expect(chips.getByText('Analytics').closest('li')).toHaveTextContent('Not included')
+  })
+
+  it('says a feature the admin turned off is turned off, not missing from the package', async () => {
+    stub('pro', {
+      ...onPackage('pro', 'Pro'),
+      plan: { ...EMPTY_PLAN, appearance: true },
+      turned_off: ['analytics'],
+    })
+    renderWithProviders(<PackagePage locale="en" />)
+
+    const included = await screen.findByText('On your package')
+    const chips = within(included.parentElement!)
+    const analytics = chips.getByText('Analytics').closest('li')!
+    expect(analytics).toHaveTextContent('turned off')
+    expect(analytics).not.toHaveTextContent('Not included')
+    expect(chips.getByText('QR studio').closest('li')).toHaveTextContent('Not included')
+  })
+
+  it("shows the restaurant's own price on its package's card, and the published one elsewhere", async () => {
+    session(onPackage('pro', 'Pro'))
+    mock.onGet('/api/packages').reply(200, {
+      data: PACKAGE_CATALOGUE,
+      meta: { current: 'pro', your_price_cents: 450 },
+    })
+    renderWithProviders(<PackagePage locale="en" />)
+
+    // The current package's card heads the page too; this is its catalogue card.
+    const pro = (await screen.findByRole('heading', { name: 'Pro', level: 3 })).closest('article')!
+    expect(within(pro).getByText('$4.50')).toBeInTheDocument()
+    expect(within(pro).getByText('/ month')).toBeInTheDocument()
+    expect(within(pro).queryByText('$7.99')).not.toBeInTheDocument()
+    const premium = screen.getByRole('heading', { name: 'Premium' }).closest('article')!
+    expect(within(premium).getByText('$10.00')).toBeInTheDocument()
+  })
+
+  it('shows the published price when the restaurant has no price of its own', async () => {
+    stub('pro', onPackage('pro', 'Pro'))
+    renderWithProviders(<PackagePage locale="en" />)
+
+    const pro = (await screen.findByRole('heading', { name: 'Pro', level: 3 })).closest('article')!
+    expect(within(pro).getByText('$7.99')).toBeInTheDocument()
   })
 
   it('builds each card on the one before and marks the most popular', async () => {
@@ -398,6 +445,61 @@ describe('PackagePage', () => {
     ).toEqual(['Not included', '100', 'Unlimited'])
   })
 
+  it('lists the AI credits a month on each card and in the table, never money', async () => {
+    session()
+    mock.onGet('/api/packages').reply(200, {
+      data: [
+        makePackage({ features: { writing_help_credits: 500 } }),
+        makePackage({
+          id: 2,
+          slug: 'pro',
+          name: { en: 'Pro', ar: null },
+          is_default: false,
+          features: { writing_help_credits: 7500 },
+        }),
+        makePackage({
+          id: 3,
+          slug: 'custom',
+          name: { en: 'Custom', ar: null },
+          is_default: false,
+          features: { writing_help_credits: null },
+        }),
+      ],
+      meta: { current: 'free' },
+    })
+    renderWithProviders(<PackagePage locale="en" />)
+
+    expect(await screen.findByText('500 AI credits a month')).toBeInTheDocument()
+    expect(screen.getByText('7,500 AI credits a month')).toBeInTheDocument()
+    expect(screen.getByText('Unlimited AI credits')).toBeInTheDocument()
+    const row = within(screen.getByRole('table'))
+      .getByRole('rowheader', { name: 'AI credits a month' })
+      .closest('tr')!
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent),
+    ).toEqual(['500', '7,500', 'Unlimited'])
+    expect(screen.queryByText(/\$/)).not.toBeInTheDocument()
+  })
+
+  it('shows the credits used this month beside the package’s other limits', async () => {
+    stub('free', { writing_help: makeWritingHelp({}, { limit: 500, left: 120 }) })
+    renderWithProviders(<PackagePage locale="en" />)
+
+    expect(await screen.findByText('AI credits this month')).toBeInTheDocument()
+    expect(screen.getByText('380 / 500')).toBeInTheDocument()
+  })
+
+  it('leaves the credits out when there is no cap or no AI', async () => {
+    stub('free', { writing_help: makeWritingHelp({}, { limit: null, left: null }) })
+    const { unmount } = renderWithProviders(<PackagePage locale="en" />)
+
+    expect(await screen.findByText('12 / 40')).toBeInTheDocument()
+    expect(screen.queryByText('AI credits this month')).not.toBeInTheDocument()
+    unmount()
+  })
+
   it('names one AI use a day in the singular', async () => {
     session()
     mock.onGet('/api/packages').reply(200, {
@@ -464,6 +566,7 @@ describe('PackagePage', () => {
     stub('free', {
       package: {
         slug: null,
+        tier: null,
         name: { en: null, ar: null },
         is_contact_only: false,
         ends_at: '2026-10-01T10:00:00+00:00',
@@ -514,6 +617,7 @@ describe('PackagePage', () => {
     stub('free', {
       lapsed: {
         slug: 'gold',
+        tier: null,
         name: { en: null, ar: null },
         ended_at: null,
         offline_at: null,
@@ -534,6 +638,7 @@ describe('PackagePage', () => {
     stub('free', {
       upcoming: {
         slug: 'premium',
+        tier: null,
         name: { en: 'Premium', ar: null },
         starts_at: null,
       },

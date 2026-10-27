@@ -35,7 +35,8 @@ describe('categoryFormSchema', () => {
   it('reports a missing name together with a description that is too long', () => {
     const result = categoryFormSchema.safeParse({
       name: { en: '', ar: '' },
-      description: { en: 'x'.repeat(301), ar: '' },
+      description: { en: 'x'.repeat(121), ar: '' },
+      icon: null,
     })
 
     const paths = result.error?.issues.map((issue) => issue.path.join('.'))
@@ -46,6 +47,7 @@ describe('categoryFormSchema', () => {
     const result = categoryFormSchema.safeParse({
       name: { en: ' Drinks ', ar: '' },
       description: { en: '', ar: '' },
+      icon: null,
     })
 
     expect(result.success).toBe(true)
@@ -57,6 +59,7 @@ describe('categoryFormSchema', () => {
     const result = categoryFormSchema.safeParse({
       name: { en: '  ', ar: 'مشروبات' },
       description: { en: '', ar: '' },
+      icon: null,
     })
 
     expect(result.error?.issues).toContainEqual(
@@ -69,12 +72,13 @@ describe('categoryFormSchema', () => {
 
   it('names the field and its limit when a name or description runs long', () => {
     const result = categoryFormSchema.safeParse({
-      name: { en: 'x'.repeat(256) },
-      description: { en: 'y'.repeat(301) },
+      name: { en: 'x'.repeat(41) },
+      description: { en: 'y'.repeat(121) },
+      icon: null,
     })
 
     const messages = result.error?.issues.map((issue) => issue.message) ?? []
-    expect(messages.some((m) => m.includes('name') && m.includes('255'))).toBe(true)
-    expect(messages.some((m) => m.includes('description') && m.includes('300'))).toBe(true)
+    expect(messages.some((m) => m.includes('name') && m.includes('40'))).toBe(true)
+    expect(messages.some((m) => m.includes('description') && m.includes('120'))).toBe(true)
   })
 })

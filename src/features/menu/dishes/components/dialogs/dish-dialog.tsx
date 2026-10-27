@@ -1,27 +1,29 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useRef } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useEffect, useMemo, useRef } from 'react'
+import { useForm, useWatch, type FieldPath } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
+import { FormDialog } from '@/shared/components/feedback'
 import {
   ComboboxField,
   FieldGroup,
-  Form,
   PriceField,
   SwitchField,
+  OneLanguageNote,
   TranslatableTextField,
 } from '@/shared/components/forms'
 import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
+import { MENU_TEXT_LIMITS } from '@/shared/constants/menu-text-limits'
 import { ImageField, imageChanges } from '@/features/uploads'
-import { Alert, Button } from '@/shared/components/ui'
+import { Alert, Segmented } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { mainLanguageOf } from '@/shared/constants/menu-languages'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
+import { useTranslateOnSave } from '@/shared/hooks/use-translate-on-save'
 import { cn } from '@/shared/utils/dom/cn'
-import { translated } from '@/shared/utils/string/translated'
+import { nameOr } from '@/shared/utils/string/translated'
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
 import { useSaveDish } from '@/features/menu/dishes/hooks/use-dishes'
-import { useDishChoices, useMenuLanguages } from '@/features/auth'
+import { useDishBuilds, useDishChoices, useMenuLanguages } from '@/features/auth'
 import { toMenuTextForm } from '@/shared/utils/string/menu-text'
 import { DishChoicesSection } from '@/features/menu/dishes/components/options/dish-choices-section'
 import {
@@ -30,11 +32,17 @@ import {
   toVariantsPayload,
 } from '@/features/menu/dishes/schemas/dish-choices.schema'
 import {
-  dishFormSchema,
+  makeDishFormSchema,
   type Dish,
   type DishFormInput,
   type DishFormValues,
 } from '@/features/menu/dishes/schemas/dish.schema'
+import { missingDishTranslations } from '@/features/menu/dishes/utils/dish-translations'
+import { tidyIngredients } from '@/shared/utils/string/ingredients'
+import { useUiStore } from '@/stores/ui.store'
+
+/** A line above a part of the form, so the parts read apart. */
+const PART = 'mt-5 border-t-[0.5px] border-[var(--line)] pt-3'
 
 export type DishDialogProps = {
   open: boolean
@@ -45,11 +53,18 @@ export type DishDialogProps = {
   categories: Category[]
   /** Preselected category when adding from a filtered view. */
   defaultCategoryId: number | null
+  /** The restaurant's main currency. */
   currency: string
+  /** The one other currency a dish may be priced in; null for none. */
+  secondCurrency: string | null
   locale: Locale
   onClose: () => void
   /** A dish needs a category; this sends the owner off to make one. */
   onOpenCategories: () => void
+  /** A dish guests build is changed on the Build your own page. */
+  onOpenBuilds: () => void
+  /** A deal dish's offer is changed on the Offers page. */
+  onOpenOffers: () => void
 }
 
 export function DishDialog({
@@ -59,24 +74,42 @@ export function DishDialog({
   categories,
   defaultCategoryId,
   currency,
+  secondCurrency,
   locale,
   onClose,
   onOpenCategories,
+  onOpenBuilds,
+  onOpenOffers,
 }: DishDialogProps) {
   const { t } = useTranslation('menu')
   const save = useSaveDish(dish?.id ?? null)
   const languages = useMenuLanguages()
   const show = useDishChoices()
   const withChoices = show.variants || show.addons
+  // Its saved builds price a dish with none of its own, while they are on;
+  // the Build your own page changes them, the form never sends them.
+  const builtByGuests = useDishBuilds() && (dish?.builds.length ?? 0) > 0
+  const showBuildsOf = useUiStore((state) => state.showBuildsOf)
+  const editOffer = useUiStore((state) => state.editOffer)
+  // A deal dish is on the menu only while the offer that made it runs.
+  const madeBy = dish?.offer ?? null
 
+  const translation = useTranslateOnSave(languages)
+  // While saving translates, a name in either language will do: the AI
+  // fills the main one in (the form reads this on every render).
+  const resolver = useMemo(
+    () => zodResolver(makeDishFormSchema(translation.on, builtByGuests)),
+    [translation.on, builtByGuests],
+  )
   const form = useForm<DishFormInput, unknown, DishFormValues>({
-    resolver: zodResolver(dishFormSchema),
+    resolver,
     defaultValues: {
       name: toMenuTextForm(null, languages),
       ingredients: toMenuTextForm(null, languages),
       price: null,
       category_id: defaultCategoryId ?? categories[0]?.id ?? null,
       is_available: true,
+      currency,
       image: null,
       variants: [],
       addons: [],
@@ -87,17 +120,22 @@ export function DishDialog({
 
   // The price hint follows the variants: with one, an empty price means the
   // first variant's options are the prices (a sandwich by size alone).
-  const [watchedPrice, watchedVariants] = useWatch({
+  const [watchedPrice, watchedVariants, watchedCurrency] = useWatch({
     control: form.control,
-    name: ['price', 'variants'],
+    name: ['price', 'variants', 'currency'],
   })
+  // The price, its variants and its add-ons are all in the dish's currency.
+  const dishCurrency = watchedCurrency || currency
   const firstVariant =
     watchedVariants[0]?.name[mainLanguageOf(languages)]?.trim() ||
     t('choices.variantNumber', { number: 1 })
-  const priceHint =
-    !show.variants || watchedVariants.length === 0
+  const unpriced = watchedPrice === null || watchedPrice === undefined
+  // A dish with no price of its own is priced by its builds first.
+  const priceHint = builtByGuests
+    ? t(unpriced ? 'dishDialog.priceHintFromBuild' : 'dishDialog.priceHintWithBuild')
+    : !show.variants || watchedVariants.length === 0
       ? t('dishDialog.priceHint')
-      : watchedPrice === null || watchedPrice === undefined
+      : unpriced
         ? t('dishDialog.priceHintFromVariant', { variant: firstVariant })
         : t('dishDialog.priceHintWithVariant', { variant: firstVariant })
 
@@ -128,11 +166,13 @@ export function DishDialog({
       category_id:
         current?.category_id ?? defaultCategoryId ?? categoriesRef.current[0]?.id ?? null,
       is_available: current?.is_available ?? true,
+      // A new dish is priced in the main currency.
+      currency: current?.currency ?? currency,
       image: null,
       variants: show.variants ? choices.variants : [],
       addons: show.addons ? choices.addons : [],
     })
-  }, [open, dishId, defaultCategoryId, languages, show, form, clearFormError])
+  }, [open, dishId, defaultCategoryId, languages, show, form, clearFormError, currency])
 
   // Opened before the categories arrived (a slow connection), the form had
   // none to preselect. Fill the empty choice once they are here, touching
@@ -145,166 +185,217 @@ export function DishDialog({
   }, [open, firstCategoryId, defaultCategoryId, form])
 
   const once = useSubmitOnce()
+  const busy = save.isPending || translation.busy
 
+  const send = (values: DishFormValues, done: () => void) => {
+    save.mutate(
+      {
+        name: values.name,
+        ingredients: values.ingredients,
+        price: values.price,
+        category_id: values.category_id,
+        is_available: values.is_available,
+        // Only once the restaurant has a second currency to choose.
+        ...(secondCurrency === null ? {} : { currency: values.currency }),
+        // A key only for an image uploaded in this session; the flag only
+        // when the saved one was removed.
+        ...imageChanges(values.image, 'image_key', 'delete_image'),
+        ...(show.variants ? { variants: toVariantsPayload(values.variants) } : {}),
+        ...(show.addons ? { addons: toAddonsPayload(values.addons) } : {}),
+      },
+      { onSuccess: onClose, onError: (error) => applyApiError(error), onSettled: done },
+    )
+  }
+
+  // Saving fills in, with the writing help, everything written in one
+  // language only (the name, the ingredients, every choice), in one AI use;
+  // the form shows them too, should the save be refused.
   const onSubmit = form.handleSubmit((values) =>
     once((done) => {
       clearFormError()
-      save.mutate(
-        {
-          name: values.name,
-          ingredients: values.ingredients,
-          price: values.price,
-          category_id: values.category_id,
-          is_available: values.is_available,
-          // A key only for an image uploaded in this session; the flag only
-          // when the saved one was removed.
-          ...imageChanges(values.image, 'image_key', 'delete_image'),
-          ...(show.variants ? { variants: toVariantsPayload(values.variants) } : {}),
-          ...(show.addons ? { addons: toAddonsPayload(values.addons) } : {}),
-        },
-        { onSuccess: onClose, onError: (error) => applyApiError(error), onSettled: done },
-      )
+      translation.fill(values, missingDishTranslations(values, languages), {
+        save: (filled) => send(filled, done),
+        show: (path, text) => form.setValue(path as FieldPath<DishFormInput>, text),
+        tidy: (piece, text) =>
+          piece.path.startsWith('ingredients.') ? tidyIngredients(text, piece.to) : text,
+      })
     }),
   )
 
-  const options = categories.map((category) => {
-    const name = translated(category.name, locale)
-    return {
-      value: String(category.id),
-      label: name.missing ? t('dishDialog.untitledCategory') : name.text,
-    }
-  })
+  const options = categories.map((category) => ({
+    value: String(category.id),
+    label: nameOr(category.name, locale, t('dishDialog.untitledCategory')),
+  }))
+  const noCategories = options.length === 0
 
   return (
-    <Modal
+    <FormDialog
       open={open}
       onClose={onClose}
-      busy={save.isPending}
+      busy={busy}
       className={cn(
-        'max-h-[90dvh] overflow-y-auto',
+        'overflow-y-auto',
         // Variant and add-on rows want the room for a name and a price.
-        withChoices ? 'w-[min(94vw,640px)]' : 'w-[min(94vw,560px)]',
+        withChoices ? 'w-[min(calc(100vw-24px),640px)]' : 'w-[min(calc(100vw-24px),560px)]',
       )}
-    >
-      <Form onSubmit={onSubmit} className="gap-0">
-        <div className="p-5 pb-0">
-          <ModalHeader title={dish ? t('dishDialog.titleEdit') : t('dishDialog.titleNew')} />
-
-          {formError ? (
-            <Alert variant="error" className="mt-3">
-              {formError}
+      title={dish ? t('dishDialog.titleEdit') : t('dishDialog.titleNew')}
+      error={formError}
+      notice={
+        <>
+          {madeBy ? (
+            <Alert
+              variant="info"
+              size="sm"
+              className="mt-3"
+              action={{
+                label: t('dishDialog.dealAction'),
+                onClick: () => {
+                  editOffer(madeBy.id)
+                  onClose()
+                  onOpenOffers()
+                },
+              }}
+            >
+              {t('dishDialog.deal', {
+                title: nameOr(madeBy.title, locale, t('dishCard.deal.untitledOffer')),
+              })}
             </Alert>
           ) : null}
-
-          {options.length === 0 ? (
-            <Alert variant="warning" title={t('shared.addCategoryFirst')} className="mt-3">
+          {translation.on ? <OneLanguageNote languages={languages} /> : null}
+          {noCategories ? (
+            <Alert
+              variant="warning"
+              title={t('shared.addCategoryFirst')}
+              className="mt-3"
+              action={{
+                label: t('shared.goToCategories'),
+                onClick: () => {
+                  onClose()
+                  onOpenCategories()
+                },
+              }}
+            >
               {t('dishDialog.needsCategory')}
-              <div className="mt-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    onClose()
-                    onOpenCategories()
-                  }}
-                >
-                  {t('shared.goToCategories')}
-                </Button>
-              </div>
             </Alert>
           ) : null}
+        </>
+      }
+      onSubmit={onSubmit}
+      submitLabel={dish ? t('dishDialog.save') : t('dishDialog.add')}
+      submitBlocked={noCategories ? t('shared.addCategoryFirst') : undefined}
+    >
+      <TranslatableTextField
+        control={form.control}
+        languages={languages}
+        name="name"
+        label={t('shared.name')}
+        required
+        maxLength={MENU_TEXT_LIMITS.dishName}
+        placeholder={{ en: 'Lamb shank', ar: 'موزات الغنم' }}
+      />
 
-          <TranslatableTextField
+      <TranslatableTextField
+        control={form.control}
+        languages={languages}
+        name="ingredients"
+        label={t('dishDialog.ingredients')}
+        multiline
+        rows={2}
+        maxLength={MENU_TEXT_LIMITS.ingredients}
+        optionalText={t('shared.optional')}
+        hint={t('dishDialog.ingredientsHint')}
+        tidy={tidyIngredients}
+        placeholder={{ en: 'Lamb, rice, almonds, yoghurt', ar: 'لحم غنم، أرز، لوز، لبن' }}
+      />
+
+      <div className={PART}>
+        <FieldGroup>
+          <PriceField
             control={form.control}
-            languages={languages}
-            name="name"
-            label={t('shared.name')}
+            name="price"
+            currency={dishCurrency}
+            label={t('dishDialog.price')}
+            hint={priceHint}
+            currencyPicker={
+              secondCurrency === null ? undefined : (
+                <Segmented
+                  size="sm"
+                  aria-label={t('dishDialog.currency')}
+                  value={dishCurrency}
+                  onChange={(next) => form.setValue('currency', next, { shouldDirty: true })}
+                  options={[
+                    { value: currency, label: currency },
+                    { value: secondCurrency, label: secondCurrency },
+                  ]}
+                />
+              )
+            }
+          />
+          <ComboboxField
+            control={form.control}
+            name="category_id"
+            label={t('dishDialog.category')}
             required
-            maxLength={255}
-            placeholder={{ en: 'Lamb shank', ar: 'موزات الغنم' }}
+            numeric
+            searchable={false}
+            options={options}
+            disabled={noCategories}
+            placeholder={
+              noCategories ? t('shared.addCategoryFirst') : t('dishDialog.categoryPlaceholder')
+            }
           />
-
-          <TranslatableTextField
-            control={form.control}
-            languages={languages}
-            name="ingredients"
-            label={t('dishDialog.ingredients')}
-            multiline
-            rows={3}
-            maxLength={2000}
-            optionalText={t('shared.optional')}
-            hint={t('dishDialog.ingredientsHint')}
-            placeholder={{ en: 'Lamb, rice, almonds, yoghurt', ar: 'لحم غنم، أرز، لوز، لبن' }}
-          />
-
-          <FieldGroup>
-            <PriceField
-              control={form.control}
-              name="price"
-              currency={currency}
-              label={t('dishDialog.price')}
-              hint={priceHint}
-            />
-            <ComboboxField
-              control={form.control}
-              name="category_id"
-              label={t('dishDialog.category')}
-              required
-              numeric
-              searchable={false}
-              options={options}
-              disabled={options.length === 0}
-              placeholder={
-                options.length === 0
-                  ? t('shared.addCategoryFirst')
-                  : t('dishDialog.categoryPlaceholder')
-              }
-            />
-          </FieldGroup>
-
-          {withChoices ? (
-            <DishChoicesSection
-              form={form}
-              languages={languages}
-              currency={currency}
-              locale={locale}
-              show={show}
-              dishes={dishes.filter((other) => other.id !== dish?.id)}
-            />
-          ) : null}
-
-          <ImageField
-            control={form.control}
-            name="image"
-            label={t('dishDialog.photo')}
-            optionalText={t('shared.optional')}
-            context="dish"
-            currentUrl={dish?.image_url ?? null}
-            hint={t('dishDialog.photoHint')}
-          />
-
-          <SwitchField
-            control={form.control}
-            name="is_available"
-            label={t('dishDialog.available')}
-            description={t('dishDialog.availableDescription')}
-          />
-        </div>
-
-        <ModalFooter>
-          <Button variant="ghost" onClick={onClose} disabled={save.isPending}>
-            {t('shared.cancel')}
-          </Button>
-          <Button
-            type="submit"
-            loading={save.isPending}
-            disabled={options.length === 0}
-            title={options.length === 0 ? t('shared.addCategoryFirst') : undefined}
+        </FieldGroup>
+        {builtByGuests && dish ? (
+          <Alert
+            variant="info"
+            size="sm"
+            className="mt-3"
+            action={{
+              label: t('dishDialog.buildsAction'),
+              onClick: () => {
+                showBuildsOf(dish.id)
+                onClose()
+                onOpenBuilds()
+              },
+            }}
           >
-            {dish ? t('dishDialog.save') : t('dishDialog.add')}
-          </Button>
-        </ModalFooter>
-      </Form>
-    </Modal>
+            {t('dishDialog.builtByGuests')}
+          </Alert>
+        ) : null}
+      </div>
+
+      {withChoices ? (
+        <DishChoicesSection
+          form={form}
+          languages={languages}
+          currency={dishCurrency}
+          locale={locale}
+          show={show}
+          dishes={dishes.filter((other) => other.id !== dish?.id)}
+          pricedByBuilds={builtByGuests}
+        />
+      ) : null}
+
+      <div className={PART}>
+        <ImageField
+          control={form.control}
+          name="image"
+          label={t('dishDialog.photo')}
+          optionalText={t('shared.optional')}
+          context="dish"
+          currentUrl={dish?.image_url ?? null}
+          hint={t('dishDialog.photoHint')}
+        />
+      </div>
+
+      <div className={PART}>
+        <SwitchField
+          control={form.control}
+          name="is_available"
+          label={t('dishDialog.available')}
+          description={t('dishDialog.availableDescription')}
+        />
+      </div>
+    </FormDialog>
   )
 }

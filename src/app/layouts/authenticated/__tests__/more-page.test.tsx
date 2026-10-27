@@ -48,7 +48,7 @@ describe('MorePage', () => {
         .getAllByRole('heading', { level: 2 })
         .map((h) => h.textContent),
     ).toEqual(['Menu', 'Look', 'Sharing', 'Orders', 'Insights', 'Settings'])
-    expect(inGroup('Menu')).toEqual(['Categories', 'Dishes'])
+    expect(inGroup('Menu')).toEqual(['Categories', 'Dishes', 'Offers', 'Build your own'])
     expect(inGroup('Sharing')).toEqual(['QR code', 'Social links'])
     expect(inGroup('Orders')).toEqual(['Delivery and pickup', 'Table orders', 'Tables'])
   })

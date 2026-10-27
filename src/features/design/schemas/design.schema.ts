@@ -10,6 +10,8 @@ const designSchema = z.object({
   thumbnail_url: z.url().nullable(),
   /** Needs a package with premium designs. */
   is_premium: z.boolean(),
+  /** Made for this restaurant alone (an admin's custom design). */
+  made_for_you: z.boolean().default(false),
   /** Premium, and this restaurant's package does not include it. */
   locked: z.boolean(),
 })

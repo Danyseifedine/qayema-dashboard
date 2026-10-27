@@ -2,13 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Modal, ModalFooter, ModalHeader } from '@/shared/components/feedback'
-import { Form, TextareaField } from '@/shared/components/forms'
-import { Alert, Button } from '@/shared/components/ui'
+import { FormDialog } from '@/shared/components/feedback'
+import { TextareaField } from '@/shared/components/forms'
 import type { Locale } from '@/shared/constants/locales'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSubmitOnce } from '@/shared/hooks/use-submit-once'
-import { translated } from '@/shared/utils/string/translated'
+import { nameOr } from '@/shared/utils/string/translated'
 import { useRequestPackage } from '@/features/package/hooks/use-packages'
 import {
   requestPackageFormSchema,
@@ -22,9 +21,12 @@ export type RequestPackageDialogProps = {
   pkg: Package | null
   locale: Locale
   onClose: () => void
+  /** In place of "Ask about <package>", for a request about something else. */
+  title?: string
+  description?: string
+  /** The note the form opens with, which the owner can change. */
+  message?: string
 }
-
-const EMPTY: RequestPackageFormValues = { message: '' }
 
 /**
  * Asks for a package.
@@ -32,13 +34,21 @@ const EMPTY: RequestPackageFormValues = { message: '' }
  * This sends a message, not a payment: an admin reads it and assigns the
  * package, so the copy promises a reply rather than an upgrade.
  */
-export function RequestPackageDialog({ open, pkg, locale, onClose }: RequestPackageDialogProps) {
+export function RequestPackageDialog({
+  open,
+  pkg,
+  locale,
+  onClose,
+  title,
+  description,
+  message = '',
+}: RequestPackageDialogProps) {
   const { t } = useTranslation('package')
   const send = useRequestPackage()
 
   const form = useForm<RequestPackageFormValues>({
     resolver: zodResolver(requestPackageFormSchema),
-    defaultValues: EMPTY,
+    defaultValues: { message },
   })
 
   const { formError, applyApiError, clearFormError } = useApiFormErrors(form.setError)
@@ -47,11 +57,10 @@ export function RequestPackageDialog({ open, pkg, locale, onClose }: RequestPack
   useEffect(() => {
     if (!open) return
     clearFormError()
-    form.reset(EMPTY)
-  }, [open, form, clearFormError])
+    form.reset({ message })
+  }, [open, message, form, clearFormError])
 
-  const name = pkg === null ? '' : translated(pkg.name, locale)
-  const label = pkg === null ? '' : name === '' || name.missing ? pkg.slug : name.text
+  const label = pkg === null ? '' : nameOr(pkg.name, locale, pkg.slug)
 
   // Each request counts against the owner's three a day.
   const once = useSubmitOnce()
@@ -68,40 +77,27 @@ export function RequestPackageDialog({ open, pkg, locale, onClose }: RequestPack
   })
 
   return (
-    <Modal open={open} onClose={onClose} busy={send.isPending}>
-      <Form onSubmit={onSubmit} className="gap-0">
-        <div className="p-5 pb-0">
-          <ModalHeader
-            title={t('request.title', { name: label })}
-            description={t('request.description')}
-          />
-
-          {formError ? (
-            <Alert variant="error" className="mt-3">
-              {formError}
-            </Alert>
-          ) : null}
-
-          <TextareaField
-            control={form.control}
-            name="message"
-            label={t('request.messageLabel')}
-            optionalText={t('request.optional')}
-            rows={4}
-            maxLength={2000}
-            placeholder={t('request.placeholder')}
-          />
-        </div>
-
-        <ModalFooter>
-          <Button variant="ghost" onClick={onClose} disabled={send.isPending}>
-            {t('request.cancel')}
-          </Button>
-          <Button type="submit" loading={send.isPending} disabled={pkg === null}>
-            {t('request.submit')}
-          </Button>
-        </ModalFooter>
-      </Form>
-    </Modal>
+    <FormDialog
+      open={open}
+      onClose={onClose}
+      busy={send.isPending}
+      title={title ?? t('request.title', { name: label })}
+      description={description ?? t('request.description')}
+      error={formError}
+      onSubmit={onSubmit}
+      submitLabel={t('request.submit')}
+      // Nothing to ask about yet: no tooltip, just a button that waits.
+      submitBlocked={pkg === null ? '' : undefined}
+    >
+      <TextareaField
+        control={form.control}
+        name="message"
+        label={t('request.messageLabel')}
+        optionalText={t('request.optional')}
+        rows={4}
+        maxLength={2000}
+        placeholder={t('request.placeholder')}
+      />
+    </FormDialog>
   )
 }

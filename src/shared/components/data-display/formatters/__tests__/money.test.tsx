@@ -11,10 +11,11 @@ describe('Money', () => {
     expect(price).toHaveClass('tabular-nums', 'font-medium')
   })
 
-  it('formats for the reader’s language', () => {
-    const { container } = render(<Money amount={12.5} currency="USD" locale="ar" />)
+  it('reads the same in Arabic, with Western digits', () => {
+    document.documentElement.dir = 'rtl'
+    render(<Money amount={12.5} currency="USD" />)
 
-    expect(container.textContent).not.toBe('$12.50')
-    expect(container.textContent).toMatch(/[١٢]/)
+    expect(screen.getByText('$12.50')).toHaveAttribute('dir', 'ltr')
+    document.documentElement.dir = 'ltr'
   })
 })

@@ -1,5 +1,4 @@
 import type { AuthRestaurant } from '@/features/auth'
-import type { Dish } from '@/features/menu'
 import type { Restaurant } from '@/features/restaurant'
 import { t } from '@/lib/i18n'
 
@@ -17,8 +16,9 @@ export type ChecklistItem = {
 
 type ChecklistInput = {
   settings: Restaurant
-  dishes: Dish[]
   limits: AuthRestaurant['limits']
+  /** Dishes still without a photo, from the session. */
+  withoutPhoto: number
 }
 
 const filled = (value: string | null | undefined) => (value ?? '').trim() !== ''
@@ -27,8 +27,8 @@ const filled = (value: string | null | undefined) => (value ?? '').trim() !== ''
  * What a guest would miss on this menu, in the order an owner would usually
  * fill it in. Everything here is read from data the dashboard already has.
  */
-export function menuChecklist({ settings, dishes, limits }: ChecklistInput): ChecklistItem[] {
-  const withoutPhoto = dishes.filter((dish) => dish.image_url === null).length
+export function menuChecklist({ settings, limits, withoutPhoto }: ChecklistInput): ChecklistItem[] {
+  const dishCount = limits.dishes.used
   const hasHours = Object.values(settings.opening_hours).some((day) => day !== null)
   const add = t('overview:checklist.actions.add')
 
@@ -92,13 +92,13 @@ export function menuChecklist({ settings, dishes, limits }: ChecklistInput): Che
     {
       id: 'photos',
       label:
-        dishes.length === 0
+        dishCount === 0
           ? t('overview:checklist.items.photos.label')
           : withoutPhoto === 0
             ? t('overview:checklist.items.photos.allDone')
             : t('overview:checklist.items.photos.missing', { count: withoutPhoto }),
       hint: t('overview:checklist.items.photos.hint'),
-      done: dishes.length > 0 && withoutPhoto === 0,
+      done: dishCount > 0 && withoutPhoto === 0,
       action: { label: t('overview:checklist.actions.fix'), target: 'dishes' },
     },
     {

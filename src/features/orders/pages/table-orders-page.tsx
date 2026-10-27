@@ -4,7 +4,7 @@ import { useTableOrderingMode } from '@/features/auth'
 import { PictureEmptyState } from '@/shared/components/feedback'
 import { Button } from '@/shared/components/ui'
 import { OrderBoard } from '@/features/orders/components/list/order-board'
-import { OrdersSwitch } from '@/features/orders/components/list/orders-switch'
+import { OrdersSwitch } from '@/features/orders/components/nav/orders-switch'
 import type { Order } from '@/features/orders/schemas/order.schema'
 
 /** A tent card waiting on an empty table: before the first table order. */
@@ -48,6 +48,7 @@ export function TableOrdersPage({
         sort={byTable}
         empty={
           <PictureEmptyState
+            fill
             picture={NO_ORDERS}
             title={t('tables.emptyTitle')}
             description={t('tables.emptyDescription')}

@@ -3,8 +3,8 @@ import { IconAt, IconMail, IconUserCircle } from '@tabler/icons-react'
 import { useEffect, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Form, FormActions, TextField } from '@/shared/components/forms'
-import { Alert, Button, SectionCard } from '@/shared/components/ui'
+import { Field, Form, FormActions, TextField } from '@/shared/components/forms'
+import { Alert, Button, Input, SectionCard } from '@/shared/components/ui'
 import { useApiFormErrors } from '@/shared/hooks/use-api-form-errors'
 import { useSaveProfile } from '@/features/account/hooks/use-account'
 import {
@@ -72,7 +72,7 @@ export function ProfileSection({ name, email, username }: ProfileSectionProps) {
           <SignInName
             label={t('profile.usernameLabel')}
             hint={t('profile.usernameHint')}
-            icon={<IconAt aria-hidden className="size-4 shrink-0" />}
+            icon={<IconAt aria-hidden />}
             value={username}
           />
         ) : null}
@@ -80,7 +80,7 @@ export function ProfileSection({ name, email, username }: ProfileSectionProps) {
           <SignInName
             label={t('profile.emailLabel')}
             hint={t('profile.emailHint')}
-            icon={<IconMail aria-hidden className="size-4 shrink-0" />}
+            icon={<IconMail aria-hidden />}
             value={email}
           />
         ) : null}
@@ -95,7 +95,7 @@ export function ProfileSection({ name, email, username }: ProfileSectionProps) {
   )
 }
 
-/** A name the owner signs in with, shown as text: it cannot be changed here. */
+/** A name the owner signs in with, in a read-only field: it cannot be changed here. */
 function SignInName({
   label,
   hint,
@@ -108,13 +108,18 @@ function SignInName({
   value: string
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <span className="label-caps text-[var(--muted)]">{label}</span>
-      <p className="force-ltr flex items-center gap-2 rounded-[var(--radius-control)] border-[0.5px] border-[var(--line)] bg-[var(--field)] px-3.5 py-2.5 text-[14px] text-[var(--muted)]">
-        {icon}
-        {value}
-      </p>
-      <p className="text-[12px] text-[var(--muted)]">{hint}</p>
-    </div>
+    <Field label={label} hint={hint}>
+      {({ id, describedBy }) => (
+        <Input
+          id={id}
+          aria-describedby={describedBy}
+          readOnly
+          value={value}
+          leadingIcon={icon}
+          dir="ltr"
+          className="text-start text-[var(--muted)]"
+        />
+      )}
+    </Field>
   )
 }
