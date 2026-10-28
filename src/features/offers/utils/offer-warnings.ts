@@ -4,12 +4,12 @@ import type { OfferParts } from '@/features/offers/hooks/use-offer-parts'
 import { discountApplies } from '@/features/offers/utils/discount'
 import { offPackage } from '@/features/offers/utils/slots'
 
-/** A dish as the warnings need it: on the menu or not, and its own price. */
+/** A dish as the warnings need it: on the menu or not, and its least price. */
 export type MenuDish = {
   id: number
   name: string
-  /** In its own currency. */
-  price: string | null
+  /** In whole cents of its own currency, size included (`DishPrices`); null without a price. */
+  reference: number | null
   /** What one of its currency is worth in the main one (1 for the main). */
   rate: number
   /** Shown to guests: available, in a category. */
@@ -82,8 +82,7 @@ export function offerWarnings(
       const value = Number(offer.discount_value ?? 0)
       const free = chosen.filter(
         (dish) =>
-          dish.price !== null &&
-          !discountApplies(Math.round(Number(dish.price) * 100), 'amount', value, dish.rate),
+          dish.reference !== null && !discountApplies(dish.reference, 'amount', value, dish.rate),
       )
       if (free.length > 0) warnings.push({ kind: 'tooBig', dishes: free.map((dish) => dish.name) })
     }

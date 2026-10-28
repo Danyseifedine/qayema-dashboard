@@ -43,7 +43,10 @@ export function formatDay(date: string, locale: Locale): string {
 }
 
 /** Monday first, in the reader's language. 2024-01-01 was a Monday. */
-export function weekdayNames(locale: Locale, width: 'short' | 'long' = 'short'): string[] {
+export function weekdayNames(
+  locale: Locale,
+  width: 'narrow' | 'short' | 'long' = 'short',
+): string[] {
   const format = new Intl.DateTimeFormat(locale, { weekday: width })
   return Array.from({ length: 7 }, (_, index) => format.format(new Date(2024, 0, 1 + index)))
 }

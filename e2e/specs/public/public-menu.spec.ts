@@ -490,8 +490,8 @@ test.describe('public menu', () => {
     // The owner's copy, in WhatsApp's bold (WhatsAppLink::message in ../qayema).
     const lines = text.split('\n')
     expect(lines[0]).toBe('*New order · E2E Kitchen*')
-    expect(lines).toContain('*1 × Kafta*   $12')
-    expect(lines).toContain('*1 × Fattoush*   $7')
+    expect(lines).toContain('*1 Kafta*   $12')
+    expect(lines).toContain('*1 Fattoush*   $7')
     expect(lines).toContain('*Total: $19*')
     expect(lines).toContain('Note: Extra lemon')
 

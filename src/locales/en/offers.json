@@ -16,7 +16,8 @@
     "scheduled": "Starts {{when}}",
     "ended": "Ended",
     "paused": "Paused",
-    "off": "Off the menu"
+    "off": "Off the menu",
+    "dealStarts": "Shown, deal from {{when}}"
   },
   "placements": {
     "banner": {
@@ -46,7 +47,12 @@
     "percentOff": "{{value}}% off",
     "amountOff": "{{value}} off",
     "pictureOnly": "Picture only",
-    "deal": "Deal: {{name}}, {{price}}"
+    "deal": "Deal: {{name}}, {{price}}",
+    "secondOff": "2nd one {{value}}% off",
+    "secondFree": "2nd one free",
+    "thumbSecond": "2nd",
+    "thumbFree": "free",
+    "thumbPercent": "{{value}}%"
   },
   "editor": {
     "titleNew": "New offer",
@@ -77,15 +83,16 @@
     "linkHint": "Opens in a new tab. Starts with https://",
     "discount": "Discount",
     "discountOptions": {
-      "none": "None",
+      "none": "No discount",
       "percent": "Percent off",
-      "amount": "Amount off"
+      "amount": "Amount off",
+      "second": "2nd one off"
     },
     "percentValue": "Percent off",
     "amountValue": "Amount off",
-    "discountHint": "Taken off each chosen dish's own price while the offer is live; choices and add-ons keep theirs. If two offers cover a dish, guests get the better one.",
+    "discountHint": "Comes off each dish you tick below, size included. Add-ons stay full price. If two offers cover the same dish, guests get the better price.",
     "dishes": "Dishes",
-    "dishesHint": "The dishes the discount is for, and the ones a tap shows.",
+    "dishesHint": "Tick the dishes this offer is for.",
     "searchDishes": "Search your dishes",
     "noDishes": "Add dishes to your menu first.",
     "noMatch": "No dish matches that.",
@@ -156,7 +163,25 @@
       "nothing": "Nothing to order",
       "discount": "A discount on your dishes",
       "deal": "A deal"
-    }
+    },
+    "secondValue": "The second one",
+    "secondModes": {
+      "free": "Free",
+      "percent": "Percent off"
+    },
+    "secondPercent": "Percent off the second one",
+    "secondHint": "Any two dishes ticked below make a pair: the first is full price, the second is free or cheaper, size included. Add-ons stay full price.",
+    "secondPrice": "<was/>, 2nd <now/>",
+    "secondFree": "<was/>, 2nd free",
+    "showsOutsideHours": "Show it all the time",
+    "showsOutsideHoursDescription": "Guests always see the offer, but the deal works only on these days and hours. A tap outside them tells guests when it is available.",
+    "builtGroup": "Dishes guests build",
+    "builtGroupNote": "From Build your own. Priced by what each guest picks, and the discount comes off that too.",
+    "otherDishes": "Not in a category",
+    "selectAll": "Select all",
+    "clear": "Clear",
+    "selectGroup": "Select all in {{group}}",
+    "clearGroup": "Clear {{group}}"
   },
   "summary": {
     "always": "always",
@@ -166,7 +191,10 @@
     "allDay": "all day",
     "between": "{{from}} to {{to}}",
     "from": "from {{date}}",
-    "until": "until {{date}}"
+    "until": "until {{date}}",
+    "shownAlways": "shown all the time",
+    "noWeekdays": "on the weekdays you pick",
+    "noMonthDays": "on the days of the month you pick"
   },
   "validation": {
     "titleRequired": "An offer needs a title in {{language}}.",
@@ -187,7 +215,8 @@
     "dealName": "The deal dish needs a name in {{language}}.",
     "dealPrice": "Set the deal dish's price.",
     "dealCategory": "Choose a category for the deal dish.",
-    "discountOrDishes": "Pick a discount, or let a tap show the dishes."
+    "discountOrDishes": "Pick a discount, or let a tap show the dishes.",
+    "secondMax": "The second one can be at most 100% off, which makes it free."
   },
   "toast": {
     "added": "Offer added",
@@ -202,7 +231,7 @@
   "steps": {
     "content": "Picture and text",
     "where": "Where and shape",
-    "tap": "Tap and discount",
+    "tap": "What guests get",
     "when": "When",
     "review": "Review"
   },
@@ -264,7 +293,7 @@
     "noDishes": "No dishes left on it: choose its dishes again.",
     "allHidden": "All its dishes are hidden from the menu.",
     "tooBig": "Does not apply to {{dishes}}: the discount is not less than the price.",
-    "waits": "Waits behind {{title}}: a guest gets one pop-up or ad per visit, the first in your order.",
+    "waits": "Not shown for now: guests see one pop-up or short ad per visit, and {{title}} comes first. Drag this card above it to show this one instead.",
     "schedulesOff": "Schedules are not on your package: this offer stays off the menu.",
     "placesOff": "Its places are not on your package: this offer stays off the menu.",
     "placeOff": {

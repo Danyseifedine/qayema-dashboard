@@ -29,6 +29,8 @@ for (const language of ['en', 'ar'] as const) {
     test.use({ uiLanguage: language })
 
     test(`every page fits a phone's width (${language})`, async ({ page, owner }) => {
+      // Thirteen pages in one go take close to a minute on their own.
+      test.setTimeout(180_000)
       await owner({
         package: 'free',
         categories: [{ name: { en: 'Grills' }, dishes: [{ name: { en: 'Kafta' } }] }],

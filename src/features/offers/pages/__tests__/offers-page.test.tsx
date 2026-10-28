@@ -1,10 +1,10 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MockAdapter from 'axios-mock-adapter'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api/client'
 import { installCsrfInterceptor, resetCsrfToken } from '@/lib/api/interceptors/csrf'
-import { makeDish } from '@/test/factories/menu'
+import { makeBuild, makeCategory, makeDish } from '@/test/factories/menu'
 import { makeOffer } from '@/test/factories/offers'
 import { FULL_PLAN, makeSessionUser } from '@/test/factories/session'
 import { renderWithProviders } from '@/test/render-with-providers'
@@ -330,6 +330,194 @@ describe('OffersPage', () => {
     expect(screen.queryByRole('navigation', { name: 'Offer steps' })).toBeNull()
   })
 
+  it('lists the dishes under their categories, each with Select all', async () => {
+    mock.onGet('/api/categories').reply(200, {
+      data: [
+        makeCategory({ id: 1, name: { en: 'Grills', ar: null } }),
+        makeCategory({ id: 2, name: { en: 'Pizzas', ar: null } }),
+      ],
+      meta: { used: 2, limit: null },
+    })
+    mock.onGet('/api/dishes').reply(200, {
+      data: [
+        makeDish({ id: 7, name: { en: 'Margherita', ar: null }, category_id: 2 }),
+        makeDish({ id: 8, name: { en: 'Kafta', ar: null }, category_id: 1 }),
+        makeDish({ id: 9, name: { en: 'Pepperoni', ar: null }, category_id: 2 }),
+      ],
+      meta: { used: 3, limit: null, currency: 'USD' },
+    })
+    stub([])
+    const user = userEvent.setup()
+    renderWithProviders(<OffersPage locale="en" onOpenCategories={vi.fn()} />)
+
+    await startNew(user)
+    await next(user)
+    await giveDiscount(user)
+
+    // In the menu's order of categories, not the dishes' own.
+    const pizzas = await screen.findByRole('group', { name: 'Pizzas' })
+    const grills = screen.getByRole('group', { name: 'Grills' })
+    expect(grills.compareDocumentPosition(pizzas) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(within(pizzas).getAllByRole('checkbox')).toHaveLength(2)
+
+    await user.click(screen.getByRole('button', { name: 'Select all in Pizzas' }))
+    expect(within(pizzas).getByRole('checkbox', { name: /Margherita/ })).toBeChecked()
+    expect(within(pizzas).getByRole('checkbox', { name: /Pepperoni/ })).toBeChecked()
+    expect(within(grills).getByRole('checkbox', { name: /Kafta/ })).not.toBeChecked()
+    expect(screen.getByText('2 chosen')).toBeInTheDocument()
+
+    // Then it clears them.
+    await user.click(screen.getByRole('button', { name: 'Clear Pizzas' }))
+    expect(screen.getByText('0 chosen')).toBeInTheDocument()
+  })
+
+  it('adds a 2nd item deal on a pizza priced by its sizes, shown all the time, its deal on Wednesday evenings', async () => {
+    const pizza = makeDish({
+      id: 9,
+      name: { en: 'Pizza', ar: null },
+      price: null,
+      variants: [
+        {
+          id: 90,
+          name: { en: 'Size' },
+          options: [
+            { id: 91, name: { en: 'Small' }, price: '8.00' },
+            { id: 92, name: { en: 'Large' }, price: '12.00' },
+          ],
+        },
+      ],
+    })
+    // Priced only by choices that are not sizes: no price to show.
+    const platter = makeDish({ id: 10, name: { en: 'Platter', ar: null }, price: null })
+    // Built by guests, in no category: priced by what they build.
+    const built = makeDish({
+      id: 11,
+      name: { en: 'Build your pizza', ar: null },
+      price: null,
+      category_id: null,
+      builds: [makeBuild()],
+    })
+    mock.onGet('/api/dishes').reply(200, {
+      data: [kafta, pizza, platter, built],
+      meta: { used: 4, limit: null, currency: 'USD' },
+    })
+    stub([])
+    mock.onPost('/api/offers').reply(201, { data: makeOffer({ id: 9 }) })
+    const user = userEvent.setup()
+    renderWithProviders(<OffersPage locale="en" onOpenCategories={vi.fn()} />)
+
+    await startNew(user)
+    await next(user)
+    await giveDiscount(user)
+
+    // A percent covers the size: each size of the pizza, discounted.
+    await user.click(screen.getByRole('tab', { name: 'Percent off' }))
+    await user.type(screen.getByLabelText('Percent off'), '20')
+    await user.click(await screen.findByRole('checkbox', { name: /Pizza/ }))
+    expect(screen.getByText(priceLine(/^Small \$8\.00 becomes \$6\.40$/))).toBeInTheDocument()
+    expect(screen.getByText(priceLine(/Large \$12\.00 becomes \$9\.60$/))).toBeInTheDocument()
+    // The dishes guests build come first, in a group of their own that says how they are priced.
+    const builds = screen.getByRole('group', { name: 'Dishes guests build' })
+    expect(within(builds).getByRole('checkbox', { name: /Build your pizza/ })).toHaveTextContent(
+      /^Build your pizza$/,
+    )
+    expect(within(builds).getByText(/Priced by what each guest picks/)).toBeInTheDocument()
+    expect(screen.getAllByRole('checkbox')[0]).toHaveAccessibleName(/Build your pizza/)
+
+    // The second of a pair starts free.
+    await user.click(screen.getByRole('tab', { name: '2nd one off' }))
+    const second = screen.getByRole('tablist', { name: 'The second one' })
+    expect(within(second).getByRole('tab', { name: 'Free' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByText(/the second is free or cheaper/)).toBeInTheDocument()
+    expect(screen.getByText(priceLine(/^Small \$8\.00, 2nd free$/))).toBeInTheDocument()
+    await user.click(screen.getByRole('checkbox', { name: /Kafta/ }))
+    expect(screen.getByText(priceLine('$12.50, 2nd free'))).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /Platter/ })).toHaveTextContent(/^Platter$/)
+    // Picked again, it stays as it is.
+    await user.click(screen.getByRole('tab', { name: '2nd one off' }))
+    expect(within(second).getByRole('tab', { name: 'Free' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+
+    await user.click(within(second).getByRole('tab', { name: 'Percent off' }))
+    expect(screen.getByLabelText('Percent off the second one')).toHaveValue('50')
+    expect(screen.getByText(priceLine('$12.50, 2nd $6.25'))).toBeInTheDocument()
+    // Typing past 100 keeps the box, so its message can say why.
+    const percent = screen.getByLabelText('Percent off the second one')
+    await user.clear(percent)
+    await user.type(percent, '150')
+    expect(screen.getByLabelText('Percent off the second one')).toHaveValue('150')
+    await next(user)
+    expect(
+      await screen.findByText('The second one can be at most 100% off, which makes it free.'),
+    ).toBeInTheDocument()
+    await user.clear(percent)
+    await user.type(percent, '50')
+    await user.click(within(second).getByRole('tab', { name: 'Free' }))
+    expect(screen.queryByLabelText('Percent off the second one')).toBeNull()
+
+    // Another kind of discount starts empty, and the 2nd item free again.
+    await user.click(screen.getByRole('tab', { name: 'Amount off' }))
+    expect(screen.getByLabelText('Amount off')).toHaveValue('')
+    await user.click(screen.getByRole('tab', { name: '2nd one off' }))
+    const again = screen.getByRole('tablist', { name: 'The second one' })
+    expect(within(again).getByRole('tab', { name: 'Free' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    await user.click(within(again).getByRole('tab', { name: 'Percent off' }))
+    await next(user)
+
+    // Shown all the time, the deal only on Wednesday evenings.
+    await user.click(await screen.findByRole('tab', { name: 'On a schedule' }))
+    expect(screen.queryByRole('switch', { name: 'Show it all the time' })).toBeNull()
+    await user.click(screen.getByRole('tab', { name: 'Some weekdays' }))
+    await user.click(screen.getByRole('button', { name: 'Wed' }))
+    await user.click(screen.getByRole('switch', { name: 'All day' }))
+    await user.click(screen.getByRole('switch', { name: 'Show it all the time' }))
+    expect(
+      screen.getByText(/every Wednesday, 5:00\s?PM to 7:00\s?PM, shown all the time/),
+    ).toBeInTheDocument()
+    await next(user)
+
+    expect(screen.getByText('2nd one 50% off on 2 dishes')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Add offer' }))
+
+    await waitFor(() => expect(mock.history.post.some((r) => r.url === '/api/offers')).toBe(true))
+    expect(sent('post')).toMatchObject({
+      discount_type: 'second',
+      discount_value: 50,
+      dish_ids: [9, 7],
+      repeat: 'weekly',
+      weekdays: ['wed'],
+      shows_outside_hours: true,
+    })
+  })
+
+  it('says on a card that an offer is a 2nd item deal, shown while its deal waits', async () => {
+    stub([
+      makeOffer({
+        discount_type: 'second',
+        discount_value: '100.00',
+        dish_ids: [7],
+        repeat: 'weekly',
+        weekdays: ['wed'],
+        shows_outside_hours: true,
+        status: 'scheduled',
+        next_start: '2099-11-04T17:00',
+      }),
+    ])
+    renderWithProviders(<OffersPage locale="en" onOpenCategories={vi.fn()} />)
+
+    expect(await screen.findByText('2nd one free on 1 dish')).toBeInTheDocument()
+    expect(screen.getByText(/^Shown, deal from Nov 4, 5:00\s?PM$/)).toBeInTheDocument()
+    expect(screen.getByText('every Wednesday, all day, shown all the time')).toBeInTheDocument()
+  })
+
   it('moves on only once each step is right', async () => {
     stub([])
     const user = userEvent.setup()
@@ -381,7 +569,7 @@ describe('OffersPage', () => {
 
     // Back always goes, and a step reached earlier opens from the stepper.
     await user.click(screen.getByRole('button', { name: 'Back' }))
-    expect(stepHeading('Tap and discount')).toBeInTheDocument()
+    expect(stepHeading('What guests get')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /^Step 4: When/ }))
     expect(stepHeading('When')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Step 5: Review/ })).toBeDisabled()
@@ -436,9 +624,8 @@ describe('OffersPage', () => {
     ).toHaveAttribute('aria-pressed', 'true')
 
     await user.click(screen.getByRole('button', { name: /^Step 4: When/ }))
-    expect(screen.getByLabelText(/^Until/, { selector: 'input[type="date"]' })).toHaveValue(
-      '2026-11-30',
-    )
+    // The day field, not the time's "Until: hour".
+    expect(screen.getByRole('combobox', { name: /^Until(?!:)/ })).toHaveValue('Mon, Nov 30, 2026')
     expect(
       screen.getByText(/on day 1 and 15 of each month, all day, from Nov 1, until Nov 30/),
     ).toBeInTheDocument()
@@ -456,6 +643,57 @@ describe('OffersPage', () => {
       popup_shape: 'tall',
     })
     expect(await screen.findByText('Happy hour')).toBeInTheDocument()
+  })
+
+  it("shows a saved ad's own seconds picked, and starts a new ad on one of the choices", async () => {
+    // Made in the admin: 6 s and a 30 s wait are not among the editor's choices.
+    // Paused, so the new one may take the short ad.
+    stub([
+      makeOffer({
+        placements: ['ad'],
+        ad_seconds: 6,
+        ad_delay_seconds: 30,
+        is_active: false,
+        status: 'paused',
+      }),
+    ])
+    const user = userEvent.setup()
+    renderWithProviders(<OffersPage locale="en" onOpenCategories={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Edit Happy hour' }))
+    await user.click(screen.getByRole('button', { name: /^Step 2: Where and shape/ }))
+    const stays = screen.getByRole('tablist', { name: 'Can be closed after' })
+    expect(within(stays).getByRole('tab', { name: '6 s' })).toHaveAttribute('aria-selected', 'true')
+    expect(
+      within(screen.getByRole('tablist', { name: 'Wait before it shows' })).getByRole('tab', {
+        name: '30 s',
+      }),
+    ).toHaveAttribute('aria-selected', 'true')
+
+    await user.click(screen.getByRole('button', { name: 'Back to your offers' }))
+    await user.click(await screen.findByRole('button', { name: 'New offer' }))
+    await user.type(screen.getByLabelText(/^Title/), 'Lunch')
+    await next(user)
+    await user.click(screen.getByRole('button', { name: /^Short ad/ }))
+    const fresh = screen.getByRole('tablist', { name: 'Can be closed after' })
+    expect(within(fresh).getByRole('tab', { name: '5 s' })).toHaveAttribute('aria-selected', 'true')
+    expect(within(fresh).queryByRole('tab', { name: '6 s' })).toBeNull()
+  })
+
+  it('takes a message away as soon as its fix is made', async () => {
+    stub([])
+    const user = userEvent.setup()
+    renderWithProviders(<OffersPage locale="en" onOpenCategories={vi.fn()} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Create your first offer' }))
+    await next(user)
+    expect(await screen.findByText('An offer needs a title in English.')).toBeInTheDocument()
+    await user.type(screen.getByLabelText(/^Title/), 'G')
+    await waitFor(() =>
+      expect(screen.queryByText('An offer needs a title in English.')).not.toBeInTheDocument(),
+    )
+    // Still on the first step: only Next moves on.
+    expect(stepHeading('Picture and text')).toBeInTheDocument()
   })
 
   it('opens a new offer from the top and goes back to the list', async () => {
@@ -529,9 +767,12 @@ describe('OffersPage', () => {
     await next(user)
 
     await user.click(await screen.findByRole('tab', { name: 'On a schedule' }))
-    fireEvent.change(screen.getByLabelText(/^From/, { selector: 'input[type="date"]' }), {
-      target: { value: '2026-11-01' },
-    })
+    // Picked on the calendar: from today's month to November 2026.
+    await user.click(screen.getByRole('combobox', { name: /^From(?!:)/ }))
+    const now = new Date()
+    const months = (2026 - now.getFullYear()) * 12 + 10 - now.getMonth()
+    await user.keyboard((months < 0 ? '{PageUp}' : '{PageDown}').repeat(Math.abs(months)))
+    await user.click(screen.getByRole('button', { name: 'Sunday, November 1, 2026' }))
     await user.click(screen.getByRole('switch', { name: 'All day' }))
     await user.click(screen.getByRole('button', { name: 'Add a time' }))
     await user.click(screen.getByRole('button', { name: 'Add a time' }))
@@ -603,7 +844,11 @@ describe('OffersPage', () => {
     await startNew(user)
     await next(user)
     await giveDiscount(user)
-    await user.click(screen.getByRole('tab', { name: 'Show its dishes' }))
+    // A discount's tap shows its dishes to start.
+    expect(screen.getByRole('tab', { name: 'Show its dishes' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
     expect(await screen.findByText('Add dishes to your menu first.')).toBeInTheDocument()
   })
 
@@ -614,7 +859,7 @@ describe('OffersPage', () => {
 
     await user.click(await screen.findByText('Happy hour'))
     expect(screen.getByRole('heading', { level: 2, name: 'Edit offer' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /^Step 3: Tap and discount/ }))
+    await user.click(screen.getByRole('button', { name: /^Step 3: What guests get/ }))
     // Unticking a dish takes it off the offer.
     await user.click(await screen.findByRole('checkbox', { name: /Shish taouk/ }))
     expect(screen.getByRole('checkbox', { name: /Shish taouk/ })).toHaveAttribute(
@@ -783,7 +1028,7 @@ describe('OffersPage', () => {
 
     expect(
       await screen.findByText(
-        'Waits behind Welcome: a guest gets one pop-up or ad per visit, the first in your order.',
+        'Not shown for now: guests see one pop-up or short ad per visit, and Welcome comes first. Drag this card above it to show this one instead.',
       ),
     ).toBeInTheDocument()
     expect(screen.getByText('No dishes left on it: choose its dishes again.')).toBeInTheDocument()
@@ -814,7 +1059,7 @@ describe('OffersPage', () => {
     expect(
       await screen.findByText('Shish taouk costs $9.00: a discount must take off less than that.'),
     ).toBeInTheDocument()
-    expect(stepHeading('Tap and discount')).toBeInTheDocument()
+    expect(stepHeading('What guests get')).toBeInTheDocument()
   })
 
   describe('dishes in two currencies', () => {
@@ -867,12 +1112,14 @@ describe('OffersPage', () => {
       expect(screen.getByText(priceLine('$5.00 becomes $1.63'))).toBeInTheDocument()
       expect(screen.getByText(priceLine(/^LBP\s450,000 becomes LBP\s150,000$/))).toBeInTheDocument()
 
-      // $5.00 is LBP 445,000: an amount that big takes all of it.
+      // $5.00 is LBP 445,000: an amount that big takes all of it, said in both.
       await user.clear(screen.getByLabelText('Amount off'))
       await user.type(screen.getByLabelText('Amount off'), '445000')
       await next(user)
       expect(
-        await screen.findByText('Burger costs $5.00: a discount must take off less than that.'),
+        await screen.findByText(
+          /^Burger costs \$5\.00 \(LBP\s445,000\): a discount must take off less than that\.$/,
+        ),
       ).toBeInTheDocument()
     })
 

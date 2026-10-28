@@ -125,6 +125,22 @@ describe('LinkSection', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
+  it('shows the link as the server wrote it, even when that is the link it had', async () => {
+    mock.onPut('/api/restaurant/slug').reply(200, { data: { ...saved, slug: 'beit-qayema' } })
+    const user = userEvent.setup()
+    renderSection()
+
+    await user.clear(field())
+    await user.type(field(), 'Beit Qayema')
+    await user.click(changeButton())
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Change link' }),
+    )
+
+    await waitFor(() => expect(field()).toHaveValue('beit-qayema'))
+    expect(changeButton()).toBeDisabled()
+  })
+
   it('says why under the field when the server refuses the link', async () => {
     mock.onPut('/api/restaurant/slug').reply(422, {
       message: 'That link is already taken. Try another one.',

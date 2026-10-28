@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { discountedCents } from '@/features/offers/utils/discount'
 import {
   clockTime,
@@ -18,6 +18,10 @@ const always: Parameters<typeof scheduleSummary>[0] = {
 }
 
 describe('offer schedule', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('says an offer with no rules is always on', () => {
     expect(scheduleSummary(always, 'en')).toBe('always')
   })
@@ -35,6 +39,50 @@ describe('offer schedule', () => {
         'en',
       ),
     ).toMatch(/^every day, 12:00\s?PM to 2:00\s?PM, until Nov 30$/)
+  })
+
+  it('says days not picked yet plainly, never "every ,"', () => {
+    const hours = { ...always, time_windows: [{ from: '17:00', to: '19:00' }] }
+    expect(scheduleSummary({ ...hours, repeat: 'weekly' }, 'en')).toMatch(
+      /^on the weekdays you pick, 5:00\s?PM to 7:00\s?PM$/,
+    )
+    expect(scheduleSummary({ ...always, repeat: 'monthly' }, 'en')).toBe(
+      'on the days of the month you pick, all day',
+    )
+  })
+
+  it('says an offer shows all the time only when it has days or hours to wait for', () => {
+    const fridays = {
+      ...always,
+      repeat: 'weekly' as const,
+      weekdays: ['fri' as const],
+      shows_outside_hours: true,
+    }
+    expect(scheduleSummary(fridays, 'en')).toBe('every Friday, all day, shown all the time')
+    expect(scheduleSummary({ ...fridays, shows_outside_hours: false }, 'en')).toBe(
+      'every Friday, all day',
+    )
+    expect(
+      scheduleSummary(
+        { ...always, starts_at: '2026-11-01T00:00', shows_outside_hours: true },
+        'en',
+      ),
+    ).toBe('every day, all day, from Nov 1')
+  })
+
+  it('says an offer shown outside its hours is shown, its deal starting later', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 10, 10, 12, 0))
+    const waiting = {
+      status: 'scheduled' as const,
+      next_start: '2026-11-13T18:00',
+      shows_outside_hours: true,
+    }
+    expect(statusLine(waiting, 'en')).toMatch(/^Shown, deal from Nov 13, 6:00\s?PM$/)
+    expect(statusLine({ ...waiting, starts_at: '2026-11-01T00:00' }, 'en')).toMatch(/^Shown/)
+    // Before its first day it shows nowhere yet.
+    expect(statusLine({ ...waiting, starts_at: '2026-11-12T00:00' }, 'en')).toMatch(/^Starts/)
+    expect(statusLine({ ...waiting, shows_outside_hours: false }, 'en')).toMatch(/^Starts/)
   })
 
   it('reads a time and a date the way the reader does', () => {

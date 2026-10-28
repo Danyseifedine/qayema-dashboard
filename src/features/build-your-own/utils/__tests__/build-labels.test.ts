@@ -42,6 +42,6 @@ describe('build labels', () => {
     expect(sizesSummary(t, 'split', [1, 4, 6], 'en')).toBe('Whole, quarters, and 6 parts')
     expect(sizesSummary(t, 'pieces', [3, 2], 'en')).toBe('2 or 3 pieces')
     expect(sizesSummary(t, 'pieces', [1], 'en')).toBe('1 piece')
-    expect(sizesSummary(t, 'split', [], 'en')).toBe('No sizes yet')
+    expect(sizesSummary(t, 'split', [], 'en')).toBe('No parts picked yet')
   })
 })

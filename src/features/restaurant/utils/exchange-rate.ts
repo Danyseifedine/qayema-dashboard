@@ -51,10 +51,12 @@ export function toExchangeRate(
 ): string | number | null {
   if (!values.second_currency || values.rate === null) return null
   const before = toRateForm(saved.exchange_rate)
+  // Only turned round (1 LBP = 0.000011236 USD) is the same rate too:
+  // sending its rounded inverse would move 89,000 to 88,999.64.
+  const same = (form: RateForm) => values.rate_one === form.rate_one && values.rate === form.rate
   if (
     values.second_currency === saved.second_currency &&
-    values.rate_one === before.rate_one &&
-    values.rate === before.rate
+    (same(before) || same(flipRate(before)))
   ) {
     return saved.exchange_rate
   }

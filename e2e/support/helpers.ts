@@ -12,7 +12,12 @@ export function fixtureFile(name: 'dish.jpg' | 'logo.png' | 'not-an-image.txt'):
  * Call the owner API as the signed-in browser does, CSRF token included, to
  * set something up (or break it) behind the page's back.
  */
-export async function callApi(page: Page, method: 'POST' | 'DELETE', path: string, data?: object) {
+export async function callApi(
+  page: Page,
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  path: string,
+  data?: object,
+) {
   const request = page.context().request
   const headers = {
     Accept: 'application/json',
@@ -52,6 +57,18 @@ export async function openSidebar(page: Page): Promise<Locator> {
 /** Back to the page that was open before `openSidebar`: on a phone that opened More. */
 export async function closeSidebar(page: Page) {
   if (isPhone(page)) await page.goBack()
+}
+
+/**
+ * The public menu's cart: its own column on a wide screen, a sheet opened
+ * from the header on a phone.
+ */
+export async function openMenuCart(page: Page): Promise<Locator> {
+  if ((page.viewportSize()?.width ?? 0) >= 1024) return page.locator('aside.col-aside')
+  await page.locator('[data-open-cart]').first().click()
+  const sheet = page.locator('#cart-sheet')
+  await expect(sheet).toBeVisible()
+  return sheet
 }
 
 /** The owner's public menu in a separate, signed-out browser. */

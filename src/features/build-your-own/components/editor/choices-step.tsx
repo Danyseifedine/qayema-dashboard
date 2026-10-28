@@ -86,6 +86,12 @@ export function ChoicesStep({
 
       {source.value === 'category' ? (
         <div className="flex flex-col gap-2">
+          {/* A build needs no category of its own, but this list does. */}
+          {categories.length === 0 ? (
+            <Alert variant="info" size="sm">
+              {t('choices.noCategories')}
+            </Alert>
+          ) : null}
           <ComboboxField
             control={control}
             name="category_id"

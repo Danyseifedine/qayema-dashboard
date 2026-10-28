@@ -69,7 +69,8 @@ test.describe('offers on the menu', () => {
     const kafta = guest.locator('article.dish', { hasText: 'Kafta' })
     await expect(kafta.locator('.price')).toHaveText('$10')
     await expect(kafta.locator('.price-was')).toHaveText('$12.50')
-    await expect(kafta.locator('.dish-badge')).toHaveText('-20%')
+    // Beside the price, never over the photo.
+    await expect(kafta.locator('.price-group .dish-badge')).toHaveText('-20%')
 
     await kafta.getByRole('button', { name: 'Add Kafta' }).click()
     const cart = guest.locator('.col-aside')

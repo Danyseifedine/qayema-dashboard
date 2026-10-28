@@ -144,10 +144,14 @@
     "vsBefore": "vs before"
   },
   "limitNotice": {
-    "onYourPackage": "on your package"
+    "onYourPackage": "on your package",
+    "forYourRestaurant": "set for your restaurant"
   },
   "colorField": {
-    "picker": "{{label}}, picker"
+    "picker": "{{label}}, picker",
+    "shade": "Shade",
+    "shadeValue": "Saturation {{saturation}}%, brightness {{brightness}}%",
+    "hue": "Hue"
   },
   "phoneField": {
     "country": "Country"
@@ -323,5 +327,14 @@
     "step": "Step {{number}}: {{name}}",
     "stepDone": "Step {{number}}: {{name}}, done",
     "progress": "Step {{number}} of {{total}}: {{name}}"
+  },
+  "datePicker": {
+    "placeholder": "Pick a day",
+    "choose": "Choose a day",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "today": "Today",
+    "clear": "Clear",
+    "clearDay": "Clear the day"
   }
 }

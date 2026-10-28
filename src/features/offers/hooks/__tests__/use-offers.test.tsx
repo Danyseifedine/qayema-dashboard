@@ -35,6 +35,7 @@ const offer = (id: number): Offer => ({
   weekdays: [],
   month_days: [],
   time_windows: null,
+  shows_outside_hours: false,
   is_active: true,
   status: 'live',
   next_start: null,

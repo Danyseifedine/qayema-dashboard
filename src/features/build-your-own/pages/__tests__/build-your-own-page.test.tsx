@@ -123,18 +123,17 @@ describe('BuildYourOwnPage', () => {
     expect(within(pizzaCard).queryByText('Guests can’t see it yet')).not.toBeInTheDocument()
 
     // The dish's price and three of the free scoop.
-    expect(card('Your scoops')).toHaveTextContent('3 pieces, your own list of 2')
+    expect(card('Your scoops')).toHaveTextContent('3 pieces, from 2 choices')
     expect(card('Your scoops')).toHaveTextContent('From $4.00')
-    expect(card('Topping')).toHaveTextContent('1 piece, your own list of 3')
+    expect(card('Topping')).toHaveTextContent('1 piece, from 3 choices')
     expect(card('Topping')).toHaveTextContent('From $4.00')
 
     // One burger to pick from: guests do not see it.
     const duo = card('Burger duo')
     expect(duo).toHaveTextContent('Halves, from Burgers')
-    expect(within(duo).getByText("Guests can't see it yet")).toHaveAttribute(
-      'title',
-      'Guests see it once at least 2 choices can be picked.',
-    )
+    // Why, said on the card: a phone has no tooltip.
+    expect(within(duo).getByText("Guests can't see it yet")).toBeInTheDocument()
+    expect(duo).toHaveTextContent('Guests see it once at least 2 choices can be picked.')
     expect(duo).not.toHaveTextContent('From')
   })
 
@@ -164,6 +163,34 @@ describe('BuildYourOwnPage', () => {
     // A whole small Pepperoni is less than a whole Margherita.
     const pizza = await screen.findByRole('heading', { name: 'Build your pizza' })
     expect(pizza.closest('article')).toHaveTextContent('From $9.00')
+  })
+
+  it('says guests cannot see pizzas priced by size that share no size', async () => {
+    const sized = (id: number, name: string, size: string, price: string) =>
+      makeDish({
+        id,
+        name: { en: name },
+        price: null,
+        category_id: 2,
+        variants: [
+          {
+            id: id * 10,
+            name: { en: 'Size' },
+            options: [{ id: id * 10 + 1, name: { en: size }, price }],
+          },
+        ],
+      })
+    stub([
+      ...DISHES.filter((dish) => dish.id !== 10 && dish.id !== 11),
+      sized(10, 'Margherita', 'Small', '8.00'),
+      sized(11, 'Pepperoni', 'Large', '16.00'),
+    ])
+    renderWithProviders(<BuildYourOwnPage locale="en" />)
+
+    // One pizza at each size: the menu leaves the build out.
+    const pizza = await screen.findByRole('heading', { name: 'Build your pizza' })
+    expect(pizza.closest('article')).toHaveTextContent("Guests can't see it yet")
+    expect(pizza.closest('article')).not.toHaveTextContent('From')
   })
 
   it('says when a build offers only some of its category’s dishes', async () => {
@@ -217,7 +244,9 @@ describe('BuildYourOwnPage', () => {
       document.querySelector('img[src="/assets/images/dashboard/empty-build.webp"]'),
     ).toBeInTheDocument()
     expect(
-      screen.getByText('Like a half and half pizza, or three scoops of ice cream.'),
+      screen.getByText(
+        'Like a half and half pizza, or three scoops of ice cream. It sits at the top of your menu.',
+      ),
     ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Make your first build' }))
@@ -262,7 +291,7 @@ describe('BuildYourOwnPage', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'New build' })).toBeEnabled())
   })
 
-  it('makes no build past the package’s dishes, or without a category for its dish', async () => {
+  it('makes no build past the package’s dishes, but one without a category', async () => {
     stub(DISHES, { limit: 6 })
     const { unmount } = renderWithProviders(<BuildYourOwnPage locale="en" />)
     expect(await screen.findByText(/each build is a dish/)).toBeInTheDocument()
@@ -271,9 +300,9 @@ describe('BuildYourOwnPage', () => {
 
     stub([], { categories: [] })
     renderWithProviders(<BuildYourOwnPage locale="en" />)
-    expect(await screen.findByText(/so it needs a category/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'New build' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Make your first build' })).toBeDisabled()
+    // Its dish sits in no category: scoops from a typed list need none.
+    expect(await screen.findByRole('button', { name: 'Make your first build' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'New build' })).toBeEnabled()
   })
 
   it('says when the categories did not load', async () => {

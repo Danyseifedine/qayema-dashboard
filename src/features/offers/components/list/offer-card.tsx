@@ -1,9 +1,10 @@
 import {
   IconCalendarTime,
-  IconDiscount2,
   IconEye,
   IconLayoutBoard,
+  IconSpeakerphone,
   IconTag,
+  IconToolsKitchen2,
   type TablerIcon,
 } from '@tabler/icons-react'
 import type { TFunction } from 'i18next'
@@ -13,9 +14,10 @@ import { StatusChip, type ChipTone } from '@/shared/components/data-display'
 import { Alert, RowActions, Switch } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { cn } from '@/shared/utils/dom/cn'
+import { formatNumber } from '@/shared/utils/format/number'
 import { translated } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
-import type { Offer } from '@/features/offers/schemas/offer.schema'
+import { FREE, type Offer } from '@/features/offers/schemas/offer.schema'
 import { discountLine, discountNumber } from '@/features/offers/utils/discount'
 import type { OfferWarning } from '@/features/offers/utils/offer-warnings'
 import { joinList, scheduleSummary, statusLine } from '@/features/offers/utils/offer-schedule'
@@ -107,13 +109,13 @@ export const OfferCard = memo(function OfferCard({
           onClick={() => onEdit(offer)}
           className="flex min-w-0 flex-1 items-center gap-3 rounded-tile text-start focus-ring"
         >
-          <span className="inset-tile grid h-[54px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-tile">
-            {offer.image_url ? (
+          {offer.image_url ? (
+            <span className="inset-tile h-[54px] w-[72px] shrink-0 overflow-hidden rounded-tile">
               <img src={offer.image_url} alt="" className="size-full object-cover" loading="lazy" />
-            ) : (
-              <IconDiscount2 aria-hidden className="size-6 text-[var(--muted)]" stroke={1.5} />
-            )}
-          </span>
+            </span>
+          ) : (
+            <NoPicture offer={offer} />
+          )}
           <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
             <span
               dir="auto"
@@ -217,6 +219,51 @@ function Line({
       <Icon aria-hidden className="mt-px size-4 shrink-0 opacity-80" stroke={1.6} />
       <span className="min-w-0 [overflow-wrap:anywhere]">{children}</span>
     </li>
+  )
+}
+
+/**
+ * The card's picture for an offer without one: the brand's gold, as the
+ * menu draws a card with words and no picture, with what it gives in big
+ * type ("20%", "2nd free") or its sign (a deal's dish, an amount's tag, a
+ * promotion's speaker).
+ */
+function NoPicture({ offer }: { offer: Offer }) {
+  const { t } = useTranslation('offers')
+  const ui = usePreferencesStore((state) => state.locale)
+  const value = discountNumber(offer.discount_value ?? '')
+  const Icon = offer.deal
+    ? IconToolsKitchen2
+    : offer.discount_type === 'amount'
+      ? IconTag
+      : IconSpeakerphone
+
+  return (
+    <span
+      aria-hidden
+      className="relative grid h-[54px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-tile bg-gradient-to-br from-gold to-gold-deep text-ink"
+    >
+      {/* A soft ring of light in a corner, so the gold is not flat. */}
+      <span className="absolute -end-4 -top-5 size-12 rounded-full bg-white/25 blur-md" />
+      {!offer.deal && offer.discount_type === 'percent' && value > 0 ? (
+        <span className="relative font-display text-[21px] leading-none tracking-[-0.02em]">
+          {t('card.thumbPercent', { value: formatNumber(value, ui) })}
+        </span>
+      ) : !offer.deal && offer.discount_type === 'second' ? (
+        <span className="relative flex flex-col items-center gap-1 leading-none">
+          <span className="font-display text-[19px] tracking-[-0.02em]">
+            {t('card.thumbSecond')}
+          </span>
+          <span className="text-[10.5px] font-semibold">
+            {value >= FREE
+              ? t('card.thumbFree')
+              : t('card.thumbPercent', { value: formatNumber(value, ui) })}
+          </span>
+        </span>
+      ) : (
+        <Icon className="relative size-6" stroke={1.7} />
+      )}
+    </span>
   )
 }
 

@@ -194,6 +194,19 @@ describe('builds', () => {
     ])
   })
 
+  it("never offers an offer's deal dish, which the server refuses", () => {
+    const deal = makeDish({
+      id: 18,
+      name: { en: 'Family meal' },
+      price: '25.00',
+      category_id: 2,
+      offer: { id: 1, title: { en: 'Family meal' }, status: 'live', next_start: null },
+    })
+    const [build] = buildsToPick(PIZZA, BUILDS, [...MENU, deal])
+
+    expect(build!.choices.map((choice) => choice.key)).toEqual(['d12', 'd13'])
+  })
+
   it('offers the priced choices of its own list', () => {
     const [build] = buildsToPick(SCOOPS, BUILDS, MENU)
 
@@ -375,6 +388,25 @@ describe('builds priced by size', () => {
     const [build] = buildsToPick(HALVES, { ...BUILDS, main: 'ar' }, BY_SIZE)
 
     expect(build!.sizes.map((size) => size.key)).toContain('كبير')
+  })
+
+  it('prices a choice without a price of its own at nothing', () => {
+    const choice = { key: 'c1', name: { en: 'Plain' }, price: null, part_prices: null }
+    const unsized = { id: 1, name: { en: 'Yours' }, shape: 'split' as const, parts: [2] }
+
+    expect(choicesAt({ ...unsized, choices: [{ ...choice, sizes: {} }], sizes: [] }, null)).toEqual(
+      [{ ...choice, sizes: {}, price: '0' }],
+    )
+    expect(
+      choicesAt(
+        {
+          ...unsized,
+          choices: [{ ...choice, sizes: {} }],
+          sizes: [{ key: 'large', name: { en: 'Large' } }],
+        },
+        'large',
+      ),
+    ).toEqual([{ ...choice, sizes: {}, price: '0' }])
   })
 
   it('offers no pizza priced by size while variants are off', () => {

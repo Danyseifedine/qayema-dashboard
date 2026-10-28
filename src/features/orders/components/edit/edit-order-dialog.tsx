@@ -141,6 +141,11 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
             <ul className="flex flex-col divide-y-[0.5px] divide-[var(--line)]">
               {order.items.map((item, index) => {
                 const quantity = lines[index]?.quantity ?? 0
+                const picked = choiceParts(
+                  item.options?.variants ?? [],
+                  item.options?.addons ?? [],
+                  item.options?.builds,
+                ).join(' · ')
                 return (
                   <li
                     key={item.id}
@@ -154,16 +159,17 @@ export function EditOrderDialog({ order, onClose }: EditOrderDialogProps) {
                         {item.name}
                       </p>
                       <p className="text-[12px] text-[var(--muted)]">
-                        {[
-                          ...choiceParts(
-                            item.options?.variants ?? [],
-                            item.options?.addons ?? [],
-                            item.options?.builds,
-                          ),
-                          t('edit.each', {
-                            price: formatMoney(Number(item.unit_price), item.currency),
-                          }),
-                        ].join(' · ')}
+                        {/* Isolated, so choices named in the other script keep
+                            the price after them, in Arabic too. */}
+                        {picked !== '' ? (
+                          <>
+                            <bdi>{picked}</bdi>
+                            {' · '}
+                          </>
+                        ) : null}
+                        {t('edit.each', {
+                          price: formatMoney(Number(item.unit_price), item.currency),
+                        })}
                       </p>
                     </div>
                     <QuantityStepper

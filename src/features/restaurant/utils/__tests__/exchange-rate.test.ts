@@ -87,6 +87,16 @@ describe('toExchangeRate', () => {
     )
   })
 
+  it('sends a rate only turned round exactly as the server sent it, not its rounded inverse', () => {
+    const turned = flipRate(toRateForm('89000.0000000000'))
+
+    expect(toExchangeRate({ second_currency: 'USD', ...turned }, saved())).toBe('89000.0000000000')
+    // Turned round and then changed is a new rate.
+    expect(
+      toExchangeRate({ second_currency: 'USD', rate_one: 'main', rate: 0.00001 }, saved()),
+    ).toBeCloseTo(100000)
+  })
+
   it('sends a new rate as main per one second', () => {
     expect(
       toExchangeRate({ second_currency: 'USD', rate_one: 'second', rate: 90000 }, saved()),

@@ -189,14 +189,14 @@ describe('OffersPage: a deal dish', () => {
 
     await user.click(screen.getByRole('button', { name: /^Step 1: Picture and text/ }))
     await user.type(screen.getByLabelText(/^Title/), ' box')
-    await user.click(screen.getByRole('button', { name: /^Step 3: Tap and discount/ }))
+    await user.click(screen.getByRole('button', { name: /^Step 3: What guests get/ }))
     expect(dishName()).toHaveValue('Brunch box')
 
     await user.clear(dishName())
     await user.type(dishName(), 'Big brunch')
     await user.click(screen.getByRole('button', { name: /^Step 1: Picture and text/ }))
     await user.type(screen.getByLabelText(/^Title/), ' for two')
-    await user.click(screen.getByRole('button', { name: /^Step 3: Tap and discount/ }))
+    await user.click(screen.getByRole('button', { name: /^Step 3: What guests get/ }))
     expect(dishName()).toHaveValue('Big brunch')
   })
 
@@ -311,7 +311,7 @@ describe('OffersPage: a deal dish', () => {
       }),
     )
     await user.click(await screen.findByRole('button', { name: 'Edit Happy hour' }))
-    await user.click(screen.getByRole('button', { name: /^Step 3: Tap and discount/ }))
+    await user.click(screen.getByRole('button', { name: /^Step 3: What guests get/ }))
     expect(screen.getByRole('tab', { name: 'A deal' })).toBeEnabled()
   })
 
@@ -325,7 +325,7 @@ describe('OffersPage: a deal dish', () => {
     expect(container.querySelector('img[src="https://cdn.test/deal-thumb.webp"]')).not.toBeNull()
 
     await user.click(screen.getByRole('button', { name: 'Edit Happy hour' }))
-    await user.click(screen.getByRole('button', { name: /^Step 3: Tap and discount/ }))
+    await user.click(screen.getByRole('button', { name: /^Step 3: What guests get/ }))
     expect(screen.getByRole('tab', { name: 'A deal' })).toHaveAttribute('aria-selected', 'true')
     expect(dishName()).toHaveValue('Family meal')
     expect(screen.getByLabelText('Price')).toHaveValue(25)
@@ -363,7 +363,7 @@ describe('OffersPage: a deal dish', () => {
     renderWithProviders(<OffersPage locale="en" onOpenCategories={vi.fn()} />)
 
     await user.click(await screen.findByRole('button', { name: 'Edit Happy hour' }))
-    await user.click(screen.getByRole('button', { name: /^Step 3: Tap and discount/ }))
+    await user.click(screen.getByRole('button', { name: /^Step 3: What guests get/ }))
     await user.click(screen.getByRole('tab', { name: 'A discount on your dishes' }))
     await user.click(
       within(screen.getByRole('dialog', { name: 'Remove the deal dish?' })).getByRole('button', {
@@ -412,7 +412,7 @@ describe('OffersPage: a deal dish', () => {
     await user.click(screen.getByRole('button', { name: 'Add offer' }))
 
     expect(
-      await screen.findByRole('heading', { level: 3, name: 'Tap and discount' }),
+      await screen.findByRole('heading', { level: 3, name: 'What guests get' }),
     ).toBeInTheDocument()
     expect(dishName()).toHaveAccessibleDescription('Your package holds 40 dishes.')
     expect(screen.getByText('The price must be more than 0.')).toBeInTheDocument()

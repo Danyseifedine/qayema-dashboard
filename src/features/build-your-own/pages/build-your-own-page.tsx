@@ -93,14 +93,14 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
   const failed = dishes.isError ? dishes : categories.isError ? categories : null
 
   // A new build makes a dish guests build: it waits for room among those
-  // (counted from the list in hand, the limit from the session), for room
-  // among the package's dishes, and for a category.
+  // (counted from the list in hand, the limit from the session) and for
+  // room among the package's dishes. Its dish sits in no category, so none
+  // is needed.
   const builtCount = dishList.filter((dish) => dish.builds.length > 0).length
   const buildLimit = session.data?.restaurant?.limits.builds.limit ?? null
   const atBuildLimit = isAtLimit({ used: builtCount, limit: buildLimit })
   const atDishLimit = isAtLimit(dishes.data?.meta)
   const atLimit = atBuildLimit || atDishLimit
-  const noCategories = !loading && failed === null && categoryList.length === 0
 
   // A dish's only build goes with its dish; one of several leaves the others.
   const only = pendingDelete?.dish.builds.length === 1
@@ -129,11 +129,12 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
       <LimitHeader
         used={builtCount}
         limit={buildLimit}
+        setBy="restaurant"
         loading={dishes.isPending || session.isPending}
         action={
           <Button
             leadingIcon={<IconPlus aria-hidden className="size-[18px]" />}
-            disabled={loading || failed !== null || atLimit || noCategories}
+            disabled={loading || failed !== null || atLimit}
             onClick={() => setEditing(null)}
           >
             {t('page.add')}
@@ -146,7 +147,6 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
       ) : atDishLimit ? (
         <Alert variant="warning">{t('page.atLimit')}</Alert>
       ) : null}
-      {noCategories ? <Alert variant="warning">{t('page.noCategories')}</Alert> : null}
 
       {loading ? (
         <SkeletonList
@@ -163,7 +163,7 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
           title={t('page.emptyTitle')}
           description={t('page.emptyDescription')}
           action={
-            <Button block disabled={atLimit || noCategories} onClick={() => setEditing(null)}>
+            <Button block disabled={atLimit} onClick={() => setEditing(null)}>
               {t('page.addFirst')}
             </Button>
           }

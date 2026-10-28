@@ -45,7 +45,7 @@ test.describe('offers', () => {
     await bannerShape.getByRole('button', { name: /^(Square|مربع)/ }).click()
     await next.click()
 
-    // 3 Tap and discount: a discount on the owner's dishes.
+    // 3 What guests get: a discount on the owner's dishes.
     await page
       .getByRole('tab', { name: either('A discount on your dishes', 'خصم على أطباقك') })
       .click()

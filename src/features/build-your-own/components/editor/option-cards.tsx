@@ -49,7 +49,8 @@ export function OptionCards<V extends string>({
             <label
               key={option.value}
               className={cn(
-                'flex flex-col gap-3 rounded-tile p-3',
+                // On a phone, the picture sits beside the words, so every card fits.
+                'flex flex-col gap-3 rounded-tile p-3 max-sm:flex-row max-sm:items-center',
                 optionCardClass(checked),
                 !checked && 'bg-[var(--surface)] hover:bg-[var(--hover-wash)]',
               )}
@@ -66,7 +67,7 @@ export function OptionCards<V extends string>({
               {option.picture ? (
                 <span
                   aria-hidden
-                  className="inset-tile grid aspect-video place-items-center rounded-tile"
+                  className="inset-tile grid aspect-video place-items-center rounded-tile max-sm:h-20 max-sm:w-24 max-sm:shrink-0 max-sm:[&>svg]:max-w-[80%]"
                 >
                   {option.picture}
                 </span>

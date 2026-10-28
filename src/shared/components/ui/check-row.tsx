@@ -14,7 +14,9 @@ export type CheckRowProps = {
 /**
  * One row of a list where any number may be ticked (the dishes an offer is
  * for, the dishes a build offers): a box that turns gold, the name, and
- * whatever sits at its end. Put the rows in a `role="group"` with a name.
+ * whatever sits at its end. When both do not fit on one line (a narrow
+ * phone, a long price), the end moves under the name rather than squeezing
+ * it away. Put the rows in a `role="group"` with a name.
  */
 export function CheckRow({ on, onClick, children, trailing }: CheckRowProps) {
   return (
@@ -24,7 +26,7 @@ export function CheckRow({ on, onClick, children, trailing }: CheckRowProps) {
       aria-checked={on}
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 rounded-tile px-2.5 py-2 text-start transition-colors focus-ring',
+        'flex flex-wrap items-center gap-x-3 gap-y-1 rounded-tile px-2.5 py-2 text-start transition-colors focus-ring',
         on ? 'bg-accent-wash' : 'hover:bg-[var(--hover-wash)]',
       )}
     >
@@ -37,10 +39,10 @@ export function CheckRow({ on, onClick, children, trailing }: CheckRowProps) {
       >
         {on ? <IconCheck className="size-3.5" stroke={2.4} /> : null}
       </span>
-      <span dir="auto" className="min-w-0 flex-1 truncate text-[14px]">
+      <span dir="auto" className="min-w-32 flex-1 truncate text-[14px]">
         {children}
       </span>
-      {trailing}
+      {trailing ? <span className="ms-auto max-w-full text-end">{trailing}</span> : null}
     </button>
   )
 }

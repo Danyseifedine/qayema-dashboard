@@ -12,17 +12,25 @@ function Harness({
   label = 'Accent',
   error,
   action,
+  layout,
 }: {
   initial?: string
   label?: string
   error?: string
   action?: ReactNode
+  layout?: 'inline' | 'tile'
 }) {
   const form = useForm<Values>({ defaultValues: { accent: initial } })
   const accent = useWatch({ control: form.control, name: 'accent' })
   return (
     <>
-      <ColorField control={form.control} name="accent" label={label} action={action} />
+      <ColorField
+        control={form.control}
+        name="accent"
+        label={label}
+        action={action}
+        layout={layout}
+      />
       <output data-testid="value">{accent}</output>
       {error ? (
         <button type="button" onClick={() => form.setError('accent', { message: error })}>
@@ -35,6 +43,8 @@ function Harness({
 }
 
 const text = () => screen.getByRole('textbox', { name: 'Accent' })
+const swatch = () => screen.getByRole('button', { name: 'Accent, picker' })
+const swatchColor = () => (swatch().firstElementChild as HTMLElement).style.backgroundColor
 const stored = () => screen.getByTestId('value').textContent
 
 describe('ColorField', () => {
@@ -42,14 +52,14 @@ describe('ColorField', () => {
     render(<Harness />)
 
     expect(text()).toHaveValue('#C8A24A')
-    expect(screen.getByLabelText('Accent, picker')).toHaveValue('#c8a24a')
+    expect(swatchColor()).toBe('rgb(200, 162, 74)')
   })
 
   it('shows black for a value that is not a whole colour', () => {
     render(<Harness initial="red" />)
 
     expect(text()).toHaveValue('#000000')
-    expect(screen.getByLabelText('Accent, picker')).toHaveValue('#000000')
+    expect(swatchColor()).toBe('rgb(0, 0, 0)')
   })
 
   it('keeps the last whole colour while a hex is half typed', async () => {
@@ -93,13 +103,27 @@ describe('ColorField', () => {
     expect(text()).toHaveValue('#C8A24A')
   })
 
-  it('stores a colour chosen in the system picker', () => {
-    render(<Harness />)
+  it('stores a colour chosen in the picker', async () => {
+    const user = userEvent.setup()
+    render(<Harness initial="#FF0000" />)
 
-    fireEvent.change(screen.getByLabelText('Accent, picker'), { target: { value: '#112233' } })
+    await user.click(swatch())
+    screen.getByRole('slider', { name: 'Hue' }).focus()
+    await user.keyboard(
+      '{Shift>}{ArrowRight}{ArrowRight}{ArrowRight}{ArrowRight}{ArrowRight}{ArrowRight}{/Shift}',
+    )
 
-    expect(stored()).toBe('#112233')
-    expect(text()).toHaveValue('#112233')
+    // Sixty degrees round from red is yellow.
+    expect(stored()).toBe('#FFFF00')
+    expect(text()).toHaveValue('#FFFF00')
+  })
+
+  it('puts a large swatch beside the label on a tile', () => {
+    render(<Harness layout="tile" action={<button type="button">Reset</button>} />)
+
+    expect(swatch()).toHaveClass('size-9', 'p-0')
+    expect(text()).toHaveClass('py-2')
+    expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument()
   })
 
   it('shows its action', () => {

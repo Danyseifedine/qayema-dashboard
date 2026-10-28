@@ -6,6 +6,8 @@ export { ActionMenu, type ActionMenuItem } from '@/shared/components/ui/action-m
 export { Alert } from '@/shared/components/ui/alert'
 export { Button } from '@/shared/components/ui/button'
 export { CheckRow } from '@/shared/components/ui/check-row'
+export { ColorPicker } from '@/shared/components/ui/color-picker'
+export { DatePicker } from '@/shared/components/ui/date-picker'
 export { Combobox, type ComboboxOption } from '@/shared/components/ui/combobox'
 export { FieldShell, FieldTrailingButton } from '@/shared/components/ui/field-shell'
 export {

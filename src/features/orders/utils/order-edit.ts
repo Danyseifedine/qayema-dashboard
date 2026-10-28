@@ -1,5 +1,5 @@
 import type { DishChoices } from '@/features/auth'
-import { buildPriceCents } from '@/features/build-your-own'
+import { buildPriceCents, sizeKey } from '@/features/build-your-own'
 import type { Dish } from '@/features/menu'
 import { rateFor } from '@/shared/utils/format/money'
 import type { MenuText } from '@/shared/utils/string/menu-text'
@@ -47,12 +47,6 @@ export type BuildToFill = Pick<DishBuild, 'id' | 'name' | 'shape' | 'parts'> & {
 
 /** What was picked for one build, as `add.*.builds` sends it; `size` for a build priced by size. */
 export type PickedBuild = { build: number; parts: string[]; size?: string }
-
-/** A size's key as the server makes it: its name in the main language, trimmed and lower case. */
-function sizeKey(name: MenuText, main: string): string {
-  const text = name[main] || Object.values(name).find((value) => value) || ''
-  return text.trim().toLowerCase()
-}
 
 /**
  * A dish priced by its sizes (no price of its own): its first variant's
@@ -111,7 +105,8 @@ export function addonsToPick(dish: Dish, choices: DishChoices): Dish['addons'] {
  * has them, and only a build offering two choices or more. A category
  * build offers that category's dishes guests can buy (only those ticked
  * when it ticks some; shown, priced, in
- * the dish's currency, never the dish itself), in the menu's order; else
+ * the dish's currency, never the dish itself nor an offer's deal dish), in
+ * the menu's order; else
  * the build's own list, each with a price.
  */
 export function buildsToPick(
@@ -172,6 +167,7 @@ function buildChoices(
       other.category_id !== build.category_id ||
       (build.dish_ids !== null && !build.dish_ids.includes(other.id)) ||
       other.id === dish.id ||
+      other.offer !== null ||
       !other.is_available ||
       (other.price === null && bySize.size === 0) ||
       other.currency !== dish.currency

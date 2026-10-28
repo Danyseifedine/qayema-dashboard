@@ -311,4 +311,46 @@ test.describe('accessibility: the admin panel', () => {
       .map((violation) => `${violation.id}: ${violation.help} (${violation.nodes.length})`)
     expect(serious, 'serious accessibility violations').toEqual([])
   })
+
+  test("the admin's other pages: home, a restaurant, the inbox, users and packages", async ({
+    page,
+    scenario,
+    signIn,
+  }) => {
+    test.setTimeout(120_000)
+    const owner = await scenario({
+      package: 'premium',
+      categories: [{ name: { en: 'Grills' }, dishes: [{ name: { en: 'Kafta' } }] }],
+    })
+    await signIn('admin@e2e.test')
+
+    for (const path of [
+      '',
+      `restaurants/${owner.restaurant.id}/edit`,
+      'contact-messages',
+      'users',
+      'packages',
+      'packages/create',
+      'offers',
+      'ai-credits',
+    ]) {
+      await page.goto(`${ADMIN_URL}/${path}`)
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 })
+      await page.waitForLoadState('networkidle')
+      // The same unlabelled ToggleColumn switch as on the restaurants list.
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .exclude('.fi-ta-toggle [role="switch"]')
+        .analyze()
+      const serious = results.violations
+        .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
+        .map(
+          (violation) =>
+            `${violation.id}: ${violation.help}: ${violation.nodes
+              .map((node) => node.target.join(' '))
+              .join(', ')}`,
+        )
+      expect(serious, `/admin/${path}`).toEqual([])
+    }
+  })
 })

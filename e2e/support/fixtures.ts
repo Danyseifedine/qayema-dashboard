@@ -2,8 +2,8 @@ import AxeBuilder from '@axe-core/playwright'
 import { test as base, expect, type APIRequestContext, type Page } from '@playwright/test'
 import { API_URL } from './urls'
 
-/** A dish or category name in each menu language written. */
-type MenuText = { en: string; ar?: string }
+/** A dish or category name in each menu language written (`de`, `ru`... for a menu in those). */
+type MenuText = { en?: string; ar?: string; [code: string]: string | undefined }
 
 /** What POST /__e2e/scenario accepts (see E2eController::scenario). */
 export type ScenarioInput = {
@@ -25,7 +25,11 @@ export type ScenarioInput = {
   switched_off?: string[]
   phone?: string
   google_maps_url?: string
-  opening_hours?: Record<string, { open: string; close: string } | null>
+  /** One shift a day, or up to three (lunch and dinner); null closed. */
+  opening_hours?: Record<
+    string,
+    { open: string; close: string } | { open: string; close: string }[] | null
+  >
   categories?: {
     name: MenuText
     description?: MenuText
@@ -39,6 +43,8 @@ export type ScenarioInput = {
       currency?: string
       ingredients?: MenuText
       is_available?: boolean
+      /** A photo on the card (and its full size in the photo pop-up). */
+      image?: boolean
       variants?: { name: MenuText; options: { name: MenuText; price?: number }[] }[]
       addons?: { name: MenuText; price?: number }[]
       /** Built from parts: from a scenario category (its English name) or a list of its own. */
@@ -76,6 +82,8 @@ export type ScenarioInput = {
   settings?: Record<string, string | boolean>
   qr_settings?: Record<string, unknown>
   logo?: boolean
+  /** A wide cover picture behind the name. */
+  cover?: boolean
   /** Logged AI use with its cost in dollars, for the admin's spending figures. */
   writing_help_days?: {
     days_ago?: number
@@ -104,7 +112,7 @@ export type ScenarioInput = {
     /** The ad's wait: after the pop-up closes, or the menu opens. */
     ad_delay_seconds?: number
     ad_seconds?: number
-    discount_type?: 'none' | 'percent' | 'amount'
+    discount_type?: 'none' | 'percent' | 'amount' | 'second'
     discount_value?: number
     dishes?: string[]
     /** UTC, "2026-11-01 18:00:00". */
@@ -114,6 +122,8 @@ export type ScenarioInput = {
     weekdays?: string[]
     month_days?: number[]
     time_windows?: { from: string; to: string }[]
+    /** Shown all the time, the deal only in its days and hours. */
+    shows_outside_hours?: boolean
     is_active?: boolean
     /** The offer's own dish (its deal), its one dish; `category` names a scenario category in English. */
     deal?: {

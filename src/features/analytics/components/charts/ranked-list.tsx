@@ -36,9 +36,11 @@ export function RankedList({ items, empty, max, locale, ...aria }: RankedListPro
         <li key={item.id} className="flex flex-col gap-1">
           <div className="flex items-baseline justify-between gap-3 text-[13px]">
             <span className="min-w-0 truncate">{item.label}</span>
-            <span className="shrink-0 tabular-nums">
+            {/* Side by side as boxes: two numbers in a row in Arabic would
+                otherwise run together as one, "100%2". */}
+            <span className="inline-flex shrink-0 items-baseline gap-2 tabular-nums">
               {item.detail ? (
-                <span className="me-2 text-[12px] text-[var(--muted)]">{item.detail}</span>
+                <span className="text-[12px] text-[var(--muted)]">{item.detail}</span>
               ) : null}
               <span className="font-semibold">{formatNumber(item.value, locale)}</span>
             </span>

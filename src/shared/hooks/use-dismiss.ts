@@ -10,18 +10,22 @@ export function useDismiss({
   onDismiss,
   container,
   trigger,
+  panel,
 }: {
   open: boolean
   onDismiss: () => void
   /** The popover and its button: a press inside either keeps it open. */
   container: RefObject<HTMLElement | null>
   trigger: RefObject<HTMLElement | null>
+  /** A popover drawn elsewhere (`floatingRoot`): a press inside it keeps it open too. */
+  panel?: RefObject<HTMLElement | null>
 }) {
   useEffect(() => {
     if (!open) return
 
     const onPointerDown = (event: MouseEvent) => {
-      if (!container.current?.contains(event.target as Node)) onDismiss()
+      const target = event.target as Node
+      if (!container.current?.contains(target) && !panel?.current?.contains(target)) onDismiss()
     }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
@@ -35,5 +39,5 @@ export function useDismiss({
       document.removeEventListener('mousedown', onPointerDown)
       document.removeEventListener('keydown', onKeyDown)
     }
-  }, [open, onDismiss, container, trigger])
+  }, [open, onDismiss, container, trigger, panel])
 }

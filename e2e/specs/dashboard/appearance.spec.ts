@@ -239,4 +239,62 @@ test.describe('appearance', () => {
       '#AA3355',
     )
   })
+
+  test('a colour picked by dragging and with the arrow keys reaches the menu @matrix', async ({
+    page,
+    owner,
+  }) => {
+    const { restaurant } = await owner({ package: 'pro', categories: MENU })
+    await page.goto('/appearance')
+    const main = colour(page, MAIN)
+    await expect(main).toHaveValue(CLASSIC_ACCENT)
+
+    const swatch = page.getByRole('button', {
+      name: either('Main colour, picker', 'اللون الرئيسي، اختيار اللون'),
+    })
+    await swatch.click()
+    const picker = page.getByRole('dialog', {
+      name: either('Main colour, picker', 'اللون الرئيسي، اختيار اللون'),
+    })
+    const shade = picker.getByRole('slider', { name: either('Shade', 'الدرجة') })
+    const hue = picker.getByRole('slider', { name: either('Hue', 'اللون') })
+
+    // Dragged past the shade box's top left corner it is white: the drag
+    // follows the pointer off the box. In Arabic too, the box reads left to right.
+    const box = (await shade.boundingBox())!
+    await page.mouse.move(box.x + 20, box.y + 20)
+    await page.mouse.down()
+    await page.mouse.move(box.x - 30, box.y - 30)
+    await page.mouse.up()
+    await expect(main).toHaveValue('#FFFFFF')
+
+    // Dragged to past the top right: the full colour of the hue.
+    await page.mouse.move(box.x + 20, box.y + 20)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width / 2, box.y - 10)
+    await page.mouse.move(box.x + box.width + 30, box.y - 10)
+    await page.mouse.up()
+    await expect(shade).toHaveAttribute('aria-valuenow', '100')
+    await expect(shade).toHaveAttribute('aria-valuetext', /100%.*100%/)
+
+    // Home on the hue strip is red; Shift and Down five times halves the brightness.
+    await hue.focus()
+    await page.keyboard.press('Home')
+    await expect(main).toHaveValue('#FF0000')
+    await shade.focus()
+    for (let step = 0; step < 5; step += 1) await page.keyboard.press('Shift+ArrowDown')
+    await expect(main).toHaveValue('#800000')
+
+    // Escape closes the picker and keeps the colour.
+    await page.keyboard.press('Escape')
+    await expect(picker).toBeHidden()
+    await expect(swatch).toBeFocused()
+    const saved = saveSettings(page)
+    await page.getByRole('button', { name: either('Save', 'حفظ') }).click()
+    await saved
+
+    expect((await publicVariable(page, restaurant.public_url, '--accent')).toUpperCase()).toBe(
+      '#800000',
+    )
+  })
 })

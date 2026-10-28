@@ -68,8 +68,8 @@ test.describe('dish variants and add-ons on the menu', () => {
     // The first option of each variant is picked to start.
     await expect(sheet.getByRole('radio', { name: /Small/ })).toBeChecked()
     await expect(sheet.getByRole('radio', { name: /Mild/ })).toBeChecked()
-    // A choice with no price says it is free.
-    await expect(sheet.locator('label', { hasText: 'Mild' })).toContainText('Free')
+    // An option that adds nothing is the dish's own price: no "Free" under it.
+    await expect(sheet.locator('label', { hasText: 'Mild' })).toHaveText('Mild')
 
     await sheet.getByText('Large').click()
     await sheet.getByText('Hot').click()

@@ -92,7 +92,12 @@ export function LinkSection({ slug, publicUrl }: LinkSectionProps) {
           if (asking === null) return
           clearFormError()
           change.mutate(asking, {
-            onSuccess: () => setAsking(null),
+            onSuccess: (saved) => {
+              setAsking(null)
+              // As the server wrote it: "E2E Place" that cleans to the
+              // link it already had changes no prop to reset the box.
+              form.reset({ slug: saved.slug })
+            },
             onError: (error) => {
               setAsking(null)
               applyApiError(error)

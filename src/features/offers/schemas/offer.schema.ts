@@ -39,7 +39,16 @@ export const ACTIONS = ['none', 'dishes', 'link'] as const
 export const GIVES = ['nothing', 'discount', 'deal'] as const
 export type Gives = (typeof GIVES)[number]
 export const SHOW_AGAIN = ['every_visit', 'daily', 'once'] as const
-export const DISCOUNTS = ['none', 'percent', 'amount'] as const
+/**
+ * What the offer takes off its dishes: nothing, a percent or an amount off
+ * each (the size and other choices included, add-ons not), or `second`: any
+ * two dishes on the offer make a pair and the second one the guest adds is
+ * a percent off (100 is free).
+ */
+export const DISCOUNTS = ['none', 'percent', 'amount', 'second'] as const
+
+/** A `second` discount of 100% gives the second one free. */
+export const FREE = 100
 export const REPEATS = ['always', 'weekly', 'monthly'] as const
 
 /** Monday first, as the server stores them (OfferSchedule::DAYS). */
@@ -52,6 +61,14 @@ export const MAX_WINDOWS = 3
 /** How long an ad stays, and how long a pop-up or an ad waits, in seconds. */
 export const AD_SECONDS = [3, 5, 8, 10, 15] as const
 export const DELAYS = [0, 2, 5, 10] as const
+
+/**
+ * The usual choices of seconds, and in its place among them a saved value
+ * that is not one of them (an offer made in the admin), so it shows picked.
+ */
+export function withSaved(choices: readonly number[], saved: number): number[] {
+  return choices.includes(saved) ? [...choices] : [...choices, saved].sort((a, b) => a - b)
+}
 
 const windowSchema = z.object({ from: z.string(), to: z.string() })
 type TimeWindow = z.infer<typeof windowSchema>
@@ -105,6 +122,8 @@ const offerSchema = z.object({
   weekdays: z.array(z.enum(WEEKDAYS)),
   month_days: z.array(z.number().int()),
   time_windows: z.array(windowSchema).nullable(),
+  /** Shown all the time; the deal works only on its days and hours. */
+  shows_outside_hours: z.boolean().default(false),
   is_active: z.boolean(),
   /** `off`: switched on but kept off the menu by what the package lacks (`kept_off`). */
   status: z.enum(['live', 'scheduled', 'ended', 'paused', 'off']),
@@ -211,6 +230,7 @@ export const offerFormSchema = z
     month_days: z.array(z.number().int()),
     all_day: z.boolean(),
     time_windows: z.array(windowSchema),
+    shows_outside_hours: z.boolean(),
     is_active: z.boolean(),
   })
   .superRefine((values, ctx) => {
@@ -278,6 +298,12 @@ export const offerFormSchema = z
           code: 'custom',
           path: ['discount_value'],
           message: t('offers:validation.percentMax'),
+        })
+      } else if (values.discount_type === 'second' && amount > FREE) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['discount_value'],
+          message: t('offers:validation.secondMax'),
         })
       }
     }
@@ -438,7 +464,8 @@ export function toOfferForm(offer: Offer | null, languages: readonly string[]): 
     show_again: offer?.show_again ?? 'every_visit',
     delay_seconds: offer?.delay_seconds ?? 0,
     ad_delay_seconds: offer?.ad_delay_seconds ?? 2,
-    ad_seconds: offer?.ad_seconds ?? 6,
+    // A new ad starts on one of the editor's choices.
+    ad_seconds: offer?.ad_seconds ?? 5,
     gives: givesOf(offer),
     has_deal: offer?.deal != null,
     deal: toDealForm(offer, languages),
@@ -458,8 +485,17 @@ export function toOfferForm(offer: Offer | null, languages: readonly string[]): 
     month_days: offer?.month_days ?? [],
     all_day: offer?.time_windows === null || offer?.time_windows === undefined,
     time_windows: offer?.time_windows ?? [{ from: '17:00', to: '19:00' }],
+    shows_outside_hours: offer?.shows_outside_hours ?? false,
     is_active: offer?.is_active ?? true,
   }
+}
+
+/**
+ * The schedule picks some days or hours, so "shown all the time" means
+ * something: the offer shows outside them while its deal waits for them.
+ */
+export function hasHours(values: Pick<OfferFormValues, 'when' | 'repeat' | 'all_day'>): boolean {
+  return values.when === 'custom' && (values.repeat !== 'always' || !values.all_day)
 }
 
 /** A deal dish as the API takes it (`deal` in StoreOfferRequest). */
@@ -497,6 +533,7 @@ export type OfferPayload = {
   weekdays: Weekday[]
   month_days: number[]
   time_windows: TimeWindow[] | null
+  shows_outside_hours: boolean
   is_active: boolean
   /** Left out: unchanged; null deletes the deal dish. */
   deal?: DealPayload | null
@@ -563,6 +600,7 @@ export function toOfferPayload(
     weekdays: repeat === 'weekly' ? values.weekdays : [],
     month_days: repeat === 'monthly' ? values.month_days : [],
     time_windows: custom && !values.all_day ? values.time_windows : null,
+    shows_outside_hours: hasHours(values) && values.shows_outside_hours,
     is_active: values.is_active,
     ...(deal ? { deal: toDealPayload(values.deal) } : values.has_deal ? { deal: null } : {}),
   }

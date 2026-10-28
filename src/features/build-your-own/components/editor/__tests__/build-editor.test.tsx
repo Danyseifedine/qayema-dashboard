@@ -184,8 +184,8 @@ describe('the build editor', () => {
     await pick(user, 'Category', 'Pizzas')
     await next(user)
 
-    // 3 Sizes.
-    await heading('How it is made and its sizes')
+    // 3 Parts.
+    await heading('How many parts?')
     expect(screen.getByRole('button', { name: 'Whole' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Half & half' })).toHaveAttribute(
       'aria-pressed',
@@ -195,7 +195,9 @@ describe('the build editor', () => {
     // A pizza is split, as its card set: nothing to change here.
     expect(screen.queryByText('Like a pizza: one item in different parts')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Change how it is made' })).not.toBeInTheDocument()
-    expect(screen.getByText('Each part costs its share of the whole price.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Each part costs its share of the price: half of a 12.00 pizza is 6.00.'),
+    ).toBeInTheDocument()
     const ownPrices = screen.getByRole('button', { name: 'Set your own prices' })
     expect(ownPrices).toHaveAttribute('aria-expanded', 'false')
     await user.click(ownPrices)
@@ -227,7 +229,7 @@ describe('the build editor', () => {
     const summary = screen.getByRole('region', { name: 'Your build' })
     expect(summary).toHaveTextContent('From Pizzas: 2 dishes guests can pick')
     expect(summary).toHaveTextContent('Whole and halves')
-    expect(summary).toHaveTextContent('DishBuild your pizza')
+    expect(summary).toHaveTextContent('Name on the menuBuild your pizza')
     expect(within(summary).getByRole('list', { name: 'Every choice' })).toHaveTextContent(
       'Margherita$12.00Half $7.00',
     )
@@ -338,7 +340,7 @@ describe('the build editor', () => {
     await next(user)
 
     // Its halves are shares of the size picked: no prices of its own.
-    await heading('How it is made and its sizes')
+    await heading('How many parts?')
     await user.click(screen.getByRole('button', { name: 'Set your own prices' }))
     expect(await screen.findByLabelText('Margherita, price for one of 2 parts')).toBeInTheDocument()
     expect(screen.queryByLabelText('Veggie, price for one of 2 parts')).not.toBeInTheDocument()
@@ -375,7 +377,7 @@ describe('the build editor', () => {
     await next(user)
 
     // Pieces: how many, More for the rest, no part prices.
-    await heading('How it is made and its sizes')
+    await heading('How many parts?')
     expect(screen.queryByText('Like ice cream: separate pieces')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '3 pieces' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.queryByRole('button', { name: 'Set your own prices' })).not.toBeInTheDocument()
@@ -397,7 +399,7 @@ describe('the build editor', () => {
 
     await heading('Review')
     const summary = screen.getByRole('region', { name: 'Your build' })
-    expect(summary).toHaveTextContent('DishIce cream')
+    expect(summary).toHaveTextContent('Name on the menuIce cream')
     expect(summary).toHaveTextContent('Your own list: 2 choices')
     expect(summary).toHaveTextContent('3 pieces')
     await user.click(screen.getByRole('button', { name: 'Add build' }))
@@ -444,7 +446,7 @@ describe('the build editor', () => {
     expect(screen.getByRole('radio', { name: 'No icon' })).toBeChecked()
     await user.click(screen.getByRole('radio', { name: 'Ice cream' }))
 
-    await user.click(screen.getByRole('button', { name: 'Step 3: Sizes, done' }))
+    await user.click(screen.getByRole('button', { name: 'Step 3: Parts, done' }))
     await user.click(await screen.findByRole('button', { name: '2 pieces' }))
     // The review sends the owner back to a step.
     await user.click(screen.getByRole('button', { name: 'Step 5: Review' }))
@@ -531,7 +533,7 @@ describe('the build editor', () => {
       ],
     })
 
-    await heading('How it is made and its sizes')
+    await heading('How many parts?')
     expect(screen.getByText('Too many parts.')).toBeInTheDocument()
     expect(screen.getByText('A dish can have 3 builds at most.')).toBeInTheDocument()
     // Its own prices are open: it has some, and one was refused.
@@ -572,10 +574,10 @@ describe('the build editor', () => {
     ])
     await next(user)
 
-    await heading('How it is made and its sizes')
+    await heading('How many parts?')
     expect(screen.getByRole('radio', { name: /Like a pizza/ })).toBeChecked()
     await next(user)
-    expect(await screen.findByText('Pick at least one size.')).toBeInTheDocument()
+    expect(await screen.findByText('Pick at least one.')).toBeInTheDocument()
     await user.click(screen.getByRole('radio', { name: /Like ice cream/ }))
     await user.click(screen.getByRole('button', { name: '2 pieces' }))
     await next(user)
@@ -643,12 +645,12 @@ describe('the build editor', () => {
     ])
     await user.click(screen.getByRole('button', { name: 'Remove choice 3' }))
     await next(user)
-    await heading('How it is made and its sizes')
+    await heading('How many parts?')
     await next(user)
 
     await heading('On your menu')
     await user.click(screen.getByRole('radio', { name: 'Coffee' }))
-    await user.click(screen.getByRole('button', { name: 'Step 1: What, done' }))
+    await user.click(screen.getByRole('button', { name: 'Step 1: Type, done' }))
     await user.click(await screen.findByRole('radio', { name: /A pizza, half and half/ }))
     await user.click(screen.getByRole('button', { name: /^Step 4: On your menu/ }))
     expect(await screen.findByRole('radio', { name: 'Coffee' })).toBeChecked()
@@ -718,7 +720,7 @@ describe('the build editor', () => {
     await heading('What can guests choose from?')
     await pick(user, 'Category', 'Drinks')
     await next(user)
-    await heading('How it is made and its sizes')
+    await heading('How many parts?')
     await next(user)
     await heading('On your menu')
     await next(user)
@@ -736,7 +738,7 @@ describe('the build editor', () => {
     await user.click(await screen.findByRole('button', { name: 'Edit Topping on Three scoops' }))
     await user.click(screen.getByRole('button', { name: 'Step 4: On your menu, done' }))
     await user.clear(await screen.findByRole('textbox', { name: /^Name on the menu/ }))
-    await user.click(screen.getByRole('button', { name: 'Step 1: What, done' }))
+    await user.click(screen.getByRole('button', { name: 'Step 1: Type, done' }))
     await heading('What do guests build?')
     await user.click(screen.getByRole('button', { name: 'Save build' }))
 
@@ -759,7 +761,7 @@ describe('the build editor', () => {
     ])
     await user.click(screen.getByRole('button', { name: 'Remove choice 3' }))
     await next(user)
-    await heading('How it is made and its sizes')
+    await heading('How many parts?')
     await next(user)
     await heading('On your menu')
     await next(user)

@@ -43,7 +43,7 @@ test.describe('two currencies', () => {
     await expect(cart.locator('.cart-line', { hasText: 'Burger' })).toContainText('$10')
     await expect(cart.locator('.cart-line', { hasText: 'Kafta' })).toContainText('L.L 450,000')
     await expect(cart.locator('.cart-total')).toContainText('L.L 1,340,000')
-    await expect(cart.locator('.cart-rate')).toHaveText('1 $ = L.L 89,000')
+    await expect(cart.locator('.cart-rate')).toHaveText('$1 = L.L 89,000')
 
     await cart.getByLabel('Your name').fill('Rami')
     await cart.getByLabel('Phone number').fill('70 123 456')

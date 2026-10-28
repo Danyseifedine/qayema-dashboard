@@ -87,6 +87,10 @@ describe('weekdayNames', () => {
     expect(weekdayNames('en')).toEqual(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
   })
 
+  it('gives the one-letter names for a calendar', () => {
+    expect(weekdayNames('en', 'narrow')).toEqual(['M', 'T', 'W', 'T', 'F', 'S', 'S'])
+  })
+
   it('gives the long names on request', () => {
     const names = weekdayNames('en', 'long')
 

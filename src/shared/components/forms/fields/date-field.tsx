@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
 import { Field } from '@/shared/components/forms/layout/field'
-import { Input } from '@/shared/components/ui'
+import { DatePicker } from '@/shared/components/ui'
 
 export type DateFieldProps<T extends FieldValues> = {
   control: Control<T>
@@ -12,12 +12,13 @@ export type DateFieldProps<T extends FieldValues> = {
   optionalText?: ReactNode
   /** The earliest day it offers, "YYYY-MM-DD". */
   min?: string
+  /** The latest day it offers, "YYYY-MM-DD". */
+  max?: string
 }
 
 /**
- * A calendar day, on the phone's or browser's own date picker (dark, like
- * the dashboard: `color-scheme` in tokens.css), stored as "YYYY-MM-DD" and
- * '' when cleared. An offer's first and last day use it.
+ * A calendar day on the dashboard's own calendar (`DatePicker`), stored as
+ * "YYYY-MM-DD" and '' when cleared. An offer's first and last day use it.
  */
 export function DateField<T extends FieldValues>({
   control,
@@ -26,24 +27,21 @@ export function DateField<T extends FieldValues>({
   hint,
   optionalText,
   min,
+  max,
 }: DateFieldProps<T>) {
   const { field, fieldState } = useController({ control, name })
 
   return (
     <Field label={label} hint={hint} optionalText={optionalText} error={fieldState.error?.message}>
       {({ id, describedBy, invalid }) => (
-        <Input
+        <DatePicker
           id={id}
-          type="date"
-          name={field.name}
-          ref={field.ref}
+          inputRef={field.ref}
           value={typeof field.value === 'string' ? field.value : ''}
           min={min}
-          onChange={(event) => field.onChange(event.target.value)}
+          max={max}
+          onChange={field.onChange}
           onBlur={field.onBlur}
-          // Read left to right in Arabic too, like every date in the dashboard.
-          dir="ltr"
-          className="text-start"
           aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           tone={invalid ? 'error' : 'default'}

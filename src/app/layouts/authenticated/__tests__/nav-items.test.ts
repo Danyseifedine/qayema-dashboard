@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { NAV_ITEMS, isOnPlan, navLock } from '@/app/layouts/authenticated/nav-items'
+import {
+  NAV_ITEMS,
+  isOnPlan,
+  navLock,
+  phoneTabOf,
+  phoneTabs,
+} from '@/app/layouts/authenticated/nav-items'
 import { EMPTY_PLAN, FULL_PLAN } from '@/test/factories/session'
 
 const NO_TEMPLATE = { hasTemplate: false, plan: FULL_PLAN }
@@ -113,5 +119,49 @@ describe('landing section', () => {
 
   it('sends an owner with no design to Design', () => {
     expect(landingKey(false)).toBe('design')
+  })
+})
+
+describe('phoneTabs', () => {
+  const keys = (off: string[] = [], access = READY) => phoneTabs(access, off).map((tab) => tab.key)
+
+  it('gives Home, Menu, the orders and More, the orders tab holding both kinds', () => {
+    const tabs = phoneTabs(READY, [])
+    expect(tabs.map((tab) => tab.key)).toEqual(['overview', 'dishes', 'orders', 'more'])
+    expect(tabs[2]).toMatchObject({
+      labelKey: 'nav.ordersGroup',
+      covers: ['orders', 'table-orders'],
+    })
+    expect(tabs[1]!.covers).toEqual(['dishes', 'categories'])
+  })
+
+  it('opens the table orders from the third tab while delivery and pickup is off', () => {
+    const tabs = phoneTabs(READY, ['orders'])
+    expect(tabs[2]).toMatchObject({
+      key: 'table-orders',
+      labelKey: 'nav.ordersGroup',
+      covers: ['table-orders'],
+    })
+  })
+
+  it('gives the third place to Analytics without orders, then to the QR code', () => {
+    expect(keys(['orders', 'dine_in'])[2]).toBe('analytics')
+    expect(phoneTabs(READY, ['orders', 'dine_in'])[2]).toMatchObject({
+      labelKey: 'nav.analytics',
+      covers: ['analytics'],
+    })
+    expect(keys(['orders', 'dine_in', 'analytics'])[2]).toBe('qr')
+    // A package with none of them: the QR code everyone has.
+    expect(keys([], FREE)[2]).toBe('qr')
+  })
+
+  it('puts every other page under More, and each tab’s own pages under it', () => {
+    const tabs = phoneTabs(READY, [])
+    expect(phoneTabOf('categories', tabs)).toBe('dishes')
+    expect(phoneTabOf('table-orders', tabs)).toBe('orders')
+    expect(phoneTabOf('overview', tabs)).toBe('overview')
+    expect(phoneTabOf('account', tabs)).toBe('more')
+    expect(phoneTabOf('qr', tabs)).toBe('more')
+    expect(phoneTabOf('qr', phoneTabs(FREE, []))).toBe('qr')
   })
 })

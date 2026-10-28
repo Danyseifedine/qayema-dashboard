@@ -3,13 +3,12 @@
     "description": "Dishes guests put together from parts: a pizza half and half, three scoops of their choice.",
     "add": "New build",
     "emptyTitle": "Let guests build a dish",
-    "emptyDescription": "Like a half and half pizza, or three scoops of ice cream.",
+    "emptyDescription": "Like a half and half pizza, or three scoops of ice cream. It sits at the top of your menu.",
     "addFirst": "Make your first build",
     "removeTitle": "Delete this build?",
     "removeDescription": "Guests will no longer build {{dish}} this way. The dish stays on your menu.",
     "removeConfirm": "Delete build",
     "atLimit": "You have used every dish your package allows, and each build is a dish. Delete a dish to make another.",
-    "noCategories": "A build is a dish on your menu, so it needs a category: add one on the Categories page first.",
     "removeDishTitle": "Delete {{dish}}?",
     "removeDishDescription": "It leaves your menu.",
     "removeDishConfirm": "Delete dish",
@@ -33,10 +32,10 @@
     "parts_other": "{{count}} parts",
     "pieces_one": "{{counts}} piece",
     "pieces_other": "{{counts}} pieces",
-    "noSizes": "No sizes yet",
+    "noSizes": "No parts picked yet",
     "category": "{{sizes}}, from {{category}}",
-    "own_one": "{{sizes}}, your own list of {{count}}",
-    "own_other": "{{sizes}}, your own list of {{count}}",
+    "own_one": "{{sizes}}, from {{count}} choice",
+    "own_other": "{{sizes}}, from {{count}} choices",
     "categorySome": "{{sizes}}, {{shown}} of {{total}} from {{category}}"
   },
   "editor": {
@@ -56,16 +55,16 @@
     "label": "Build steps"
   },
   "steps": {
-    "kind": "What",
+    "kind": "Type",
     "choices": "Choices",
-    "sizes": "Sizes",
+    "sizes": "Parts",
     "menu": "On your menu",
     "review": "Review"
   },
   "headings": {
     "kind": "What do guests build?",
     "choices": "What can guests choose from?",
-    "sizes": "How it is made and its sizes",
+    "sizes": "How many parts?",
     "menu": "On your menu",
     "review": "Review"
   },
@@ -81,7 +80,7 @@
     },
     "other": {
       "name": "Something else",
-      "hint": "Start with nothing filled in and set it up your way."
+      "hint": "Anything else guests put together, like a mixed grill or two sides of their choice."
     }
   },
   "choices": {
@@ -103,7 +102,8 @@
     "add": "Add a choice",
     "ticked": "{{shown}} of {{total}}",
     "tickHint": "Untick a dish to leave it out of this build.",
-    "fewTicked": "Tick at least 2 dishes: guests see this build only then."
+    "fewTicked": "Tick at least 2 dishes: guests see this build only then.",
+    "noCategories": "You have no categories yet. Add one with its dishes first, or type your own list above."
   },
   "sizes": {
     "shape": "How it is made",
@@ -116,7 +116,7 @@
       "pieces": "Each piece is a whole item at its own price."
     },
     "splitLabel": "How guests can have it",
-    "piecesLabel": "How many",
+    "piecesLabel": "How many guests pick",
     "whole": "Whole",
     "halves": "Half & half",
     "thirds": "Thirds",
@@ -127,9 +127,9 @@
     "pieces_other": "{{count}} pieces",
     "more": "More",
     "fewer": "Fewer",
-    "shareLine": "Each part costs its share of the whole price.",
+    "shareLine": "Each part costs its share of the price: half of a 12.00 pizza is 6.00.",
     "ownPrices": "Set your own prices",
-    "ownPricesHint": "Give a choice its own price for a part, like a Margherita half at 7.00. An empty box keeps the share it shows.",
+    "ownPricesHint": "Want a part to cost something else, like a Margherita half at 7.00 instead of 6.00? Type it here. Leave a box empty to keep the price shown in it.",
     "partPrice": "{{choice}}, price for one of {{count}} parts",
     "share": "{{price}} auto"
   },
@@ -137,7 +137,7 @@
     "name": "Name on the menu",
     "optional": "Optional",
     "icon": "Icon",
-    "iconHint": "Shown beside its name above the search on your menu."
+    "iconHint": "Shown beside its name at the top of your menu."
   },
   "partName": {
     "2": "Half",
@@ -155,13 +155,13 @@
     "preview": "What guests see",
     "summary": "Your build",
     "kind": "What guests build",
-    "dish": "Dish",
+    "dish": "Name on the menu",
     "choices": "Choices",
     "fromCategory_one": "From {{category}}: {{count}} dish guests can pick",
     "fromCategory_other": "From {{category}}: {{count}} dishes guests can pick",
     "ownList_one": "Your own list: {{count}} choice",
     "ownList_other": "Your own list: {{count}} choices",
-    "sizes": "Sizes",
+    "sizes": "Parts",
     "edit": "Edit",
     "editStep": "Edit {{step}}",
     "everyChoice": "Every choice",
@@ -176,7 +176,7 @@
     "needChoices": "A list needs 2 to {{max}} choices.",
     "choiceNameRequired": "Give every choice a name in {{language}}.",
     "choicePriceRequired": "Give every choice a price.",
-    "partsRequired": "Pick at least one size.",
+    "partsRequired": "Pick at least one.",
     "priceInvalid": "Enter a price, or leave it empty.",
     "priceNegative": "A price cannot be negative.",
     "priceTooHigh": "That price is too high."

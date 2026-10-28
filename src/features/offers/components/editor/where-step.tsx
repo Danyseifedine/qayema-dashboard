@@ -11,6 +11,7 @@ import {
   PLACEMENTS,
   POPUP_SHAPES,
   SHOW_AGAIN,
+  withSaved,
   type Offer,
   type OfferSlots,
 } from '@/features/offers/schemas/offer.schema'
@@ -51,10 +52,17 @@ export function WhereStep({
   slots: SlotsContext | null
 }) {
   const { t } = useTranslation('offers')
-  const [placements, active] = useWatch({ control, name: ['placements', 'is_active'] })
+  const [placements, active, delay, adDelay, adSeconds] = useWatch({
+    control,
+    name: ['placements', 'is_active', 'delay_seconds', 'ad_delay_seconds', 'ad_seconds'],
+  })
   const popup = placements.includes('popup')
   const ad = placements.includes('ad')
-  const delays = DELAYS.map((value) => ({ value, label: t('editor.inSeconds', { count: value }) }))
+  const seconds = (choices: readonly number[], saved: number) =>
+    withSaved(choices, saved).map((value) => ({
+      value,
+      label: t('editor.inSeconds', { count: value }),
+    }))
   const ratio = ratioOf(look.pictureSize)
 
   // A paused offer takes no slot, so only one to be switched on is kept out.
@@ -129,7 +137,7 @@ export function WhereStep({
               control={control}
               name="delay_seconds"
               label={ad ? t('editor.popupDelay') : t('editor.delay')}
-              options={delays}
+              options={seconds(DELAYS, delay)}
             />
           ) : null}
           {ad ? (
@@ -139,16 +147,13 @@ export function WhereStep({
                 control={control}
                 name="ad_delay_seconds"
                 label={popup ? t('editor.adAfterPopup') : t('editor.delay')}
-                options={delays}
+                options={seconds(DELAYS, adDelay)}
               />
               <SegmentedField
                 control={control}
                 name="ad_seconds"
                 label={popup ? t('editor.adStays') : t('editor.seconds')}
-                options={AD_SECONDS.map((value) => ({
-                  value,
-                  label: t('editor.inSeconds', { count: value }),
-                }))}
+                options={seconds(AD_SECONDS, adSeconds)}
               />
             </>
           ) : null}

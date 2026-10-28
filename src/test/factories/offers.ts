@@ -26,6 +26,7 @@ export function makeOffer(overrides: Partial<Offer> = {}): Offer {
     weekdays: [],
     month_days: [],
     time_windows: null,
+    shows_outside_hours: false,
     is_active: true,
     status: 'live',
     next_start: null,

@@ -130,6 +130,13 @@ export function OfferEditor({
       const result = await rules(values, context, options)
       const dish = values.gives === 'discount' ? amountTooBig(values, priced.current) : null
       if (dish === null || result.errors.discount_value) return result
+      // A dish in the second currency also says its price in the main one,
+      // which the amount is in: "$5.00 (LBP 445,000)".
+      const own = formatMoney(dish.reference! / 100, dish.currency)
+      const price =
+        dish.currency === currency
+          ? own
+          : `${own} (${formatMoney(Math.round(dish.reference! * dish.rate) / 100, currency)})`
       return {
         values: {},
         errors: {
@@ -138,13 +145,13 @@ export function OfferEditor({
             type: 'custom',
             message: t('validation.amountTooBig', {
               dish: dish.name,
-              price: formatMoney(Number(dish.price), dish.currency),
+              price,
             }),
           },
         },
       }
     }
-  }, [t])
+  }, [t, currency])
 
   const form = useForm<OfferFormValues>({
     resolver,
@@ -165,6 +172,15 @@ export function OfferEditor({
     form.setValue('deal.name', offerTitle)
     filledName.current = JSON.stringify(form.getValues('deal.name'))
   }, [offerTitle, savedDeal, form])
+
+  // Once Next or a save has said what to fix, each message goes as soon as
+  // its fix is made (a picture added, a title typed), not at the next press.
+  useEffect(() => {
+    const { unsubscribe } = form.watch((_values, { name }) => {
+      if (name && form.getFieldState(name).invalid) void form.trigger(name)
+    })
+    return unsubscribe
+  }, [form])
 
   const [step, setStep] = useState(0)
   const [reached, setReached] = useState(editing ? LAST_STEP : 0)

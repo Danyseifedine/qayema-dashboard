@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form'
-import { Input } from '@/shared/components/ui'
+import { ColorPicker, Input } from '@/shared/components/ui'
 import { Field } from '@/shared/components/forms/layout/field'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -24,7 +23,7 @@ export type ColorFieldProps<T extends FieldValues> = {
 /**
  * A colour, bound to a React Hook Form field as `#RRGGBB`.
  *
- * The swatch opens the system picker; the text beside it takes a pasted or
+ * The swatch opens our own picker (`ColorPicker`); the text beside it takes a pasted or
  * typed hex. While typing, a half-finished value lives only in the input and
  * the form keeps the last whole colour, so the preview never flashes invalid.
  */
@@ -36,7 +35,6 @@ export function ColorField<T extends FieldValues>({
   layout = 'inline',
   className,
 }: ColorFieldProps<T>) {
-  const { t } = useTranslation()
   const { field, fieldState } = useController({ control, name })
   const value = typeof field.value === 'string' && HEX.test(field.value) ? field.value : '#000000'
 
@@ -46,17 +44,15 @@ export function ColorField<T extends FieldValues>({
   const commit = (next: string) => field.onChange(next.toUpperCase())
 
   const picker = (
-    <input
-      type="color"
-      value={value.toLowerCase()}
-      onChange={(event) => commit(event.target.value)}
-      aria-label={t('colorField.picker', { label })}
-      className={cn(
-        'shrink-0 cursor-pointer border-[0.5px] border-[var(--line)] bg-[var(--surface)] [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0',
+    <ColorPicker
+      value={value}
+      onChange={commit}
+      label={label}
+      className={
         layout === 'tile'
-          ? 'size-9 rounded-tile p-0 sm:size-11 [&::-moz-color-swatch]:rounded-tile [&::-webkit-color-swatch]:rounded-tile'
-          : 'size-10 rounded-control p-1 [&::-moz-color-swatch]:rounded-tile [&::-webkit-color-swatch]:rounded-tile',
-      )}
+          ? 'size-9 rounded-tile bg-[var(--surface)] p-0 sm:size-11'
+          : 'size-10 rounded-control bg-[var(--surface)]'
+      }
     />
   )
 

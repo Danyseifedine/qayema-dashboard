@@ -3,6 +3,7 @@ import { ApiError } from '@/shared/types/api'
 import { makeDish } from '@/test/factories/menu'
 import {
   buildExample,
+  cheapestOffered,
   choicesOf,
   kindDefaults,
   kindOf,
@@ -11,6 +12,8 @@ import {
   offeredDishes,
   placeBuildErrors,
   savedBuildsPayload,
+  sizeKey,
+  sizePrices,
   suggestedCategory,
   toBuildFields,
   toBuildForm,
@@ -197,7 +200,7 @@ describe('the editor’s rules', () => {
       choices: 'A list needs 2 to 30 choices.',
       'choices.0.name.en': 'Give every choice a name in English.',
       'choices.0.price': 'Give every choice a price.',
-      parts: 'Pick at least one size.',
+      parts: 'Pick at least one.',
       'dish.name.en': 'Give the dish a name in English.',
     })
   })
@@ -452,6 +455,18 @@ describe('what a category’s build offers', () => {
     expect(offeredDishes(dishes, null, null, 'USD')).toEqual([])
   })
 
+  it('never offers an offer’s deal dish, live or not, as the server leaves it out', () => {
+    const live = { id: 1, title: { en: 'Family meal' }, status: 'live', next_start: null } as const
+    const dishes = [
+      makeDish({ id: 1, category_id: 4 }),
+      makeDish({ id: 2, category_id: 4, offer: live }),
+      makeDish({ id: 3, category_id: 4, offer: { ...live, status: 'paused' } }),
+      makeDish({ id: 4, category_id: 4 }),
+    ]
+
+    expect(offeredDishes(dishes, 4, null, 'USD').map((dish) => dish.id)).toEqual([1, 4])
+  })
+
   it('takes a pizza priced only by size while variants are on, at its cheapest size', () => {
     const sized = makeDish({
       id: 7,
@@ -563,5 +578,123 @@ describe('the title above the choices', () => {
       en: 'x'.repeat(40),
       ar: 'بوظة',
     })
+  })
+})
+
+/** A pizza priced only by its sizes, as the Dishes page saves one. */
+function bySize(id: number, sizes: Record<string, string>, names: Record<string, string> = {}) {
+  return makeDish({
+    id,
+    category_id: 4,
+    price: null,
+    variants: [
+      {
+        id: id * 10,
+        name: { en: 'Size' },
+        options: Object.entries(sizes).map(([size, price], at) => ({
+          id: id * 10 + at + 1,
+          name: { en: size, ...(names[size] ? { ar: names[size] } : {}) },
+          price,
+        })),
+      },
+    ],
+  })
+}
+
+describe('the least a category’s build adds, as the menu counts it', () => {
+  const HALVES = { shape: 'split', parts: [1, 2] } as const
+  const none = () => undefined
+
+  it('is the cheapest count and choice, a part price included', () => {
+    const dishes = [
+      makeDish({ id: 1, category_id: 4, price: '12.00' }),
+      makeDish({ id: 2, category_id: 4, price: '16.00' }),
+    ]
+
+    expect(cheapestOffered(HALVES, dishes, none, 'en')).toBe(1200)
+    // A Margherita half at $5: two of them come to $10.
+    expect(cheapestOffered(HALVES, dishes, (id) => (id === 1 ? { '2': '5.00' } : null), 'en')).toBe(
+      1000,
+    )
+  })
+
+  it('is null with fewer than two choices', () => {
+    expect(cheapestOffered(HALVES, [makeDish({ id: 1, category_id: 4 })], none, 'en')).toBeNull()
+  })
+
+  it('counts pizzas priced by size only at a size two of them come in', () => {
+    // Small has the Margherita alone: guests start at Large, where it is $12.
+    const dishes = [bySize(1, { Small: '8.00', Large: '12.00' }), bySize(2, { Large: '16.00' })]
+
+    expect(cheapestOffered(HALVES, dishes, none, 'en')).toBe(1200)
+  })
+
+  it('is null when no size has two pizzas, though there are two', () => {
+    const dishes = [bySize(1, { Small: '8.00' }), bySize(2, { Large: '16.00' })]
+
+    expect(cheapestOffered(HALVES, dishes, none, 'en')).toBeNull()
+  })
+
+  it('keeps a pizza with a price of its own at every size, at that price', () => {
+    const dishes = [
+      bySize(1, { Small: '8.00', Large: '12.00' }),
+      makeDish({ id: 2, category_id: 4, price: '6.00' }),
+    ]
+
+    // Whole: the $6 pizza; halves of $8 and $6 would be $7.
+    expect(cheapestOffered(HALVES, dishes, none, 'en')).toBe(600)
+  })
+
+  it('takes one size for names written alike, and the main language names them', () => {
+    const dishes = [
+      bySize(1, { Large: '12.00' }, { Large: 'كبير' }),
+      bySize(2, { ' LARGE ': '16.00' }, { ' LARGE ': 'كبير' }),
+    ]
+
+    // Two sizes apart would be no build at all: as one, two Margherita halves.
+    expect(cheapestOffered({ shape: 'split', parts: [2] }, dishes, none, 'en')).toBe(1200)
+    expect(cheapestOffered({ shape: 'split', parts: [2] }, dishes, none, 'ar')).toBe(1200)
+    expect(sizeKey({ en: ' LARGE ', ar: null }, 'en')).toBe('large')
+    expect(sizeKey({ en: 'Large', ar: null }, 'ar')).toBe('large')
+  })
+
+  it('skips a size with no name and keeps the first of two named alike', () => {
+    const pizza = makeDish({
+      id: 1,
+      category_id: 4,
+      price: null,
+      variants: [
+        {
+          id: 10,
+          name: { en: 'Size' },
+          options: [
+            { id: 11, name: { en: '' }, price: '1.00' },
+            { id: 12, name: { en: 'Large' }, price: '12.00' },
+            { id: 13, name: { en: 'large' }, price: '99.00' },
+          ],
+        },
+      ],
+    })
+    // No sizes at all: never a choice at any size.
+    const bare = makeDish({ id: 3, category_id: 4, price: null, variants: [] })
+
+    expect(cheapestOffered(HALVES, [pizza, bySize(2, { Large: '16.00' }), bare], none, 'en')).toBe(
+      1200,
+    )
+    expect(sizeKey({}, 'en')).toBe('')
+  })
+})
+
+describe('the price helpers at their edges', () => {
+  it('has none for a dish with a price of its own, or a dish without sizes', () => {
+    expect(sizePrices(makeDish({ price: '9.00' }))).toEqual([])
+    expect(sizePrices(makeDish({ price: null, variants: [] }))).toEqual([])
+    expect(sizePrices(bySize(1, { Small: '8.00', Large: '12.00' }))).toEqual([8, 12])
+  })
+
+  it('shows a whole when a whole is the only count', () => {
+    expect(
+      buildExample({ shape: 'split', parts: [1] }, [{ name: 'Pepperoni', price: 16 }]),
+    ).toEqual({ count: 1, names: ['Pepperoni'], cents: 1600 })
   })
 })

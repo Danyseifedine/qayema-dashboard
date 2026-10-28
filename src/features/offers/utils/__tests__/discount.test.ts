@@ -5,6 +5,8 @@ import {
   discountLine,
   discountNumber,
   discountedCents,
+  dishPrices,
+  secondCents,
 } from '@/features/offers/utils/discount'
 
 describe('discount', () => {
@@ -31,9 +33,9 @@ describe('discount', () => {
 
   it('finds the cheapest chosen dish a fixed amount would take all of', () => {
     const dishes = [
-      { id: 1, name: 'Kafta', price: '12.50', currency: 'USD', rate: 1 },
-      { id: 2, name: 'Fries', price: '3.00', currency: 'USD', rate: 1 },
-      { id: 3, name: 'Set menu', price: null, currency: 'USD', rate: 1 },
+      { id: 1, name: 'Kafta', reference: 1250, sizes: [], currency: 'USD', rate: 1 },
+      { id: 2, name: 'Fries', reference: 300, sizes: [], currency: 'USD', rate: 1 },
+      { id: 3, name: 'Set menu', reference: null, sizes: [], currency: 'USD', rate: 1 },
     ]
     const values = { discount_type: 'amount' as const, discount_value: '3', dish_ids: [1, 2, 3] }
 
@@ -47,8 +49,8 @@ describe('discount', () => {
 
   it('weighs an amount against each price turned into the main currency', () => {
     const dishes = [
-      { id: 1, name: 'Burger', price: '5.00', currency: 'USD', rate: 89000 },
-      { id: 2, name: 'Tea', price: '450000.00', currency: 'LBP', rate: 1 },
+      { id: 1, name: 'Burger', reference: 500, sizes: [], currency: 'USD', rate: 89000 },
+      { id: 2, name: 'Tea', reference: 45000000, sizes: [], currency: 'LBP', rate: 1 },
     ]
     const values = { discount_type: 'amount' as const, discount_value: '445000', dish_ids: [1, 2] }
 
@@ -71,5 +73,67 @@ describe('discount', () => {
     )
     expect(discountLine({ type: 'amount', value: 2, dishes: 1 }, where)).toBe('$2.00 off on 1 dish')
     expect(discountLine({ type: 'none', value: 0, dishes: 3 }, where)).toBeNull()
+    expect(discountLine({ type: 'second', value: 50, dishes: 3 }, where)).toBe(
+      '2nd one 50% off on 3 dishes',
+    )
+    expect(discountLine({ type: 'second', value: 100, dishes: 1 }, where)).toBe(
+      '2nd one free on 1 dish',
+    )
+  })
+
+  it('prices the second one of a pair, free at 100%, and nothing off each one', () => {
+    expect(secondCents(1200, 50)).toBe(600)
+    expect(secondCents(999, 15)).toBe(849)
+    expect(secondCents(1200, 100)).toBe(0)
+    expect(secondCents(1200, 120)).toBe(0)
+    expect(discountedCents(1200, 'second', 50)).toBe(1200)
+    expect(discountApplies(1200, 'second', 50)).toBe(false)
+  })
+
+  it('reads a dish at its least price, its size and other choices included', () => {
+    const size = {
+      options: [
+        { name: 'Large', price: '12.00' },
+        { name: 'Small', price: '8.00' },
+      ],
+    }
+    const crust = {
+      options: [
+        { name: 'Thin', price: '0.00' },
+        { name: 'Stuffed', price: '2.00' },
+      ],
+    }
+    // A variant with one option is never picked: it adds nothing.
+    const only = { options: [{ name: 'Regular', price: '5.00' }] }
+
+    expect(dishPrices({ price: '10.00', variants: [] }, true)).toEqual({
+      reference: 1000,
+      sizes: [],
+    })
+    expect(dishPrices({ price: '10.00', variants: [size, only] }, true)).toEqual({
+      reference: 1800,
+      sizes: [],
+    })
+    // Priced by its sizes: each with the least the rest add.
+    expect(dishPrices({ price: null, variants: [size, crust] }, true)).toEqual({
+      reference: 800,
+      sizes: [
+        { name: 'Large', cents: 1200 },
+        { name: 'Small', cents: 800 },
+      ],
+    })
+    // Variants off, only its own price counts.
+    expect(dishPrices({ price: null, variants: [size] }, false)).toEqual({
+      reference: null,
+      sizes: [],
+    })
+    expect(dishPrices({ price: '10.00', variants: [size] }, false).reference).toBe(1000)
+  })
+
+  it('weighs an amount against a dish priced by its sizes at its smallest', () => {
+    const dishes = [{ id: 1, name: 'Pizza', reference: 800, sizes: [], currency: 'USD', rate: 1 }]
+    const values = { discount_type: 'amount' as const, discount_value: '8', dish_ids: [1] }
+    expect(amountTooBig(values, dishes)?.name).toBe('Pizza')
+    expect(amountTooBig({ ...values, discount_value: '7.99' }, dishes)).toBeNull()
   })
 })

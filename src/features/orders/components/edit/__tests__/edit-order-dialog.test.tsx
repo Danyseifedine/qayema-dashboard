@@ -112,9 +112,10 @@ describe('EditOrderDialog', () => {
 
     expect(within(dialog).getByRole('heading', { name: 'Edit order ABC234' })).toBeInTheDocument()
     expect(within(dialog).getByText(/Dishes already on it keep the price/)).toBeInTheDocument()
-    expect(
-      within(dialog).getByText('Size: Large · + Extra cheese · $12.00 each'),
-    ).toBeInTheDocument()
+    // The choices isolated in their own run, the price after them.
+    const choices = within(dialog).getByText('Size: Large · + Extra cheese')
+    expect(choices.tagName).toBe('BDI')
+    expect(choices.parentElement).toHaveTextContent('Size: Large · + Extra cheese · $12.00 each')
     expect(within(dialog).getByText('$24.00')).toBeInTheDocument()
   })
 
@@ -212,8 +213,8 @@ describe('EditOrderDialog', () => {
       )
 
       expect(
-        within(dialog).getByText('Your scoops: 2 × Vanilla, Chocolate · $6.50 each'),
-      ).toBeInTheDocument()
+        within(dialog).getByText('Your scoops: 2 × Vanilla, Chocolate').parentElement,
+      ).toHaveTextContent('Your scoops: 2 × Vanilla, Chocolate · $6.50 each')
     })
 
     it('adds it with every part, names what was built, counts it and sends it', async () => {

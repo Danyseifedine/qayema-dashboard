@@ -12,6 +12,8 @@ import {
 } from '@/shared/utils/string/menu-text'
 import {
   buildPriceCents,
+  cheapestCents,
+  type BuildPart,
   type BuildShape,
   type PartPrices,
 } from '@/features/build-your-own/utils/build-price'
@@ -515,7 +517,9 @@ type Offerable = {
   is_available: boolean
   price: string | null
   currency: string
-  variants?: readonly { options: readonly { price: string }[] }[]
+  variants?: readonly { options: readonly { name?: MenuText; price: string }[] }[]
+  /** An offer's deal dish carries its offer: on the menu only for a while, never a choice. */
+  offer?: unknown
 }
 
 /**
@@ -536,8 +540,8 @@ export function lowestPrice(dish: Offerable): number {
 /**
  * The dishes of a category guests can pick in a build, the server's
  * BuildChoices: available, priced (or, while variants are on, `sized`,
- * priced by size), in the dish's currency, never the dish itself; in the
- * menu's order.
+ * priced by size), in the dish's currency, never the dish itself nor an
+ * offer's deal dish; in the menu's order.
  */
 export function offeredDishes<T extends Offerable>(
   dishes: readonly T[],
@@ -551,6 +555,7 @@ export function offeredDishes<T extends Offerable>(
     (dish) =>
       dish.category_id === categoryId &&
       dish.id !== dishId &&
+      dish.offer == null &&
       dish.is_available &&
       (dish.price !== null || (sized && sizePrices(dish).length > 0)) &&
       dish.currency === currency,
@@ -566,6 +571,58 @@ export function tickedDishes<T extends { id: number }>(
   dishIds: readonly number[] | null | undefined,
 ): T[] {
   return dishIds == null ? [...offered] : offered.filter((dish) => dishIds.includes(dish.id))
+}
+
+/**
+ * A size's key as the server makes it (BuildChoices): its name in the
+ * menu's main language, else the first it has, trimmed and lower case, so
+ * "Large" on one pizza and " LARGE " on another are one size.
+ */
+export function sizeKey(name: MenuText, main: string): string {
+  const text = name[main] || Object.values(name).find((value) => value) || ''
+  return text.trim().toLowerCase()
+}
+
+/**
+ * The least a category's build adds, in cents, as the menu's card counts it
+ * (MenuDishOptions over BuildChoices): the cheapest count and choice; with
+ * dishes priced by size, the same at each size (such a dish at that size's
+ * price, shares only; one with a price of its own at every size), at the
+ * cheapest size offering two choices or more. Null when guests are not
+ * offered it: fewer than two choices at every size.
+ */
+export function cheapestOffered(
+  build: { shape: BuildShape; parts: readonly number[] },
+  offered: readonly Offerable[],
+  partPrices: (dishId: number) => PartPrices,
+  main: string,
+): number | null {
+  // Each dish priced by size: its price by size key, the first option naming each.
+  const bySize = new Map<number, Map<string, string>>()
+  const keys: string[] = []
+  for (const dish of offered) {
+    if (dish.price !== null) continue
+    const prices = new Map<string, string>()
+    for (const option of dish.variants?.[0]?.options ?? []) {
+      const key = sizeKey(option.name ?? {}, main)
+      if (key !== '' && !prices.has(key)) prices.set(key, option.price)
+    }
+    bySize.set(dish.id, prices)
+    for (const key of prices.keys()) if (!keys.includes(key)) keys.push(key)
+  }
+
+  let lowest: number | null = null
+  for (const key of keys.length === 0 ? [null] : keys) {
+    const at: BuildPart[] = offered.flatMap((dish) => {
+      if (dish.price !== null) return [{ price: dish.price, part_prices: partPrices(dish.id) }]
+      const atSize = key === null ? undefined : bySize.get(dish.id)?.get(key)
+      return atSize === undefined ? [] : [{ price: atSize }]
+    })
+    if (at.length < 2) continue
+    const cents = cheapestCents(build.shape, build.parts, at)
+    lowest = lowest === null || cents < lowest ? cents : lowest
+  }
+  return lowest
 }
 
 /** One choice as the price example and the preview read it. */

@@ -1,18 +1,11 @@
 import { useCombobox } from 'downshift'
 import { IconCheck, IconChevronDown } from '@tabler/icons-react'
-import {
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-  type Ref,
-} from 'react'
+import { useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/dom/cn'
 import { controlClass, menuItemClass, menuPanelClass } from '@/shared/components/ui/control-class'
 import { FieldShell, type FieldTone } from '@/shared/components/ui/field-shell'
+import { useAnchoredPlace } from '@/shared/hooks/use-anchored-place'
 
 export type ComboboxOption = {
   value: string
@@ -59,11 +52,8 @@ const PANEL_WIDTH = 320
 /**
  * A searchable select.
  *
- * The list is rendered inline rather than in a portal, because every modal in
- * this app is a native `<dialog>` living in the browser's top layer: anything
- * appended to `<body>` would be painted behind it. While open it is `fixed`
- * at the field's place on screen (followed on scroll and resize), so a
- * scrolling parent, such as a dialog's body, cannot clip it. Keyboard
+ * The list is rendered inline and `fixed` at the field while open
+ * (`useAnchoredPlace`), so a dialog's scrolling body cannot clip it. Keyboard
  * behaviour comes from downshift, which supplies the ARIA combobox contract.
  */
 export function Combobox({
@@ -86,8 +76,6 @@ export function Combobox({
 }: ComboboxProps) {
   const { t } = useTranslation()
   const shellRef = useRef<HTMLDivElement>(null)
-  // Where the open list sits on screen, measured from the field.
-  const [place, setPlace] = useState<CSSProperties>({})
   // `null` means "not filtering": the input mirrors the selected label.
   // Any string, including an empty one, is an active filter, which is what
   // lets the owner clear the field and search from scratch.
@@ -138,7 +126,6 @@ export function Combobox({
     },
     onIsOpenChange: ({ isOpen: open, type }) => {
       if (!open) return
-      setPlace(placeFor(shellRef.current, embedded))
       // Opened without typing: on the current choice, so a time sits where
       // it is in the day rather than the list starting at midnight.
       if (selected && type !== useCombobox.stateChangeTypes.InputChange) {
@@ -151,18 +138,14 @@ export function Combobox({
     },
   })
 
-  // The field moves under a fixed list when its dialog or page scrolls, or
-  // the window changes size: the list follows it while open.
-  useLayoutEffect(() => {
-    if (!isOpen) return
-    const follow = () => setPlace(placeFor(shellRef.current, embedded))
-    window.addEventListener('scroll', follow, true)
-    window.addEventListener('resize', follow)
-    return () => {
-      window.removeEventListener('scroll', follow, true)
-      window.removeEventListener('resize', follow)
-    }
-  }, [isOpen, embedded])
+  // Where the open list sits on screen, measured from the field and
+  // following it while its dialog or page scrolls.
+  const place = useAnchoredPlace(isOpen, shellRef, {
+    width: PANEL_WIDTH,
+    height: PANEL_SPACE,
+    alignEnd: !embedded,
+    matchWidth: !embedded,
+  })
 
   // Typeahead for the non-searchable variant: the input is read-only, so the
   // usual filtering is unavailable and letters jump the highlight instead.
@@ -315,46 +298,4 @@ export function Combobox({
       {list}
     </div>
   )
-}
-
-/** The gap between the field and its list. */
-const GAP = 6
-
-/**
- * Where the open list goes on screen: under the field (over it when there is
- * not enough room below but more above), from the field's start edge (from
- * its end edge near the screen's side), and at least as wide as the field.
- */
-function placeFor(element: HTMLElement | null, embedded: boolean): CSSProperties {
-  if (!element || typeof window === 'undefined') return {}
-  const rect = element.getBoundingClientRect()
-  const rtl = getComputedStyle(element).direction === 'rtl'
-  const fromEnd = !embedded && shouldAlignEnd(element)
-  // In Arabic the start edge is the right one.
-  const fromLeft = rtl ? fromEnd : !fromEnd
-
-  return {
-    ...(shouldFlipUp(element)
-      ? { bottom: window.innerHeight - rect.top + GAP }
-      : { top: rect.bottom + GAP }),
-    ...(fromLeft ? { left: rect.left } : { right: window.innerWidth - rect.right }),
-    ...(embedded ? {} : { minWidth: rect.width }),
-  }
-}
-
-/** Grow toward the start edge when there is not enough room toward the end. */
-function shouldAlignEnd(element: HTMLElement | null): boolean {
-  if (!element || typeof window === 'undefined') return false
-  const rect = element.getBoundingClientRect()
-  const rtl = getComputedStyle(element).direction === 'rtl'
-  const towardEnd = rtl ? rect.right : window.innerWidth - rect.left
-  return towardEnd < Math.min(PANEL_WIDTH, window.innerWidth - 32)
-}
-
-/** Open upward when there is not enough room below but more above. */
-function shouldFlipUp(element: HTMLElement | null): boolean {
-  if (!element || typeof window === 'undefined') return false
-  const rect = element.getBoundingClientRect()
-  const below = window.innerHeight - rect.bottom
-  return below < PANEL_SPACE && rect.top > below
 }

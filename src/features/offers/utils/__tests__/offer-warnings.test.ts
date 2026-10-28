@@ -17,9 +17,9 @@ function offer(id: number, overrides: Partial<Offer> = {}): Offer {
 }
 
 const DISHES: MenuDish[] = [
-  { id: 1, name: 'Kafta', price: '12.50', rate: 1, shown: true },
-  { id: 2, name: 'Fries', price: '3.00', rate: 1, shown: true },
-  { id: 3, name: 'Old soup', price: '4.00', rate: 1, shown: false },
+  { id: 1, name: 'Kafta', reference: 1250, rate: 1, shown: true },
+  { id: 2, name: 'Fries', reference: 300, rate: 1, shown: true },
+  { id: 3, name: 'Old soup', reference: 400, rate: 1, shown: false },
 ]
 
 const kinds = (subject: Offer, offers: Offer[] = [subject], dishes = DISHES) =>
@@ -49,8 +49,8 @@ describe('offerWarnings', () => {
   it('takes an amount in the main currency off a dish in the second at the rate', () => {
     // LBP 300,000 off: $3.37 off a $5.00 dish, all of a $3.00 one.
     const usd: MenuDish[] = [
-      { id: 1, name: 'Burger', price: '5.00', rate: 89000, shown: true },
-      { id: 2, name: 'Fries', price: '3.00', rate: 89000, shown: true },
+      { id: 1, name: 'Burger', reference: 500, rate: 89000, shown: true },
+      { id: 2, name: 'Fries', reference: 300, rate: 89000, shown: true },
     ]
     const subject = offer(1, {
       discount_type: 'amount',

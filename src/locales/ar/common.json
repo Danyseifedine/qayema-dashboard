@@ -152,10 +152,14 @@
     "vsBefore": "مقارنة بالسابق"
   },
   "limitNotice": {
-    "onYourPackage": "في باقتك"
+    "onYourPackage": "في باقتك",
+    "forYourRestaurant": "المحدد لمطعمك"
   },
   "colorField": {
-    "picker": "{{label}}، اختيار اللون"
+    "picker": "{{label}}، اختيار اللون",
+    "shade": "الدرجة",
+    "shadeValue": "التشبع {{saturation}}%، السطوع {{brightness}}%",
+    "hue": "اللون"
   },
   "phoneField": {
     "country": "الدولة"
@@ -339,5 +343,14 @@
     "step": "الخطوة {{number}}: {{name}}",
     "stepDone": "الخطوة {{number}}: {{name}}، مكتملة",
     "progress": "الخطوة {{number}} من {{total}}: {{name}}"
+  },
+  "datePicker": {
+    "placeholder": "اختر يومًا",
+    "choose": "اختر يومًا",
+    "previousMonth": "الشهر السابق",
+    "nextMonth": "الشهر التالي",
+    "today": "اليوم",
+    "clear": "مسح",
+    "clearDay": "امسح اليوم"
   }
 }

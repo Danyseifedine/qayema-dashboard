@@ -61,6 +61,22 @@ test.describe('analytics', () => {
     await expect(locked).toContainText(/Premium|مميّز/)
   })
 
+  test('a share and its count stand apart, in Arabic too @matrix', async ({ page, owner }) => {
+    await owner({ package: 'pro', visits: 4, qr_scans: 1 })
+    await page.goto('/analytics')
+
+    const row = page
+      .getByRole('list', { name: either('How guests arrive', 'كيف يصل الزبائن') })
+      .getByRole('listitem')
+      .filter({ hasText: /Opened a link|فتحوا رابطًا/ })
+    const share = row.getByText('75%', { exact: true })
+    const count = row.getByText('3', { exact: true })
+    const [a, b] = [(await share.boundingBox())!, (await count.boundingBox())!]
+    // Never one run of digits such as "75%3": a gap between the two boxes.
+    const gap = a.x < b.x ? b.x - (a.x + a.width) : a.x - (b.x + b.width)
+    expect(gap).toBeGreaterThanOrEqual(6)
+  })
+
   test('how guests arrive splits QR scans from links', async ({ page, owner }) => {
     await owner({ package: 'pro', visits: 4, qr_scans: 1 })
     await page.goto('/analytics')

@@ -3,12 +3,14 @@ import { useWatch, type UseFormSetValue } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useSession } from '@/features/auth'
 import { ConfirmDialog } from '@/shared/components/feedback'
-import { TextField } from '@/shared/components/forms'
+import { Field, TextField } from '@/shared/components/forms'
+import { Segmented } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
 import { isAtLimit } from '@/shared/utils/limits/is-at-limit'
 import {
   ACTIONS,
   DISCOUNTS,
+  FREE,
   GIVES,
   type Gives,
   type OfferFormValues,
@@ -37,8 +39,10 @@ export type TapStepProps = {
 
 /**
  * What the offer gives guests, first: nothing to order (a tap does nothing
- * or opens a link), a discount on the owner's dishes (with what a tap does
- * and the dishes), or a deal dish of its own, which a tap opens. Without
+ * or opens a link), a discount on the owner's dishes (the discount, its
+ * dishes, then what a tap does), or a deal dish of its own, which a tap opens. A discount
+ * is a percent or an amount off each dish, or the second of a pair free or
+ * a percent off ("2nd item", starting free). Without
  * discounts on the package only "None" can be picked; with the package's
  * dishes all used, a new deal dish cannot. Leaving a saved deal dish asks
  * first, since saving then takes it off the menu.
@@ -66,19 +70,36 @@ export function TapStep({
   const dishesFull = isAtLimit(dishes) && !hasDeal
   const discount =
     discountType === 'none' ? null : { type: discountType, value: discountNumber(discountValue) }
+  // Free or a percent off the second one, as picked: typing 100 or more in
+  // the percent box keeps the box (and its message), never flips to Free.
+  const [secondPercent, setSecondPercent] = useState(
+    discountType === 'second' && discountNumber(discountValue) < FREE,
+  )
+  const secondFree = discountType === 'second' && !secondPercent
 
-  /** The choice, with what goes with it: a deal is opened by a tap and takes no discount. */
+  /** Another kind of discount: the 2nd item starts free, and leaving it starts empty. */
+  const pickDiscount = (next: OfferFormValues['discount_type']) => {
+    if (next === discountType) return
+    setValue('discount_type', next, { shouldDirty: true })
+    setSecondPercent(false)
+    if (next === 'second') setValue('discount_value', String(FREE))
+    else if (discountType === 'second') setValue('discount_value', '')
+  }
+
+  /**
+   * The choice, with what goes with it: a deal is opened by a tap and takes
+   * no discount; a discount's tap shows its dishes unless a link was chosen.
+   */
   const choose = (next: Gives) => {
     setValue('gives', next, { shouldDirty: true })
     if (next !== 'discount') {
       setValue('discount_type', 'none')
       if (next === 'deal') setValue('action', 'dishes')
       else if (action === 'dishes') setValue('action', 'none')
-    } else if (!parts.discounts) {
-      setValue('action', 'dishes')
-    } else {
-      setValue('discount_type', 'percent')
+      return
     }
+    if (action === 'none') setValue('action', 'dishes')
+    if (parts.discounts) setValue('discount_type', 'percent')
   }
 
   return (
@@ -99,6 +120,85 @@ export function TapStep({
           disabled: value === 'deal' && dishesFull && gives !== 'deal',
         }))}
       />
+      {gives === 'discount' ? (
+        <>
+          <SegmentedField
+            control={control}
+            name="discount_type"
+            label={t('editor.discount')}
+            hint={parts.discounts ? undefined : t('editor.discountsOff')}
+            onPick={pickDiscount}
+            options={DISCOUNTS.map((value) => ({
+              value,
+              label: t(`editor.discountOptions.${value}`),
+              disabled: !parts.discounts && value !== 'none' && value !== discountType,
+            }))}
+          />
+          {discountType === 'second' ? (
+            <Field
+              label={t('editor.secondValue')}
+              hint={secondFree ? t('editor.secondHint') : undefined}
+            >
+              {() => (
+                <Segmented<string>
+                  block
+                  value={secondFree ? 'free' : 'percent'}
+                  onChange={(mode) => {
+                    if (mode === (secondFree ? 'free' : 'percent')) return
+                    setSecondPercent(mode === 'percent')
+                    setValue('discount_value', mode === 'free' ? String(FREE) : '50', {
+                      shouldDirty: true,
+                    })
+                  }}
+                  aria-label={t('editor.secondValue')}
+                  options={(['free', 'percent'] as const).map((mode) => ({
+                    value: mode,
+                    label: t(`editor.secondModes.${mode}`),
+                  }))}
+                />
+              )}
+            </Field>
+          ) : null}
+          {discountType === 'second' && !secondFree ? (
+            <TextField
+              control={control}
+              name="discount_value"
+              label={t('editor.secondPercent')}
+              hint={t('editor.secondHint')}
+              inputMode="decimal"
+              placeholder="50"
+              forceLtr
+              leadingIcon={<span className="text-[13px] text-[var(--muted)]">%</span>}
+            />
+          ) : null}
+          {discountType === 'percent' || discountType === 'amount' ? (
+            <TextField
+              control={control}
+              name="discount_value"
+              label={
+                discountType === 'percent' ? t('editor.percentValue') : t('editor.amountValue')
+              }
+              hint={t('editor.discountHint')}
+              inputMode="decimal"
+              placeholder={discountType === 'percent' ? '20' : '2'}
+              forceLtr
+              leadingIcon={
+                <span className="text-[13px] text-[var(--muted)]">
+                  {discountType === 'percent' ? '%' : currency}
+                </span>
+              }
+            />
+          ) : null}
+          <DishPicker
+            control={control}
+            currency={currency}
+            exchangeRate={exchangeRate}
+            locale={locale}
+            discount={discount}
+          />
+        </>
+      ) : null}
+
       {gives === 'deal' ? (
         <DealFields
           control={control}
@@ -134,46 +234,6 @@ export function TapStep({
           ) : null}
         </>
       )}
-      {gives === 'discount' ? (
-        <>
-          <SegmentedField
-            control={control}
-            name="discount_type"
-            label={t('editor.discount')}
-            hint={parts.discounts ? undefined : t('editor.discountsOff')}
-            options={DISCOUNTS.map((value) => ({
-              value,
-              label: t(`editor.discountOptions.${value}`),
-              disabled: !parts.discounts && value !== 'none' && value !== discountType,
-            }))}
-          />
-          {discountType !== 'none' ? (
-            <TextField
-              control={control}
-              name="discount_value"
-              label={
-                discountType === 'percent' ? t('editor.percentValue') : t('editor.amountValue')
-              }
-              hint={t('editor.discountHint')}
-              inputMode="decimal"
-              placeholder={discountType === 'percent' ? '20' : '2'}
-              forceLtr
-              leadingIcon={
-                <span className="text-[13px] text-[var(--muted)]">
-                  {discountType === 'percent' ? '%' : currency}
-                </span>
-              }
-            />
-          ) : null}
-          <DishPicker
-            control={control}
-            currency={currency}
-            exchangeRate={exchangeRate}
-            locale={locale}
-            discount={discount}
-          />
-        </>
-      ) : null}
 
       <ConfirmDialog
         open={leaving !== null}

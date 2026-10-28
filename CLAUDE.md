@@ -322,7 +322,9 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `SortableList` from its barrel), each with its status ("Live now",
   "Starts Fri 6:00 PM", from the server), where it shows, its discount,
   its schedule as a sentence (`utils/offer-schedule.ts`) and its last 30
-  days' numbers, a switch to pause it (optimistic) and edit and delete.
+  days' numbers, a switch to pause it (optimistic) and edit and delete;
+  an offer without a picture shows a gold tile with its discount ("20%",
+  "2nd free") or its sign (`NoPicture` in `offer-card.tsx`).
   The editor (`components/editor/offer-editor.tsx`) is a page of its own
   that takes the list's place (back arrow, a confirm before dropping
   changes), in five steps (`offer-steps.ts`, the shared `Stepper`; Next checks
@@ -330,17 +332,31 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   step, a refused save opens the first step with an error): 1 the picture,
   then "Write a title and text on it" (`show_text`; off makes a picture
   alone, which needs its picture: `saved_image` counts the one it has);
-  2 where it shows (`PlacementPicker`: banner, section, pop-up or ad, never
+  2 where it shows (`PlacementPicker`: banner, pop-up or ad, never
   pop-up and ad together) and its shape (`banner_shape` rectangle 2:1 or
   square, `popup_shape` square or tall 3:4, picked on cards drawn with the
-  owner's picture by `OfferPreview`; an ad is always a rectangle, the
-  section a dish-like row; the live preview is `LivePreview` over
+  owner's picture by `OfferPreview`; an ad is always a rectangle; the
+  live preview is `LivePreview` over
   `PreviewFigure`), how often and how long for a
   pop-up or an ad; 3 what the offer gives guests (`gives`, a `Segmented`
   first): nothing to order (a tap does nothing or opens a link), a
-  discount on the owner's dishes (what a tap does, the discount and its
-  dishes: `DishPicker`, old and new price by `discountedCents`, the twin of
-  the server's; never a deal dish, which the server refuses), or **a deal**
+  discount on the owner's dishes (the discount, its dishes, then what a
+  tap does; the step is "What guests get"; dishes: `DishPicker`, grouped by
+  `dishGroups()`: "Dishes guests build" first in a panel of their own with
+  the build icon and a line on their price, then each category in the
+  menu's order, each with "Select all"; old and new price by
+  `discountedCents`, the twin of the server's; never a deal dish, which the
+  server refuses). A percent or
+  an amount covers the size and other choices picked, add-ons not: each
+  dish is read at `dishPrices()` (`utils/discount.ts`: `reference`, its own
+  price or 0 plus the cheapest option of each variant with 2 or more, the
+  amount check's price; a dish priced by its sizes lists each size, "Small
+  $8.00 becomes $6.40"), only while variants are on. "2nd item"
+  (`discount_type: 'second'`, `discount_value` 1 to 100, `FREE` = 100,
+  starting free; a `Segmented` Free / Percent off and then the percent):
+  any two dishes on the offer pair up and the second one the guest adds is
+  that much off (`secondCents()`, "$12.50, 2nd $6.25"); said "2nd one 50%
+  off" / "2nd one free" by `discountLine()`. Or **a deal**
   (the tab "A deal": a dish of its own, `DealFields`: "Deal name", the
   offer's title until the owner writes one, "What it includes", its price
   with a currency
@@ -354,7 +370,10 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   `isAtLimit`) the choice is closed unless the offer has one. The dish is
   on the menu, and orderable, only while the offer is live; 4 when (`ScheduleSection`: always, or dates with `DateField`,
   a repeat, and times with `TimeField`, said back as one sentence in the
-  restaurant's timezone); 5 a review of every choice with previews in each
+  restaurant's timezone; with some days or hours (`hasHours()`), "Show it
+  all the time" sends `shows_outside_hours`: shown always, the deal only
+  in its hours, the sentence ending "shown all the time" and the status
+  "Shown, deal from Wed 5:00 PM"); 5 a review of every choice with previews in each
   place it shows and the switch that puts it on the menu. Dates travel as the restaurant's local "YYYY-MM-DDTHH:MM";
   an end date without a time is the next midnight (`toLocal`). An order
   line bought on an offer says "Grill week, was $25.00" on its card. A
@@ -372,7 +391,15 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   Backend rules: `../qayema/docs/architecture/offers.md`.
 - **Times and dates in forms:** `TimeField` (shared forms, hour, quarter
   minutes and AM | PM, stored "HH:MM", the opening hours' and the offers'
-  times) and `DateField` (the phone's own date picker, "YYYY-MM-DD");
+  times) and `DateField` (our own calendar, `DatePicker` in shared/ui:
+  the day in words in the dashboard's language, a month Monday first with
+  today marked, `min`/`max`, Today and Clear, arrows/Page Up/Home/End,
+  mirrored in Arabic; "YYYY-MM-DD", '' when cleared; never `type="date"`);
+  a panel dropping from a field sits fixed at it through `useAnchoredPlace`
+  (shared/hooks, the Combobox's too); a colour is `ColorField`, a hex box
+  beside `ColorPicker` (shared/ui: our own shade box and hue strip, dragged
+  or moved with the arrows, never `type="color"`, HSV helpers in
+  `shared/utils/color/hsv.ts`);
   the clock helpers (`splitTime`, `joinTime`, `runsPastMidnight`,
   `shiftProblem`) are `shared/utils/format/clock.ts`.
 - **Variants and add-ons** (`features/menu/dishes/components/options/`,
@@ -401,7 +428,8 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   choices guests can pick) with edit, delete and "New build" in a
   `LimitHeader` (the dishes guests build against the restaurant's
   `limits.builds`, 3 unless an admin sets another; disabled at it, at the
-  package's dish limit, or without a category). The editor
+  package's dish limit; never for want of a category, which its dish
+  lacks, though "From a category" says when there is none). The editor
   (`components/editor/build-editor.tsx`, `build-steps.ts`, the shared
   `Stepper`) takes the list's place like the offers': 1 what guests build
   (three cards: a pizza half and half, scoops or pieces, something else;
@@ -409,7 +437,7 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   2 the choices (a category's offered dishes, `offeredDishes()`,
   each a `CheckRow` ticked to start; unticked ones are left out, `dish_ids`,
   null while every one is ticked so a dish added later joins,
-  `tickedDishes()`; or an own list of 2 to 30 on the menu's `ChoiceRow`), 3 the sizes (Whole
+  `tickedDishes()`; or an own list of 2 to 30 on the menu's `ChoiceRow`), 3 the parts (the step says "Parts", never "Sizes", which a pizza's own Small / Large are; Whole
   to Quarters or 1 to 4 pieces, More for the rest; how it is made asked for
   "Something else" only, a pizza and scoops keep what their card set; own
   part prices behind "Set your own prices", empty boxes showing "6.00
@@ -580,7 +608,8 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   (`home-backdrop` in globals.css). On a phone, a section opened from More
   adds its back button on a row of its own above. Pages draw no title of
   their own (a page's usage is `LimitNotice`, "6 / 40 on your package",
-  beside its add button); a new page adds its line to `usePageHero`.
+  beside its add button; `setBy="restaurant"` for a limit an admin sets
+  per restaurant, Build your own's: "1 / 3 set for your restaurant"); a new page adds its line to `usePageHero`.
 - **Shared pieces worth knowing (use them, never hand-roll their look):**
   - Banners: `Alert` is the one banner: `warning` (amber, wants the owner to
     act: orders waiting, turned off, a limit), `error` (red), `info` (small

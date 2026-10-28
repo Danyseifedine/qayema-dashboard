@@ -7,6 +7,8 @@ import {
   toOfferPayload,
   type Deal,
   type Offer,
+  hasHours,
+  withSaved,
   type OfferFormValues,
 } from '@/features/offers/schemas/offer.schema'
 
@@ -34,6 +36,7 @@ const saved: Offer = {
   weekdays: ['fri'],
   month_days: [],
   time_windows: [{ from: '18:00', to: '22:00' }],
+  shows_outside_hours: true,
   is_active: false,
   status: 'paused',
   next_start: null,
@@ -58,12 +61,15 @@ describe('offer schema', () => {
       when: 'always',
       all_day: true,
       title: { en: '', ar: '' },
+      // One of the editor's choices, so one shows picked.
+      ad_seconds: 5,
     })
     expect(toOfferPayload(valid())).toMatchObject({
       starts_at: null,
       ends_at: null,
       repeat: 'always',
       time_windows: null,
+      shows_outside_hours: false,
       discount_value: null,
       dish_ids: [],
       action_url: null,
@@ -161,6 +167,38 @@ describe('offer schema', () => {
     expect(issues(valid({ ...amount, discount_value: '1,5' }))).toEqual([])
   })
 
+  it('takes the second of a pair free or up to 100% off', () => {
+    const second = { gives: 'discount' as const, discount_type: 'second' as const, dish_ids: [1] }
+    expect(issues(valid({ ...second, discount_value: '100' }))).toEqual([])
+    expect(issues(valid({ ...second, discount_value: '101' }))).toEqual(['discount_value'])
+    expect(issues(valid({ ...second, discount_value: '' }))).toEqual(['discount_value'])
+    expect(toOfferPayload(valid({ ...second, discount_value: '50' }))).toMatchObject({
+      discount_type: 'second',
+      discount_value: 50,
+      dish_ids: [1],
+    })
+  })
+
+  it('shows an offer all the time only with days or hours its deal waits for', () => {
+    expect(toOfferForm(saved, ['en']).shows_outside_hours).toBe(true)
+    expect(toOfferForm(null, ['en']).shows_outside_hours).toBe(false)
+    const shown = { shows_outside_hours: true }
+    expect(hasHours(valid({ when: 'always' }))).toBe(false)
+    expect(hasHours(valid({ when: 'custom', repeat: 'always', all_day: true }))).toBe(false)
+    expect(hasHours(valid({ when: 'custom', repeat: 'weekly', all_day: true }))).toBe(true)
+    expect(hasHours(valid({ when: 'custom', repeat: 'always', all_day: false }))).toBe(true)
+    expect(
+      toOfferPayload(valid({ ...shown, when: 'custom', repeat: 'weekly', weekdays: ['wed'] }))
+        .shows_outside_hours,
+    ).toBe(true)
+    // Dates alone: outside them it never shows, so there is nothing to show it over.
+    expect(
+      toOfferPayload(valid({ ...shown, when: 'custom', starts_on: '2026-11-01' }))
+        .shows_outside_hours,
+    ).toBe(false)
+    expect(toOfferPayload(valid(shown)).shows_outside_hours).toBe(false)
+  })
+
   it('needs a discount, or a tap showing the dishes, to give a discount on dishes', () => {
     expect(issues(valid({ gives: 'discount', dish_ids: [1] }))).toEqual(['discount_type'])
     expect(issues(valid({ gives: 'discount', action: 'dishes' }))).toEqual(['dish_ids'])
@@ -223,6 +261,14 @@ describe('offer schema', () => {
         }),
       ),
     ).toEqual(['time_windows.0.from'])
+  })
+})
+
+describe('withSaved', () => {
+  it('lists a saved number of seconds that is not one of the choices, in its place', () => {
+    expect(withSaved([3, 5, 8], 5)).toEqual([3, 5, 8])
+    expect(withSaved([3, 5, 8], 6)).toEqual([3, 5, 6, 8])
+    expect(withSaved([0, 2, 5], 30)).toEqual([0, 2, 5, 30])
   })
 })
 

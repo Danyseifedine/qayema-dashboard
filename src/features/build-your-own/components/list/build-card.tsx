@@ -1,13 +1,15 @@
 import { IconChefHat } from '@tabler/icons-react'
 import { Trans, useTranslation } from 'react-i18next'
+import { useMenuLanguages } from '@/features/auth'
 import { categoryIcon, type Category, type Dish } from '@/features/menu'
 import { Money, StatusChip } from '@/shared/components/data-display'
 import { RowActions } from '@/shared/components/ui'
 import type { Locale } from '@/shared/constants/locales'
+import { mainLanguageOf } from '@/shared/constants/menu-languages'
 import { nameOr } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import {
-  lowestPrice,
+  cheapestOffered,
   offeredDishes,
   tickedDishes,
   type Build,
@@ -35,8 +37,9 @@ export type BuildCardProps = {
  * see above the choices when it is another, what it is
  * in a line ("Halves and thirds, from Pizzas"), the least a guest pays for
  * it (the dish's price and the build's cheapest, as the menu's card says
- * "from"), a warning when fewer than two choices can be picked (guests do
- * not see it then), and edit and delete.
+ * "from"), a warning when fewer than two choices can be picked, at any one
+ * size for pizzas priced by size (guests do not see it then), and edit and
+ * delete.
  */
 export function BuildCard({
   build,
@@ -51,6 +54,8 @@ export function BuildCard({
   const { t } = useTranslation('build-your-own')
   // The build's own words are the menu's; the line about it is the dashboard's.
   const ui = usePreferencesStore((state) => state.locale)
+  // The menu's main language names a pizza's sizes, as on the menu.
+  const main = mainLanguageOf(useMenuLanguages())
   const dishName = nameOr(dish.name, locale, t('card.untitled'))
   const name = nameOr(build.name, locale, t('card.untitled'))
 
@@ -58,16 +63,16 @@ export function BuildCard({
   const pickable = offeredDishes(dishes, build.category_id, dish.id, dish.currency, sized)
   const offered = tickedDishes(pickable, build.dish_ids)
   const saved = new Map(build.choices.map((choice) => [choice.dish_id, choice.part_prices]))
-  const choices: BuildPart[] = fromCategory
-    ? offered.map((each) =>
-        // One priced by size counts at its cheapest, with shares only.
-        each.price === null
-          ? { price: lowestPrice(each) }
-          : { price: each.price, part_prices: saved.get(each.id) },
-      )
-    : build.choices.flatMap((choice) =>
-        choice.price === null ? [] : [{ price: choice.price, part_prices: choice.part_prices }],
-      )
+  const own: BuildPart[] = build.choices.flatMap((choice) =>
+    choice.price === null ? [] : [{ price: choice.price, part_prices: choice.part_prices }],
+  )
+  // The least it adds, null while guests are not offered it (fewer than 2
+  // choices, at every size of pizzas priced by size).
+  const cheapest = fromCategory
+    ? cheapestOffered(build, offered, (id) => saved.get(id), main)
+    : own.length >= 2
+      ? cheapestCents(build.shape, build.parts, own)
+      : null
   const category = categories.find((each) => each.id === build.category_id)
   const sizes = sizesSummary(t, build.shape, build.parts, ui)
   const categoryName = nameOr(category?.name ?? {}, locale, t('card.untitled'))
@@ -82,8 +87,7 @@ export function BuildCard({
       : t('summary.category', { sizes, category: categoryName })
     : t('summary.own', { sizes, count: build.choices.length })
   const Icon = categoryIcon(dish.icon) ?? IconChefHat
-  const from =
-    Math.round(Number(dish.price ?? 0) * 100) + cheapestCents(build.shape, build.parts, choices)
+  const from = Math.round(Number(dish.price ?? 0) * 100) + (cheapest ?? 0)
 
   return (
     <article data-dish={dish.id} className="flex h-full gap-3 glass-card rounded-card p-3">
@@ -107,7 +111,7 @@ export function BuildCard({
         <p className="text-[12.5px] leading-snug text-[var(--muted)]">{summary}</p>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           {/* Guests are not offered a build with one choice: it has no price yet. */}
-          {choices.length >= 2 ? (
+          {cheapest !== null ? (
             <span className="text-[13px] text-accent">
               <Trans
                 t={t}
@@ -120,9 +124,13 @@ export function BuildCard({
               />
             </span>
           ) : (
-            <StatusChip tone="warning" title={t('card.hiddenHint')}>
-              {t('card.hidden')}
-            </StatusChip>
+            <>
+              <StatusChip tone="warning">{t('card.hidden')}</StatusChip>
+              {/* Said, not a tooltip: a phone has no hover. */}
+              <span className="text-[12.5px] leading-snug text-[var(--muted)]">
+                {t('card.hiddenHint')}
+              </span>
+            </>
           )}
         </div>
       </div>

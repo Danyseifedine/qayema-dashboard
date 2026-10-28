@@ -41,6 +41,7 @@ export const STEPS = [
       'month_days',
       'all_day',
       'time_windows',
+      'shows_outside_hours',
     ],
   },
   { id: 'review', fields: ['is_active'] },

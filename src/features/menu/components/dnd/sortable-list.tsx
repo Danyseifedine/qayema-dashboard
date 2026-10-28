@@ -1,6 +1,5 @@
 import {
   DndContext,
-  KeyboardSensor,
   PointerSensor,
   closestCenter,
   useSensor,
@@ -17,6 +16,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import type { ReactNode } from 'react'
+import { EagerKeyboardSensor } from '@/features/menu/components/dnd/eager-keyboard-sensor'
 
 export type SortableListProps<T extends { id: UniqueIdentifier }> = {
   /** Saved rows by their id, or form rows by their field-array key. */
@@ -33,7 +33,8 @@ export type SortableListProps<T extends { id: UniqueIdentifier }> = {
  *
  * The pointer sensor needs 8px of movement before a drag starts, so a tap on a
  * phone still reads as a tap. Reordering is reported once, on drop, rather
- * than on every frame.
+ * than on every frame. The keyboard sensor reads a key pressed straight after
+ * Space picks a card up (`EagerKeyboardSensor`).
  */
 export function SortableList<T extends { id: UniqueIdentifier }>({
   items,
@@ -43,7 +44,7 @@ export function SortableList<T extends { id: UniqueIdentifier }>({
 }: SortableListProps<T>) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(EagerKeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
   const handleDragEnd = (event: DragEndEvent) => {

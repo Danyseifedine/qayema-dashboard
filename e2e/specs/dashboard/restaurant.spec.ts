@@ -347,14 +347,15 @@ test.describe('restaurant', () => {
     await expect(guest.locator('img.brand-mark')).toBeVisible()
     expect(await guest.locator('img.brand-mark').getAttribute('src')).not.toBe(oldLogo)
     await expect(guest.locator('img.cover-photo')).toHaveCount(1)
+    await expect(guest.locator('img.cover-photo')).not.toHaveAttribute('src', /default-banner/)
 
-    // Remove the cover.
+    // Remove the cover: the default banner takes its place.
     await page.reload()
     await expect(page.getByRole('button', { name: 'Remove' })).toHaveCount(1)
     await page.getByRole('button', { name: 'Remove' }).click()
     expect((await save(page)).ok()).toBeTruthy()
     await guest.reload()
-    await expect(guest.locator('img.cover-photo')).toHaveCount(0)
+    await expect(guest.locator('img.cover-photo')).toHaveAttribute('src', /default-banner/)
     await expect(guest.locator('img.brand-mark')).toBeVisible()
     await guest.context().close()
   })

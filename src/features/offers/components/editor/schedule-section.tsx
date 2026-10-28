@@ -4,12 +4,13 @@ import { useTranslation } from 'react-i18next'
 import { DateField, Field, FieldGroup, SwitchField, TimeField } from '@/shared/components/forms'
 import { Button, HelperText, Segmented, ToggleChip } from '@/shared/components/ui'
 import { runsPastMidnight } from '@/shared/utils/format/clock'
-import { weekdayNames } from '@/shared/utils/format/date'
+import { todayDay, weekdayNames } from '@/shared/utils/format/date'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import {
   MAX_WINDOWS,
   REPEATS,
   WEEKDAYS,
+  hasHours,
   toOfferPayload,
   type OfferFormValues,
 } from '@/features/offers/schemas/offer.schema'
@@ -28,7 +29,9 @@ export type ScheduleSectionProps = {
  * When the offer runs: always, or on a schedule made of its first and last
  * day (either may be left open), the days it repeats on (every day, some
  * weekdays, some days of the month) and the times of day (all day, or up to
- * three, the last allowed past midnight), said back as one sentence.
+ * three, the last allowed past midnight), said back as one sentence. With
+ * some days or hours picked, the offer may show all the time while its deal
+ * waits for them (`shows_outside_hours`).
  */
 export function ScheduleSection({ control, timezone }: ScheduleSectionProps) {
   const { t } = useTranslation('offers')
@@ -44,6 +47,7 @@ export function ScheduleSection({ control, timezone }: ScheduleSectionProps) {
   const names = weekdayNames(locale, 'short')
   const longNames = weekdayNames(locale, 'long')
   const last = values.time_windows?.[values.time_windows.length - 1]
+  const today = todayDay()
 
   const toggleIn = <T,>(list: readonly T[], item: T): T[] =>
     list.includes(item) ? list.filter((other) => other !== item) : [...list, item]
@@ -98,7 +102,8 @@ export function ScheduleSection({ control, timezone }: ScheduleSectionProps) {
                 label={t('editor.until')}
                 hint={t('editor.untilHint')}
                 optionalText={t('editor.optional')}
-                min={values.starts_on || undefined}
+                // Never before its first day, nor before today: it would end at once.
+                min={values.starts_on > today ? values.starts_on : today}
               />
               {values.ends_on ? (
                 <TimeField
@@ -238,6 +243,15 @@ export function ScheduleSection({ control, timezone }: ScheduleSectionProps) {
                 </Button>
               ) : null}
             </div>
+          ) : null}
+
+          {hasHours(values) ? (
+            <SwitchField
+              control={control}
+              name="shows_outside_hours"
+              label={t('editor.showsOutsideHours')}
+              description={t('editor.showsOutsideHoursDescription')}
+            />
           ) : null}
         </>
       ) : null}
