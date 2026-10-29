@@ -249,7 +249,8 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   in code. `DesignSettingsCard` draws each by its type (colour → `ColorField`
   with a reset, boolean → `SwitchField`, select → `ChoiceField`, text →
   `TextField`), labelled from the schema, with a zod schema built from the
-  rows. Each design remembers its own. Save sends only changed settings, and
+  rows. Switching design carries the look over (the server copies every
+  setting the two designs share). Save sends only changed settings, and
   `null` when one is back on its default. A `contrast_with` colour pair warns
   below 4.5:1 (`shared/utils/color/contrast.ts`). Fonts: one picker per
   writing system the menu uses (English + Spanish = one), options and a

@@ -11,7 +11,7 @@ export type ScenarioInput = {
   package?: 'free' | 'pro' | 'premium' | 'custom' | (string & {})
   package_starts_at?: string
   package_ends_at?: string
-  template?: 'classic' | 'midnight' | null
+  template?: 'classic' | 'midnight' | 'ember' | null
   onboarded?: boolean
   restaurant?: boolean
   has_password?: boolean
@@ -23,7 +23,8 @@ export type ScenarioInput = {
   second_locale?: string | null
   is_active?: boolean
   switched_off?: string[]
-  phone?: string
+  /** null: no phone, so no WhatsApp to reach. */
+  phone?: string | null
   google_maps_url?: string
   /** One shift a day, or up to three (lunch and dinner); null closed. */
   opening_hours?: Record<

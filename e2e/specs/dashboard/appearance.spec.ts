@@ -2,7 +2,6 @@ import type { Page } from '@playwright/test'
 import { either, expect, test } from '../../support/fixtures'
 
 const CLASSIC_ACCENT = '#F8D38D'
-const MIDNIGHT_ACCENT = '#1F6FEB'
 
 const MENU = [{ name: { en: 'Mains' }, dishes: [{ name: { en: 'Kafta' } }] }]
 
@@ -182,7 +181,7 @@ test.describe('appearance', () => {
     )
   })
 
-  test('each design remembers its own colours', async ({ page, owner }) => {
+  test('switching designs keeps the look', async ({ page, owner }) => {
     const { restaurant } = await owner({ package: 'premium', categories: MENU })
     await page.goto('/appearance')
 
@@ -193,7 +192,7 @@ test.describe('appearance', () => {
     await saved
     await expect(page.getByText('All saved')).toBeVisible()
 
-    // Switch to Midnight: its own default, not Classic's choice.
+    // Switch to Midnight: it opens with the colour the menu had.
     await page.goto('/design')
     await page
       .getByRole('article')
@@ -209,19 +208,19 @@ test.describe('appearance', () => {
 
     await page.goto('/appearance')
     await expect(page.getByText('Choose the colours for your Midnight design.')).toBeVisible()
-    await expect(main).toHaveValue(MIDNIGHT_ACCENT)
+    await expect(main).toHaveValue('#AA3355')
     expect((await publicVariable(page, restaurant.public_url, '--accent')).toUpperCase()).toBe(
-      MIDNIGHT_ACCENT,
+      '#AA3355',
     )
 
-    // A change on Midnight stays on Midnight.
+    // A change on Midnight goes along when switching back.
     await page.goto('/appearance')
     await main.fill('#0B3D2E')
     saved = saveSettings(page)
     await page.getByRole('button', { name: 'Save' }).click()
     await saved
 
-    // Back to Classic: its colour is still there.
+    // Back to Classic: the latest look comes too.
     await page.goto('/design')
     await page
       .getByRole('article')
@@ -234,9 +233,9 @@ test.describe('appearance', () => {
 
     await page.goto('/appearance')
     await expect(page.getByText('Choose the colours for your Classic design.')).toBeVisible()
-    await expect(main).toHaveValue('#AA3355')
+    await expect(main).toHaveValue('#0B3D2E')
     expect((await publicVariable(page, restaurant.public_url, '--accent')).toUpperCase()).toBe(
-      '#AA3355',
+      '#0B3D2E',
     )
   })
 

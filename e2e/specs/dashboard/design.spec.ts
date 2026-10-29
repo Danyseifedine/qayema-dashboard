@@ -75,7 +75,8 @@ test.describe('design', () => {
     await expect(
       design(page, 'Classic').getByRole('button', { name: 'Use this design' }),
     ).toBeEnabled()
-    expect(await publicAccent(page, restaurant.public_url)).toBe(MIDNIGHT_ACCENT)
+    // A new design keeps the look the menu had: Classic's colour comes along.
+    expect(await publicAccent(page, restaurant.public_url)).toBe(CLASSIC_ACCENT)
 
     await page.goto('/design')
     await design(page, 'Classic').getByRole('button', { name: 'Use this design' }).click()
