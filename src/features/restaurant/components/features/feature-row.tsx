@@ -52,7 +52,7 @@ export function FeatureRow({
   const offNote = key === 'analytics' ? null : t(`${key}.offNote`)
 
   return (
-    <li className="py-3">
+    <li className="py-3" data-feature={key}>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[14px] font-medium">{label}</p>

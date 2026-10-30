@@ -48,6 +48,13 @@ export type ScenarioInput = {
       image?: boolean
       variants?: { name: MenuText; options: { name: MenuText; price?: number }[] }[]
       addons?: { name: MenuText; price?: number }[]
+      /** Add-ons in a group (as a POS makes them): its fewest and most, null for no most. */
+      addon_groups?: {
+        name: MenuText
+        min?: number
+        max?: number | null
+        addons: { name: MenuText; price?: number }[]
+      }[]
       /** Built from parts: from a scenario category (its English name) or a list of its own. */
       builds?: {
         name: MenuText

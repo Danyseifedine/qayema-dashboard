@@ -12,6 +12,7 @@ import {
   deleteOrder,
   editOrderItems,
   fetchOrders,
+  sendOrderToPos,
   setOrderStatus,
   type OrderEdit,
 } from '@/features/orders/api/order.api'
@@ -139,5 +140,25 @@ export function useDeleteOrder() {
       }
     },
     onError: (error) => toast.error(t('orders:toast.deleteFailed'), error),
+  })
+}
+
+/**
+ * Try again for an order that did not reach the POS. Either way the lists
+ * are fetched again, so the card shows where it now stands.
+ */
+export function useSendOrderToPos() {
+  const queryClient = useQueryClient()
+
+  return useMutation<Order, ApiError, Order>({
+    mutationFn: (order) => sendOrderToPos(order.id),
+    onSuccess: (order) => {
+      toast.success(t('orders:toast.sendingToPos', { reference: order.reference }))
+      void queryClient.invalidateQueries({ queryKey: orderKeys.lists() })
+    },
+    onError: (error) => {
+      toast.error(t('orders:toast.sendToPosFailed'), error)
+      void queryClient.invalidateQueries({ queryKey: orderKeys.lists() })
+    },
   })
 }

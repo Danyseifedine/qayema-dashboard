@@ -16,3 +16,8 @@ export {
   ChoicePriceInput,
 } from '@/features/menu/dishes/components/options/choice-fields'
 export { languagesWithErrors } from '@/features/menu/dishes/utils/languages-with-errors'
+// The order editor asks for grouped add-ons as the dish form shows them.
+export {
+  addonGroupLimits,
+  addonGroupRule,
+} from '@/features/menu/dishes/schemas/dish-choices.schema'

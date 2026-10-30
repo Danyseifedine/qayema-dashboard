@@ -17,6 +17,9 @@ const categorySchema = z.object({
   icon: z.string().nullable(),
   // Always sent in practice, but the resource marks it conditional.
   dishes_count: z.number().int().optional(),
+  /** Connect to POS: made by the POS, and since removed there (hidden on the menu). */
+  from_pos: z.boolean().default(false),
+  pos_removed: z.boolean().default(false),
 })
 
 /** The index adds a usage/limit block; reorder does not. */

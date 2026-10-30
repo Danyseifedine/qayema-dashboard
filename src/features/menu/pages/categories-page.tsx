@@ -13,6 +13,8 @@ import {
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
 import { MenuSwitch } from '@/features/menu/components/nav/menu-switch'
+import { PosBanner } from '@/features/menu/components/pos-notice'
+import { usePosConnected } from '@/features/auth'
 import {
   ConfirmDialog,
   ErrorState,
@@ -39,6 +41,8 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
   const categories = useCategories()
   const reorder = useReorderCategories()
   const remove = useDeleteCategory()
+  // The menu comes from a POS: no adding or deleting; the icon and order stay the owner's.
+  const fromPos = usePosConnected()
 
   const [dialog, setDialog] = useState<{ open: boolean; category: Category | null }>({
     open: false,
@@ -58,17 +62,21 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
     <div className="flex flex-1 flex-col gap-4">
       <MenuSwitch value="categories" onOpen={onOpenDishes} />
 
+      {fromPos ? <PosBanner /> : null}
+
       <LimitHeader
         used={categories.data?.meta.used ?? 0}
         limit={categories.data?.meta.limit ?? null}
         action={
-          <Button
-            leadingIcon={<IconFolderPlus className="size-[18px]" />}
-            disabled={atLimit}
-            onClick={() => setDialog({ open: true, category: null })}
-          >
-            {t('categoriesPage.add')}
-          </Button>
+          fromPos ? null : (
+            <Button
+              leadingIcon={<IconFolderPlus className="size-[18px]" />}
+              disabled={atLimit}
+              onClick={() => setDialog({ open: true, category: null })}
+            >
+              {t('categoriesPage.add')}
+            </Button>
+          )
         }
       />
 
@@ -80,6 +88,13 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
         <ErrorState
           description={categories.error.message}
           onRetry={() => void categories.refetch()}
+        />
+      ) : list.length === 0 && fromPos ? (
+        <PictureEmptyState
+          fill
+          picture="/assets/images/dashboard/no_categories.webp"
+          title={t('pos.categoriesEmptyTitle')}
+          description={t('pos.emptyDescription')}
         />
       ) : list.length === 0 ? (
         <PictureEmptyState
@@ -106,6 +121,7 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
                       handle={handle}
                       onEdit={openEdit}
                       onDelete={confirmDelete}
+                      posManaged={fromPos}
                     />
                   )}
                 </SortableCard>
@@ -122,6 +138,7 @@ export function CategoriesPage({ locale, onOpenDishes }: CategoriesPageProps) {
       <CategoryDialog
         open={dialog.open}
         category={dialog.category}
+        posManaged={fromPos}
         onClose={() => setDialog({ open: false, category: null })}
       />
 

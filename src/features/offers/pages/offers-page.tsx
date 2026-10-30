@@ -1,6 +1,7 @@
 import { IconDiscount2 } from '@tabler/icons-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { usePosConnected } from '@/features/auth'
 import { SortableCard, SortableList } from '@/features/menu'
 import { StatusChip } from '@/shared/components/data-display'
 import {
@@ -50,6 +51,8 @@ export function OffersPage({ locale, onOpenCategories }: OffersPageProps) {
   const remove = useDeleteOffer()
   const reorder = useReorderOffers()
   const setActive = useSetOfferActive()
+  // Offers are off while the menu comes from a POS: saved ones are listed, not changed.
+  const fromPos = usePosConnected()
 
   // The offer open in the editor: null for a new one, undefined for the list.
   const [editing, setEditing] = useState<Offer | null | undefined>(undefined)
@@ -102,7 +105,7 @@ export function OffersPage({ locale, onOpenCategories }: OffersPageProps) {
   const limits = meta ? { used: list.length, limit: meta.limit } : undefined
   const atLimit = isAtLimit(limits)
 
-  if (editing !== undefined) {
+  if (editing !== undefined && !fromPos) {
     return (
       <OfferEditor
         key={editing?.id ?? 'new'}
@@ -145,17 +148,21 @@ export function OffersPage({ locale, onOpenCategories }: OffersPageProps) {
             })}
           </ul>
         ) : null}
-        <Button
-          className="ms-auto"
-          leadingIcon={<IconDiscount2 className="size-[18px]" />}
-          disabled={offers.data === undefined || atLimit}
-          onClick={() => setEditing(null)}
-        >
-          {t('page.add')}
-        </Button>
+        {fromPos ? null : (
+          <Button
+            className="ms-auto"
+            leadingIcon={<IconDiscount2 className="size-[18px]" />}
+            disabled={offers.data === undefined || atLimit}
+            onClick={() => setEditing(null)}
+          >
+            {t('page.add')}
+          </Button>
+        )}
       </div>
 
-      {atLimit ? (
+      {fromPos ? <Alert variant="warning">{t('page.offWhilePos')}</Alert> : null}
+
+      {atLimit && !fromPos ? (
         <Alert variant="warning">{t('page.atLimit', { limit: meta?.limit })}</Alert>
       ) : null}
 
@@ -174,11 +181,31 @@ export function OffersPage({ locale, onOpenCategories }: OffersPageProps) {
           title={t('page.emptyTitle')}
           description={t('page.emptyDescription')}
           action={
-            <Button block onClick={() => setEditing(null)}>
-              {t('page.addFirst')}
-            </Button>
+            fromPos ? undefined : (
+              <Button block onClick={() => setEditing(null)}>
+                {t('page.addFirst')}
+              </Button>
+            )
           }
         />
+      ) : fromPos ? (
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {list.map((offer) => (
+            <OfferCard
+              key={offer.id}
+              offer={offer}
+              locale={locale}
+              currency={meta?.currency ?? 'USD'}
+              stats={meta?.stats[String(offer.id)]}
+              warnings={[]}
+              handle={null}
+              onEdit={openEdit}
+              onDelete={confirmDelete}
+              onActive={changeActive}
+              readOnly
+            />
+          ))}
+        </div>
       ) : (
         // Two columns on a wide screen; dragging works across both.
         <SortableList items={list} layout="grid" onReorder={(ordered) => reorder.mutate(ordered)}>

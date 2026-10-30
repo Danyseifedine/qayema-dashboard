@@ -25,6 +25,7 @@ import type { Category } from '@/features/menu/categories/schemas/category.schem
 import { useSaveDish } from '@/features/menu/dishes/hooks/use-dishes'
 import { useDishBuilds, useDishChoices, useMenuLanguages } from '@/features/auth'
 import { toMenuTextForm } from '@/shared/utils/string/menu-text'
+import { AddonGroupsList } from '@/features/menu/dishes/components/options/addon-groups-list'
 import { DishChoicesSection } from '@/features/menu/dishes/components/options/dish-choices-section'
 import {
   toAddonsPayload,
@@ -374,6 +375,12 @@ export function DishDialog({
           dishes={dishes.filter((other) => other.id !== dish?.id)}
           pricedByBuilds={builtByGuests}
         />
+      ) : null}
+
+      {show.addons && dish && dish.addon_groups.length > 0 ? (
+        <div className={PART}>
+          <AddonGroupsList groups={dish.addon_groups} language={locale} currency={dishCurrency} />
+        </div>
       ) : null}
 
       <div className={PART}>

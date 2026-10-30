@@ -1,5 +1,13 @@
 import type { Order, OrderStatus } from '@/features/orders/schemas/order.schema'
 
+/**
+ * Sent to the restaurant's POS, or on its way there: the POS moves it on
+ * from here, so its card offers no steps and no edits.
+ */
+export function isInPos({ pos }: Pick<Order, 'pos'>): boolean {
+  return pos !== null && pos.status !== 'failed'
+}
+
 type StatusLabelKey =
   `status.${OrderStatus}` | 'status.onItsWay' | 'status.preparing' | 'status.served'
 

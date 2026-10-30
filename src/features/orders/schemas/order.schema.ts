@@ -97,6 +97,21 @@ const orderSchema = z
     guest_updates: z.number().int().default(0),
     /** When the restaurant last changed what it holds. */
     owner_updated_at: z.string().nullable().default(null),
+    /**
+     * Sent to the restaurant's POS (Connect to POS): on its way, taken (the
+     * POS handles it from here, with its own number), or not sent (why).
+     * Null for an order that was never sent.
+     */
+    pos: z
+      .object({
+        status: z.enum(['sending', 'sent', 'failed']),
+        number: z.string().nullable().default(null),
+        error: z.string().nullable().default(null),
+      })
+      .nullable()
+      .default(null),
+    /** Why the POS called it off, when it said. */
+    cancel_reason: z.string().nullable().default(null),
     items: z.array(orderItemSchema).default([]),
   })
   .transform((order) => ({

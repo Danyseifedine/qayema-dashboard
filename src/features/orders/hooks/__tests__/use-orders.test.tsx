@@ -10,6 +10,7 @@ import {
   useDeleteOrder,
   useEditOrder,
   useOrders,
+  useSendOrderToPos,
   useSetOrderStatus,
 } from '@/features/orders/hooks/use-orders'
 import type { Order } from '@/features/orders/schemas/order.schema'
@@ -36,6 +37,8 @@ function order(id: number, overrides: Partial<Order> = {}): Order {
     guest_updated_at: null,
     guest_updates: 0,
     owner_updated_at: null,
+    pos: null,
+    cancel_reason: null,
     items: [],
     ...overrides,
   }
@@ -164,6 +167,40 @@ describe('order mutations', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(invalidated()).toEqual([orderKeys.lists()])
+  })
+
+  it('a status move the POS handles is refused, and the lists show where it stands', async () => {
+    mock.onPatch('/api/orders/1').reply(409, {
+      message: 'This order is handled in your POS.',
+      code: 'handled_in_pos',
+    })
+    const { wrapper, invalidated } = setup()
+
+    const { result } = renderHook(() => useSetOrderStatus(), { wrapper })
+    act(() => result.current.mutate({ id: 1, status: 'accepted' }))
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(invalidated()).toEqual([orderKeys.lists()])
+  })
+
+  it('sends an order to the POS again, and refreshes the lists either way', async () => {
+    mock.onPost('/api/orders/1/send-to-pos').replyOnce(200, {
+      data: order(1, { pos: { status: 'sending', number: null, error: null } }),
+    })
+    mock
+      .onPost('/api/orders/1/send-to-pos')
+      .replyOnce(409, { message: 'Not now', code: 'not_sendable' })
+    const { wrapper, invalidated } = setup()
+
+    const { result } = renderHook(() => useSendOrderToPos(), { wrapper })
+    const sent = await act(() => result.current.mutateAsync(order(1)))
+
+    expect(sent.pos?.status).toBe('sending')
+    expect(invalidated()).toEqual([orderKeys.lists()])
+
+    act(() => result.current.mutate(order(1)))
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(invalidated()).toEqual([orderKeys.lists(), orderKeys.lists()])
   })
 
   it('an edit refreshes the lists, and the counts only when it accepted a new order', async () => {

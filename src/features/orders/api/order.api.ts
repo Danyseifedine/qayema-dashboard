@@ -90,6 +90,18 @@ export async function editOrderItems(id: number, edit: OrderEdit): Promise<Order
   return data
 }
 
+/**
+ * Try again: an order the POS refused or never answered is sent once more.
+ * 409 when it cannot be sent now (closed, or sending was switched off).
+ */
+export async function sendOrderToPos(id: number): Promise<Order> {
+  const { data } = await request(orderResponseSchema, {
+    method: 'POST',
+    url: `/api/orders/${id}/send-to-pos`,
+  })
+  return data
+}
+
 /** 204. The order and its lines are gone for good. */
 export async function deleteOrder(id: number): Promise<void> {
   await request(z.unknown(), { method: 'DELETE', url: `/api/orders/${id}` })

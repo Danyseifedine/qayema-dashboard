@@ -29,7 +29,7 @@ export type AlertProps = {
    */
   size?: 'md' | 'sm'
   /** One button under the message, always the same: what to do about it. */
-  action?: { label: ReactNode; onClick: () => void }
+  action?: { label: ReactNode; onClick: () => void; loading?: boolean }
   /** Makes the whole banner one button, with an arrow at its end. */
   onClick?: () => void
   /** Renders a dismiss button on the trailing side. */
@@ -80,7 +80,13 @@ export function Alert({
           {children}
         </div>
         {action ? (
-          <Button size="sm" variant="secondary" className="mt-2.5" onClick={action.onClick}>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="mt-2.5"
+            loading={action.loading}
+            onClick={action.onClick}
+          >
             {action.label}
           </Button>
         ) : null}

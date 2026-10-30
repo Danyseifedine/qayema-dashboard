@@ -1,7 +1,7 @@
 import { IconPlus } from '@tabler/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDishChoices, useMenuLanguages, useSession } from '@/features/auth'
+import { useDishChoices, useMenuLanguages, usePosConnected, useSession } from '@/features/auth'
 import { useCategories, useDeleteDish, useDishes, type Dish } from '@/features/menu'
 import { LimitHeader } from '@/shared/components/data-display'
 import {
@@ -50,6 +50,8 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
   const sized = useDishChoices().variants
   const removeBuild = useRemoveBuild()
   const removeDish = useDeleteDish()
+  // Off while the menu comes from a POS: the builds are kept for when it is not.
+  const fromPos = usePosConnected()
 
   // The build open in the editor: null for a new one, undefined for the list.
   const [editing, setEditing] = useState<Placed | null | undefined>(undefined)
@@ -72,6 +74,10 @@ export function BuildYourOwnPage({ locale }: BuildYourOwnPageProps) {
     document.querySelector(`[data-dish="${shownDish}"]`)?.scrollIntoView?.({ block: 'center' })
     showBuildsOf(null)
   }, [shownDish, loaded, showBuildsOf])
+
+  if (fromPos) {
+    return <Alert variant="warning">{t('page.offWhilePos')}</Alert>
+  }
 
   if (editing !== undefined) {
     return (

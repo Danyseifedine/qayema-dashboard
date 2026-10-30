@@ -8,6 +8,8 @@ import { CategoryFilter, UNCATEGORISED } from '@/features/menu/components/filter
 import { SortableCard, SortableList } from '@/features/menu/components/dnd'
 import { MenuSwitch } from '@/features/menu/components/nav/menu-switch'
 import { DishDialog } from '@/features/menu/dishes/components/dialogs/dish-dialog'
+import { PosDishDialog } from '@/features/menu/dishes/components/dialogs/pos-dish-dialog'
+import { PosBanner } from '@/features/menu/components/pos-notice'
 import { DishCard } from '@/features/menu/dishes/components/list/dish-card'
 import {
   useDeleteDish,
@@ -24,7 +26,7 @@ import {
   SkeletonList,
 } from '@/shared/components/feedback'
 import { Alert, Button } from '@/shared/components/ui'
-import { useDishBuilds, useDishChoices } from '@/features/auth'
+import { useDishBuilds, useDishChoices, useMenuLanguages, usePosConnected } from '@/features/auth'
 import type { Locale } from '@/shared/constants/locales'
 import { nameOr } from '@/shared/utils/string/translated'
 
@@ -58,6 +60,9 @@ export function DishesPage({
   const availability = useDishAvailability()
   const remove = useDeleteDish()
   const show = useDishChoices()
+  // The menu comes from a POS: no adding or deleting, and a dish opens to be looked at.
+  const fromPos = usePosConnected()
+  const languages = useMenuLanguages()
 
   const [filter, setFilter] = useState<number | null>(null)
   const [dialog, setDialog] = useState<{ open: boolean; dish: Dish | null }>({
@@ -115,7 +120,7 @@ export function DishesPage({
     if (!categoryList.some((category) => category.id === filter)) setFilter(null)
   }, [filter, categoryList, categories.isPending])
 
-  const addButton = (
+  const addButton = fromPos ? null : (
     <Button
       leadingIcon={<IconPlus className="size-[18px]" />}
       disabled={loading || atLimit || noCategories}
@@ -128,6 +133,8 @@ export function DishesPage({
   return (
     <div className="flex flex-1 flex-col gap-4">
       <MenuSwitch value="dishes" onOpen={onOpenCategories} />
+
+      {fromPos ? <PosBanner /> : null}
 
       <LimitHeader
         used={dishes.data?.meta.used ?? 0}
@@ -143,6 +150,13 @@ export function DishesPage({
           count={6}
           className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3 min-[118rem]:grid-cols-4"
           itemClassName="h-[132px]"
+        />
+      ) : fromPos && dishList.length === 0 ? (
+        <PictureEmptyState
+          fill
+          picture="/assets/images/dashboard/no_dishes.webp"
+          title={t('pos.dishesEmptyTitle')}
+          description={t('pos.emptyDescription')}
         />
       ) : noCategories && dishList.length === 0 ? (
         <PictureEmptyState
@@ -201,9 +215,11 @@ export function DishesPage({
               title={t('dishesPage.emptyFilteredTitle')}
               description={t('dishesPage.emptyFilteredDescription')}
               action={
-                <Button onClick={() => setDialog({ open: true, dish: null })}>
-                  {t('dishesPage.emptyAction')}
-                </Button>
+                fromPos ? undefined : (
+                  <Button onClick={() => setDialog({ open: true, dish: null })}>
+                    {t('dishesPage.emptyAction')}
+                  </Button>
+                )
               }
             />
           ) : (
@@ -230,6 +246,7 @@ export function DishesPage({
                         onEdit={openEdit}
                         onDelete={confirmDelete}
                         onToggleAvailability={toggleAvailability}
+                        posManaged={fromPos}
                       />
                     )}
                   </SortableCard>
@@ -240,8 +257,16 @@ export function DishesPage({
         </>
       )}
 
+      <PosDishDialog
+        dish={fromPos && dialog.open ? dialog.dish : null}
+        categories={categoryList}
+        languages={languages}
+        locale={locale}
+        onClose={() => setDialog({ open: false, dish: null })}
+      />
+
       <DishDialog
-        open={dialog.open}
+        open={dialog.open && !fromPos}
         dish={dialog.dish}
         dishes={dishList}
         categories={categoryList}

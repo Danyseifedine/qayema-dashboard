@@ -20,6 +20,7 @@ export const FULL_PLAN: Plan = {
   offer_schedules: true,
   offer_discounts: true,
   build_your_own: true,
+  pos_connection: true,
 }
 
 /** A WhatsApp order asking the guest for nothing, as a new restaurant starts. */
@@ -47,6 +48,7 @@ export const EMPTY_PLAN: Plan = {
   offer_schedules: false,
   offer_discounts: false,
   build_your_own: false,
+  pos_connection: false,
 }
 
 /**
@@ -89,6 +91,7 @@ export function makeSessionUser(
         builds: { used: 0, limit: 10 },
       },
       dishes_without_photo: 0,
+      pos_connected: false,
       switched_off: [],
       turned_off: [],
       ordering: {

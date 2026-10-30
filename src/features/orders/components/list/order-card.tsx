@@ -20,9 +20,10 @@ import { cn } from '@/shared/utils/dom/cn'
 import { formatDateTime, formatTime } from '@/shared/utils/format/date'
 import { formatMoney, formatRate } from '@/shared/utils/format/money'
 import { usePreferencesStore } from '@/stores/preferences.store'
+import { OrderPosStatus } from '@/features/orders/components/list/order-pos-status'
 import { TableTent } from '@/features/orders/components/list/table-tent'
 import type { Order, OrderStatus } from '@/features/orders/schemas/order.schema'
-import { choiceParts, statusLabel } from '@/features/orders/utils/order-text'
+import { choiceParts, isInPos, statusLabel } from '@/features/orders/utils/order-text'
 
 export type OrderCardProps = {
   order: Order
@@ -60,14 +61,16 @@ export const OrderCard = memo(function OrderCard({
   const { t } = useTranslation('orders')
   const locale = usePreferencesStore((state) => state.locale)
   const titleId = useId()
-  const next = nextStep(order)
+  // In the restaurant's POS, it is moved on there: no steps and no edits here.
+  const inPos = isInPos(order)
+  const next = inPos ? null : nextStep(order)
   const table = order.table
   // A line in the restaurant's second currency, whose rate the card then says.
   const second = order.items.find((item) => item.currency !== order.currency)?.currency
 
   const more: ActionMenuItem[] = [
     // A cancelled order is no longer anyone's to change.
-    ...(order.status !== 'cancelled'
+    ...(order.status !== 'cancelled' && !inPos
       ? [
           {
             label: t('card.editShort'),
@@ -159,6 +162,8 @@ export const OrderCard = memo(function OrderCard({
               {t('card.ownerChanged', { time: formatTime(order.owner_updated_at, locale) })}
             </Alert>
           ) : null}
+
+          <OrderPosStatus order={order} />
 
           {order.fulfilment !== null ? <GuestDetails order={order} /> : null}
 

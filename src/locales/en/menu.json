@@ -166,7 +166,17 @@
     "optionNameRequired": "Give every option a name in {{language}}.",
     "addonNameRequired": "Give every add-on a name in {{language}}.",
     "translate": "Translate all names",
-    "nothingToTranslate": "Every name is in both languages."
+    "nothingToTranslate": "Every name is in both languages.",
+    "groups": {
+      "title": "Add-on groups from your POS",
+      "hint": "Made in your POS. Change them there.",
+      "untitled": "Untitled group",
+      "exactly": "Pick exactly {{count}}",
+      "between": "Pick {{min}} to {{max}}",
+      "upTo": "Pick up to {{max}}",
+      "atLeast": "Pick at least {{min}}",
+      "any": "Pick any"
+    }
   },
   "dishToast": {
     "added": "Dish added",
@@ -223,5 +233,31 @@
     "glass-cocktail": "Cocktails",
     "beer": "Beer",
     "bottle": "Soft drinks"
+  },
+  "pos": {
+    "banner": "Your menu comes from your POS. Change dishes there; they show here within a few minutes.",
+    "removed": "Removed in your POS",
+    "hidden": "Hidden while connected",
+    "managed": "Managed in your POS",
+    "categoryManaged": "Its name and description come from your POS. You can still pick its icon here.",
+    "categoriesEmptyTitle": "Your categories come from your POS",
+    "dishesEmptyTitle": "Your dishes come from your POS",
+    "emptyDescription": "They show here after the next sync. Sync now on the Features page if you just added them.",
+    "view": "View {{name}}",
+    "viewUnnamed": "View dish",
+    "dishTitle": "Dish from your POS",
+    "dishDescription": "Change it in your POS; it shows here within a few minutes.",
+    "ownTitle": "Your dish",
+    "ownDescription": "Hidden from your menu while it is connected to your POS. It comes back when you disconnect.",
+    "price": "Price",
+    "category": "Category",
+    "noCategory": "No category",
+    "ingredients": "Ingredients",
+    "available": "On the menu",
+    "soldOut": "Sold out",
+    "variants": "Variants",
+    "addons": "Add-ons",
+    "buildsOff": "Build your own is off while your menu is connected to a POS.",
+    "close": "Close"
   }
 }

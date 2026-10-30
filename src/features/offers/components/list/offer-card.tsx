@@ -44,6 +44,8 @@ export type OfferCardProps = {
   onEdit: (offer: Offer) => void
   onDelete: (offer: Offer) => void
   onActive: (offer: Offer, active: boolean) => void
+  /** Shown only: no switch, edit or delete (Offers are off while the menu comes from a POS). */
+  readOnly?: boolean
 }
 
 /**
@@ -63,6 +65,7 @@ export const OfferCard = memo(function OfferCard({
   onEdit,
   onDelete,
   onActive,
+  readOnly = false,
 }: OfferCardProps) {
   const { t } = useTranslation('offers')
   // The offer's own words are in the menu's language; the card's are the
@@ -106,6 +109,7 @@ export const OfferCard = memo(function OfferCard({
         <div className="-ms-1.5 flex h-[54px] items-center">{handle}</div>
         <button
           type="button"
+          disabled={readOnly}
           onClick={() => onEdit(offer)}
           className="flex min-w-0 flex-1 items-center gap-3 rounded-tile text-start focus-ring"
         >
@@ -129,13 +133,15 @@ export const OfferCard = memo(function OfferCard({
             <StatusChip tone={STATUS_TONE[offer.status]}>{statusLine(offer, ui)}</StatusChip>
           </span>
         </button>
-        <div className="flex h-[54px] items-center">
-          <Switch
-            checked={offer.is_active}
-            onChange={(active) => onActive(offer, active)}
-            aria-label={t('card.active', { title: name })}
-          />
-        </div>
+        {readOnly ? null : (
+          <div className="flex h-[54px] items-center">
+            <Switch
+              checked={offer.is_active}
+              onChange={(active) => onActive(offer, active)}
+              aria-label={t('card.active', { title: name })}
+            />
+          </div>
+        )}
       </div>
 
       {/* What it does, a line each, across the card's width. */}
@@ -191,14 +197,16 @@ export const OfferCard = memo(function OfferCard({
               : t('card.shown', { count: 0 })}
           </span>
         </span>
-        <div className="-me-1.5 flex items-center">
-          <RowActions
-            editLabel={t('card.edit', { title: name })}
-            deleteLabel={t('card.remove', { title: name })}
-            onEdit={() => onEdit(offer)}
-            onDelete={() => onDelete(offer)}
-          />
-        </div>
+        {readOnly ? null : (
+          <div className="-me-1.5 flex items-center">
+            <RowActions
+              editLabel={t('card.edit', { title: name })}
+              deleteLabel={t('card.remove', { title: name })}
+              onEdit={() => onEdit(offer)}
+              onDelete={() => onDelete(offer)}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

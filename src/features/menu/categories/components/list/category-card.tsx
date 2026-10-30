@@ -7,6 +7,7 @@ import { cn } from '@/shared/utils/dom/cn'
 import { translated } from '@/shared/utils/string/translated'
 import type { Category } from '@/features/menu/categories/schemas/category.schema'
 import { categoryIcon } from '@/features/menu/categories/constants/category-icons'
+import { PosRowChip } from '@/features/menu/components/pos-notice'
 
 export type CategoryCardProps = {
   category: Category
@@ -20,6 +21,8 @@ export type CategoryCardProps = {
    */
   onEdit: (category: Category) => void
   onDelete: (category: Category) => void
+  /** The menu comes from a POS: the category cannot be deleted here. */
+  posManaged?: boolean
 }
 
 /**
@@ -34,6 +37,7 @@ export const CategoryCard = memo(function CategoryCard({
   handle,
   onEdit,
   onDelete,
+  posManaged = false,
 }: CategoryCardProps) {
   const { t } = useTranslation('menu')
   const name = translated(category.name, locale)
@@ -78,6 +82,9 @@ export const CategoryCard = memo(function CategoryCard({
               {name.language?.toUpperCase()}
             </StatusChip>
           ) : null}
+          {posManaged ? (
+            <PosRowChip fromPos={category.from_pos} removed={category.pos_removed} />
+          ) : null}
         </span>
         {!description.missing ? (
           <span
@@ -104,7 +111,7 @@ export const CategoryCard = memo(function CategoryCard({
             : t('categoryCard.deleteUnnamed')
         }
         onEdit={() => onEdit(category)}
-        onDelete={() => onDelete(category)}
+        onDelete={posManaged ? undefined : () => onDelete(category)}
       />
     </div>
   )

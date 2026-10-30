@@ -20,4 +20,11 @@ describe('RowActions', () => {
     await user.click(remove)
     expect(onDelete).toHaveBeenCalledOnce()
   })
+
+  it('leaves the bin out of a row that cannot be deleted here', () => {
+    render(<RowActions editLabel="View Mains" onEdit={vi.fn()} view />)
+
+    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'View Mains' })).toBeInTheDocument()
+  })
 })

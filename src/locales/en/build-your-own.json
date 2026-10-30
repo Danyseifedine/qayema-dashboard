@@ -13,7 +13,8 @@
     "removeDishDescription": "It leaves your menu.",
     "removeDishConfirm": "Delete dish",
     "atBuildLimit_one": "You have {{count}} build, as many as your restaurant may have. Delete it to make another.",
-    "atBuildLimit_other": "You have {{count}} builds, as many as your restaurant may have. Delete one to make another."
+    "atBuildLimit_other": "You have {{count}} builds, as many as your restaurant may have. Delete one to make another.",
+    "offWhilePos": "Off while your menu is connected to a POS. Your builds are kept and come back when you disconnect."
   },
   "card": {
     "from": "From <price />",

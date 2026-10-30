@@ -68,7 +68,9 @@
     "edited": "حُدِّث الطلب {{reference}}",
     "editFailed": "تعذّر تحديث هذا الطلب",
     "deleted": "حُذف الطلب {{reference}}",
-    "deleteFailed": "تعذّر حذف هذا الطلب"
+    "deleteFailed": "تعذّر حذف هذا الطلب",
+    "sendingToPos": "الطلب {{reference}} في طريقه إلى نقطة البيع",
+    "sendToPosFailed": "تعذر إرسال هذا الطلب إلى نقطة البيع"
   },
   "whatsapp": {
     "title": "طلباتك تصل عبر <gold>واتساب</gold>",
@@ -140,5 +142,15 @@
       "pieces_many": "{{count}} قطعة",
       "pieces_other": "{{count}} قطعة"
     }
+  },
+  "pos": {
+    "sending": "يُرسل إلى نقطة البيع",
+    "inPos": "في نقطة البيع",
+    "inPosNumber": "في نقطة البيع · {{number}}",
+    "handledThere": "يُدار من نقطة البيع",
+    "notSent": "لم يُرسل إلى نقطة البيع",
+    "noAnswer": "لم تُجب نقطة البيع.",
+    "tryAgain": "حاول مجدداً",
+    "cancelledBecause": "ألغته نقطة البيع"
   }
 }

@@ -2,14 +2,17 @@ import { describe, expect, it } from 'vitest'
 import type { Dish } from '@/features/menu'
 import { makeDish } from '@/test/factories/menu'
 import {
+  addonGroupsToPick,
   buildsCost,
   buildsToPick,
   builtParts,
   choicesAt,
   firstSize,
+  groupsMet,
   isFilled,
   isSellable,
   orderTotal,
+  pickedIn,
   unitPrice,
   variantsToPick,
 } from '@/features/orders/utils/order-edit'
@@ -43,6 +46,9 @@ function dish(overrides: Partial<Dish> = {}): Dish {
       },
     ],
     addons: [{ id: 30, name: { en: 'Cheese' }, price: '1.25' }],
+    addon_groups: [],
+    from_pos: false,
+    pos_removed: false,
     builds: [],
     offer: null,
     currency: 'USD',
@@ -412,5 +418,40 @@ describe('builds priced by size', () => {
   it('offers no pizza priced by size while variants are off', () => {
     // Garlic alone is left: one choice is no build.
     expect(buildsToPick(HALVES, { ...OFF, builds: true }, BY_SIZE)).toEqual([])
+  })
+})
+
+describe('add-on groups in the order editor', () => {
+  const SAUCES = {
+    id: 60,
+    name: { en: 'Sauces' },
+    min_select: 1,
+    max_select: 2,
+    addons: [
+      { id: 61, name: { en: 'Garlic' }, price: '0.50' },
+      { id: 62, name: { en: 'Chili' }, price: '0.50' },
+      { id: 63, name: { en: 'Tahini' }, price: '1.00' },
+    ],
+  }
+  const EMPTY = { id: 70, name: { en: 'Nothing' }, min_select: 1, max_select: null, addons: [] }
+  const grouped = dish({ addon_groups: [SAUCES, EMPTY] })
+
+  it('asks for the groups that have add-ons, with their limits, and none while add-ons are off', () => {
+    expect(addonGroupsToPick(grouped, ON)).toEqual([{ ...SAUCES, min: 1, max: 2 }])
+    expect(addonGroupsToPick(grouped, OFF)).toEqual([])
+  })
+
+  it('checks each group gets its fewest and no more than its most', () => {
+    const [sauces] = addonGroupsToPick(grouped, ON)
+    expect(pickedIn(sauces!, [61, 30])).toBe(1)
+    expect(groupsMet([sauces!], [])).toBe(false)
+    expect(groupsMet([sauces!], [61, 63])).toBe(true)
+    expect(groupsMet([sauces!], [61, 62, 63])).toBe(false)
+    expect(groupsMet([{ ...sauces!, max: null }], [61, 62, 63])).toBe(true)
+  })
+
+  it('prices the grouped add-ons picked with the rest', () => {
+    expect(unitPrice(grouped, [12], [30, 63], ON)).toBe(12.75)
+    expect(unitPrice(grouped, [12], [63], OFF)).toBe(8)
   })
 })

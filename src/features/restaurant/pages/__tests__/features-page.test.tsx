@@ -121,7 +121,7 @@ describe('FeaturesPage', () => {
 
     expect(
       screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent),
-    ).toEqual(['Orders', 'Dishes', 'Menu languages', 'QR code and analytics'])
+    ).toEqual(['Orders', 'Dishes', 'Menu languages', 'QR code and analytics', 'Connect to POS'])
     expect(switchesIn('Orders')).toEqual(['Delivery and pickup on', 'Ordering at the table on'])
     expect(switchesIn('Dishes')).toEqual(['Variants on', 'Add-ons on'])
     expect(switchesIn('QR code and analytics')).toEqual(['QR Studio on', 'Analytics on'])

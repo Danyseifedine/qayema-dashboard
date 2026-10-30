@@ -9,7 +9,8 @@
     "removeTitle": "Delete this offer?",
     "removeDescription": "It leaves your menu at once. Orders already placed with it keep their price.",
     "removeConfirm": "Delete offer",
-    "timezone": "Times follow your restaurant's time zone, {{timezone}}."
+    "timezone": "Times follow your restaurant's time zone, {{timezone}}.",
+    "offWhilePos": "Off while your menu is connected to a POS. Your offers are kept and come back when you disconnect."
   },
   "status": {
     "live": "Live now",

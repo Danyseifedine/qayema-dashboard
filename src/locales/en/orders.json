@@ -60,7 +60,9 @@
     "edited": "Order {{reference}} updated",
     "editFailed": "Could not update that order",
     "deleted": "Order {{reference}} deleted",
-    "deleteFailed": "Could not delete that order"
+    "deleteFailed": "Could not delete that order",
+    "sendingToPos": "Order {{reference}} is on its way to your POS",
+    "sendToPosFailed": "Could not send that order to your POS"
   },
   "whatsapp": {
     "title": "Your orders go to <gold>WhatsApp</gold>",
@@ -124,5 +126,15 @@
       "pieces_one": "{{count}} piece",
       "pieces_other": "{{count}} pieces"
     }
+  },
+  "pos": {
+    "sending": "Sending to your POS",
+    "inPos": "In your POS",
+    "inPosNumber": "In your POS · {{number}}",
+    "handledThere": "Handled in your POS",
+    "notSent": "Not sent to your POS",
+    "noAnswer": "Your POS did not answer.",
+    "tryAgain": "Try again",
+    "cancelledBecause": "Your POS called it off"
   }
 }

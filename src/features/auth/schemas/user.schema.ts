@@ -30,6 +30,12 @@ const planSchema = z.object({
    * from before it.
    */
   build_your_own: z.boolean().default(false),
+  /**
+   * Connect to POS: the menu may take its categories and dishes from a POS
+   * branch. On no package: an admin switches it on per restaurant. False
+   * from a server from before it.
+   */
+  pos_connection: z.boolean().default(false),
 })
 
 /** A package named in the session, in both interface languages. */
@@ -99,6 +105,12 @@ const restaurantSchema = z.object({
   }),
   /** Dishes still without a photo (Home's checklist), counted by the server. */
   dishes_without_photo: z.number().int().default(0),
+  /**
+   * Linked to a POS branch (and Connect to POS on): the POS owns the
+   * categories and dishes (no adding or deleting, its fields read-only),
+   * and Offers and Build your own are off. False from a server from before it.
+   */
+  pos_connected: z.boolean().default(false),
   /** Optional features the owner switched off on the Features page. */
   switched_off: z.array(z.string()),
   /**

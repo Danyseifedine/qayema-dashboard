@@ -414,6 +414,19 @@ t('…') }`. Counts use plurals (`t('key', { count })`), sentences with markup
   id as `savedId` (RHF field arrays own `id`) and send it back as `id`. A
   list that is off is left out of the form and of the save, so the server
   keeps it. Limits mirror `../qayema/config/menu.php`.
+- **Connect to POS** (`plan.pos_connection`, on no package: an admin turns
+  it on per restaurant; never name the POS product, it is "your POS"): a card
+  on the Features page (`features/restaurant/components/features/pos-connection-card.tsx`,
+  `use-pos-connection.ts`) links with the POS address and key, shows the last
+  sync and its problems, Sync now and Disconnect, and polls after a link or a
+  sync until the pull is done. While `restaurant.pos_connected`
+  (`usePosConnected()`) the Categories and Dishes pages have no Add or Delete,
+  dishes open read-only (`PosDishDialog`), a category keeps only its icon,
+  rows show "Removed in your POS" / "Hidden while connected" (`from_pos`,
+  `pos_removed`), and Offers and Build your own show "Off while connected".
+  Add-on groups (`addon_groups`, min and max) come from the POS and show
+  read-only (`AddonGroupsList`; the order editor's picker enforces them).
+  Rules: qayema/docs/architecture/pos-connection-plan.md.
 - **Build your own** (`features/build-your-own`, nav key and namespace
   `build-your-own`, in MENU after Offers, `requiresPlan: 'build_your_own'`:
   on no package, an admin turns it on per restaurant; opened by a link

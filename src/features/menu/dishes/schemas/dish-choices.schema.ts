@@ -31,6 +31,55 @@ export const variantSchema = z.object({
 
 export const addonsSchema = z.array(choiceSchema)
 
+/**
+ * A heading over some add-ons ("Sauces") with the fewest and most a guest
+ * picks from it; `max_select` null is no limit. Only a POS connection
+ * makes groups, so the dish form shows them and never edits them.
+ */
+export const addonGroupSchema = z.object({
+  id: z.number().int(),
+  name: menuTextSchema,
+  min_select: z.number().int(),
+  max_select: z.number().int().nullable(),
+  addons: z.array(choiceSchema),
+})
+
+export type AddonGroup = z.infer<typeof addonGroupSchema>
+
+/**
+ * A group's fewest and most as guests meet them (MenuDishOptions::limits()):
+ * never more than its add-ons, and no most when it would limit nothing.
+ */
+export function addonGroupLimits(group: AddonGroup): { min: number; max: number | null } {
+  const count = group.addons.length
+  const min = Math.min(Math.max(0, group.min_select), count)
+  const max =
+    group.max_select === null || group.max_select >= count
+      ? null
+      : Math.max(group.max_select, min, 1)
+  return { min, max }
+}
+
+type RuleKey =
+  | 'choices.groups.exactly'
+  | 'choices.groups.between'
+  | 'choices.groups.upTo'
+  | 'choices.groups.atLeast'
+  | 'choices.groups.any'
+
+/**
+ * What a group asks for, as a `menu` text and its values ("Pick up to 2"),
+ * never more than it has.
+ */
+export function addonGroupRule(group: AddonGroup): [RuleKey, Record<string, number>] {
+  const { min, max } = addonGroupLimits(group)
+
+  if (max !== null && min === max) return ['choices.groups.exactly', { count: max }]
+  if (max !== null && min > 0) return ['choices.groups.between', { min, max }]
+  if (max !== null) return ['choices.groups.upTo', { max }]
+  return min > 0 ? ['choices.groups.atLeast', { min }] : ['choices.groups.any', {}]
+}
+
 type Choice = z.infer<typeof choiceSchema>
 type Variant = z.infer<typeof variantSchema>
 

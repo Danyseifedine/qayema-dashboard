@@ -10,6 +10,7 @@ import { cn } from '@/shared/utils/dom/cn'
 import { nameOr, translated } from '@/shared/utils/string/translated'
 import { usePreferencesStore } from '@/stores/preferences.store'
 import type { Dish, DishOffer } from '@/features/menu/dishes/schemas/dish.schema'
+import { PosRowChip } from '@/features/menu/components/pos-notice'
 import { lowestPrice } from '@/features/menu/dishes/schemas/dish-choices.schema'
 
 export type DishCardProps = {
@@ -29,6 +30,11 @@ export type DishCardProps = {
   onEdit: (dish: Dish) => void
   onDelete: (dish: Dish) => void
   onToggleAvailability: (dish: Dish, isAvailable: boolean) => void
+  /**
+   * The menu comes from a POS: the dish opens to be looked at, its
+   * availability is the POS's, and it cannot be deleted here.
+   */
+  posManaged?: boolean
 }
 
 /**
@@ -51,6 +57,7 @@ export const DishCard = memo(function DishCard({
   onEdit,
   onDelete,
   onToggleAvailability,
+  posManaged = false,
 }: DishCardProps) {
   const { t } = useTranslation('menu')
   // The card's words and dates are the dashboard's language; the offer's title the menu's.
@@ -139,9 +146,12 @@ export const DishCard = memo(function DishCard({
               </p>
             ) : null}
 
-            {choices.length > 0 || !dish.is_available || dish.offer ? (
+            {choices.length > 0 || !dish.is_available || dish.offer || posManaged ? (
               <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] font-medium text-[var(--faint)]">
                 {dish.offer ? <StatusChip tone="gold">{t('dishCard.deal.chip')}</StatusChip> : null}
+                {posManaged ? (
+                  <PosRowChip fromPos={dish.from_pos} removed={dish.pos_removed} />
+                ) : null}
                 {!dish.is_available ? (
                   <StatusChip tone="danger">{t('dishCard.soldOut')}</StatusChip>
                 ) : null}
@@ -162,6 +172,7 @@ export const DishCard = memo(function DishCard({
           <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[var(--muted)]">
             <Switch
               checked={dish.is_available}
+              disabled={posManaged}
               onChange={(isAvailable) => onToggleAvailability(dish, isAvailable)}
               aria-label={
                 name.text
@@ -173,16 +184,26 @@ export const DishCard = memo(function DishCard({
           </label>
 
           <div className="ms-auto flex items-center gap-0.5">
-            <RowActions
-              editLabel={
-                name.text ? t('dishCard.edit', { name: name.text }) : t('dishCard.editUnnamed')
-              }
-              deleteLabel={
-                name.text ? t('dishCard.delete', { name: name.text }) : t('dishCard.deleteUnnamed')
-              }
-              onEdit={() => onEdit(dish)}
-              onDelete={() => onDelete(dish)}
-            />
+            {posManaged ? (
+              <RowActions
+                view
+                editLabel={name.text ? t('pos.view', { name: name.text }) : t('pos.viewUnnamed')}
+                onEdit={() => onEdit(dish)}
+              />
+            ) : (
+              <RowActions
+                editLabel={
+                  name.text ? t('dishCard.edit', { name: name.text }) : t('dishCard.editUnnamed')
+                }
+                deleteLabel={
+                  name.text
+                    ? t('dishCard.delete', { name: name.text })
+                    : t('dishCard.deleteUnnamed')
+                }
+                onEdit={() => onEdit(dish)}
+                onDelete={() => onDelete(dish)}
+              />
+            )}
           </div>
         </div>
       </div>

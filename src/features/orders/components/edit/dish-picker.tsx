@@ -1,7 +1,7 @@
 import { IconPlus } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Dish } from '@/features/menu'
+import { addonGroupRule, type Dish } from '@/features/menu'
 import { Money } from '@/shared/components/data-display'
 import { Button, Combobox, Switch } from '@/shared/components/ui'
 import { formatMoney } from '@/shared/utils/format/money'
@@ -12,10 +12,13 @@ import { QuantityStepper } from '@/features/orders/components/edit/quantity-step
 import { usePickChoices } from '@/features/orders/hooks/use-pick-choices'
 import type { EditOrderFormValues } from '@/features/orders/schemas/edit-order.schema'
 import {
+  addonGroupsToPick,
   addonsToPick,
   buildsToPick,
   firstSize,
+  groupsMet,
   isFilled,
+  pickedIn,
   isSellable,
   type BuildToFill,
   type PickedBuild,
@@ -32,12 +35,14 @@ export type DishPickerProps = {
 /**
  * Adds a dish to the order: the dish, one option of each variant (as the
  * guest's sheet asks), each build filled (how many parts, a choice in
- * each), any add-ons, and how many. Dishes hidden from guests can be added
+ * each), any add-ons (within each add-on group's fewest and most), and
+ * how many. Dishes hidden from guests can be added
  * too: the kitchen may still have them. A build's choices come from the
  * whole menu, so `dishes` is all of it.
  */
 export function DishPicker({ dishes, onAdd }: DishPickerProps) {
   const { t } = useTranslation('orders')
+  const { t: tMenu } = useTranslation('menu')
   const locale = usePreferencesStore((state) => state.locale)
   const choices = usePickChoices()
   const [dishId, setDishId] = useState<string | null>(null)
@@ -60,6 +65,7 @@ export function DishPicker({ dishes, onAdd }: DishPickerProps) {
     [dish, choices, dishes],
   )
   const extras = dish ? addonsToPick(dish, choices) : []
+  const groups = dish ? addonGroupsToPick(dish, choices) : []
   // Its options, builds and add-ons are in its currency too.
   const currency = dish?.currency ?? ''
   const picked = Object.values(options)
@@ -78,12 +84,41 @@ export function DishPicker({ dishes, onAdd }: DishPickerProps) {
   const ready =
     dish !== null &&
     variants.every((variant) => options[variant.id] !== undefined) &&
+    groupsMet(groups, addons) &&
     builds.every((build) =>
       isFilled(
         build,
         built.find((mine) => mine.build === build.id),
       ),
     )
+
+  // One add-on and its switch; off once its group has all it may take.
+  const addonRow = (addon: Dish['addons'][number], off: boolean) => {
+    const name = translated(addon.name, locale).text
+    return (
+      <li key={addon.id} className="flex items-center justify-between gap-3 text-[13px]">
+        <span>
+          {name}{' '}
+          <Money
+            prefix="+"
+            amount={Number(addon.price)}
+            currency={currency}
+            className="text-[var(--muted)]"
+          />
+        </span>
+        <Switch
+          checked={addons.includes(addon.id)}
+          disabled={off}
+          onChange={(on) =>
+            setAddons((current) =>
+              on ? [...current, addon.id] : current.filter((id) => id !== addon.id),
+            )
+          }
+          aria-label={name}
+        />
+      </li>
+    )
+  }
 
   const reset = () => {
     setDishId(null)
@@ -158,34 +193,25 @@ export function DishPicker({ dishes, onAdd }: DishPickerProps) {
       ))}
 
       {extras.length > 0 ? (
-        <ul className="flex flex-col gap-1.5">
-          {extras.map((addon) => {
-            const name = translated(addon.name, locale).text
-            return (
-              <li key={addon.id} className="flex items-center justify-between gap-3 text-[13px]">
-                <span>
-                  {name}{' '}
-                  <Money
-                    prefix="+"
-                    amount={Number(addon.price)}
-                    currency={currency}
-                    className="text-[var(--muted)]"
-                  />
-                </span>
-                <Switch
-                  checked={addons.includes(addon.id)}
-                  onChange={(on) =>
-                    setAddons((current) =>
-                      on ? [...current, addon.id] : current.filter((id) => id !== addon.id),
-                    )
-                  }
-                  aria-label={name}
-                />
-              </li>
-            )
-          })}
-        </ul>
+        <ul className="flex flex-col gap-1.5">{extras.map((addon) => addonRow(addon, false))}</ul>
       ) : null}
+
+      {groups.map((group) => {
+        const full = group.max !== null && pickedIn(group, addons) >= group.max
+        return (
+          <div key={group.id} className="flex flex-col gap-1.5" data-pick-group={group.id}>
+            <div className="flex items-baseline justify-between gap-3 text-[13px]">
+              <span className="font-medium">{translated(group.name, locale).text}</span>
+              <span className="text-[12px] text-[var(--muted)]">
+                {tMenu(...addonGroupRule(group))}
+              </span>
+            </div>
+            <ul className="flex flex-col gap-1.5">
+              {group.addons.map((addon) => addonRow(addon, full && !addons.includes(addon.id)))}
+            </ul>
+          </div>
+        )
+      })}
 
       {dish ? (
         // On a phone: how many and the price on one line, Add full width

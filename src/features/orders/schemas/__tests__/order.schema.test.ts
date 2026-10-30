@@ -90,4 +90,26 @@ describe('orderResponseSchema', () => {
 
     expect(result.success).toBe(false)
   })
+
+  it('reads where an order sent to the POS stands, and why the POS called it off', () => {
+    const { data } = orderResponseSchema.parse({
+      data: {
+        ...ORDER,
+        status: 'cancelled',
+        items: [LINE],
+        pos: { status: 'sent', number: 'W-0012', error: null },
+        cancel_reason: 'Out of hummus',
+      },
+    })
+
+    expect(data.pos).toEqual({ status: 'sent', number: 'W-0012', error: null })
+    expect(data.cancel_reason).toBe('Out of hummus')
+  })
+
+  it('reads an order never sent to a POS, from a server from before too', () => {
+    const { data } = orderResponseSchema.parse({ data: { ...ORDER, items: [LINE] } })
+
+    expect(data.pos).toBeNull()
+    expect(data.cancel_reason).toBeNull()
+  })
 })

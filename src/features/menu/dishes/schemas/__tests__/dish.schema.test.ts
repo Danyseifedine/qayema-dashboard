@@ -39,6 +39,28 @@ describe('a dish’s builds from the API', () => {
   })
 })
 
+describe('a POS dish from the API', () => {
+  it('reads its add-on groups and where it came from, and none from a server from before them', () => {
+    const dish = makeDish({ id: 1 })
+    const { addon_groups: _groups, from_pos: _from, pos_removed: _removed, ...old } = dish
+    const parsed = dishResponseSchema.parse({ data: old }).data
+    expect([parsed.addon_groups, parsed.from_pos, parsed.pos_removed]).toEqual([[], false, false])
+
+    const sauces = {
+      id: 4,
+      name: { en: 'Sauces' },
+      min_select: 1,
+      max_select: null,
+      addons: [{ id: 41, name: { en: 'Garlic' }, price: '0.50' }],
+    }
+    const fromPos = dishResponseSchema.parse({
+      data: { ...dish, addon_groups: [sauces], from_pos: true, pos_removed: true },
+    }).data
+    expect(fromPos.addon_groups).toEqual([sauces])
+    expect([fromPos.from_pos, fromPos.pos_removed]).toEqual([true, true])
+  })
+})
+
 describe('a deal dish from the API', () => {
   it('reads the offer that made it, and none from a server from before them', () => {
     const dish = makeDish({ id: 1 })

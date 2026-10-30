@@ -417,4 +417,44 @@ describe('DishPicker', () => {
       addons: [],
     })
   })
+
+  it('asks for a group of add-ons within its fewest and most', async () => {
+    const hummus = makeDish({
+      id: 50,
+      name: { en: 'Hummus', ar: null },
+      price: '5.00',
+      addon_groups: [
+        {
+          id: 8,
+          name: { en: 'Sauces' },
+          min_select: 1,
+          max_select: 2,
+          addons: [
+            { id: 81, name: { en: 'Garlic' }, price: '0.50' },
+            { id: 82, name: { en: 'Chili' }, price: '0.50' },
+            { id: 83, name: { en: 'Tahini' }, price: '1.00' },
+          ],
+        },
+      ],
+    })
+    const { onAdd, user } = open({}, [hummus])
+
+    await user.click(screen.getByRole('combobox', { name: 'Dish' }))
+    await user.click(await screen.findByRole('option', { name: 'Hummus' }))
+
+    const group = (await screen.findByText('Sauces')).closest('[data-pick-group]') as HTMLElement
+    expect(within(group).getByText('Pick 1 to 2')).toBeInTheDocument()
+    const add = screen.getByRole('button', { name: 'Add' })
+    expect(add).toBeDisabled()
+
+    await user.click(within(group).getByRole('switch', { name: 'Garlic' }))
+    expect(add).toBeEnabled()
+    await user.click(within(group).getByRole('switch', { name: 'Tahini' }))
+    // Its most is picked: the last one is off.
+    expect(within(group).getByRole('switch', { name: 'Chili' })).toBeDisabled()
+    expect(screen.getByText('$6.50')).toBeInTheDocument()
+
+    await user.click(add)
+    expect(onAdd).toHaveBeenCalledWith({ dish_id: 50, quantity: 1, options: [], addons: [81, 83] })
+  })
 })

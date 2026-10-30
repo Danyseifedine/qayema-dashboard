@@ -4,6 +4,7 @@ import { imageFieldSchema } from '@/features/uploads'
 import { t } from '@/lib/i18n'
 import { menuTextField, menuTextSchema, requireMainLanguage } from '@/shared/utils/string/menu-text'
 import {
+  addonGroupSchema,
   addonsField,
   addonsSchema,
   requireChoiceNames,
@@ -74,6 +75,11 @@ const dishSchema = z.object({
   /** Sent whether or not the owner has them switched on. */
   variants: z.array(variantSchema),
   addons: addonsSchema,
+  /** Add-ons in groups (from a POS), shown and not edited; none from a server from before them. */
+  addon_groups: z.array(addonGroupSchema).default([]),
+  /** Connect to POS: made by the POS, and since removed there (hidden on the menu). */
+  from_pos: z.boolean().default(false),
+  pos_removed: z.boolean().default(false),
   /** Its "build your own"; none from a server from before them. */
   builds: z.array(buildSchema).default([]),
   /** A build's dish's icon (the categories' set), drawn above the menu's search; null for none. */

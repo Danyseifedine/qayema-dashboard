@@ -11,6 +11,7 @@ import type { PackageFlag } from '@/features/package'
 import { SectionCard } from '@/shared/components/ui'
 import { FeatureRow, type FeatureKey } from '@/features/restaurant/components/features/feature-row'
 import { MainLanguageField } from '@/features/restaurant/components/features/main-language-field'
+import { PosConnectionCard } from '@/features/restaurant/components/features/pos-connection-card'
 import { useSaveSwitchedOff } from '@/features/restaurant/hooks/use-features'
 import { cn } from '@/shared/utils/dom/cn'
 
@@ -172,6 +173,8 @@ export function FeaturesPage({
           ))}
         </div>
       ))}
+      {/* Only where an admin switched Connect to POS on: no package has it. */}
+      {plan.pos_connection ? <PosConnectionCard /> : null}
     </div>
   )
 }

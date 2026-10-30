@@ -10,6 +10,8 @@ export function makeCategory(overrides: Partial<Category> = {}): Category {
     description: { en: null, ar: null },
     icon: null,
     dishes_count: 0,
+    from_pos: false,
+    pos_removed: false,
     ...overrides,
   }
 }
@@ -26,6 +28,9 @@ export function makeDish(overrides: Partial<Dish> = {}): Dish {
     image_url: null,
     variants: [],
     addons: [],
+    addon_groups: [],
+    from_pos: false,
+    pos_removed: false,
     builds: [],
     offer: null,
     icon: null,

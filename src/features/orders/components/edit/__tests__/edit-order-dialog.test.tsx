@@ -32,6 +32,8 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
     guest_updated_at: null,
     guest_updates: 0,
     owner_updated_at: null,
+    pos: null,
+    cancel_reason: null,
     items: [
       {
         id: 1,

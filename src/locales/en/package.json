@@ -93,7 +93,8 @@
       "order_tracking": "order tracking",
       "offer_schedules": "offer schedules",
       "offer_discounts": "offer discounts",
-      "build_your_own": "build your own (half and half pizzas, scoops)"
+      "build_your_own": "build your own (half and half pizzas, scoops)",
+      "pos_connection": "connecting to a POS"
     }
   },
   "askOn": {

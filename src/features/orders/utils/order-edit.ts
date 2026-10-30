@@ -1,6 +1,6 @@
 import type { DishChoices } from '@/features/auth'
 import { buildPriceCents, sizeKey } from '@/features/build-your-own'
-import type { Dish } from '@/features/menu'
+import { addonGroupLimits, type Dish } from '@/features/menu'
 import { rateFor } from '@/shared/utils/format/money'
 import type { MenuText } from '@/shared/utils/string/menu-text'
 import { translated } from '@/shared/utils/string/translated'
@@ -97,6 +97,30 @@ export function variantsToPick(dish: Dish, choices: DishChoices): Dish['variants
 /** The add-ons that can go on a dish, while the restaurant shows them. */
 export function addonsToPick(dish: Dish, choices: DishChoices): Dish['addons'] {
   return choices.addons ? dish.addons : []
+}
+
+/** A dish's add-on group as the editor asks it: its add-ons and its limits. */
+export type GroupToPick = Dish['addon_groups'][number] & { min: number; max: number | null }
+
+/** A dish's add-on groups that have an add-on, while the restaurant shows add-ons. */
+export function addonGroupsToPick(dish: Dish, choices: DishChoices): GroupToPick[] {
+  if (!choices.addons) return []
+  return dish.addon_groups
+    .filter((group) => group.addons.length > 0)
+    .map((group): GroupToPick => Object.assign({}, group, addonGroupLimits(group)))
+}
+
+/** How many of a group's add-ons are picked. */
+export function pickedIn(group: GroupToPick, addons: readonly number[]): number {
+  return group.addons.filter((addon) => addons.includes(addon.id)).length
+}
+
+/** Every group has at least its fewest and at most its most, as the server checks. */
+export function groupsMet(groups: readonly GroupToPick[], addons: readonly number[]): boolean {
+  return groups.every((group) => {
+    const took = pickedIn(group, addons)
+    return took >= group.min && (group.max === null || took <= group.max)
+  })
 }
 
 /**
@@ -277,6 +301,11 @@ export function unitPrice(
   }
   for (const addon of addonsToPick(dish, choices)) {
     if (addons.includes(addon.id)) price += Number(addon.price)
+  }
+  for (const group of addonGroupsToPick(dish, choices)) {
+    for (const addon of group.addons) {
+      if (addons.includes(addon.id)) price += Number(addon.price)
+    }
   }
   return price + buildsCost(buildsToPick(dish, choices, menu), builds)
 }
