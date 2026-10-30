@@ -25,6 +25,7 @@ function connection(overrides: Partial<PosConnection> = {}): PosConnection {
     locales: ['en'],
     linked_at: null,
     ...BEFORE,
+    unreachable_since: null,
     sends_orders: false,
     orders_in_menu: true,
     problems: [],

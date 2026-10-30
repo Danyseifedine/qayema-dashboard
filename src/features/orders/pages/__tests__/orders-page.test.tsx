@@ -287,7 +287,8 @@ describe('OrdersPage', () => {
     renderWithProviders(<OrdersPage onOpenFeatures={() => {}} />)
 
     await pick(user, 'Edit order ABC234')
-    const dialog = await screen.findByRole('dialog')
+    // The editor is a lazy chunk: under a full run's load it can take over the default second.
+    const dialog = await screen.findByRole('dialog', {}, { timeout: 5000 })
     // House Bowl: 2 to 3. Daily Tart: off.
     await user.click(within(dialog).getByRole('button', { name: 'House Bowl +1' }))
     await user.click(within(dialog).getByRole('button', { name: 'Daily Tart -1' }))

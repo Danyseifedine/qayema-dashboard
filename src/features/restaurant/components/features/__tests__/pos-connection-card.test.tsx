@@ -25,6 +25,7 @@ function linked(overrides: Partial<PosConnection> = {}): PosConnection {
     last_synced_at: '2026-10-30T10:01:00Z',
     last_attempt_at: '2026-10-30T10:01:00Z',
     last_error: null,
+    unreachable_since: null,
     sends_orders: false,
     orders_in_menu: true,
     problems: [],
